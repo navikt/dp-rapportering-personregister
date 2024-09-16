@@ -6,7 +6,6 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
-import no.nav.helse.rapids_rivers.asLocalDateTime
 
 class SoknadMottak(
     rapidsConnection: RapidsConnection,
@@ -28,10 +27,9 @@ class SoknadMottak(
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
 
         val ident = packet["ident"].asText()
-        val søknadstidspunkt = packet["søknadstidspunkt"].asLocalDateTime().toLocalDate()
         val søknadId = packet["søknadId"].asText()
 
-        personStatusMediator.behandle(ident, søknadstidspunkt, søknadId)
+        personStatusMediator.behandle(ident, søknadId)
     }
 
     companion object {

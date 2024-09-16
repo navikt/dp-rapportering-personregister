@@ -5,7 +5,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.DpSoknad
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status.Søkt
 import no.nav.helse.rapids_rivers.RapidsConnection
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class PersonstatusMediator(
@@ -13,7 +12,6 @@ class PersonstatusMediator(
 ) {
     fun behandle(
         ident: String,
-        soknadtidspunkt: LocalDate,
         soknadId: String,
     ) {
         val hendelse =
