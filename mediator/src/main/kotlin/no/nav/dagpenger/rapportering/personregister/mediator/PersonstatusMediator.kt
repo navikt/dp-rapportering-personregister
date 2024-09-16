@@ -17,7 +17,7 @@ class PersonstatusMediator(
         soknadId: String,
     ) {
         val hendelse =
-            Hendelse(personId = ident, referanseId = soknadId, hendelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now())
+            Hendelse(personId = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now())
         val person = Person(ident, Søkt)
 
         // Sjekke om personen finnes i databasen

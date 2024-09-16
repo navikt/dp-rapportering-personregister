@@ -8,7 +8,7 @@ data class Hendelse(
     val personId: String,
     val referanseId: String,
     val mottatt: LocalDateTime,
-    val hendelse: String, // Tilsvarer status?
+    val beskrivelse: String,
     val kilde: Kildesystem,
 )
 
