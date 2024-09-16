@@ -6,12 +6,12 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.overriding
 
 internal object Configuration {
-    private const val APP_NAME = "dp-rapportering-fabrikk"
+    private const val APP_NAME = "dp-rapportering-personregister"
     private val defaultProperties =
         ConfigurationMap(
             mapOf(
                 "RAPID_APP_NAME" to APP_NAME,
-                "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-fabrikk-v1",
+                "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-personregister-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "latest",
             ),

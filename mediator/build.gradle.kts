@@ -40,7 +40,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("no.nav.dagpenger.rapportering.fabrikk.mediator.ApplicationKt")
+    mainClass.set("no.nav.dagpenger.rapportering.personregister.mediator.ApplicationKt")
 }
 
 tasks.withType<ShadowJar> {
