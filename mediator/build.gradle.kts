@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-//    implementation(project(":modell"))
+    implementation(project(":modell"))
 
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
