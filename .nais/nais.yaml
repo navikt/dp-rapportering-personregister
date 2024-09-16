@@ -28,3 +28,9 @@ spec:
     enabled: true
   kafka:
     pool: {{ kafka.pool }}
+  ingresses:
+    - https://dp-rapportering-personregister.intern.dev.nav.no
+  observability:
+    logging:
+      destinations:
+        - id: elastic
