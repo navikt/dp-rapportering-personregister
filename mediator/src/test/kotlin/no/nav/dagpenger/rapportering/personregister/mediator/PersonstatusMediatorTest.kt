@@ -8,13 +8,22 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.Status.Avslag
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class PersonstatusMediatorTest {
-    val rapidsConnection = TestRapid()
-    val personRepository: PersonRepository = TestPersonRepository()
-    val hendelseRepository: HendelseRepository = TestHendelseRepository()
-    val personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository, hendelseRepository)
+    private lateinit var rapidsConnection: TestRapid
+    private lateinit var personRepository: PersonRepository
+    private lateinit var hendelseRepository: HendelseRepository
+    private lateinit var personstatusMediator: PersonstatusMediator
+
+    @BeforeEach
+    fun setup() {
+        rapidsConnection = TestRapid()
+        personRepository = PersonRepositoryFaker()
+        hendelseRepository = HendelseRepositoryFaker()
+        personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository, hendelseRepository)
+    }
 
     @Test
     fun `kan behandle en ny hendelse med ny person`() {
@@ -51,8 +60,8 @@ class PersonstatusMediatorTest {
     }
 }
 
-class TestPersonRepository : PersonRepository {
-    val personliste = mutableMapOf<String, Person>()
+class PersonRepositoryFaker : PersonRepository {
+    private val personliste = mutableMapOf<String, Person>()
 
     override fun finn(ident: String): Person? = personliste[ident]
 
@@ -65,8 +74,8 @@ class TestPersonRepository : PersonRepository {
     }
 }
 
-class TestHendelseRepository : HendelseRepository {
-    val hendelseliste = mutableMapOf<String, Hendelse>()
+class HendelseRepositoryFaker : HendelseRepository {
+    private val hendelseliste = mutableMapOf<String, Hendelse>()
 
     override fun finnHendelser(ident: String): List<Hendelse> = hendelseliste.filter { it.key == ident }.map { it.value }
 
