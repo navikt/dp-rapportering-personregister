@@ -19,7 +19,7 @@ class InMemoryHendelseRepositoryTest {
         hendelse =
             Hendelse(
                 id = UUID.randomUUID(),
-                personId = "12345678910",
+                ident = "12345678910",
                 referanseId = "123",
                 mottatt = LocalDateTime.now(),
                 beskrivelse = Søkt.name,
@@ -30,11 +30,11 @@ class InMemoryHendelseRepositoryTest {
     @Test
     fun `kan opprette en hendelse`() {
         hendelseRepository.opprettHendelse(hendelse)
-        hendelseRepository.finnHendelser(hendelse.personId) shouldBe listOf(hendelse)
+        hendelseRepository.finnHendelser(hendelse.ident) shouldBe listOf(hendelse)
     }
 
     @Test
     fun `kan ikke funne en gendelse som ikke er lagret`() {
-        hendelseRepository.finnHendelser(hendelse.personId) shouldBe emptyList()
+        hendelseRepository.finnHendelser(hendelse.ident) shouldBe emptyList()
     }
 }

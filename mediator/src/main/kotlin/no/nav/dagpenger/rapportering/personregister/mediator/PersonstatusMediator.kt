@@ -29,7 +29,7 @@ class PersonstatusMediator(
             }
 
         hendelseRepository.opprettHendelse(
-            Hendelse(personId = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now()),
+            Hendelse(ident = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now()),
         )
 
         // Sjekke om personen finnes i databasen

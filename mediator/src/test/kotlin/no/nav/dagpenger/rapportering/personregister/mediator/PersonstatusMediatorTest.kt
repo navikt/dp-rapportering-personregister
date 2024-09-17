@@ -29,7 +29,7 @@ class PersonstatusMediatorTest {
 
         personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
         with(hendelseRepository.finnHendelser(ident).first()) {
-            personId shouldBe ident
+            this.ident shouldBe ident
             beskrivelse shouldBe Status.Søkt.name
         }
     }
@@ -45,7 +45,7 @@ class PersonstatusMediatorTest {
 
         personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
         with(hendelseRepository.finnHendelser(ident).first()) {
-            personId shouldBe ident
+            this.ident shouldBe ident
             beskrivelse shouldBe Status.Søkt.name
         }
     }
@@ -71,6 +71,6 @@ class TestHendelseRepository : HendelseRepository {
     override fun finnHendelser(ident: String): List<Hendelse> = hendelseliste.filter { it.key == ident }.map { it.value }
 
     override fun opprettHendelse(hendelse: Hendelse) {
-        hendelseliste[hendelse.personId] = hendelse
+        hendelseliste[hendelse.ident] = hendelse
     }
 }
