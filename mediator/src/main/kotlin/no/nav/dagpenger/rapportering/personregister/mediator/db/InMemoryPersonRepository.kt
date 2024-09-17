@@ -1,15 +1,17 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import io.ktor.server.plugins.NotFoundException
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 
 class InMemoryPersonRepository : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
 
-    override fun finn(ident: String): Person = personList[ident] ?: throw NotFoundException("Person med $ident finnes ikke")
+    override fun finn(ident: String): Person? = personList.get(ident)
 
-    override fun lagre(person: Person): Boolean {
+    override fun lagre(person: Person) {
         personList[person.ident] = person
-        return true
+    }
+
+    override fun oppdater(person: Person) {
+        personList[person.ident] = person
     }
 }

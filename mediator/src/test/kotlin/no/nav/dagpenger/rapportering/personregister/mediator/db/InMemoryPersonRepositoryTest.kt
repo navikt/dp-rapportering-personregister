@@ -1,8 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import io.ktor.server.plugins.NotFoundException
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.BeforeEach
@@ -26,8 +24,6 @@ class InMemoryPersonRepositoryTest {
 
     @Test
     fun `kan ikke finne en person som ikke er lagret`() {
-        shouldThrow<NotFoundException> {
-            personRepository.finn(person.ident)
-        }
+        personRepository.finn(person.ident) shouldBe null
     }
 }
