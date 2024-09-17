@@ -20,25 +20,20 @@ class PersonstatusMediator(
     ) {
         personRepository
             .finn(ident)
-            .let { person ->
-                if (person == null) {
-                    personRepository.lagre(Person(ident, Søkt))
-                } else {
-                    personRepository.oppdater(person.copy(status = Søkt))
-                }
-            }
+            ?.let { person ->
+                personRepository.oppdater(person.copy(status = Søkt))
+            } ?: run {
+            personRepository.lagre(Person(ident, Søkt))
+        }
 
         hendelseRepository.opprettHendelse(
-            Hendelse(ident = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now()),
+            Hendelse(
+                ident = ident,
+                referanseId = soknadId,
+                beskrivelse = Søkt.name,
+                kilde = DpSoknad,
+                mottatt = LocalDateTime.now(),
+            ),
         )
-
-        // Sjekke om personen finnes i databasen
-        // Hvis personen finnes, oppdater status hvis nødvendig og lagre hendelse
-        // Hvis personen ikke finnes, lagre person og hendelse
-        // Rest-endepunk for å gi personstatus til dp-rapportering
-
-        // V2:
-        // Legge melding på kafka om at meldekort må lages for person i inneværende periode
-        // Regelmessig sende melding på kafka om at meldekort må påfylles for bruker
     }
 }
