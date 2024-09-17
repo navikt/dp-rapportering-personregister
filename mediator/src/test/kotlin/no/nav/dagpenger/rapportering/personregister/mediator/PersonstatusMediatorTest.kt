@@ -1,7 +1,9 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.rapportering.personregister.mediator.db.HendelseRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.Status.Avslag
@@ -11,18 +13,25 @@ import org.junit.jupiter.api.Test
 class PersonstatusMediatorTest {
     val rapidsConnection = TestRapid()
     val personRepository: PersonRepository = TestPersonRepository()
-    val personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository)
+    val hendelseRepository: HendelseRepository = TestHendelseRepository()
+    val personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository, hendelseRepository)
 
     @Test
-    fun `kan behandle en ny person`() {
+    fun `kan behandle en ny hendelse med ny person`() {
         val ident = "12345678910"
         val soknadId = "123"
 
         personRepository.finn(ident) shouldBe null
+        hendelseRepository.finnHendelser(ident) shouldBe emptyList()
 
-        personstatusMediator.behandle(ident, soknadId)
+        personstatusMediator
+            .behandle(ident, soknadId)
 
         personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
+        with(hendelseRepository.finnHendelser(ident).first()) {
+            personId shouldBe ident
+            beskrivelse shouldBe Status.Søkt.name
+        }
     }
 
     @Test
@@ -35,6 +44,10 @@ class PersonstatusMediatorTest {
         personstatusMediator.behandle(ident, soknadId)
 
         personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
+        with(hendelseRepository.finnHendelser(ident).first()) {
+            personId shouldBe ident
+            beskrivelse shouldBe Status.Søkt.name
+        }
     }
 }
 
@@ -49,5 +62,15 @@ class TestPersonRepository : PersonRepository {
 
     override fun oppdater(person: Person) {
         personliste.replace(person.ident, person)
+    }
+}
+
+class TestHendelseRepository : HendelseRepository {
+    val hendelseliste = mutableMapOf<String, Hendelse>()
+
+    override fun finnHendelser(ident: String): List<Hendelse> = hendelseliste.filter { it.key == ident }.map { it.value }
+
+    override fun opprettHendelse(hendelse: Hendelse) {
+        hendelseliste[hendelse.personId] = hendelse
     }
 }

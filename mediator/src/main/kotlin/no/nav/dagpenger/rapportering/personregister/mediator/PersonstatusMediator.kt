@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import no.nav.dagpenger.rapportering.personregister.mediator.db.HendelseRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.DpSoknad
@@ -11,14 +12,12 @@ import java.time.LocalDateTime
 class PersonstatusMediator(
     private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
+    private val hendelseRepository: HendelseRepository,
 ) {
     fun behandle(
         ident: String,
         soknadId: String,
     ) {
-        val hendelse =
-            Hendelse(personId = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now())
-
         personRepository
             .finn(ident)
             .let { person ->
@@ -28,6 +27,10 @@ class PersonstatusMediator(
                     personRepository.oppdater(person.copy(status = Søkt))
                 }
             }
+
+        hendelseRepository.opprettHendelse(
+            Hendelse(personId = ident, referanseId = soknadId, beskrivelse = Søkt.name, kilde = DpSoknad, mottatt = LocalDateTime.now()),
+        )
 
         // Sjekke om personen finnes i databasen
         // Hvis personen finnes, oppdater status hvis nødvendig og lagre hendelse
