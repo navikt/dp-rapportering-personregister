@@ -4,10 +4,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.helse.rapids_rivers.RapidsConnection
 
 class PersonstatusMediator(
-    private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {

@@ -20,7 +20,7 @@ class PersonstatusMediatorTest {
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
-        personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository)
+        personstatusMediator = PersonstatusMediator(personRepository)
     }
 
     @Test
