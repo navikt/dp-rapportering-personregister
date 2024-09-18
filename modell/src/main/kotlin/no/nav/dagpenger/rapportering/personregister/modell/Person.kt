@@ -12,7 +12,7 @@ class Person(
     }
 
     fun behandle(hendelse: Hendelse) {
-        hendelser.put(LocalDateTime.now(), hendelse)
+        hendelser.put(hendelse.dato, hendelse)
     }
 
     val status: Status
