@@ -13,6 +13,6 @@ data class Hendelse(
 )
 
 enum class Kildesystem {
-    DpSoknad,
+    Søknad,
     Arena,
 }

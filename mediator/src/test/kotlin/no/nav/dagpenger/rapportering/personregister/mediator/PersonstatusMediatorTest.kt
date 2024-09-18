@@ -26,12 +26,12 @@ class PersonstatusMediatorTest {
     @Test
     fun `kan behandle en ny hendelse med ny person`() {
         val ident = "12345678910"
-        val soknadId = "123"
+        val søknadId = "123"
 
         val søknadHendelse =
             SøknadHendelse(
                 ident = ident,
-                referanseId = soknadId,
+                referanseId = søknadId,
                 dato = LocalDateTime.now(),
             )
 
@@ -49,13 +49,13 @@ class PersonstatusMediatorTest {
     @Test
     fun `kan behandle eksisterende person`() {
         val ident = "12345678910"
-        val soknadId = "123"
+        val søknadId = "123"
         val dato = LocalDateTime.now()
 
         val søknadHendelse =
             SøknadHendelse(
                 ident = ident,
-                referanseId = soknadId,
+                referanseId = søknadId,
                 dato = dato,
             )
 

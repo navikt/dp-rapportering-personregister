@@ -8,12 +8,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class SoknadMottakTest {
+class SøknadMottakTest {
     private val testRapid = TestRapid()
     private val rapporteringMediator = mockk<PersonstatusMediator>(relaxed = true)
 
     init {
-        SoknadMottak(testRapid, rapporteringMediator)
+        SøknadMottak(testRapid, rapporteringMediator)
     }
 
     @BeforeEach

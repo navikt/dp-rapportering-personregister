@@ -15,7 +15,7 @@ class PersonTest {
         referanseId = referanseId,
         dato = dato,
         status = status,
-        kilde = Kildesystem.DpSoknad,
+        kilde = Kildesystem.Søknad,
     )
 
     @Test

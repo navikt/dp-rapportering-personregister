@@ -8,7 +8,7 @@ import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
 import no.nav.helse.rapids_rivers.asLocalDateTime
 
-class SoknadMottak(
+class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val personStatusMediator: PersonstatusMediator,
 ) : River.PacketListener {
