@@ -7,8 +7,8 @@ data class Hendelse(
     val id: UUID = UUID.randomUUID(),
     val ident: String,
     val referanseId: String,
-    val mottatt: LocalDateTime,
-    val beskrivelse: String,
+    val dato: LocalDateTime,
+    val status: Status,
     val kilde: Kildesystem,
 )
 

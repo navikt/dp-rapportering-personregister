@@ -1,28 +1,26 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.rapportering.personregister.mediator.db.HendelseRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.Status.Avslag
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
-    private lateinit var hendelseRepository: HendelseRepository
     private lateinit var personstatusMediator: PersonstatusMediator
 
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
-        hendelseRepository = HendelseRepositoryFaker()
-        personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository, hendelseRepository)
+        personstatusMediator = PersonstatusMediator(rapidsConnection, personRepository)
     }
 
     @Test
@@ -31,15 +29,13 @@ class PersonstatusMediatorTest {
         val soknadId = "123"
 
         personRepository.finn(ident) shouldBe null
-        hendelseRepository.finnHendelser(ident) shouldBe emptyList()
 
         personstatusMediator
             .behandle(ident, soknadId)
 
-        personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
-        with(hendelseRepository.finnHendelser(ident).first()) {
-            this.ident shouldBe ident
-            beskrivelse shouldBe Status.Søkt.name
+        personRepository.finn(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe Status.Søkt
         }
     }
 
@@ -48,14 +44,23 @@ class PersonstatusMediatorTest {
         val ident = "12345678910"
         val soknadId = "123"
 
-        personRepository.lagre(Person(ident, Avslag))
+        val hendelse =
+            Hendelse(
+                ident = ident,
+                referanseId = soknadId,
+                dato = LocalDateTime.now(),
+                status = Status.Søkt,
+                kilde = Kildesystem.DpSoknad,
+            )
+
+        val person = Person(ident, hendelse)
+        personRepository.lagre(person)
 
         personstatusMediator.behandle(ident, soknadId)
 
-        personRepository.finn(ident) shouldBe Person(ident, Status.Søkt)
-        with(hendelseRepository.finnHendelser(ident).first()) {
-            this.ident shouldBe ident
-            beskrivelse shouldBe Status.Søkt.name
+        personRepository.finn(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe Status.Søkt
         }
     }
 }
@@ -71,15 +76,5 @@ class PersonRepositoryFaker : PersonRepository {
 
     override fun oppdater(person: Person) {
         personliste.replace(person.ident, person)
-    }
-}
-
-class HendelseRepositoryFaker : HendelseRepository {
-    private val hendelseliste = mutableMapOf<String, Hendelse>()
-
-    override fun finnHendelser(ident: String): List<Hendelse> = hendelseliste.filter { it.key == ident }.map { it.value }
-
-    override fun opprettHendelse(hendelse: Hendelse) {
-        hendelseliste[hendelse.ident] = hendelse
     }
 }
