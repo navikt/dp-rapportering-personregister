@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 
 class SoknadMottakTest {
     private val testRapid = TestRapid()
@@ -26,8 +27,11 @@ class SoknadMottakTest {
 
         val ident = "12345678903"
         val søknadId = "123e4567-e89b-12d3-a456-426614174000"
+        val dato = LocalDateTime.parse("2024-02-21T11:00:27.899791748")
 
-        verify(exactly = 1) { rapporteringMediator.behandle(ident, søknadId) }
+        val søknadHendelse = SøknadHendelse(ident, søknadId, dato)
+
+        verify(exactly = 1) { rapporteringMediator.behandle(søknadHendelse) }
     }
 }
 

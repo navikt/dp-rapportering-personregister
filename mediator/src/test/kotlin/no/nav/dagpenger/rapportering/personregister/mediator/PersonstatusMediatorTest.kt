@@ -2,8 +2,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.helse.rapids_rivers.testsupport.TestRapid
@@ -28,10 +28,17 @@ class PersonstatusMediatorTest {
         val ident = "12345678910"
         val soknadId = "123"
 
+        val søknadHendelse =
+            SøknadHendelse(
+                ident = ident,
+                referanseId = soknadId,
+                dato = LocalDateTime.now(),
+            )
+
         personRepository.finn(ident) shouldBe null
 
         personstatusMediator
-            .behandle(ident, soknadId)
+            .behandle(søknadHendelse)
 
         personRepository.finn(ident)?.apply {
             ident shouldBe ident
@@ -43,20 +50,22 @@ class PersonstatusMediatorTest {
     fun `kan behandle eksisterende person`() {
         val ident = "12345678910"
         val soknadId = "123"
+        val dato = LocalDateTime.now()
 
-        val hendelse =
-            Hendelse(
+        val søknadHendelse =
+            SøknadHendelse(
                 ident = ident,
                 referanseId = soknadId,
-                dato = LocalDateTime.now(),
-                status = Status.Søkt,
-                kilde = Kildesystem.DpSoknad,
+                dato = dato,
             )
+
+        val hendelse = søknadHendelse.tilHendelse()
 
         val person = Person(ident, hendelse)
         personRepository.lagre(person)
+        personRepository.lagre(person)
 
-        personstatusMediator.behandle(ident, soknadId)
+        personstatusMediator.behandle(søknadHendelse)
 
         personRepository.finn(ident)?.apply {
             ident shouldBe ident
