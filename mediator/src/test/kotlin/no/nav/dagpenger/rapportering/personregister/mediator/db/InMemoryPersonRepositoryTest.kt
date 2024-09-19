@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -13,7 +12,7 @@ class InMemoryPersonRepositoryTest {
     @BeforeEach
     fun setUp() {
         personRepository = InMemoryPersonRepository()
-        person = Person("12345678901", Status.Søkt)
+        person = Person("12345678901")
     }
 
     @Test

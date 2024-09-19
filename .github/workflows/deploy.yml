@@ -1,11 +1,13 @@
 name: Build and deploy
 
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+permissions:
+  contents: "read"
+  id-token: "write"
 
-#Kommenter inn
-#on:
-#  push:
-#    branches-ignore:
-#      - 'dependabot/**'
 
 jobs:
   build:

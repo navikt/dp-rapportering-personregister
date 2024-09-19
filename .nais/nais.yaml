@@ -34,3 +34,12 @@ spec:
     logging:
       destinations:
         - id: elastic
+  gcp:
+    sqlInstances:
+      - type: POSTGRES_15
+        highAvailability: true
+        diskAutoresize: true
+        databases:
+          - name: soknad-rapportering-personregister
+            envVarPrefix: DB
+        tier: db-custom-1-3840

@@ -6,8 +6,9 @@ import no.nav.helse.rapids_rivers.JsonMessage
 import no.nav.helse.rapids_rivers.MessageContext
 import no.nav.helse.rapids_rivers.RapidsConnection
 import no.nav.helse.rapids_rivers.River
+import no.nav.helse.rapids_rivers.asLocalDateTime
 
-class SoknadMottak(
+class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val personStatusMediator: PersonstatusMediator,
 ) : River.PacketListener {
@@ -15,7 +16,7 @@ class SoknadMottak(
         River(rapidsConnection)
             .apply {
                 validate { it.demandValue("@event_name", "søknad_innsendt_varsel") }
-                validate { it.requireKey("ident", "søknadId", "søknadstidspunkt") }
+                validate { it.requireKey("ident", "søknadId", "@opprettet", "søknadstidspunkt") }
                 validate { it.interestedIn("@id", "@opprettet") }
             }.register(this)
     }
@@ -26,13 +27,17 @@ class SoknadMottak(
     ) {
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
 
-        val ident = packet["ident"].asText()
-        val søknadId = packet["søknadId"].asText()
-
-        personStatusMediator.behandle(ident, søknadId)
+        personStatusMediator.behandle(packet.tilHendelse())
     }
 
     companion object {
         private val logger = KotlinLogging.logger {}
     }
+}
+
+private fun JsonMessage.tilHendelse(): SøknadHendelse {
+    val ident = this["ident"].asText()
+    val referanseId = this["søknadId"].asText()
+    val dato = this["@opprettet"].asLocalDateTime()
+    return SøknadHendelse(ident, referanseId, dato)
 }

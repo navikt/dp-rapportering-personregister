@@ -1,39 +1,26 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import no.nav.dagpenger.rapportering.personregister.mediator.db.HendelseRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.DpSoknad
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status.Søkt
-import no.nav.helse.rapids_rivers.RapidsConnection
-import java.time.LocalDateTime
 
 class PersonstatusMediator(
-    private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
-    private val hendelseRepository: HendelseRepository,
 ) {
-    fun behandle(
-        ident: String,
-        soknadId: String,
-    ) {
-        personRepository
-            .finn(ident)
-            ?.let { person ->
-                personRepository.oppdater(person.copy(status = Søkt))
-            } ?: run {
-            personRepository.lagre(Person(ident, Søkt))
-        }
+    fun behandle(søknadHendelse: SøknadHendelse) {
+        val hendelse = søknadHendelse.tilHendelse()
 
-        hendelseRepository.opprettHendelse(
-            Hendelse(
-                ident = ident,
-                referanseId = soknadId,
-                beskrivelse = Søkt.name,
-                kilde = DpSoknad,
-                mottatt = LocalDateTime.now(),
-            ),
-        )
+        personRepository
+            .finn(hendelse.ident)
+            ?.let { person ->
+                person.behandle(hendelse)
+                personRepository.oppdater(person)
+            } ?: run {
+            Person(hendelse.ident).apply {
+                behandle(hendelse)
+                personRepository.lagre(this)
+            }
+        }
     }
 }

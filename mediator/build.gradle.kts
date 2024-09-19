@@ -21,6 +21,7 @@ dependencies {
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
+    implementation(libs.bundles.postgres)
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
@@ -29,6 +30,7 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
 
     testImplementation(kotlin("test"))
+    testImplementation(libs.bundles.postgres.test)
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.mockk)
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
