@@ -40,6 +40,6 @@ spec:
         highAvailability: true
         diskAutoresize: true
         databases:
-          - name: soknad-rapportering-personregister
+          - name: dp-rapportering-personregister
             envVarPrefix: DB
         tier: db-custom-1-3840
