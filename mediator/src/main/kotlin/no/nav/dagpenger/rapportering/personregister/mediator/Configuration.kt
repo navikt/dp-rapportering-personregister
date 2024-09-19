@@ -11,7 +11,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.overriding
 
 internal object Configuration {
-    private const val APP_NAME = "dp-rapportering-personregister"
+    const val APP_NAME = "dp-rapportering-personregister"
     private val defaultProperties =
         ConfigurationMap(
             mapOf(
@@ -22,7 +22,7 @@ internal object Configuration {
             ),
         )
 
-    private val properties =
+    val properties =
         ConfigurationProperties.systemProperties() overriding EnvironmentVariables() overriding defaultProperties
 
     val config: Map<String, String> =

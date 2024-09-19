@@ -1,6 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
+import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
+import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.helse.rapids_rivers.RapidsConnection
 
@@ -11,7 +13,9 @@ internal class ApplicationBuilder(
         RapidApplication
             .Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
             .withKtorModule {
+                konfigurasjon()
                 internalApi()
+                personstatusApi()
             }.build()
 
     init {
