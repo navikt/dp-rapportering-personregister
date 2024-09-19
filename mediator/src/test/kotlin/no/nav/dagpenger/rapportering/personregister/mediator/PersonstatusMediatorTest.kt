@@ -61,7 +61,7 @@ class PersonstatusMediatorTest {
 
         val hendelse = søknadHendelse.tilHendelse()
 
-        val person = Person(ident, hendelse)
+        val person = Person(ident).apply { behandle(hendelse) }
         personRepository.lagre(person)
         personRepository.lagre(person)
 
