@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    testImplementation(libs.bundles.kotest.assertions)
 }
 
 tasks.test {

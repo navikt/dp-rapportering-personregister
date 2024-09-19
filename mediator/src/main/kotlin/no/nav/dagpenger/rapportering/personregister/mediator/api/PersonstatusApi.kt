@@ -21,8 +21,10 @@ internal fun Application.personstatusApi(personRepository: PersonRepository) {
                 get {
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
-                    val person = personRepository.finn(ident) ?: throw IllegalArgumentException("Person ikke funnet")
-                    call.respond(HttpStatusCode.OK, person)
+                    personRepository
+                        .finn(ident)
+                        ?.also { call.respond(HttpStatusCode.OK, it) }
+                        ?: call.respond(HttpStatusCode.NotFound)
                 }
             }
         }
