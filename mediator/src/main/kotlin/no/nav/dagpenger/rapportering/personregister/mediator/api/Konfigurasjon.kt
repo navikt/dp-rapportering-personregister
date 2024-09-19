@@ -17,7 +17,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactor
 fun Application.konfigurasjon(
     auth: AuthenticationConfig.() -> Unit = {
         jwt("tokenX") { tokenX() }
-        // jwt("azureAd") { azureAd() }
     },
 ) {
     install(Authentication) {

@@ -20,13 +20,8 @@ internal object Configuration {
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-personregister-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
                 "KAFKA_RESET_POLICY" to "latest",
-                // "Grupper.saksbehandler" to "123",
             ),
         )
-
-    /*object Grupper : PropertyGroup() {
-        val saksbehandler by stringType
-    }*/
 
     val properties =
         ConfigurationProperties.systemProperties() overriding EnvironmentVariables() overriding defaultProperties
@@ -35,21 +30,6 @@ internal object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
-
-    /*private val azureAd by lazy {
-        val aad = OAuth2Config.AzureAd(properties)
-        CachedOauth2Client(
-            tokenEndpointUrl = aad.tokenEndpointUrl,
-            authType = aad.clientSecret(),
-        )
-    }
-
-    fun azureADClient() =
-        { audience: String ->
-            azureAd
-                .clientCredentials(audience)
-                .accessToken
-        }*/
 
     val defaultObjectMapper: ObjectMapper =
         ObjectMapper()

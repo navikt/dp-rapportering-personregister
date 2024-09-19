@@ -7,7 +7,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.clean
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -91,10 +90,6 @@ open class ApiTestSetup {
         System.setProperty("TOKEN_X_PRIVATE_JWK", TEST_PRIVATE_JWK)
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
-       /* System.setProperty("azure-app.well-known-url", mockOAuth2Server.wellKnownUrl(AZURE_ISSUER_ID).toString())
-        System.setProperty("AZURE_APP_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(AZURE_ISSUER_ID).toString())
-        System.setProperty("AZURE_APP_CLIENT_ID", AZURE_ISSUER_ID)
-        System.setProperty("AZURE_APP_CLIENT_SECRET", TEST_PRIVATE_JWK)*/
         System.setProperty("GITHUB_SHA", "some_sha")
     }
 

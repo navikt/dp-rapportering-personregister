@@ -26,17 +26,6 @@ object AuthFactory {
         val client_id by stringType
     }
 
-   /* @Suppress("ClassName")
-    private object azure_app : PropertyGroup() {
-        val well_known_url by stringType
-        val client_id by stringType
-    }*/
-
-    /*private val azureAdConfiguration: OpenIdConfiguration by lazy {
-        runBlocking {
-            httpClient.get(Configuration.properties[azure_app.well_known_url]).body()
-        }
-    }*/
     private val tokenXConfiguration: OpenIdConfiguration by lazy {
         runBlocking {
             httpClient.get(Configuration.properties[token_x.well_known_url]).body()
@@ -44,13 +33,11 @@ object AuthFactory {
     }
 
     enum class Issuer {
-        AzureAD,
         TokenX,
     }
 
     fun issuerFromString(issuer: String?) =
         when (issuer) {
-            // azureAdConfiguration.issuer -> Issuer.AzureAD
             tokenXConfiguration.issuer -> Issuer.TokenX
             else -> {
                 throw IllegalArgumentException("Ikke støttet issuer: $issuer")
@@ -66,23 +53,6 @@ object AuthFactory {
             validator(credentials)
         }
     }
-
-    /*fun JWTAuthenticationProvider.Config.azureAd() {
-        val saksbehandlerGruppe = Configuration.properties[Configuration.Grupper.saksbehandler]
-        verifier(jwkProvider(URI(azureAdConfiguration.jwksUri).toURL()), azureAdConfiguration.issuer) {
-            withAudience(Configuration.properties[azure_app.client_id])
-        }
-        realm = Configuration.APP_NAME
-        validate { credentials ->
-            require(
-                credentials.payload.claims["groups"]
-                    ?.asList(String::class.java)
-                    ?.contains(saksbehandlerGruppe)
-                    ?: false,
-            )
-            JWTPrincipal(credentials.payload)
-        }
-    }*/
 
     private fun jwkProvider(url: URL) =
         JwkProviderBuilder(url)
