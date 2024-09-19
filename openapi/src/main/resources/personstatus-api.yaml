@@ -1,0 +1,84 @@
+openapi: 3.0.0
+info:
+  title: Personstatus API
+  version: 1.0.0
+  description: API for å hente personstatus for dagpengebrukere
+  contact:
+    name: '#team-dagpenger-rapportering'
+servers:
+  - url: https://dp-rapportering-personregister.intern.dev.nav.no
+    description: dev
+  - url: https://dp-rapportering-personregister.intern.nav.no
+    description: prod
+paths:
+  /personstatus:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        404:
+          description: Not Found
+      summary: Hent personstatus
+      description: Hent personstatus for en dagpengebruker
+      operationId: get-personstatus
+      security:
+        - tokenX: []
+
+components:
+  schemas:
+    Person:
+      required:
+        - ident
+        - status
+      type: object
+      properties:
+        ident:
+          type: string
+        status:
+          $ref: '#/components/schemas/Staus'
+    Staus:
+      type: string
+      enum:
+        - Søkt
+        - Innvilget
+        - Avslag
+        - Stans
+    Problem:
+      type: object
+      description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)
+      properties:
+        type:
+          type: string
+          format: uri
+          default: about:blank
+          description: URI som identifiserer problemet
+        title:
+          type: string
+          description: En kort oppsummering av problemet
+        status:
+          type: integer
+          description: HTTP status
+        detail:
+          type: string
+          description: Forklaring av problemet
+        instance:
+          type: string
+          format: uri
+          description: Hvor feilen oppstod
+  securitySchemes:
+    tokenX:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bruker [TokenX](https://docs.nais.io/security/auth/tokenx/) til autentisering. Du må utveksle IDporten-token
+        til et TokenX-token hvor `audience` er satt til `[cluster]:teamdagpenger:dp-rapportering-personregister`.
+        
+        For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
+        - [dev-gcp](https://wonderwalled-idporten.intern.dev.nav.no/api/obo?aud=dev-gcp:teamdagpenger:dp-rapportering-personregister)
+  headers: { }
+  responses: { }
