@@ -6,7 +6,7 @@ import org.testcontainers.containers.PostgreSQLContainer
 import javax.sql.DataSource
 
 internal object Postgres {
-    private val database by lazy {
+    val database by lazy {
         PostgreSQLContainer("postgres:15").apply {
             start()
         }

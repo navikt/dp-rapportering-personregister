@@ -13,7 +13,6 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.auth.jwt.JWTAuthenticationProvider
-import io.ktor.server.auth.jwt.JWTPrincipal
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import java.net.URI
@@ -27,17 +26,17 @@ object AuthFactory {
         val client_id by stringType
     }
 
-    @Suppress("ClassName")
+   /* @Suppress("ClassName")
     private object azure_app : PropertyGroup() {
         val well_known_url by stringType
         val client_id by stringType
-    }
+    }*/
 
-    private val azureAdConfiguration: OpenIdConfiguration by lazy {
+    /*private val azureAdConfiguration: OpenIdConfiguration by lazy {
         runBlocking {
             httpClient.get(Configuration.properties[azure_app.well_known_url]).body()
         }
-    }
+    }*/
     private val tokenXConfiguration: OpenIdConfiguration by lazy {
         runBlocking {
             httpClient.get(Configuration.properties[token_x.well_known_url]).body()
@@ -51,7 +50,7 @@ object AuthFactory {
 
     fun issuerFromString(issuer: String?) =
         when (issuer) {
-            azureAdConfiguration.issuer -> Issuer.AzureAD
+            // azureAdConfiguration.issuer -> Issuer.AzureAD
             tokenXConfiguration.issuer -> Issuer.TokenX
             else -> {
                 throw IllegalArgumentException("Ikke støttet issuer: $issuer")
@@ -68,7 +67,7 @@ object AuthFactory {
         }
     }
 
-    fun JWTAuthenticationProvider.Config.azureAd() {
+    /*fun JWTAuthenticationProvider.Config.azureAd() {
         val saksbehandlerGruppe = Configuration.properties[Configuration.Grupper.saksbehandler]
         verifier(jwkProvider(URI(azureAdConfiguration.jwksUri).toURL()), azureAdConfiguration.issuer) {
             withAudience(Configuration.properties[azure_app.client_id])
@@ -83,7 +82,7 @@ object AuthFactory {
             )
             JWTPrincipal(credentials.payload)
         }
-    }
+    }*/
 
     private fun jwkProvider(url: URL) =
         JwkProviderBuilder(url)

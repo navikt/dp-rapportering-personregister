@@ -12,13 +12,12 @@ import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.azureAd
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 
 fun Application.konfigurasjon(
     auth: AuthenticationConfig.() -> Unit = {
         jwt("tokenX") { tokenX() }
-        jwt("azureAd") { azureAd() }
+        // jwt("azureAd") { azureAd() }
     },
 ) {
     install(Authentication) {

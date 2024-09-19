@@ -26,6 +26,8 @@ spec:
       memory: 256Mi
   secureLogs:
     enabled: true
+  tokenx:
+    enabled: true
   kafka:
     pool: {{ kafka.pool }}
   ingresses:
