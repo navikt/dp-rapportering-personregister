@@ -45,3 +45,10 @@ spec:
           - name: dp-rapportering-personregister
             envVarPrefix: DB
         tier: db-custom-1-3840
+  accessPolicy:
+    inbound:
+      rules:
+        - application: dp-rapportering
+        - application: tokenx-token-generator
+          namespace: aura
+          cluster: dev-gcp
