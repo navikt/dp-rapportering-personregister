@@ -24,7 +24,7 @@ internal fun Application.personstatusApi(personRepository: PersonRepository) {
                     personRepository
                         .finn(ident)
                         ?.also { call.respond(HttpStatusCode.OK, it) }
-                        ?: call.respond(HttpStatusCode.NotFound)
+                        ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
                 }
             }
         }
