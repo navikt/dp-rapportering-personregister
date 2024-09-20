@@ -1,0 +1,4 @@
+### Personstatus
+GET https://dp-rapportering-personregister.intern.dev.nav.no/personstatus
+Accept: application/json
+Authorization: Bearer <token>
