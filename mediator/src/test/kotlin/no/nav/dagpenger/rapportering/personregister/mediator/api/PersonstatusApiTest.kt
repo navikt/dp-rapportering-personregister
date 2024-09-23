@@ -6,20 +6,17 @@ import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
-import kotliquery.queryOf
-import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Søknad
+import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status.Søkt
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-@Disabled
 class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
 
@@ -46,7 +43,14 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `personstatus gir personen hvis den finnes`() =
         setUpTestApplication {
-            opprettPerson(ident)
+            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource)
+
+            Person(ident)
+                .apply { behandle(lagHendelse(ident)) }
+                .also {
+                    personRepository.lagrePerson(it)
+                }
+
             with(
                 client.get("/personstatus") {
                     header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
@@ -56,34 +60,6 @@ class PersonstatusApiTest : ApiTestSetup() {
                 defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
             }
         }
-}
-
-fun opprettPerson(
-    ident: String,
-    hendelse: Hendelse = lagHendelse(ident),
-) {
-    using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                "INSERT INTO person (ident) VALUES (:ident)",
-                mapOf("ident" to ident),
-            ).asUpdate,
-        )
-    }.also { println("Opprettet person med ident $ident") }
-
-    using(sessionOf(dataSource)) { session ->
-        session.run(
-            queryOf(
-                "INSERT INTO hendelse (id, ident, referanse_id, dato, status, kilde) VALUES (?, ?, ?, ?, ?, ?)",
-                hendelse.id,
-                hendelse.ident,
-                hendelse.referanseId,
-                hendelse.dato,
-                hendelse.status.name,
-                hendelse.kilde.name,
-            ).asUpdate,
-        )
-    }.also { println("Opprettet hendelse for person med ident $ident") }
 }
 
 fun lagHendelse(ident: String) =
