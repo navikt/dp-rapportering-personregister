@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
@@ -8,7 +9,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
-import no.nav.helse.rapids_rivers.RapidsConnection
 
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
@@ -17,14 +17,14 @@ internal class ApplicationBuilder(
     private val personstatusMediator = PersonstatusMediator(personRepository)
     private val rapidsConnection =
         RapidApplication
-            .Builder(RapidApplication.RapidApplicationConfig.fromEnv(configuration))
-            .withKtorModule {
-                konfigurasjon()
-                internalApi()
-                personstatusApi(personRepository)
-            }.build()
-            .apply {
-                SøknadMottak(this, personstatusMediator)
+            .create(configuration) { engine, rapid ->
+                with(engine.application) {
+                    konfigurasjon()
+                    internalApi()
+                    personstatusApi(personRepository)
+                }
+                SøknadMottak(rapid, personstatusMediator)
+
             }
 
     init {
