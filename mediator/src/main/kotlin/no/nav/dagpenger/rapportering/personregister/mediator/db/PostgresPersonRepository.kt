@@ -7,6 +7,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import java.time.LocalDateTime
 import javax.sql.DataSource
 
 class PostgresPersonRepository(
@@ -32,10 +34,13 @@ class PostgresPersonRepository(
                 )
 
             if (hendelser.isNotEmpty()) {
-                // Create Person with all hendelser
                 Person(ident).apply {
                     hendelser.forEach { hendelse ->
-                        this.hendelser.put(hendelse.dato, hendelse)
+                        this.hendelser.add(hendelse)
+                    }
+
+                    hentStatusHistorikk(dataSource, ident).allItems().forEach { (dato, status) ->
+                        this.statusHistorikk.put(dato, status)
                     }
                 }
             } else {
@@ -52,8 +57,8 @@ class PostgresPersonRepository(
                 ).asUpdate,
             )
         }
-
-        person.hendelser.allItems().forEach { (date, hendelse) ->
+        lagreStatus(dataSource, person.ident, LocalDateTime.now(), person.status)
+        person.hendelser.forEach { hendelse ->
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf(
@@ -74,3 +79,38 @@ class PostgresPersonRepository(
         TODO("Not yet implemented")
     }
 }
+
+fun lagreStatus(
+    dataSource: DataSource,
+    personIdent: String,
+    dato: LocalDateTime,
+    status: Status,
+) {
+    using(sessionOf(dataSource)) { session ->
+        session.run(
+            queryOf(
+                "INSERT INTO status_historikk (person_ident, dato, status) VALUES (:person_ident, :dato, :status)",
+                mapOf("person_ident" to personIdent, "dato" to dato, "status" to status.toString()),
+            ).asUpdate,
+        )
+    }
+}
+
+fun hentStatusHistorikk(
+    dataSource: DataSource,
+    personIdent: String,
+): TemporalCollection<Status> =
+    using(sessionOf(dataSource)) { session ->
+        val statusHistorikk = TemporalCollection<Status>()
+        session.run(
+            queryOf(
+                "SELECT * FROM status_historikk WHERE person_ident = :person_ident",
+                mapOf("person_ident" to personIdent),
+            ).map { row ->
+                val dato = row.localDateTime("dato")
+                val status = Status.valueOf(row.string("status"))
+                statusHistorikk.put(dato, status)
+            }.asList,
+        )
+        statusHistorikk
+    }

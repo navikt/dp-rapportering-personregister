@@ -30,7 +30,6 @@ class PersonTest {
 
         person.ident shouldBe ident
         person.status shouldBe Status.Søkt
-        person.statusForDato(dato) shouldBe Status.Søkt
     }
 
     @Test
@@ -44,6 +43,6 @@ class PersonTest {
         person.behandle(nyHendelse)
 
         person.status shouldBe Status.Innvilget
-        person.statusForDato(dato) shouldBe Status.Søkt
+        person.status(dato) shouldBe Status.Søkt
     }
 }

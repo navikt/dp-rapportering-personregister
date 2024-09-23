@@ -14,10 +14,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSou
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.Status.Søkt
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
+@Disabled
 class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
 

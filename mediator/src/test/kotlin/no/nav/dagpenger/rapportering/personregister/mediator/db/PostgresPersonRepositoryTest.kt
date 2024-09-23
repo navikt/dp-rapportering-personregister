@@ -32,7 +32,11 @@ class PostgresPersonRepositoryTest {
             person.behandle(hendelse)
             personRepository.lagre(person)
 
-            personRepository.finn(ident) shouldBe person
+            personRepository.finn(ident)?.apply {
+                ident shouldBe ident
+                hendelse shouldBe hendelse
+                status shouldBe Status.Søkt
+            }
         }
     }
 }

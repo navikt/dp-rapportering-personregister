@@ -5,14 +5,17 @@ import java.time.LocalDateTime
 data class Person(
     val ident: String,
 ) {
-    val hendelser: TemporalCollection<Hendelse> = TemporalCollection()
+    val hendelser = mutableListOf<Hendelse>()
 
-    fun behandle(hendelse: Hendelse) {
-        hendelser.put(hendelse.dato, hendelse)
-    }
+    val statusHistorikk = TemporalCollection<Status>()
 
     val status: Status
-        get() = hendelser.get(LocalDateTime.now()).status
+        get() = status(LocalDateTime.now())
 
-    val statusForDato: (LocalDateTime) -> Status = { hendelser.get(it).status }
+    fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
+
+    fun behandle(hendelse: Hendelse) {
+        hendelser.add(hendelse)
+        statusHistorikk.put(hendelse.dato, hendelse.status)
+    }
 }
