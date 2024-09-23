@@ -35,12 +35,12 @@ class PersonstatusMediatorTest {
                 dato = LocalDateTime.now(),
             )
 
-        personRepository.finn(ident) shouldBe null
+        personRepository.hentPerson(ident) shouldBe null
 
         personstatusMediator
             .behandle(søknadHendelse)
 
-        personRepository.finn(ident)?.apply {
+        personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
             status shouldBe Status.Søkt
         }
@@ -62,11 +62,11 @@ class PersonstatusMediatorTest {
         val hendelse = søknadHendelse.tilHendelse()
 
         val person = Person(ident).apply { behandle(hendelse) }
-        personRepository.lagre(person)
+        personRepository.lagrePerson(person)
 
         personstatusMediator.behandle(søknadHendelse)
 
-        personRepository.finn(ident)?.apply {
+        personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
             status shouldBe Status.Søkt
         }
@@ -76,13 +76,13 @@ class PersonstatusMediatorTest {
 class PersonRepositoryFaker : PersonRepository {
     private val personliste = mutableMapOf<String, Person>()
 
-    override fun finn(ident: String): Person? = personliste[ident]
+    override fun hentPerson(ident: String): Person? = personliste[ident]
 
-    override fun lagre(person: Person) {
+    override fun lagrePerson(person: Person) {
         personliste[person.ident] = person
     }
 
-    override fun oppdater(person: Person) {
+    override fun oppdaterPerson(person: Person) {
         personliste.replace(person.ident, person)
     }
 }

@@ -22,7 +22,7 @@ internal fun Application.personstatusApi(personRepository: PersonRepository) {
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
                     personRepository
-                        .finn(ident)
+                        .hentPerson(ident)
                         ?.also { call.respond(HttpStatusCode.OK, it) }
                         ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
                 }

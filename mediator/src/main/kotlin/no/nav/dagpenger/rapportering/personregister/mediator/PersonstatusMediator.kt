@@ -12,14 +12,14 @@ class PersonstatusMediator(
         val hendelse = søknadHendelse.tilHendelse()
 
         personRepository
-            .finn(hendelse.ident)
+            .hentPerson(hendelse.ident)
             ?.let { person ->
                 person.behandle(hendelse)
-                personRepository.oppdater(person)
+                personRepository.oppdaterPerson(person)
             } ?: run {
             Person(hendelse.ident).apply {
                 behandle(hendelse)
-                personRepository.lagre(this)
+                personRepository.lagrePerson(this)
             }
         }
     }

@@ -17,12 +17,12 @@ class InMemoryPersonRepositoryTest {
 
     @Test
     fun `kan lagre en person`() {
-        personRepository.lagre(person)
-        personRepository.finn(person.ident) shouldBe person
+        personRepository.lagrePerson(person)
+        personRepository.hentPerson(person.ident) shouldBe person
     }
 
     @Test
     fun `kan ikke finne en person som ikke er lagret`() {
-        personRepository.finn(person.ident) shouldBe null
+        personRepository.hentPerson(person.ident) shouldBe null
     }
 }

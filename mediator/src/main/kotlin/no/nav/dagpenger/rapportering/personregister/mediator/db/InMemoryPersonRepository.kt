@@ -5,13 +5,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 class InMemoryPersonRepository : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
 
-    override fun finn(ident: String): Person? = personList[ident]
+    override fun hentPerson(ident: String): Person? = personList[ident]
 
-    override fun lagre(person: Person) {
+    override fun lagrePerson(person: Person) {
         personList[person.ident] = person
     }
 
-    override fun oppdater(person: Person) {
+    override fun oppdaterPerson(person: Person) {
         personList[person.ident] = person
     }
 }

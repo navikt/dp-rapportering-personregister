@@ -15,7 +15,7 @@ import javax.sql.DataSource
 class PostgresPersonRepository(
     private val dataSource: DataSource,
 ) : PersonRepository {
-    override fun finn(ident: String): Person? {
+    override fun hentPerson(ident: String): Person? {
         val hendelser = hentHendelser(ident)
         val statusHistorikk = hentStatusHistorikk(ident).allItems()
 
@@ -29,7 +29,7 @@ class PostgresPersonRepository(
         }
     }
 
-    override fun lagre(person: Person) {
+    override fun lagrePerson(person: Person) {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("INSERT INTO person (ident) VALUES (:ident)", mapOf("ident" to person.ident)).asUpdate,
@@ -44,7 +44,7 @@ class PostgresPersonRepository(
             }
     }
 
-    override fun oppdater(person: Person) {
+    override fun oppdaterPerson(person: Person) {
         TODO("Not yet implemented")
     }
 
