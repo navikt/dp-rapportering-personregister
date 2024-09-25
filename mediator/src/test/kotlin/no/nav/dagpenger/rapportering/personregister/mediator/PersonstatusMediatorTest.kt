@@ -4,7 +4,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.BeforeEach
@@ -59,7 +61,14 @@ class PersonstatusMediatorTest {
                 dato = dato,
             )
 
-        val hendelse = søknadHendelse.tilHendelse()
+        val hendelse =
+            Hendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+                status = Status.Søkt,
+                kilde = Kildesystem.Søknad,
+            )
 
         val person = Person(ident).apply { behandle(hendelse) }
         personRepository.lagrePerson(person)
@@ -69,6 +78,27 @@ class PersonstatusMediatorTest {
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
             status shouldBe Status.Søkt
+        }
+    }
+
+    @Test
+    fun `kan behandle vedtak hendelse`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now()
+
+        personstatusMediator.behandle(
+            VedtakHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+                status = Status.Innvilget,
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe Status.Innvilget
         }
     }
 }
