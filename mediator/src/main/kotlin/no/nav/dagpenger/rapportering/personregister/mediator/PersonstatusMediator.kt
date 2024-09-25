@@ -1,8 +1,9 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.tilHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 
 class PersonstatusMediator(
@@ -22,5 +23,8 @@ class PersonstatusMediator(
                 personRepository.lagrePerson(this)
             }
         }
+    }
+
+    fun behandle(vedtakHendelse: VedtakHendelse) {
     }
 }

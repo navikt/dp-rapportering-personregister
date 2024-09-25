@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
+package no.nav.dagpenger.rapportering.personregister.mediator.hendelser
 
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
