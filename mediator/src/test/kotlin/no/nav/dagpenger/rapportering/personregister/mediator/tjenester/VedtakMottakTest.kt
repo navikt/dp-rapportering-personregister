@@ -92,29 +92,17 @@ fun vedtak_event(
             else -> "NEI"
         }
 
-    println("dato: $dato")
-
-    println("Utfallkode: $utfallKode")
     return """
         {
           "table": "SIAMO.VEDTAK",
-          "op_type": "I",
           "op_ts": "$dato",
-          "current_ts": "2020-04-07T14:53:03.656001",
-          "pos": "00000000000000013022",
           "tokens": {
             "FODSELSNR": "$ident"
           },
           "after": {
             "VEDTAK_ID": $referenseId,
-            "SAK_ID": "123",
-            "VEDTAKSTATUSKODE": "IVERK",
             "VEDTAKTYPEKODE": "O",
-            "UTFALLKODE":  "$utfallKode",
-            "RETTIGHETKODE": "DAGO",
-            "PERSON_ID": 4124685,
-            "FRA_DATO": "2018-03-05 00:00:00",
-            "TIL_DATO": null
+            "UTFALLKODE":  "$utfallKode"
           }
         }
         """.trimIndent()
