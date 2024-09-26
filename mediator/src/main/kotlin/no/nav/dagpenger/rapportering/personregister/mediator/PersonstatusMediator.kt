@@ -13,6 +13,7 @@ class PersonstatusMediator(
     private val personRepository: PersonRepository,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
+        logger.info { "Behandler søknadshendelse: $søknadHendelse" }
         behandleHendelse(søknadHendelse.tilHendelse())
     }
 

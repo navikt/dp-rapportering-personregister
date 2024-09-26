@@ -17,8 +17,8 @@ class SøknadMottak(
         River(rapidsConnection)
             .apply {
                 validate { it.demandValue("@event_name", "søknad_innsendt_varsel") }
-                validate { it.requireKey("ident", "søknadId", "@opprettet", "søknadstidspunkt") }
-                validate { it.interestedIn("@id", "@opprettet") }
+                validate { it.requireKey("ident", "søknadId", "søknadstidspunkt") }
+                validate { it.interestedIn("@id") }
             }.register(this)
     }
 
@@ -39,6 +39,6 @@ class SøknadMottak(
 private fun JsonMessage.tilHendelse(): SøknadHendelse {
     val ident = this["ident"].asText()
     val referanseId = this["søknadId"].asText()
-    val dato = this["@opprettet"].asLocalDateTime()
+    val dato = this["søknadstidspunkt"].asLocalDateTime()
     return SøknadHendelse(ident, referanseId, dato)
 }

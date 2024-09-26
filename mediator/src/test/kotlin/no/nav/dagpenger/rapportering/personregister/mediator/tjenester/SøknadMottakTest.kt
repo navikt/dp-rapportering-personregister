@@ -28,7 +28,7 @@ class SøknadMottakTest {
 
         val ident = "12345678903"
         val søknadId = "123e4567-e89b-12d3-a456-426614174000"
-        val dato = LocalDateTime.parse("2024-02-21T11:00:27.899791748")
+        val dato = LocalDateTime.parse("2024-09-01T11:00:27.899791748")
 
         val søknadHendelse = SøknadHendelse(ident, søknadId, dato)
 
@@ -42,26 +42,8 @@ private val søknad_innsendt_event =
     {
       "@id": "675eb2c2-bfba-4939-926c-cf5aac73d163",
       "@event_name": "søknad_innsendt_varsel",
-      "@opprettet": "2024-02-21T11:00:27.899791748",
       "søknadId": "123e4567-e89b-12d3-a456-426614174000",
       "ident": "12345678903",
-      "søknadstidspunkt": "2024-09-01T11:00:27.899791748",
-      "søknadData": {
-        "søknad_uuid": "123e4567-e89b-12d3-a456-426614174000",
-        "@opprettet": "2024-02-21T11:00:27.899791748",
-        "seksjoner": [
-          {
-            "fakta": [
-              {
-                "id": "6001",
-                "svar": "NOR",
-                "type": "land",
-                "beskrivendeId": "faktum.hvilket-land-bor-du-i"
-              }
-            ],
-            "beskrivendeId": "bostedsland"
-          }
-        ]
-      }
+      "søknadstidspunkt": "2024-09-01T11:00:27.899791748"
     }
     """.trimIndent()
