@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
@@ -25,8 +26,9 @@ internal class ApplicationBuilder(
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
+    private val actionTimer = ActionTimer(meterRegistry)
 
-    private val personRepository = PostgresPersonRepository(dataSource)
+    private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val personstatusMediator = PersonstatusMediator(personRepository)
     private val rapidsConnection =
         RapidApplication

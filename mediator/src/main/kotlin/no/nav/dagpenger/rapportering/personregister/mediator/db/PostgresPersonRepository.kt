@@ -4,6 +4,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -14,56 +15,64 @@ import javax.sql.DataSource
 
 class PostgresPersonRepository(
     private val dataSource: DataSource,
+    private val actionTimer: ActionTimer,
 ) : PersonRepository {
-    override fun hentPerson(ident: String): Person? {
-        val hendelser = hentHendelser(ident)
-        val statusHistorikk = hentStatusHistorikk(ident).allItems()
+    override fun hentPerson(ident: String): Person? =
+        actionTimer.timedAction("db-hentPerson") {
+            val hendelser = hentHendelser(ident)
+            val statusHistorikk = hentStatusHistorikk(ident).allItems()
 
-        return if (hendelser.isNotEmpty()) {
-            Person(ident).apply {
-                hendelser.forEach { this.hendelser.add(it) }
-                statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
+            if (hendelser.isNotEmpty()) {
+                Person(ident).apply {
+                    hendelser.forEach { this.hendelser.add(it) }
+                    statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
+                }
+            } else {
+                null
             }
-        } else {
-            null
-        }
-    }
-
-    override fun lagrePerson(person: Person) {
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("INSERT INTO person (ident) VALUES (:ident)", mapOf("ident" to person.ident)).asUpdate,
-            )
         }
 
-        person.hendelser.forEach { lagreHendelse(it) }
-        person.statusHistorikk
-            .allItems()
-            .forEach { (dato, status) ->
-                lagreStatusHistorikk(person.ident, dato, status)
+    override fun lagrePerson(person: Person) =
+        actionTimer.timedAction("db-lagrePerson") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("INSERT INTO person (ident) VALUES (:ident)", mapOf("ident" to person.ident)).asUpdate,
+                )
             }
-    }
 
-    override fun oppdaterPerson(person: Person) {
-        TODO("Not yet implemented")
-    }
+            person.hendelser.forEach { lagreHendelse(it) }
+            person.statusHistorikk
+                .allItems()
+                .forEach { (dato, status) ->
+                    lagreStatusHistorikk(person.ident, dato, status)
+                }
+        }
+
+    override fun oppdaterPerson(person: Person) =
+        actionTimer.timedAction("db-oppdaterPerson") {
+            TODO("Not yet implemented")
+        }
 
     override fun hentAnallPersoner(): Int =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT COUNT(*) FROM person")
-                    .map { it.int(1) }
-                    .asSingle,
-            ) ?: 0
+        actionTimer.timedAction("db-hentAnallPersoner") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM person")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            }
         }
 
     override fun hentAntallHendelser(): Int =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT COUNT(*) FROM hendelse")
-                    .map { it.int(1) }
-                    .asSingle,
-            ) ?: 0
+        actionTimer.timedAction("db-hentAntallHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM hendelse")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            }
         }
 
     private fun lagreHendelse(hendelse: Hendelse) {

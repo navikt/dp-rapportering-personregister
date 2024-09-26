@@ -3,13 +3,16 @@ package no.nav.dagpenger.rapportering.personregister.mediator.metrikker
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.measureTime
 
 private val logger = KotlinLogging.logger {}
 private const val NAMESPACE = "dp_rapportering_personregister"
@@ -74,5 +77,28 @@ class DatabaseMetrikker(
                 }
             },
         )
+    }
+}
+
+class ActionTimer(
+    private val meterRegistry: MeterRegistry,
+) {
+    fun <T> timedAction(
+        navn: String,
+        block: () -> T,
+    ): T {
+        val blockResult: T
+        val tidBrukt =
+            measureTime {
+                blockResult = block()
+            }
+        Timer
+            .builder("${NAMESPACE}_timer")
+            .tag("navn", navn)
+            .description("Indikerer hvor lang tid en funksjon brukte")
+            .register(meterRegistry)
+            .record(tidBrukt.inWholeMilliseconds, MILLISECONDS)
+
+        return blockResult
     }
 }
