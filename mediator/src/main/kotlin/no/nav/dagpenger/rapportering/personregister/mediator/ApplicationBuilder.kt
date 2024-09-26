@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 
 internal class ApplicationBuilder(
@@ -24,7 +25,7 @@ internal class ApplicationBuilder(
                     personstatusApi(personRepository)
                 }
                 SøknadMottak(rapid, personstatusMediator)
-
+                VedtakMottak(rapid, personstatusMediator)
             }
 
     init {
