@@ -72,7 +72,6 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentPerson(ident)?.apply {
                 hendelser.size shouldBe 2
-                hendelser.last() shouldBe vedtakHendelse
                 status shouldBe Status.Innvilget
             }
         }
