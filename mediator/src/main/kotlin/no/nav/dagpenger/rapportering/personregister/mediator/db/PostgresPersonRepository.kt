@@ -45,7 +45,12 @@ class PostgresPersonRepository(
     }
 
     override fun oppdaterPerson(person: Person) {
-        TODO("Not yet implemented")
+        person.hendelser.forEach { lagreHendelse(it) }
+        person.statusHistorikk
+            .allItems()
+            .forEach { (dato, status) ->
+                lagreStatusHistorikk(person.ident, dato, status)
+            }
     }
 
     private fun lagreHendelse(hendelse: Hendelse) {
@@ -53,9 +58,16 @@ class PostgresPersonRepository(
             session.run(
                 queryOf(
                     """
-                    INSERT INTO hendelse (id, ident, referanse_id, dato, status, kilde) 
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
+                INSERT INTO hendelse (id, ident, referanse_id, dato, status, kilde) 
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT (id) 
+                DO UPDATE SET 
+                    ident = EXCLUDED.ident,
+                    referanse_id = EXCLUDED.referanse_id,
+                    dato = EXCLUDED.dato,
+                    status = EXCLUDED.status,
+                    kilde = EXCLUDED.kilde
+                """,
                     hendelse.id,
                     hendelse.ident,
                     hendelse.referanseId,
