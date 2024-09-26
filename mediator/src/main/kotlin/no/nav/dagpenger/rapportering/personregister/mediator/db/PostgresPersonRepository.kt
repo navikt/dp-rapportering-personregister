@@ -48,6 +48,24 @@ class PostgresPersonRepository(
         TODO("Not yet implemented")
     }
 
+    override fun hentAnallPersoner(): Int =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT COUNT(*) FROM person")
+                    .map { it.int(1) }
+                    .asSingle,
+            ) ?: 0
+        }
+
+    override fun hentAntallHendelser(): Int =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT COUNT(*) FROM hendelse")
+                    .map { it.int(1) }
+                    .asSingle,
+            ) ?: 0
+        }
+
     private fun lagreHendelse(hendelse: Hendelse) {
         using(sessionOf(dataSource)) { session ->
             session.run(

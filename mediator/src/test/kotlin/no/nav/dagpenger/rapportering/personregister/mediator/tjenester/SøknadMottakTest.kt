@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -14,7 +15,7 @@ class SøknadMottakTest {
     private val rapporteringMediator = mockk<PersonstatusMediator>(relaxed = true)
 
     init {
-        SøknadMottak(testRapid, rapporteringMediator)
+        SøknadMottak(testRapid, rapporteringMediator, soknadMetrikker)
     }
 
     @BeforeEach

@@ -8,4 +8,8 @@ interface PersonRepository {
     fun lagrePerson(person: Person)
 
     fun oppdaterPerson(person: Person)
+
+    fun hentAnallPersoner(): Int
+
+    fun hentAntallHendelser(): Int
 }

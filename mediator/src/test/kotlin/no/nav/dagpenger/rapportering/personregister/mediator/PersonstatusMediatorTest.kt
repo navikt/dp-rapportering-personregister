@@ -115,4 +115,8 @@ class PersonRepositoryFaker : PersonRepository {
     override fun oppdaterPerson(person: Person) {
         personliste.replace(person.ident, person)
     }
+
+    override fun hentAnallPersoner(): Int = personliste.size
+
+    override fun hentAntallHendelser(): Int = personliste.values.sumOf { it.hendelser.size }
 }

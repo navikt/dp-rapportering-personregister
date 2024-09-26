@@ -8,10 +8,12 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val personStatusMediator: PersonstatusMediator,
+    private val soknadMetrikker: SoknadMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -27,6 +29,7 @@ class SøknadMottak(
         context: MessageContext,
     ) {
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
+        soknadMetrikker.soknaderMottatt.increment()
 
         personStatusMediator.behandle(packet.tilHendelse())
     }

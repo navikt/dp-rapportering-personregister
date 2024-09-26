@@ -14,4 +14,8 @@ class InMemoryPersonRepository : PersonRepository {
     override fun oppdaterPerson(person: Person) {
         personList[person.ident] = person
     }
+
+    override fun hentAnallPersoner(): Int = personList.size
+
+    override fun hentAntallHendelser(): Int = personList.values.sumOf { it.hendelser.size }
 }

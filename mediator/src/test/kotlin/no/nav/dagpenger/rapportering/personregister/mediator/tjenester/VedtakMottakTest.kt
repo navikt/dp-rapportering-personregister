@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.vedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,7 +24,7 @@ class VedtakMottakTest {
     }
 
     init {
-        VedtakMottak(testRapid, personstatusMediator)
+        VedtakMottak(testRapid, personstatusMediator, vedtakMetrikker)
     }
 
     @Test
