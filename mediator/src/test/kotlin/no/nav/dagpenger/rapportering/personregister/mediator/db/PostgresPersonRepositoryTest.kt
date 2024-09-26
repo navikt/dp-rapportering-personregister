@@ -39,4 +39,11 @@ class PostgresPersonRepositoryTest {
             }
         }
     }
+
+    @Test
+    fun `kan ikke hente person dersom person ikke finnes`() {
+        withMigratedDb {
+            personRepository.hentPerson("12345678901") shouldBe null
+        }
+    }
 }
