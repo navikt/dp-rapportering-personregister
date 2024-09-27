@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -43,7 +44,7 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `personstatus gir personen hvis den finnes`() =
         setUpTestApplication {
-            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource)
+            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
 
             Person(ident)
                 .apply { behandle(lagHendelse(ident)) }

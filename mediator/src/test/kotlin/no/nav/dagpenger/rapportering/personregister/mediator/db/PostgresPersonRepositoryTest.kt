@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class PostgresPersonRepositoryTest {
-    private var personRepository = PostgresPersonRepository(dataSource)
+    private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
 
     @Test
     fun `skal lagre og finne person`() {
