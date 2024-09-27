@@ -9,6 +9,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ import java.time.format.DateTimeFormatter
 class VedtakMottak(
     rapidsConnection: RapidsConnection,
     private val personStatusMediator: PersonstatusMediator,
+    private val vedtakMetrikker: VedtakMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -42,7 +44,12 @@ class VedtakMottak(
     ) {
         logger.info { "Mottok nytt vedtak" }
 
-        personStatusMediator.behandle(packet.tilHendelse())
+        personStatusMediator
+            .behandle(
+                packet
+                    .tilHendelse()
+                    .also { vedtakMetrikker.vedtakMottatt(it.status).increment() },
+            )
     }
 
     companion object {

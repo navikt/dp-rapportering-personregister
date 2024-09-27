@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.databas
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.junit.jupiter.api.AfterAll
@@ -71,7 +72,7 @@ open class ApiTestSetup {
                 config = mapAppConfig()
             }
 
-            val personRepository = PostgresPersonRepository(dataSource)
+            val personRepository = PostgresPersonRepository(dataSource, actionTimer)
 
             application {
                 konfigurasjon()
