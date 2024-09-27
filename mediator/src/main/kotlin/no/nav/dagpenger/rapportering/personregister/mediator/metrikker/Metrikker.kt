@@ -33,7 +33,7 @@ class VedtakMetrikker(
     fun vedtakMottatt(status: Status) =
         Counter
             .builder("${NAMESPACE}_vedtak_mottatt_total")
-            .description("Indikerer antall mottatte søknader")
+            .description("Indikerer antall mottatte vedtak")
             .tag("status", status.name)
             .register(meterRegistry)
 }
