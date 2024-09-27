@@ -42,6 +42,43 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
+    fun `kan oppdatere person`() {
+        withMigratedDb {
+            val ident = "12345678901"
+            val referanseId = "123"
+            val dato = LocalDateTime.now().minusDays(1)
+            val person = Person(ident = ident)
+            val søknadHendelse =
+                Hendelse(
+                    ident = ident,
+                    referanseId = referanseId,
+                    dato = dato,
+                    status = Status.Søkt,
+                    kilde = Kildesystem.Søknad,
+                )
+
+            person.behandle(søknadHendelse)
+            personRepository.lagrePerson(person)
+
+            val vedtakHendelse =
+                Hendelse(
+                    ident = ident,
+                    referanseId = "123",
+                    dato = dato.plusDays(1),
+                    status = Status.Innvilget,
+                    kilde = Kildesystem.Arena,
+                )
+            person.behandle(vedtakHendelse)
+            personRepository.oppdaterPerson(person)
+
+            personRepository.hentPerson(ident)?.apply {
+                hendelser.size shouldBe 2
+                status shouldBe Status.Innvilget
+            }
+        }
+    }
+
+    @Test
     fun `kan ikke hente person dersom person ikke finnes`() {
         withMigratedDb {
             personRepository.hentPerson("12345678901") shouldBe null

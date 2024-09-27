@@ -101,6 +101,36 @@ class PersonstatusMediatorTest {
             status shouldBe Status.Innvilget
         }
     }
+
+    @Test
+    fun `kan behandle vedtak hendelse for eksisterende person`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            SøknadHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+            ),
+        )
+
+        personstatusMediator.behandle(
+            VedtakHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato.plusDays(1),
+                status = Status.Innvilget,
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe Status.Innvilget
+            status(dato) shouldBe Status.Søkt
+        }
+    }
 }
 
 class PersonRepositoryFaker : PersonRepository {
