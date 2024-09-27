@@ -48,14 +48,15 @@ class PostgresPersonRepository(
                 }
         }
 
-    override fun oppdaterPerson(person: Person) = actionTimer.timedAction("db-oppdaterPerson") {
-        person.hendelser.forEach { lagreHendelse(it) }
-        person.statusHistorikk
-            .allItems()
-            .forEach { (dato, status) ->
-                lagreStatusHistorikk(person.ident, dato, status)
-            }
-    }
+    override fun oppdaterPerson(person: Person) =
+        actionTimer.timedAction("db-oppdaterPerson") {
+            person.hendelser.forEach { lagreHendelse(it) }
+            person.statusHistorikk
+                .allItems()
+                .forEach { (dato, status) ->
+                    lagreStatusHistorikk(person.ident, dato, status)
+                }
+        }
 
     override fun hentAnallPersoner(): Int =
         actionTimer.timedAction("db-hentAnallPersoner") {
