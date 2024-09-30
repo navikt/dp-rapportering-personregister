@@ -26,7 +26,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.Søkt,
+                    status = Status.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 
@@ -36,7 +36,7 @@ class PostgresPersonRepositoryTest {
             personRepository.hentPerson(ident)?.apply {
                 ident shouldBe ident
                 hendelse shouldBe hendelse
-                status shouldBe Status.Søkt
+                status shouldBe Status.SØKT
             }
         }
     }
@@ -53,7 +53,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.Søkt,
+                    status = Status.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 
@@ -65,7 +65,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = "123",
                     dato = dato.plusDays(1),
-                    status = Status.Innvilget,
+                    status = Status.INNVILGET,
                     kilde = Kildesystem.Arena,
                 )
             person.behandle(vedtakHendelse)
@@ -73,7 +73,7 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentPerson(ident)?.apply {
                 hendelser.size shouldBe 2
-                status shouldBe Status.Innvilget
+                status shouldBe Status.INNVILGET
             }
         }
     }
@@ -97,7 +97,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.Søkt,
+                    status = Status.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 

@@ -13,7 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status.Søkt
+import no.nav.dagpenger.rapportering.personregister.modell.Status.SØKT
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -64,4 +64,4 @@ class PersonstatusApiTest : ApiTestSetup() {
 }
 
 fun lagHendelse(ident: String) =
-    Hendelse(id = UUID.randomUUID(), ident = ident, referanseId = "123", dato = LocalDateTime.now(), status = Søkt, kilde = Søknad)
+    Hendelse(id = UUID.randomUUID(), ident = ident, referanseId = "123", dato = LocalDateTime.now(), status = SØKT, kilde = Søknad)

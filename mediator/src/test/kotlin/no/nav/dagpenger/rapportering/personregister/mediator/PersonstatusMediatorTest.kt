@@ -44,7 +44,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.Søkt
+            status shouldBe Status.SØKT
         }
     }
 
@@ -66,7 +66,7 @@ class PersonstatusMediatorTest {
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.Søkt,
+                status = Status.SØKT,
                 kilde = Kildesystem.Søknad,
             )
 
@@ -77,7 +77,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.Søkt
+            status shouldBe Status.SØKT
         }
     }
 
@@ -92,13 +92,13 @@ class PersonstatusMediatorTest {
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.Innvilget,
+                status = Status.INNVILGET,
             ),
         )
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.Innvilget
+            status shouldBe Status.INNVILGET
         }
     }
 
@@ -121,14 +121,14 @@ class PersonstatusMediatorTest {
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato.plusDays(1),
-                status = Status.Innvilget,
+                status = Status.INNVILGET,
             ),
         )
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.Innvilget
-            status(dato) shouldBe Status.Søkt
+            status shouldBe Status.INNVILGET
+            status(dato) shouldBe Status.SØKT
         }
     }
 }

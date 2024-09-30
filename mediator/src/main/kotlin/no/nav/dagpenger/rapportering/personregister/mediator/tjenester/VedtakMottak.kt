@@ -64,8 +64,8 @@ private fun JsonMessage.tilHendelse(): VedtakHendelse {
 
     val status =
         when (this["after"]["UTFALLKODE"].asText()) {
-            "JA" -> Status.Innvilget
-            "NEI" -> Status.Avslag
+            "JA" -> Status.INNVILGET
+            "NEI" -> Status.AVSLÅTT
             else -> throw IllegalArgumentException("Ukjent utfallskode")
         }
 

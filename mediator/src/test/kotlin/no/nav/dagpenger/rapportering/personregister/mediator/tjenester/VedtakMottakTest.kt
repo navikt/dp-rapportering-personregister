@@ -32,7 +32,7 @@ class VedtakMottakTest {
         val ident = "12345678901"
         val referenseId = "29501880"
         val dato = "2020-04-07 14:31:08.840468"
-        val status = Status.Innvilget
+        val status = Status.INNVILGET
 
         testRapid.sendTestMessage(
             vedtak_event(
@@ -58,7 +58,7 @@ class VedtakMottakTest {
         val ident = "12345678901"
         val referenseId = "29501880"
         val dato = "2020-04-07 14:31:08.840468"
-        val status = Status.Avslag
+        val status = Status.AVSLÅTT
 
         testRapid.sendTestMessage(
             vedtak_event(
@@ -89,7 +89,7 @@ fun vedtak_event(
 ): String {
     val utfallKode =
         when (status) {
-            Status.Innvilget -> "JA"
+            Status.INNVILGET -> "JA"
             else -> "NEI"
         }
 
