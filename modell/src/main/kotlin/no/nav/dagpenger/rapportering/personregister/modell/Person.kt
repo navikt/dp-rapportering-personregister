@@ -6,16 +6,18 @@ data class Person(
     val ident: String,
 ) {
     val hendelser = mutableListOf<Hendelse>()
-
     val statusHistorikk = TemporalCollection<Status>()
-
-    val status: Status
-        get() = status(LocalDateTime.now())
 
     fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
 
+    val status: Status
+        get() = if (statusHistorikk.isNotEmpty()) status(LocalDateTime.now()) else Status.UKJENT
+
     fun behandle(hendelse: Hendelse) {
         hendelser.add(hendelse)
-        statusHistorikk.put(hendelse.dato, hendelse.status)
+
+        SimpleStatusStrategyFactory()
+            .createStrategy(this)
+            .also { it.håndter(this, hendelse) }
     }
 }
