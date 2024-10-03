@@ -17,9 +17,10 @@ class PersonSteps : No {
             person = Person(ident)
         }
 
-        Gitt("en person søkt om dagpenger den {string} med søknadId {string}") { søknadsdato: String, søknadId: String ->
+        Gitt("en person som søkt om dagpenger den {string} med søknadId {string}") { søknadsdato: String, søknadId: String ->
             person = Person(ident)
             person.behandle(lagHendelse(søknadsdato, søknadId, Status.SØKT, Kildesystem.Søknad))
+            println(person)
         }
 
         Gitt("en person som fikk avslag") {
@@ -27,7 +28,12 @@ class PersonSteps : No {
             person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.AVSLÅTT, Kildesystem.Arena))
         }
 
-        Gitt("en person har dagpengerrettighet") {
+        Gitt("en person som fikk stans") {
+            person = Person(ident)
+            person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.STANSET, Kildesystem.Arena))
+        }
+
+        Gitt("en person som har dagpengerrettighet") {
             person = Person(ident)
             person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.INNVILGET, Kildesystem.Arena))
         }
@@ -38,16 +44,22 @@ class PersonSteps : No {
 
         Når("personen får vedtak om innvilgelse den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->
             person.behandle(lagHendelse(vedtaksdato, vedtakId, Status.INNVILGET, Kildesystem.Arena))
+            println(person)
         }
 
         Når("personen får vedtak om avslag den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->
             person.behandle(lagHendelse(vedtaksdato, vedtakId, Status.AVSLÅTT, Kildesystem.Arena))
+        }
+
+        Når("personen får vedtak om stans den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->
+            person.behandle(lagHendelse(vedtaksdato, vedtakId, Status.STANSET, Kildesystem.Arena))
         }
         Når("personen klager og får medhold den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->
             person.behandle(lagHendelse(vedtaksdato, vedtakId, Status.INNVILGET, Kildesystem.Arena))
         }
 
         Så("skal status være {string}") { status: String ->
+            println("hello ")
             person.status shouldBe Status.valueOf(status)
         }
     }

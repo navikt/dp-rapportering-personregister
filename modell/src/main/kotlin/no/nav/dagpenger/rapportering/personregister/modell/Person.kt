@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
+import SimpleStatusStrategyFactory
 import java.time.LocalDateTime
 
 data class Person(
