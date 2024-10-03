@@ -8,7 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHe
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 class SøknadMottakTest {
     private val testRapid = TestRapid()
@@ -29,7 +29,7 @@ class SøknadMottakTest {
 
         val ident = "12345678903"
         val søknadId = "123e4567-e89b-12d3-a456-426614174000"
-        val dato = LocalDateTime.parse("2024-09-01T11:00:27.899791748")
+        val dato = OffsetDateTime.parse("2024-10-03T16:14:40+02:00").toLocalDateTime()
 
         val søknadHendelse = SøknadHendelse(ident, søknadId, dato)
 
@@ -45,6 +45,7 @@ private val søknad_innsendt_event =
       "@event_name": "søknad_innsendt_varsel",
       "søknadId": "123e4567-e89b-12d3-a456-426614174000",
       "ident": "12345678903",
-      "søknadstidspunkt": "2024-09-01T11:00:27.899791748"
+      "søknadstidspunkt": "2024-10-03T16:14:40+02:00" 
+      
     }
     """.trimIndent()

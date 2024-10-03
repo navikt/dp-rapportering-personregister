@@ -2,13 +2,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import java.time.OffsetDateTime
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
@@ -46,6 +46,12 @@ class SøknadMottak(
 private fun JsonMessage.tilHendelse(): SøknadHendelse {
     val ident = this["ident"].asText()
     val referanseId = this["søknadId"].asText()
-    val dato = this["søknadstidspunkt"].asLocalDateTime()
+    val datoString = this["søknadstidspunkt"].asText()
+    val dato = OffsetDateTime.parse(datoString).toLocalDateTime()
+
     return SøknadHendelse(ident, referanseId, dato)
+}
+
+fun main() {
+    println("Hello, World!")
 }
