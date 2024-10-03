@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 enum class Status {
-    UKJENT,
+    IKKE_REGISTRERT,
     SØKT,
     INNVILGET,
     AVSLÅTT,
