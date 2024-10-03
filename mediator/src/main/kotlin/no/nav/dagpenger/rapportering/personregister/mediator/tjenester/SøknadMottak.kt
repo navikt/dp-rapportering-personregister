@@ -31,7 +31,11 @@ class SøknadMottak(
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
         soknadMetrikker.soknaderMottatt.increment()
 
-        personStatusMediator.behandle(packet.tilHendelse())
+        try {
+            personStatusMediator.behandle(packet.tilHendelse())
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av søknad $e" }
+        }
     }
 
     companion object {
