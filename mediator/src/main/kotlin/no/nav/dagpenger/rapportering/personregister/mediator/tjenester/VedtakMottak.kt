@@ -44,12 +44,16 @@ class VedtakMottak(
     ) {
         logger.info { "Mottok nytt vedtak" }
 
-        personStatusMediator
-            .behandle(
-                packet
-                    .tilHendelse()
-                    .also { vedtakMetrikker.vedtakMottatt(it.status).increment() },
-            )
+        try {
+            personStatusMediator
+                .behandle(
+                    packet
+                        .tilHendelse()
+                        .also { vedtakMetrikker.vedtakMottatt(it.status).increment() },
+                )
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av vedtak $e" }
+        }
     }
 
     companion object {
