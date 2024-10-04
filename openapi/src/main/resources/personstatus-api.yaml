@@ -39,14 +39,15 @@ components:
         ident:
           type: string
         status:
-          $ref: '#/components/schemas/Staus'
-    Staus:
+          $ref: '#/components/schemas/Status'
+    Status:
       type: string
       enum:
-        - Søkt
-        - Innvilget
-        - Avslag
-        - Stans
+        - IKKE_REGISTRERT
+        - SØKT
+        - INNVILGET
+        - AVSLÅTT
+        - STANSET
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)

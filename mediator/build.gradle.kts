@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation(project(":modell"))
+    implementation(project(":openapi"))
 
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
