@@ -22,12 +22,12 @@ abstract class BaseStatusStrategy : StatusStrategy {
     }
 }
 
-object IkkeRegistrertStatusStrategy : BaseStatusStrategy() {
+object DefaultStatusStrategy : StatusStrategy {
     override fun håndter(
         person: Person,
         hendelse: Hendelse,
     ) {
-        oppdaterStatus(person, hendelse, setOf(Status.SØKT, Status.INNVILGET, Status.AVSLÅTT, Status.STANSET))
+        person.statusHistorikk.put(hendelse.dato, hendelse.status)
     }
 }
 
@@ -73,11 +73,15 @@ interface StatusStrategyFactory {
 
 class SimpleStatusStrategyFactory : StatusStrategyFactory {
     override fun createStrategy(person: Person): StatusStrategy =
-        when (person.status) {
-            Status.IKKE_REGISTRERT -> IkkeRegistrertStatusStrategy
-            Status.SØKT -> SøktStatusStrategy
-            Status.AVSLÅTT -> AvslåttStatusStrategy
-            Status.INNVILGET -> InnvilgetStatusStrategy
-            Status.STANSET -> StansetStatusStrategy
+
+        try {
+            when (person.status) {
+                Status.SØKT -> SøktStatusStrategy
+                Status.AVSLÅTT -> AvslåttStatusStrategy
+                Status.INNVILGET -> InnvilgetStatusStrategy
+                Status.STANSET -> StansetStatusStrategy
+            }
+        } catch (e: Exception) {
+            DefaultStatusStrategy
         }
 }

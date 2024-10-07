@@ -13,7 +13,6 @@ import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 
 private val logger = KotlinLogging.logger {}
 
@@ -35,13 +34,7 @@ internal fun Application.personstatusApi(personRepository: PersonRepository) {
                                 ),
                             )
                         }
-                        ?: call.respond(
-                            HttpStatusCode.OK,
-                            PersonResponse(
-                                ident = ident,
-                                status = StatusResponse.valueOf(Status.IKKE_REGISTRERT.name),
-                            ),
-                        )
+                        ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
                 }
             }
         }

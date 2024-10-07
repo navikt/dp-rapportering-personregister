@@ -12,7 +12,7 @@ data class Person(
     fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
 
     val status: Status
-        get() = if (statusHistorikk.isNotEmpty()) status(LocalDateTime.now()) else Status.IKKE_REGISTRERT
+        get() = status(LocalDateTime.now())
 
     fun behandle(hendelse: Hendelse) {
         hendelser.add(hendelse)

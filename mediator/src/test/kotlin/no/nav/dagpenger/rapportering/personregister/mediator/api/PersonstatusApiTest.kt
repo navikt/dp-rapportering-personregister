@@ -37,7 +37,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                     header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
                 },
             ) {
-                status shouldBe HttpStatusCode.OK
+                status shouldBe HttpStatusCode.NotFound
             }
         }
 
