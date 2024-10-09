@@ -13,7 +13,7 @@ class PersonstatusMediator(
     private val personRepository: PersonRepository,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
-        logger.info { "Behandler søknadshendelse: $søknadHendelse" }
+        sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
         behandleHendelse(søknadHendelse.tilHendelse())
     }
 
@@ -28,7 +28,7 @@ class PersonstatusMediator(
                 kilde = vedtakHendelse.kildesystem,
             )
 
-        logger.info { "Behandler vedtakshendelse: $hendelse" }
+        sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
         behandleHendelse(hendelse)
     }
 
@@ -46,7 +46,7 @@ class PersonstatusMediator(
                 }
             }
 
-            logger.info { "Behandlet hendelse: $hendelse" }
+            sikkerlogg.info { "Behandlet hendelse: $hendelse" }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av hendelse: $hendelse" }
         }
@@ -54,5 +54,6 @@ class PersonstatusMediator(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 }
