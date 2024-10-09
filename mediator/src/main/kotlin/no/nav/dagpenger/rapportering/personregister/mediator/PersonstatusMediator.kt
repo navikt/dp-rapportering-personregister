@@ -48,12 +48,11 @@ class PersonstatusMediator(
 
             sikkerlogg.info { "Behandlet hendelse: $hendelse" }
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av hendelse: $hendelse" }
+            sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
         }
     }
 
     companion object {
-        private val logger = KotlinLogging.logger {}
         val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 }
