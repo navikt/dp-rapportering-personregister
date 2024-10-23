@@ -138,6 +138,8 @@ class PersonRepositoryFaker : PersonRepository {
 
     override fun hentPerson(ident: String): Person? = personliste[ident]
 
+    override fun hentPersonerUtenArbeidssøkerstatus(): List<Person> = personliste.values.filter { it.erArbeidssøker() == null }
+
     override fun lagrePerson(person: Person) {
         personliste[person.ident] = person
     }

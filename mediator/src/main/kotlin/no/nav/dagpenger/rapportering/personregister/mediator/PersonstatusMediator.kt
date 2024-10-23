@@ -7,6 +7,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHen
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.RegistrertSomArbeidssøkerLøsning
+import java.time.LocalDate
 import java.util.UUID
 
 class PersonstatusMediator(
@@ -49,6 +51,26 @@ class PersonstatusMediator(
             sikkerlogg.info { "Behandlet hendelse: $hendelse" }
         } catch (e: Exception) {
             sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
+        }
+    }
+
+    fun behandle(løsning: RegistrertSomArbeidssøkerLøsning) {
+        try {
+            personRepository
+                .hentPerson(løsning.ident)
+                ?.let { person ->
+                    if (løsning.gyldigFraOgMed.isBefore(LocalDate.now().plusDays(1)) && løsning.gyldigTilOgMed.isAfter(LocalDate.now())) {
+                        person.settArbeidssøker(løsning.verdi)
+                        personRepository.oppdaterPerson(person)
+                        sikkerlogg.info { "Oppdatert person med arbeidssøkerstatus: $løsning" }
+                    } else {
+                        sikkerlogg.warn { "Fikk ugyldig virkningsdato for løsning: $løsning" }
+                    }
+                } ?: run {
+                sikkerlogg.warn { "Fikk løsning for person som ikke finnes: $løsning" }
+            }
+        } catch (e: Exception) {
+            sikkerlogg.error(e) { "Feil ved behandling av løsning: $løsning" }
         }
     }
 

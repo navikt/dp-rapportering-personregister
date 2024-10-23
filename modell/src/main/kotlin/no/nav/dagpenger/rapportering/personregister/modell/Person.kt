@@ -8,6 +8,7 @@ data class Person(
 ) {
     val hendelser = mutableListOf<Hendelse>()
     val statusHistorikk = TemporalCollection<Status>()
+    private var arbeidssøker: Boolean? = null
 
     fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
 
@@ -20,5 +21,11 @@ data class Person(
         SimpleStatusStrategyFactory()
             .createStrategy(this)
             .also { it.håndter(this, hendelse) }
+    }
+
+    fun erArbeidssøker(): Boolean? = arbeidssøker
+
+    fun settArbeidssøker(arbeidssøker: Boolean) {
+        this.arbeidssøker = arbeidssøker
     }
 }
