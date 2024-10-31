@@ -59,7 +59,11 @@ class PersonstatusMediator(
             personRepository
                 .hentPerson(løsning.ident)
                 ?.let { person ->
-                    if (løsning.gyldigFraOgMed.isBefore(LocalDate.now().plusDays(1)) && løsning.gyldigTilOgMed.isAfter(LocalDate.now())) {
+                    if (løsning.gyldigFraOgMed.isBefore(
+                            LocalDate.now().plusDays(1),
+                        ) // && løsning.gyldigTilOgMed.isAfter(LocalDate.now())
+                        // TODO: Ser ut som at alle får gyldigFraOgMed og gyldigTilOgMed satt til samme dato
+                    ) {
                         person.settArbeidssøker(løsning.verdi)
                         personRepository.oppdaterPerson(person)
                         sikkerlogg.info { "Oppdatert person med arbeidssøkerstatus: $løsning" }
