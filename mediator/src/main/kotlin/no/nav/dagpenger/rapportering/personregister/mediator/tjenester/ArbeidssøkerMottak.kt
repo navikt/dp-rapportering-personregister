@@ -28,6 +28,7 @@ class ArbeidssøkerMottak(
         context: MessageContext,
     ) {
         logger.info { "Mottok løsning på behov om arbeidssøker" }
+        sikkerlogg.info { "Mottok løsning på behov om arbeidssøker. Packet: ${packet.toJson()}" }
 
         try {
             personStatusMediator.behandle(packet.tilRegistrertSomArbeidssøkerLøsning())
@@ -38,6 +39,7 @@ class ArbeidssøkerMottak(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 }
 
