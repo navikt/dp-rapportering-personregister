@@ -8,8 +8,13 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.EnvironmentVariables
+import com.natpryce.konfig.Key
 import com.natpryce.konfig.getValue
 import com.natpryce.konfig.overriding
+import com.natpryce.konfig.stringType
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.oauth2.CachedOauth2Client
+import no.nav.dagpenger.oauth2.OAuth2Config
 
 internal object Configuration {
     const val APP_NAME = "dp-rapportering-personregister"
@@ -30,6 +35,47 @@ internal object Configuration {
         properties.list().reversed().fold(emptyMap()) { map, pair ->
             map + pair.second
         }
+
+    val arbeidssoekerregisterUrl by lazy {
+        properties[Key("ARBEIDSSOKERREGISTER_HOST", stringType)].let {
+            "https://$it"
+        }
+    }
+
+    // val arbeidssoekerregisterAudience by lazy { properties[Key("ARBEIDSSOKERREGISTER_AUDIENCE", stringType)] }
+
+    private val azureAdConfig by lazy { OAuth2Config.AzureAd(properties) }
+    private val azureAdClient by lazy {
+        CachedOauth2Client(
+            tokenEndpointUrl = azureAdConfig.tokenEndpointUrl,
+            authType = azureAdConfig.clientSecret(),
+        )
+    }
+
+    val tokenProvider: () -> String by lazy {
+        {
+            runBlocking {
+                azureAdClient
+                    .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)])
+                    .accessToken ?: throw RuntimeException("Failed to get token")
+            }
+        }
+    }
+
+/*    private val azureAd by lazy {
+        val aad = OAuth2Config.AzureAd(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = aad.tokenEndpointUrl,
+            authType = aad.clientSecret(),
+        )
+    }
+
+    fun azureADClient() =
+        { audience: String ->
+            azureAd
+                .clientCredentials(audience)
+                .accessToken
+        }*/
 
     val defaultObjectMapper: ObjectMapper =
         ObjectMapper()

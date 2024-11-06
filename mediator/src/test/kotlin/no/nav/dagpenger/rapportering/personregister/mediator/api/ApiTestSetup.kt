@@ -6,6 +6,7 @@ import io.ktor.server.testing.testApplication
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -76,7 +77,7 @@ open class ApiTestSetup {
 
             application {
                 konfigurasjon()
-                internalApi()
+                internalApi(ArbeidssøkerregisterConnector())
                 personstatusApi(personRepository)
             }
 
@@ -92,6 +93,8 @@ open class ApiTestSetup {
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("GITHUB_SHA", "some_sha")
+        System.setProperty("ARBEIDSSOKERREGISTER_HOST", "http://arbeidssokerregister")
+        System.setProperty("ARBEIDSSOKERREGISTER_SCOPE", "api://arbeidssokerregister/.default")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =
