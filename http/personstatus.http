@@ -2,3 +2,7 @@
 GET https://dp-rapportering-personregister.intern.dev.nav.no/personstatus
 Accept: application/json
 Authorization: Bearer <token>
+
+###
+GET https://dp-rapportering-personregister.intern.dev.nav.no/arbeidssoker?ident=26886999568
+Accept: application/json

@@ -38,7 +38,7 @@ class ArbeidssøkerregisterConnector(
             val result =
                 httpClient
                     .post(URI("$arbeidssøkerregisterUrl/api/v1/arbeidssoekerperioder").toURL()) {
-                        header(HttpHeaders.Authorization, "Bearer ${tokenProvider()}")
+                        header(HttpHeaders.Authorization, "Bearer $tokenProvider")
                         contentType(ContentType.Application.Json)
                         parameter("siste", true)
                         setBody(defaultObjectMapper.writeValueAsString(ArbeidssøkerperiodeRequestBody(ident)))
