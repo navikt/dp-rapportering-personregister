@@ -70,3 +70,4 @@ jobs:
           RESOURCE: .nais/nais.yaml
           VAR: image=${{ needs.build.outputs.image }},githubSha=${{ github.sha }}
           VARS: .nais/vars-${{ inputs.environment }}.yaml
+          PRINT_PAYLOAD: true
