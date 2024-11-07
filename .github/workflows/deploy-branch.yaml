@@ -13,8 +13,8 @@ on:
         required: true
 
 permissions:
-  contents: read
-  id-token: write
+  contents: "read"
+  id-token: "write"
 
 jobs:
   build:
@@ -43,7 +43,6 @@ jobs:
 
       - name: docker-build-push
         uses: nais/docker-build-push@v0
-        if: github.ref == 'refs/heads/main'
         id: docker-build-push
         with:
           team: teamdagpenger
