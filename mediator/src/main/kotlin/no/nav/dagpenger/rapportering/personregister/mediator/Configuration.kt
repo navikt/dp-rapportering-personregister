@@ -42,7 +42,7 @@ internal object Configuration {
         }
     }
 
-    // val arbeidssoekerregisterAudience by lazy { properties[Key("ARBEIDSSOKERREGISTER_AUDIENCE", stringType)] }
+    val arbeidssoekerregisterScope: String by lazy { properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)] }
 
     private val azureAdConfig by lazy { OAuth2Config.AzureAd(properties) }
     private val azureAdClient by lazy {
@@ -56,7 +56,7 @@ internal object Configuration {
         {
             runBlocking {
                 azureAdClient
-                    .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)])
+                    .clientCredentials(arbeidssoekerregisterScope)
                     .accessToken ?: throw RuntimeException("Failed to get token")
             }
         }
