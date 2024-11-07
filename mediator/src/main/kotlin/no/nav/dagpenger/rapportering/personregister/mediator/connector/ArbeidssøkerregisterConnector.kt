@@ -35,10 +35,12 @@ class ArbeidssøkerregisterConnector(
 
     suspend fun hentSisteArbeidssøkerperiode(ident: String) =
         withContext(Dispatchers.IO) {
+            logger.info { "Scope: ${Configuration.arbeidssoekerregisterScope}" }
+            val token = tokenProvider.invoke()
             val result =
                 httpClient
                     .post(URI("$arbeidssøkerregisterUrl/api/v1/arbeidssoekerperioder").toURL()) {
-                        header(HttpHeaders.Authorization, "Bearer $tokenProvider")
+                        header(HttpHeaders.Authorization, "Bearer $token")
                         contentType(ContentType.Application.Json)
                         parameter("siste", true)
                         setBody(defaultObjectMapper.writeValueAsString(ArbeidssøkerperiodeRequestBody(ident)))
