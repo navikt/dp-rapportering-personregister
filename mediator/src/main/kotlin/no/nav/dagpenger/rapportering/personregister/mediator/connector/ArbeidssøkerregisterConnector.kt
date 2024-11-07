@@ -8,14 +8,13 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.jackson.jackson
@@ -36,11 +35,12 @@ class ArbeidssøkerregisterConnector(
     suspend fun hentSisteArbeidssøkerperiode(ident: String) =
         withContext(Dispatchers.IO) {
             logger.info { "Scope: ${Configuration.arbeidssoekerregisterScope}" }
-            val token = tokenProvider.invoke()
+            logger.info { "Lazy scope: ${Configuration.lazyArbeidssoekerregisterScope}" }
+            val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
             val result =
                 httpClient
                     .post(URI("$arbeidssøkerregisterUrl/api/v1/arbeidssoekerperioder").toURL()) {
-                        header(HttpHeaders.Authorization, "Bearer $token")
+                        bearerAuth(token)
                         contentType(ContentType.Application.Json)
                         parameter("siste", true)
                         setBody(defaultObjectMapper.writeValueAsString(ArbeidssøkerperiodeRequestBody(ident)))
