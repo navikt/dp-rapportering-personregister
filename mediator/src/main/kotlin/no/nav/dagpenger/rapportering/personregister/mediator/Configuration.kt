@@ -57,7 +57,7 @@ internal object Configuration {
         {
             runBlocking {
                 azureAdClient
-                    .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)])
+                    .clientCredentials("api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default")
                     .accessToken ?: throw RuntimeException("Failed to get token")
             }
         }
