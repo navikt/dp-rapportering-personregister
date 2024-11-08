@@ -7,9 +7,9 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 
-fun Application.internalApi(arbeidssøkerregisterConnector: ArbeidssøkerregisterConnector) {
+fun Application.internalApi(arbeidssøkerConnector: ArbeidssøkerConnector) {
     routing {
         get("/") {
             call.respond(HttpStatusCode.OK)
@@ -23,7 +23,7 @@ fun Application.internalApi(arbeidssøkerregisterConnector: Arbeidssøkerregiste
         get("/arbeidssoker") {
             val ident = call.request.queryParameters["ident"]
             if (ident != null) {
-                val arbeidssoker = arbeidssøkerregisterConnector.hentSisteArbeidssøkerperiode(ident)
+                val arbeidssoker = arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
                 call.respondText(arbeidssoker)
             } else {
                 call.respond(HttpStatusCode.BadRequest, "Mangler ident")

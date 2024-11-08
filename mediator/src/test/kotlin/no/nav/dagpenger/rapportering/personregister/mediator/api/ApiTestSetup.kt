@@ -6,7 +6,7 @@ import io.ktor.server.testing.testApplication
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -77,7 +77,7 @@ open class ApiTestSetup {
 
             application {
                 konfigurasjon()
-                internalApi(ArbeidssøkerregisterConnector())
+                internalApi(ArbeidssøkerConnector())
                 personstatusApi(personRepository)
             }
 

@@ -1,13 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -16,21 +9,18 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
-import io.ktor.serialization.jackson.jackson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import java.net.URI
-import java.time.Duration
 
-class ArbeidssøkerregisterConnector(
+class ArbeidssøkerConnector(
     private val arbeidssøkerregisterUrl: String = Configuration.arbeidssoekerregisterUrl,
     private val tokenProvider: () -> String? = Configuration.tokenProvider,
+    private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val httpClient = createHttpClient()
-
     suspend fun hentSisteArbeidssøkerperiode(ident: String) =
         withContext(Dispatchers.IO) {
             val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
@@ -63,23 +53,3 @@ class ArbeidssøkerregisterConnector(
 data class ArbeidssøkerperiodeRequestBody(
     val identitetsnummer: String,
 )
-
-fun createHttpClient() =
-    HttpClient(CIO.create {}) {
-        expectSuccess = false
-
-        install(HttpTimeout) {
-            connectTimeoutMillis = Duration.ofSeconds(60).toMillis()
-            requestTimeoutMillis = Duration.ofSeconds(60).toMillis()
-            socketTimeoutMillis = Duration.ofSeconds(60).toMillis()
-        }
-
-        install(ContentNegotiation) {
-            jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            }
-        }
-    }

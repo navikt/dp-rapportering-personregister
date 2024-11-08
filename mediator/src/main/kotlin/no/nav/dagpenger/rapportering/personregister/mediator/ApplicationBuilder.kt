@@ -8,7 +8,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -32,7 +32,7 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val arbeidssøkerregisterConnector = ArbeidssøkerregisterConnector()
+    private val arbeidssøkerConnector = ArbeidssøkerConnector()
 
     private val personstatusMediator = PersonstatusMediator(personRepository)
     private val rapidsConnection =
@@ -40,7 +40,7 @@ internal class ApplicationBuilder(
             .create(configuration) { engine, rapid ->
                 with(engine.application) {
                     konfigurasjon()
-                    internalApi(arbeidssøkerregisterConnector)
+                    internalApi(arbeidssøkerConnector)
                     personstatusApi(personRepository)
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
