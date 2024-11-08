@@ -42,9 +42,6 @@ internal object Configuration {
         }
     }
 
-    val lazyArbeidssoekerregisterScope by lazy { properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)] }
-    val arbeidssoekerregisterScope = properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)]
-
     private val azureAdConfig by lazy { OAuth2Config.AzureAd(properties) }
     private val azureAdClient by lazy {
         CachedOauth2Client(
@@ -57,26 +54,11 @@ internal object Configuration {
         {
             runBlocking {
                 azureAdClient
-                    .clientCredentials("api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default")
+                    .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_SCOPE", stringType)])
                     .accessToken ?: throw RuntimeException("Failed to get token")
             }
         }
     }
-
-/*    private val azureAd by lazy {
-        val aad = OAuth2Config.AzureAd(properties)
-        CachedOauth2Client(
-            tokenEndpointUrl = aad.tokenEndpointUrl,
-            authType = aad.clientSecret(),
-        )
-    }
-
-    fun azureADClient() =
-        { audience: String ->
-            azureAd
-                .clientCredentials(audience)
-                .accessToken
-        }*/
 
     val defaultObjectMapper: ObjectMapper =
         ObjectMapper()
