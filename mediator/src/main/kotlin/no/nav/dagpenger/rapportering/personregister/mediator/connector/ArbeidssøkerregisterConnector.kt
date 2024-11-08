@@ -9,7 +9,6 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -34,8 +33,6 @@ class ArbeidssøkerregisterConnector(
 
     suspend fun hentSisteArbeidssøkerperiode(ident: String) =
         withContext(Dispatchers.IO) {
-            logger.info { "Scope: ${Configuration.arbeidssoekerregisterScope}" }
-            logger.info { "Lazy scope: ${Configuration.lazyArbeidssoekerregisterScope}" }
             val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
             val result =
                 httpClient
