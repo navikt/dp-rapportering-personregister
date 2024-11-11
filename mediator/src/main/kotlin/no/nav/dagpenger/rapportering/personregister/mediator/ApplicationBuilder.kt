@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.ktor.server.engine.embeddedServer
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -21,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.HentArbei
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
+import io.ktor.server.cio.CIO as CIOEngine
 
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
@@ -37,7 +39,10 @@ internal class ApplicationBuilder(
     private val personstatusMediator = PersonstatusMediator(personRepository)
     private val rapidsConnection =
         RapidApplication
-            .create(configuration) { engine, rapid ->
+            .create(
+                env = configuration,
+                builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
+            ) { engine, rapid ->
                 with(engine.application) {
                     konfigurasjon()
                     internalApi(arbeidssøkerConnector)
