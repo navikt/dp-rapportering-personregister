@@ -11,10 +11,17 @@ import io.ktor.server.application.install
 import io.ktor.server.auth.Authentication
 import io.ktor.server.auth.AuthenticationConfig
 import io.ktor.server.auth.jwt.jwt
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 
 fun Application.konfigurasjon(
+    meterRegistry: PrometheusMeterRegistry,
     auth: AuthenticationConfig.() -> Unit = {
         jwt("tokenX") { tokenX() }
     },
@@ -40,5 +47,16 @@ fun Application.konfigurasjon(
             disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             enable(SerializationFeature.INDENT_OUTPUT)
         }
+    }
+
+    install(MicrometerMetrics) {
+        registry = meterRegistry
+        meterBinders =
+            listOf(
+                JvmMemoryMetrics(),
+                JvmGcMetrics(),
+                JvmThreadMetrics(),
+                ProcessorMetrics(),
+            )
     }
 }

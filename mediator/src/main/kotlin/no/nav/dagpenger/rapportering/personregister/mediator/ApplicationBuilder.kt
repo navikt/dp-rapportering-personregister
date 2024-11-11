@@ -44,8 +44,8 @@ internal class ApplicationBuilder(
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
                 with(engine.application) {
-                    konfigurasjon()
-                    internalApi(arbeidssøkerConnector)
+                    konfigurasjon(meterRegistry)
+                    internalApi(arbeidssøkerConnector, meterRegistry)
                     personstatusApi(personRepository)
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
