@@ -3,6 +3,10 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
+import io.micrometer.core.instrument.Clock
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -71,12 +75,12 @@ open class ApiTestSetup {
             environment {
                 config = mapAppConfig()
             }
-
+            val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
 
             application {
-                konfigurasjon()
-                internalApi()
+                konfigurasjon(meterRegistry)
+                internalApi(meterRegistry)
                 personstatusApi(personRepository)
             }
 

@@ -37,8 +37,8 @@ internal class ApplicationBuilder(
         RapidApplication
             .create(configuration) { engine, rapid ->
                 with(engine.application) {
-                    konfigurasjon()
-                    internalApi()
+                    konfigurasjon(meterRegistry)
+                    internalApi(meterRegistry)
                     personstatusApi(personRepository)
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
