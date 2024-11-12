@@ -4,5 +4,5 @@ Accept: application/json
 Authorization: Bearer <token>
 
 ###
-GET https://dp-rapportering-personregister.intern.dev.nav.no/arbeidssoker?ident=26886999568
+GET https://dp-rapportering-personregister.intern.dev.nav.no/arbeidssoker?ident=22837397069
 Accept: application/json

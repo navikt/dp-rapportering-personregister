@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -14,6 +15,7 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
 import java.net.URI
 
 class ArbeidssøkerConnector(
@@ -21,7 +23,7 @@ class ArbeidssøkerConnector(
     private val tokenProvider: () -> String? = Configuration.tokenProvider,
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    suspend fun hentSisteArbeidssøkerperiode(ident: String) =
+    suspend fun hentSisteArbeidssøkerperiode(ident: String): List<ArbeidssøkerperiodeResponse> =
         withContext(Dispatchers.IO) {
             val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
             val result =
@@ -32,16 +34,21 @@ class ArbeidssøkerConnector(
                         parameter("siste", true)
                         setBody(defaultObjectMapper.writeValueAsString(ArbeidssøkerperiodeRequestBody(ident)))
                     }.also {
-                        logger.info { "Kall til arbeidssøkerregister for å hente profilering ga status ${it.status}" }
-                        sikkerlogg.info { "Kall til arbeidssøkerregister for å hente profilering for $ident ga status ${it.status}" }
+                        logger.info { "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode ga status ${it.status}" }
+                        sikkerlogg.info {
+                            "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for $ident ga status ${it.status}"
+                        }
                     }
 
-            val body = result.bodyAsText()
             if (result.status != HttpStatusCode.OK) {
-                logger.warn { "Uforventet HTTP status ${result.status.value} ved henting av profilering" }
-                sikkerlogg.warn { "Uforventet HTTP status ${result.status.value} ved henting av profilering for $ident. Response: $body" }
+                val body = result.bodyAsText()
+                logger.warn { "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode" }
+                sikkerlogg.warn {
+                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for $ident. Response: $body"
+                }
+                throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode")
             }
-            body
+            result.body()
         }
 
     companion object {

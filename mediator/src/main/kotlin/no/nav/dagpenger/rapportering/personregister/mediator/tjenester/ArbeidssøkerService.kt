@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
 
 class ArbeidssøkerService(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
@@ -9,5 +10,6 @@ class ArbeidssøkerService(
         TODO()
     }
 
-    private suspend fun hentRegistreringsperiodeId(ident: String): String = arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
+    private suspend fun hentRegistreringsperiodeId(ident: String): List<ArbeidssøkerperiodeResponse> =
+        arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
 }
