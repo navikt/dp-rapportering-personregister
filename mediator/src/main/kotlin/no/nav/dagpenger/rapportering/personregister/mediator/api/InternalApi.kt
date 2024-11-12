@@ -9,10 +9,10 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerService
 
 fun Application.internalApi(
-    arbeidssøkerConnector: ArbeidssøkerConnector,
+    arbeidssøkerService: ArbeidssøkerService,
     meterRegistry: PrometheusMeterRegistry,
 ) {
     routing {
@@ -31,7 +31,7 @@ fun Application.internalApi(
         get("/arbeidssoker") {
             val ident = call.request.queryParameters["ident"]
             if (ident != null) {
-                val arbeidssoker = arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
+                val arbeidssoker = arbeidssøkerService.hentRegistreringsperiodeId(ident)
                 call.respondText(defaultObjectMapper.writeValueAsString(arbeidssoker))
             } else {
                 call.respond(HttpStatusCode.BadRequest, "Mangler ident")

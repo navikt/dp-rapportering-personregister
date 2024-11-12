@@ -1,7 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
+import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
+import java.util.UUID
 
 class ArbeidssøkerService(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
@@ -10,6 +11,19 @@ class ArbeidssøkerService(
         TODO()
     }
 
-    private suspend fun hentRegistreringsperiodeId(ident: String): List<ArbeidssøkerperiodeResponse> =
-        arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
+    suspend fun hentRegistreringsperiodeId(ident: String): UUID {
+        val sisteArbeidssøkerperiodeListe = arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
+        if (sisteArbeidssøkerperiodeListe.isEmpty()) {
+            logger.error { "Fant ingen arbeidssøkerperiode" }
+            sikkerlogg.error { "Fant ingen arbeidssøkerperiode for ident = $ident" }
+            throw IllegalStateException("Fant ingen arbeidssøkerperiode")
+        } else {
+            return sisteArbeidssøkerperiodeListe.first().periodeId
+        }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger {}
+        val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
+    }
 }
