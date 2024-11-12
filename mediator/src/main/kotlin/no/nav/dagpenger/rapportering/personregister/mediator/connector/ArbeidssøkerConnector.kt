@@ -26,7 +26,7 @@ class ArbeidssøkerConnector(
             val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
             val result =
                 httpClient
-                    .post(URI("$arbeidssøkerregisterUrl/api/v1/arbeidssoekerperioder").toURL()) {
+                    .post(URI("$arbeidssøkerregisterUrl/api/v1/veileder/arbeidssoekerperioder").toURL()) {
                         bearerAuth(token)
                         contentType(ContentType.Application.Json)
                         parameter("siste", true)
