@@ -1,21 +1,26 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.RegistrertSomArbeidssøkerLøsning
-import java.time.LocalDate
 import java.util.UUID
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
+    private val arbeidssøkerService: ArbeidssøkerService,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
+        runBlocking { arbeidssøkerService.hentSisteAktiveRegistreringsperiode(søknadHendelse.ident) }
+            ?.let { arbeidssøkerHendelse ->
+                behandleHendelse(arbeidssøkerHendelse.tilHendelse())
+            }
         behandleHendelse(søknadHendelse.tilHendelse())
     }
 
@@ -51,30 +56,6 @@ class PersonstatusMediator(
             sikkerlogg.info { "Behandlet hendelse: $hendelse" }
         } catch (e: Exception) {
             sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
-        }
-    }
-
-    fun behandle(løsning: RegistrertSomArbeidssøkerLøsning) {
-        try {
-            personRepository
-                .hentPerson(løsning.ident)
-                ?.let { person ->
-                    if (løsning.gyldigFraOgMed.isBefore(
-                            LocalDate.now().plusDays(1),
-                        ) // && løsning.gyldigTilOgMed.isAfter(LocalDate.now())
-                        // TODO: Ser ut som at alle får gyldigFraOgMed og gyldigTilOgMed satt til samme dato
-                    ) {
-                        person.settArbeidssøker(løsning.verdi)
-                        personRepository.oppdaterPerson(person)
-                        sikkerlogg.info { "Oppdatert person med arbeidssøkerstatus: $løsning" }
-                    } else {
-                        sikkerlogg.warn { "Fikk ugyldig virkningsdato for løsning: $løsning" }
-                    }
-                } ?: run {
-                sikkerlogg.warn { "Fikk løsning for person som ikke finnes: $løsning" }
-            }
-        } catch (e: Exception) {
-            sikkerlogg.error(e) { "Feil ved behandling av løsning: $løsning" }
         }
     }
 

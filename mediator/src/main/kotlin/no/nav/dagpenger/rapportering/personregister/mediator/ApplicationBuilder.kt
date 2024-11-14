@@ -17,9 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.HentArbeidssøkerstatusJob
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -38,7 +36,7 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 
-    private val personstatusMediator = PersonstatusMediator(personRepository)
+    private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -47,14 +45,12 @@ internal class ApplicationBuilder(
             ) { engine, rapid ->
                 with(engine.application) {
                     konfigurasjon(meterRegistry)
-                    internalApi(arbeidssøkerService, meterRegistry)
+                    internalApi(meterRegistry)
                     personstatusApi(personRepository)
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
-                ArbeidssøkerMottak(rapid, personstatusMediator)
             }
-    private val hentArbeidssøkerstatusJob = HentArbeidssøkerstatusJob(rapidsConnection, personRepository)
 
     init {
         rapidsConnection.register(this)
@@ -67,7 +63,5 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-
-        hentArbeidssøkerstatusJob.start()
     }
 }

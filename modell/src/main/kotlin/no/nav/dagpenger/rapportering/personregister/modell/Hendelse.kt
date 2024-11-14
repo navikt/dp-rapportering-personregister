@@ -15,4 +15,5 @@ data class Hendelse(
 enum class Kildesystem {
     Søknad,
     Arena,
+    Arbeidssokerregisteret,
 }
