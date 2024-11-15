@@ -12,7 +12,7 @@ class ArbeidssøkerService(
         TODO()
     }
 
-    suspend fun hentSisteAktiveRegistreringsperiode(ident: String): ArbeidssøkerHendelse? {
+    suspend fun hentArbeidssøkerHendelse(ident: String): ArbeidssøkerHendelse? {
         val sisteArbeidssøkerperiodeListe = arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident)
         return if (sisteArbeidssøkerperiodeListe.isEmpty()) {
             logger.error { "Fant ingen arbeidssøkerperiode" }
@@ -30,7 +30,7 @@ class ArbeidssøkerService(
     }
 
     suspend fun hentRegistreringsperiodeId(ident: String): UUID =
-        hentSisteAktiveRegistreringsperiode(ident)?.periodeId
+        hentArbeidssøkerHendelse(ident)?.periodeId
             ?: throw RuntimeException("Fant ingen aktiv arbeidssøkerperiode")
 
     companion object {

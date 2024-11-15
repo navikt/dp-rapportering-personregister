@@ -17,7 +17,7 @@ class PersonstatusMediator(
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        runBlocking { arbeidssøkerService.hentSisteAktiveRegistreringsperiode(søknadHendelse.ident) }
+        runBlocking { arbeidssøkerService.hentArbeidssøkerHendelse(søknadHendelse.ident) }
             ?.let { arbeidssøkerHendelse ->
                 behandleHendelse(arbeidssøkerHendelse.tilHendelse())
             }
