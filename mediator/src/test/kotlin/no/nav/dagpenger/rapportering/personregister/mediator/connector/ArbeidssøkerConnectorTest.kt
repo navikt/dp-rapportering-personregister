@@ -4,7 +4,12 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.BrukerResponse
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.MetadataResponse
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerConnectorTest {
@@ -82,34 +87,39 @@ class ArbeidssøkerConnectorTest {
 fun arbeidssøkerResponse(
     periodeId: UUID,
     inkluderAvsluttet: Boolean = true,
-) = """
-    [
-      {
-        "periodeId": "$periodeId",
-        "startet": {
-          "tidspunkt": "2024-11-01T10:36:48.045Z",
-          "utfoertAv": { "type": "SLUTTBRUKER", "id": "12345678901" },
-          "kilde": "europe-north1-docker.pkg.dev/nais-management-233d/paw/paw-arbeidssokerregisteret-api-inngang:24.11.01.127-1",
-          "aarsak": "Er over 18 år, er bosatt i Norge i henhold Folkeregisterloven",
-          "tidspunktFraKilde": null
-        }
-        ${if (inkluderAvsluttet) {
-    """
-        ,
-        "avsluttet": {
-        "tidspunkt": "2024-11-04T11:20:33.372Z",
-        "utfoertAv": {
-            "type": "SYSTEM",
-            "id": "europe-north1-docker.pkg.dev/nais-management-233d/paw/paw-arbeidssoekerregisteret-bekreftelse-utgang:24.11.01.38-1"
-        },
-        "kilde": "paw.arbeidssoekerregisteret.bekreftelse-utgang",
-        "aarsak": "Graceperiode utløpt",
-        "tidspunktFraKilde": null
-    }
-    """.trimIndent()
-} else {
-    ""
-}}
-      }
-    ]
-    """.trimIndent()
+) = defaultObjectMapper
+    .writeValueAsString(
+        listOf(
+            ArbeidssøkerperiodeResponse(
+                periodeId = periodeId,
+                startet =
+                    MetadataResponse(
+                        tidspunkt = LocalDateTime.now().minusWeeks(3),
+                        utfoertAv =
+                            BrukerResponse(
+                                type = "SLUTTBRUKER",
+                                id = "12345678910",
+                            ),
+                        kilde = "kilde",
+                        aarsak = "aarsak",
+                        tidspunktFraKilde = null,
+                    ),
+                avsluttet =
+                    if (inkluderAvsluttet) {
+                        MetadataResponse(
+                            tidspunkt = LocalDateTime.now().minusDays(2),
+                            utfoertAv =
+                                BrukerResponse(
+                                    type = "SYSTEM",
+                                    id = "paw-arbeidssoekerregisteret-bekreftelse-utgang:24.11.01.38-1",
+                                ),
+                            kilde = "kilde",
+                            aarsak = "Graceperiode utløpt",
+                            tidspunktFraKilde = null,
+                        )
+                    } else {
+                        null
+                    },
+            ),
+        ),
+    )
