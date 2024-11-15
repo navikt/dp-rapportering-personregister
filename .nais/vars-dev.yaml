@@ -1,2 +1,5 @@
 kafka:
   pool: nav-dev
+
+ARBEIDSSOKERREGISTER_HOST: oppslag-arbeidssoekerregisteret.intern.dev.nav.no
+ARBEIDSSOKERREGISTER_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default

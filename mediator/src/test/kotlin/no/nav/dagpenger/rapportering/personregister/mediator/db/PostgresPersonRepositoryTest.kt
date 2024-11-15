@@ -42,34 +42,6 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
-    fun `kan hente personer uten arbeidssøkerstatus`() {
-        withMigratedDb {
-            val ident = "12345678901"
-            val referanseId = "123"
-            val dato = LocalDateTime.now()
-            val person = Person(ident = ident)
-            val hendelse =
-                Hendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = dato,
-                    status = Status.SØKT,
-                    kilde = Kildesystem.Søknad,
-                )
-
-            person.behandle(hendelse)
-            personRepository.lagrePerson(person)
-
-            personRepository.hentPersonerUtenArbeidssøkerstatus().size shouldBe 1
-
-            person.settArbeidssøker(true)
-            personRepository.oppdaterPerson(person)
-
-            personRepository.hentPersonerUtenArbeidssøkerstatus().size shouldBe 0
-        }
-    }
-
-    @Test
     fun `kan oppdatere person`() {
         withMigratedDb {
             val ident = "12345678901"

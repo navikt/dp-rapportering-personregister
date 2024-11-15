@@ -96,6 +96,8 @@ open class ApiTestSetup {
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("GITHUB_SHA", "some_sha")
+        System.setProperty("ARBEIDSSOKERREGISTER_HOST", "http://arbeidssokerregister")
+        System.setProperty("ARBEIDSSOKERREGISTER_SCOPE", "api://arbeidssokerregister/.default")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =

@@ -36,7 +36,16 @@ object SøktStatusStrategy : BaseStatusStrategy() {
         person: Person,
         hendelse: Hendelse,
     ) {
-        oppdaterStatus(person, hendelse, setOf(Status.INNVILGET, Status.AVSLÅTT))
+        oppdaterStatus(person, hendelse, setOf(Status.ARBS, Status.INNVILGET, Status.AVSLÅTT))
+    }
+}
+
+object ArbsStatusStrategy : BaseStatusStrategy() {
+    override fun håndter(
+        person: Person,
+        hendelse: Hendelse,
+    ) {
+        oppdaterStatus(person, hendelse, setOf(Status.SØKT, Status.INNVILGET, Status.AVSLÅTT))
     }
 }
 
@@ -77,6 +86,7 @@ class SimpleStatusStrategyFactory : StatusStrategyFactory {
         try {
             when (person.status) {
                 Status.SØKT -> SøktStatusStrategy
+                Status.ARBS -> ArbsStatusStrategy
                 Status.AVSLÅTT -> AvslåttStatusStrategy
                 Status.INNVILGET -> InnvilgetStatusStrategy
                 Status.STANSET -> StansetStatusStrategy

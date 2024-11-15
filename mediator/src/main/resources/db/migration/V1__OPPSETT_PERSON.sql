@@ -1,7 +1,6 @@
 CREATE TABLE person
 (
-    ident VARCHAR(255) PRIMARY KEY,
-    arbeidssoker BOOLEAN
+    ident VARCHAR(255) PRIMARY KEY
 );
 
 CREATE TABLE status_historikk

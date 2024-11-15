@@ -19,13 +19,11 @@ class PostgresPersonRepository(
 ) : PersonRepository {
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
-            val arbeidssøker = hentArbeidssøkerstatus(ident)
             val hendelser = hentHendelser(ident)
             val statusHistorikk = hentStatusHistorikk(ident).allItems()
 
             if (hendelser.isNotEmpty()) {
                 Person(ident).apply {
-                    arbeidssøker?.let { settArbeidssøker(it) }
                     hendelser.forEach { this.hendelser.add(it) }
                     statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
                 }
@@ -34,29 +32,13 @@ class PostgresPersonRepository(
             }
         }
 
-    override fun hentPersonerUtenArbeidssøkerstatus(): List<Person> =
-        actionTimer.timedAction("db-hentPersonUtenArbeidssøkerStatus") {
-            using(sessionOf(dataSource)) { session ->
-                session.run(
-                    queryOf("SELECT ident FROM person WHERE arbeidssoker IS NULL")
-                        .map { it.string("ident") }
-                        .asList,
-                )
-            }.mapNotNull { hentPerson(it) }
-        }
-
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
                     tx.run(
-                        queryOf(
-                            "INSERT INTO person (ident, arbeidssoker) VALUES (:ident, :arbeidssoker)",
-                            mapOf(
-                                "ident" to person.ident,
-                                "arbeidssoker" to person.erArbeidssøker(),
-                            ),
-                        ).asUpdate,
+                        queryOf("INSERT INTO person (ident) VALUES (:ident)", mapOf("ident" to person.ident))
+                            .asUpdate,
                     )
                 }
             }
@@ -71,20 +53,6 @@ class PostgresPersonRepository(
 
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
-            using(sessionOf(dataSource)) { session ->
-                session.transaction { tx ->
-                    tx.run(
-                        queryOf(
-                            "UPDATE person SET arbeidssoker = :arbeidssoker WHERE ident = :ident",
-                            mapOf(
-                                "ident" to person.ident,
-                                "arbeidssoker" to person.erArbeidssøker(),
-                            ),
-                        ).asUpdate,
-                    )
-                }
-            }
-
             person.hendelser.forEach { lagreHendelse(it) }
             person.statusHistorikk
                 .allItems()
@@ -142,15 +110,6 @@ class PostgresPersonRepository(
             }
         }
     }
-
-    private fun hentArbeidssøkerstatus(ident: String): Boolean? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT arbeidssoker FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> row.stringOrNull("arbeidssoker").toBooleanOrNull() }
-                    .asSingle,
-            )
-        }
 
     private fun hentHendelser(ident: String): List<Hendelse> =
         using(sessionOf(dataSource)) { session ->

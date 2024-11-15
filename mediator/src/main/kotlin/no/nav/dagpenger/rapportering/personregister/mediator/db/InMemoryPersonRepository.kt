@@ -7,8 +7,6 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun hentPerson(ident: String): Person? = personList[ident]
 
-    override fun hentPersonerUtenArbeidssøkerstatus(): List<Person> = personList.values.filter { it.erArbeidssøker() == null }
-
     override fun lagrePerson(person: Person) {
         personList[person.ident] = person
     }

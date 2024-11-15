@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.ktor.server.engine.embeddedServer
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -8,6 +9,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -15,11 +17,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.HentArbeidssøkerstatusJob
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
+import io.ktor.server.cio.CIO as CIOEngine
 
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
@@ -31,11 +33,16 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private val arbeidssøkerConnector = ArbeidssøkerConnector()
+    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 
-    private val personstatusMediator = PersonstatusMediator(personRepository)
+    private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
         RapidApplication
-            .create(configuration) { engine, rapid ->
+            .create(
+                env = configuration,
+                builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
+            ) { engine, rapid ->
                 with(engine.application) {
                     konfigurasjon(meterRegistry)
                     internalApi(meterRegistry)
@@ -43,9 +50,7 @@ internal class ApplicationBuilder(
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
-                ArbeidssøkerMottak(rapid, personstatusMediator)
             }
-    private val hentArbeidssøkerstatusJob = HentArbeidssøkerstatusJob(rapidsConnection, personRepository)
 
     init {
         rapidsConnection.register(this)
@@ -58,7 +63,5 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-
-        hentArbeidssøkerstatusJob.start()
     }
 }
