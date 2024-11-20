@@ -14,3 +14,6 @@ spec:
     - team: teamdagpenger
       application: *
       access: readwrite   # read, write, readwrite
+    - team: teamdagpenger
+      application: abdifatah.bashi
+      access: readwrite
