@@ -9,5 +9,8 @@ spec:
   pool: nav-dev
   acl:
     - team: teamdagpenger
+      application: dp-rapportering-personregister
+      access: readwrite   # read, write, readwrite
+    - team: teamdagpenger
       application: *
       access: readwrite   # read, write, readwrite
