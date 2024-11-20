@@ -12,7 +12,7 @@ class KafkaConsumer {
     fun start() {
         try {
             factory.createConsumer(APP_NAME).use { consumer ->
-                consumer.subscribe(listOf("test-topic"))
+                consumer.subscribe(listOf("teamdagpeger.test-topic"))
                 logger.info { "Consumer subscribed to topic 'my-topic'" }
 
                 while (true) {
