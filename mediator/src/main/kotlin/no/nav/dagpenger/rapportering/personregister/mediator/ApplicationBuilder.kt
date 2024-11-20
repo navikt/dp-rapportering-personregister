@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.KafkaConsumer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -36,6 +37,8 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 
+    private val kafkaConsumer = KafkaConsumer()
+
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
         RapidApplication
@@ -58,6 +61,7 @@ internal class ApplicationBuilder(
 
     internal fun start() {
         rapidsConnection.start()
+        kafkaConsumer.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {

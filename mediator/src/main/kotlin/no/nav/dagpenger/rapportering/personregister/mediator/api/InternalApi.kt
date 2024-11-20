@@ -44,6 +44,9 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
                 val produsent = factory.createProducer()
 
                 produsent.send(ProducerRecord("my-topic", body.key, body.value))
+
+                logger.info { "Produserte melding med key: ${body.key} og value: ${body.value}" }
+                call.respond(HttpStatusCode.OK)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to process message" }
                 call.respond(HttpStatusCode.InternalServerError)
