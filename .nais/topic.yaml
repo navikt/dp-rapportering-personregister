@@ -1,0 +1,13 @@
+apiVersion: kafka.nais.io/v1
+kind: Topic
+metadata:
+  name: test-topic
+  namespace: teamdagpenger
+  labels:
+    team: teamdagpenger
+spec:
+  pool: nav-dev
+  acl:
+    - team: teamdagpenger
+      application: *
+      access: readwrite   # read, write, readwrite

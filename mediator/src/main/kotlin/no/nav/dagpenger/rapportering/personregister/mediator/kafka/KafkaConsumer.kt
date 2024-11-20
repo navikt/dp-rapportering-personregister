@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 import com.github.navikt.tbd_libs.kafka.AivenConfig
 import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.APP_NAME
 import java.time.Duration
 
 class KafkaConsumer {
@@ -10,8 +11,8 @@ class KafkaConsumer {
 
     fun start() {
         try {
-            factory.createConsumer("my-group").use { consumer ->
-                consumer.subscribe(listOf("my-topic"))
+            factory.createConsumer(APP_NAME).use { consumer ->
+                consumer.subscribe(listOf("test-topic"))
                 logger.info { "Consumer subscribed to topic 'my-topic'" }
 
                 while (true) {
