@@ -10,7 +10,7 @@ Content-Type: application/json
 
 {
   "key": "test key",
-  "value": "Innhold fra dp-personregisterr"
+  "value": "Innhold fra personregister"
 }
 
 ### Personstatus
