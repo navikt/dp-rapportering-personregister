@@ -11,9 +11,10 @@ class KafkaConsumer {
 
     fun start() {
         try {
+            logger.info { "Starter kafkaConsumer" }
             factory.createConsumer(APP_NAME).use { consumer ->
-                consumer.subscribe(listOf("teamdagpeger.test-topic"))
-                logger.info { "Consumer subscribed to topic 'my-topic'" }
+                consumer.subscribe(listOf("teamdagpenger.test-topic"))
+                logger.info { "Consumer subscribed to topic 'teamdagpenger.test-topic'" }
 
                 while (true) {
                     val records = consumer.poll(Duration.ofMillis(1000)) // Poll messages every second
