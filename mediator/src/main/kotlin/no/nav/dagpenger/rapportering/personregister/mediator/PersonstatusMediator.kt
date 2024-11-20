@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
@@ -37,6 +38,15 @@ class PersonstatusMediator(
 
         sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
         behandleHendelse(hendelse)
+    }
+
+    fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
+        sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
+        if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
+            behandleHendelse(arbeidssøkerHendelse.tilHendelse())
+        } else {
+            sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
+        }
     }
 
     private fun behandleHendelse(hendelse: Hendelse) {

@@ -21,7 +21,7 @@ class ArbeidssøkerService(
         } else {
             if (sisteArbeidssøkerperiodeListe.first().avsluttet == null) {
                 sisteArbeidssøkerperiodeListe.first().let {
-                    ArbeidssøkerHendelse(ident = ident, periodeId = it.periodeId, dato = it.startet.tidspunkt)
+                    ArbeidssøkerHendelse(ident = ident, periodeId = it.periodeId, startDato = it.startet.tidspunkt)
                 }
             } else {
                 null
