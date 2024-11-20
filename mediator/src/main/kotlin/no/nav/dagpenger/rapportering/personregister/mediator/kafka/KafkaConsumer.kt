@@ -17,7 +17,7 @@ class KafkaConsumer {
                     val records = consumer.poll(1000) // Poll messages every second
                     records.forEach { record ->
                         logger.info {
-                            "Received message: Key=${record.key()}, Value=${record.value()}, Partition=${record.partition()}, Offset=${record.offset()}"
+                            "Received message: Key=${record.key()}, Value=${record.value()}"
                         }
                     }
                 }

@@ -37,6 +37,7 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
         }
 
         post("/test") {
+            logger.info { "Mottok melding som skal sendes" }
             try {
                 val body = call.receive<KafkaMessage>()
 
@@ -51,6 +52,7 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
                 logger.error(e) { "Failed to process message" }
                 call.respond(HttpStatusCode.InternalServerError)
             }
+            call.respond(HttpStatusCode.OK, "Return etter try")
         }
     }
 }

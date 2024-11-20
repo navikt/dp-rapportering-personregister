@@ -2,3 +2,16 @@
 GET https://dp-rapportering-personregister.intern.dev.nav.no/personstatus
 Accept: application/json
 Authorization: Bearer <token>
+
+
+### Kafka
+POST https://dp-rapportering-personregister.intern.dev.nav.no/test
+Content-Type: application/json
+
+{
+  "key": "test key",
+  "value": "Innhold fra dp-personregisterr"
+}
+
+### Personstatus
+GET https://dp-rapportering-personregister.intern.dev.nav.no/isAlive
