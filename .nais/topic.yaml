@@ -12,7 +12,7 @@ spec:
       application: dp-rapportering-personregister
       access: readwrite   # read, write, readwrite
     - team: teamdagpenger
-      application: abdifatah.bashi
+      application: abdifatah-bashi
       access: readwrite
     - team: teamdagpenger
       application: yrjanaff
