@@ -60,12 +60,12 @@ internal class ApplicationBuilder(
     }
 
     internal fun start() {
-        kafkaConsumer.start()
         rapidsConnection.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
+        kafkaConsumer.start()
     }
 }
