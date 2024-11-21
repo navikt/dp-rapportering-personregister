@@ -60,8 +60,8 @@ internal class ApplicationBuilder(
     }
 
     internal fun start() {
-        rapidsConnection.start()
         kafkaConsumer.start()
+        rapidsConnection.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {

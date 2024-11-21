@@ -4,14 +4,18 @@ import com.github.navikt.tbd_libs.kafka.AivenConfig
 import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.APP_NAME
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import java.time.Duration
 
+private val logger = KotlinLogging.logger {}
+
 class KafkaConsumer {
-    val factory = ConsumerProducerFactory(AivenConfig.default)
+    private val factory = ConsumerProducerFactory(AivenConfig.default)
 
     fun start() {
         try {
             logger.info { "Starter kafkaConsumer" }
+            logger.info { "AivenConfig ${defaultObjectMapper.writeValueAsString(AivenConfig.default)}" }
             factory.createConsumer(APP_NAME).use { consumer ->
                 consumer.subscribe(listOf("teamdagpenger.test-topic"))
                 logger.info { "Consumer subscribed to topic 'teamdagpenger.test-topic'" }
@@ -28,9 +32,5 @@ class KafkaConsumer {
         } catch (e: Exception) {
             logger.error(e) { "KafkaConsumer feilet!" }
         }
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger {}
     }
 }
