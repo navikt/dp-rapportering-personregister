@@ -1,17 +1,27 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 
-import com.github.navikt.tbd_libs.kafka.AivenConfig
-import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.APP_NAME
-import java.time.Duration
+import org.apache.kafka.clients.consumer.KafkaConsumer
 
 private val logger = KotlinLogging.logger {}
 
-class KafkaConsumer {
-    private val factory = ConsumerProducerFactory(AivenConfig.default)
+class TestKonsument(
+    konsument: KafkaConsumer<String, String>,
+    topic: String,
+) : KafkaKonsument<String>(consumer = konsument, topic = topic) {
+    // private val factory = ConsumerProducerFactory(AivenConfig.default)
 
-    fun start() {
+    override fun stream() {
+        stream { meldinger ->
+            meldinger.forEach { melding ->
+                logger.info {
+                    "Received message: Key=${melding.key()}, Value=${melding.value()}"
+                }
+            }
+        }
+    }
+
+   /* fun start() {
         try {
             logger.info { "Starter kafkaConsumer" }
             factory.createConsumer(APP_NAME).use { consumer ->
@@ -30,5 +40,5 @@ class KafkaConsumer {
         } catch (e: Exception) {
             logger.error(e) { "KafkaConsumer feilet!" }
         }
-    }
+    }*/
 }
