@@ -23,6 +23,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseM
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -41,10 +42,12 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 
-    val factory = ConsumerProducerFactory(AivenConfig.default)
-    val testKonsument = TestKonsument(konsument = factory.createConsumer(APP_NAME), topic = "teamdagpenger.test-topic")
-
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+
+    private val factory = ConsumerProducerFactory(AivenConfig.default)
+    private val testKonsument = TestKonsument(konsument = factory.createConsumer(APP_NAME), topic = "teamdagpenger.test-topic")
+    private val arbeidssøkerperiodeMottak = ArbeidssøkerperiodeMottak(factory.createConsumer(APP_NAME), personstatusMediator)
+
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -72,5 +75,6 @@ internal class ApplicationBuilder(
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
         startLytting(testKonsument)
+        startLytting(arbeidssøkerperiodeMottak)
     }
 }

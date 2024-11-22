@@ -1,46 +1,39 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers.River
-import com.github.navikt.tbd_libs.rapids_and_rivers.River.PacketListener
-import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.KafkaKonsument
+import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.Periode
+import org.apache.kafka.clients.consumer.Consumer
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.util.UUID
+
+private const val ARBEIDSSØKER_PERIODE_TOPIC = "paw.arbeidssokerperioder-v1"
 
 class ArbeidssøkerperiodeMottak(
-    rapidsConnection: RapidsConnection,
+    konsument: Consumer<String, String>,
     private val personstatusMediator: PersonstatusMediator,
-) : PacketListener {
-    init {
-        River(rapidsConnection)
-            .apply {
-                validate { it.requireKey("id", "identitetsnummer", "startet") }
-                validate { it.interestedIn("avsluttet") }
+) : KafkaKonsument<String>(consumer = konsument, topic = ARBEIDSSØKER_PERIODE_TOPIC) {
+    override fun stream() {
+        stream { meldinger ->
+            meldinger.forEach { melding ->
+                logger.info {
+                    logger.info { "Mottok melding om endring i arbeidssøkerperiode" }
+                    try {
+                        personstatusMediator
+                            .behandle(
+                                defaultObjectMapper
+                                    .readValue(melding.value(), Periode::class.java)
+                                    .tilHendelse(),
+                            )
+                    } catch (e: Exception) {
+                        logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
+                    }
+                }
             }
-    }
-
-    override fun onPacket(
-        packet: JsonMessage,
-        context: MessageContext,
-    ) {
-        logger.info { "Mottok melding om endring i arbeidssøkerperiode" }
-
-        try {
-            personstatusMediator
-                .behandle(
-                    packet
-                        .tilHendelse(),
-                    // .also { TODO("Skal vi ha med metrikker her?") },
-                )
-        } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av arbeidssøkerperiode $e" }
         }
     }
 
@@ -49,17 +42,12 @@ class ArbeidssøkerperiodeMottak(
     }
 }
 
-private fun JsonMessage.tilHendelse(): ArbeidssøkerHendelse =
+private fun Periode.tilHendelse(): ArbeidssøkerHendelse =
     ArbeidssøkerHendelse(
-        ident = this["identitetsnummer"].asText(),
-        periodeId = UUID.fromString(this["id"].asText()),
-        startDato = this["startet"]["tidspunkt"].asLong().convertMillisToLocalDateTime(),
-        sluttDato =
-            if (this["avsluttet"].isMissingOrNull()) {
-                null
-            } else {
-                this["avsluttet"].let { it["tidspunkt"].asLong().convertMillisToLocalDateTime() }
-            },
+        ident = this.identitetsnummer,
+        periodeId = this.id,
+        startDato = this.startet.tidspunkt.convertMillisToLocalDateTime(),
+        sluttDato = this.avsluttet?.tidspunkt?.convertMillisToLocalDateTime(),
     )
 
 fun Long.convertMillisToLocalDateTime(): LocalDateTime =

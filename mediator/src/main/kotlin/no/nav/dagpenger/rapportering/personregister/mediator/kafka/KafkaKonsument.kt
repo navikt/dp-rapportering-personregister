@@ -1,8 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 
 import mu.KotlinLogging
+import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecords
-import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.errors.WakeupException
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 private val logger = KotlinLogging.logger {}
 
 abstract class KafkaKonsument<T>(
-    val consumer: KafkaConsumer<String, T>,
+    val consumer: Consumer<String, T>,
     val topic: String,
     protected val closed: AtomicBoolean = AtomicBoolean(false),
 ) {
@@ -35,6 +35,9 @@ abstract class KafkaKonsument<T>(
             consumer.subscribe(listOf(topic))
             while (!closed.get()) {
                 val meldinger: ConsumerRecords<String, T> = consumer.poll(Duration.ofSeconds(10))
+                if (!meldinger.isEmpty) {
+                    logger.info { "Meldinger: ${meldinger.first().value()}" }
+                }
                 haandter(meldinger)
                 consumer.commitSync()
 

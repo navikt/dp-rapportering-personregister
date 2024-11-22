@@ -176,6 +176,8 @@ class PersonRepositoryFaker : PersonRepository {
 
     override fun hentPerson(ident: String): Person? = personliste[ident]
 
+    override fun finnesPerson(ident: String): Boolean = personliste.contains(ident)
+
     override fun lagrePerson(person: Person) {
         personliste[person.ident] = person
     }

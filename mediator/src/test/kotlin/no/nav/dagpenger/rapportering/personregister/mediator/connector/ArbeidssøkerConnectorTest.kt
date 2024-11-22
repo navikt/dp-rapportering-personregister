@@ -84,7 +84,7 @@ class ArbeidssøkerConnectorTest {
     }
 }
 
-fun arbeidssøkerResponse(
+private fun arbeidssøkerResponse(
     periodeId: UUID,
     inkluderAvsluttet: Boolean = true,
 ) = defaultObjectMapper

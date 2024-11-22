@@ -1,12 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import org.apache.kafka.clients.producer.KafkaProducer
+import org.apache.kafka.clients.producer.MockProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 interface KafkaProdusent {
     fun publiser(
-        verdi: JsonMessage,
+        verdi: String,
         headers: Map<String, ByteArray>? = emptyMap(),
     ): Pair<Int, Long>
 
@@ -14,16 +14,16 @@ interface KafkaProdusent {
 }
 
 class KafkaProdusentImpl(
-    private val kafka: KafkaProducer<String, JsonMessage>,
+    private val kafka: KafkaProducer<String, String>,
     private val topic: String,
 ) : KafkaProdusent {
     override fun publiser(
-        verdi: JsonMessage,
+        verdi: String,
         headers: Map<String, ByteArray>?,
     ): Pair<Int, Long> =
         kafka
             .send(
-                ProducerRecord<String, JsonMessage>(topic, verdi).also {
+                ProducerRecord<String, String>(topic, verdi).also {
                     headers?.forEach { h ->
                         it.headers().add(h.key, h.value)
                     }
@@ -38,9 +38,12 @@ class KafkaProdusentImpl(
     }
 }
 
-class TestProdusent : KafkaProdusent {
+class TestProdusent(
+    private val kafka: MockProducer<String, String>,
+    private val topic: String,
+) : KafkaProdusent {
     data class Record(
-        val verdi: JsonMessage,
+        val verdi: String,
         val headers: Map<String, ByteArray>?,
     )
 
@@ -49,17 +52,20 @@ class TestProdusent : KafkaProdusent {
     val meldinger = mutableListOf<Record>()
 
     override fun publiser(
-        verdi: JsonMessage,
+        verdi: String,
         headers: Map<String, ByteArray>?,
-    ): Pair<Int, Long> {
-        if (closed) {
-            throw IllegalStateException("Produsenten er lukket")
-        }
-        return meldinger.let {
-            it.add(Record(verdi, headers))
-            Pair(0, (it.size - 1).toLong())
-        }
-    }
+    ): Pair<Int, Long> =
+        kafka
+            .send(
+                ProducerRecord<String, String>(topic, verdi).also {
+                    headers?.forEach { h ->
+                        it.headers().add(h.key, h.value)
+                    }
+                },
+            ).get()
+            .let { it.partition() to it.offset() }
+
+    fun reset() = meldinger.clear()
 
     override fun close() {
         closed = true
