@@ -3,7 +3,9 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
+import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
@@ -18,7 +20,7 @@ class SøknadMottak(
     init {
         River(rapidsConnection)
             .apply {
-                validate { it.demandValue("@event_name", "søknad_innsendt_varsel") }
+                validate { it.requireValue("@event_name", "søknad_innsendt_varsel") }
                 validate { it.requireKey("ident", "søknadId", "søknadstidspunkt") }
                 validate { it.interestedIn("@id") }
             }.register(this)
@@ -27,6 +29,8 @@ class SøknadMottak(
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
+        metadata: MessageMetadata,
+        meterRegistry: MeterRegistry,
     ) {
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
         soknadMetrikker.soknaderMottatt.increment()
