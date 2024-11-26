@@ -12,11 +12,14 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import mu.KotlinLogging
-import org.apache.kafka.clients.producer.ProducerRecord
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProducerImpl
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelseMelding
+import org.apache.kafka.clients.producer.KafkaProducer
 
 data class KafkaMessage(
-    val key: String,
-    val value: String,
+    val periodeId: String,
 )
 
 private val logger = KotlinLogging.logger {}
@@ -42,11 +45,17 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
                 val body = call.receive<KafkaMessage>()
 
                 val factory = ConsumerProducerFactory(AivenConfig.default)
-                val produsent = factory.createProducer()
+                val produsent: KafkaProducer<String, String> = factory.createProducer()
 
-                produsent.send(ProducerRecord("teamdagpenger.test-topic", body.key, body.value))
+                val kafkaProdusent: KafkaProdusent<OvertaArbeidssøkerBekreftelseMelding> =
+                    KafkaProducerImpl(
+                        producer = produsent,
+                        topic = "teamdagpenger.test-topic",
+                    )
 
-                logger.info { "Produserte melding med key: ${body.key} og value: ${body.value}" }
+                OvertaArbeidssøkerBekreftelse(kafkaProdusent).behandle(body.periodeId)
+
+                logger.info { "Produserte melding for periode: ${body.periodeId}" }
                 call.respond(HttpStatusCode.OK)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to process message" }

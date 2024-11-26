@@ -9,8 +9,7 @@ POST https://dp-rapportering-personregister.intern.dev.nav.no/test
 Content-Type: application/json
 
 {
-  "key": "test key",
-  "value": "Innhold fra personregister"
+  "perioeId": "123"
 }
 
 ### Personstatus

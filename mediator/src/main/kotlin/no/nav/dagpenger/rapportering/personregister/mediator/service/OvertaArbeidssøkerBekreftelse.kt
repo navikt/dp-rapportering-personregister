@@ -26,7 +26,11 @@ class OvertaArbeidssøkerBekreftelse(
 
     fun behandle(periodeId: String) {
         val melding = OvertaArbeidssøkerBekreftelseMelding(periodeId)
-        kafkaProdusent.send(melding)
-        logger.info { "Sendt bekreftelse for periodeId=$periodeId" }
+        try {
+            kafkaProdusent.send(melding)
+            logger.info { "Sendt bekreftelse for periodeId=$periodeId" }
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved sending av bekreftelse for periodeId=$periodeId" }
+        }
     }
 }
