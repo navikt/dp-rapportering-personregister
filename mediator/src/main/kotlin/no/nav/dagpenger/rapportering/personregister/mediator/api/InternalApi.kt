@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import com.github.navikt.tbd_libs.kafka.AivenConfig
-import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.request.receive
@@ -12,11 +11,9 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProducerImpl
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProducerFactory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelseMelding
-import org.apache.kafka.clients.producer.KafkaProducer
 
 data class KafkaMessage(
     val periodeId: String,
@@ -44,16 +41,9 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
             try {
                 val body = call.receive<KafkaMessage>()
 
-                val factory = ConsumerProducerFactory(AivenConfig.default)
-                val produsent: KafkaProducer<String, String> = factory.createProducer()
-
-                val kafkaProdusent: KafkaProdusent<OvertaArbeidssøkerBekreftelseMelding> =
-                    KafkaProducerImpl(
-                        producer = produsent,
-                        topic = "teamdagpenger.test-topic",
-                    )
-
-                OvertaArbeidssøkerBekreftelse(kafkaProdusent).behandle(body.periodeId)
+                KafkaProducerFactory(AivenConfig.default)
+                    .createProducer<OvertaArbeidssøkerBekreftelseMelding>("teamdagpenger.another-topic")
+                    .let { OvertaArbeidssøkerBekreftelse(it).behandle(body.periodeId) }
 
                 logger.info { "Produserte melding for periode: ${body.periodeId}" }
                 call.respond(HttpStatusCode.OK)

@@ -9,7 +9,7 @@ POST https://dp-rapportering-personregister.intern.dev.nav.no/test
 Content-Type: application/json
 
 {
-  "perioeId": "123"
+  "periodeId": "7a1b0779-ac3f-439d-a489-be51e91a568e"
 }
 
 ### Personstatus
