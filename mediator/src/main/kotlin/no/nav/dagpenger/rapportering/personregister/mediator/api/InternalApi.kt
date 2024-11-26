@@ -42,7 +42,7 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
                 val body = call.receive<KafkaMessage>()
 
                 KafkaProducerFactory(AivenConfig.default)
-                    .createProducer<OvertaArbeidssøkerBekreftelseMelding>("teamdagpenger.another-topic")
+                    .createProducer<OvertaArbeidssøkerBekreftelseMelding>("teamdagpenger.test-topic")
                     .let { OvertaArbeidssøkerBekreftelse(it).behandle(body.periodeId) }
 
                 logger.info { "Produserte melding for periode: ${body.periodeId}" }
