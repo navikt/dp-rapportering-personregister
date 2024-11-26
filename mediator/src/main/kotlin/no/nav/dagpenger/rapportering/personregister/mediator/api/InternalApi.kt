@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import com.github.navikt.tbd_libs.kafka.AivenConfig
-import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.request.receive
@@ -12,11 +11,12 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import mu.KotlinLogging
-import org.apache.kafka.clients.producer.ProducerRecord
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProducerFactory
+import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelseMelding
 
 data class KafkaMessage(
-    val key: String,
-    val value: String,
+    val periodeId: String,
 )
 
 private val logger = KotlinLogging.logger {}
@@ -41,12 +41,11 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
             try {
                 val body = call.receive<KafkaMessage>()
 
-                val factory = ConsumerProducerFactory(AivenConfig.default)
-                val produsent = factory.createProducer()
+                KafkaProducerFactory(AivenConfig.default)
+                    .createProducer<OvertaArbeidssøkerBekreftelseMelding>("teamdagpenger.test-topic")
+                    .let { OvertaArbeidssøkerBekreftelse(it).behandle(body.periodeId) }
 
-                produsent.send(ProducerRecord("teamdagpenger.test-topic", body.key, body.value))
-
-                logger.info { "Produserte melding med key: ${body.key} og value: ${body.value}" }
+                logger.info { "Produserte melding for periode: ${body.periodeId}" }
                 call.respond(HttpStatusCode.OK)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to process message" }
