@@ -16,8 +16,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestKonsument
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.startLytting
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestTopicConsumer
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaConsumerRunner
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -41,8 +41,13 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 
-    val factory = ConsumerProducerFactory(AivenConfig.default)
-    val testKonsument = TestKonsument(konsument = factory.createConsumer(APP_NAME), topic = "teamdagpenger.test-topic")
+    private val factory = ConsumerProducerFactory(AivenConfig.default)
+    private val testTopicKonsument =
+        TestTopicConsumer(
+            kafkaConsumer = factory.createConsumer(APP_NAME),
+            topic = "teamdagpenger.test-topic",
+            mediator = TestTopicMediator(),
+        )
 
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
@@ -71,6 +76,10 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        startLytting(testKonsument)
+        KafkaConsumerRunner(
+            consumer = testTopicKonsument,
+        ).apply {
+            start()
+        }
     }
 }
