@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.util.UUID
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
@@ -37,6 +38,15 @@ class PersonstatusMediator(
 
         sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
         behandleHendelse(hendelse)
+    }
+
+    fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
+        sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
+//        if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
+//            behandleHendelse(arbeidssøkerHendelse.tilHendelse())
+//        } else {
+//            sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
+//        }
     }
 
     private fun behandleHendelse(hendelse: Hendelse) {
