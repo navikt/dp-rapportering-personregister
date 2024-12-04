@@ -5,6 +5,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 interface PersonRepository {
     fun hentPerson(ident: String): Person?
 
+    fun finnesPerson(ident: String): Boolean
+
     fun lagrePerson(person: Person)
 
     fun oppdaterPerson(person: Person)

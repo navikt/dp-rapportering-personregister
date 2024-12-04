@@ -176,6 +176,8 @@ class PersonRepositoryFaker : PersonRepository {
 
     override fun hentPerson(ident: String): Person? = personliste[ident]
 
+    override fun finnesPerson(ident: String): Boolean = personliste.contains(ident)
+
     override fun lagrePerson(person: Person) {
         personliste[person.ident] = person
     }
@@ -196,32 +198,32 @@ fun arbeidssøkerperiodeResponse(
     ArbeidssøkerperiodeResponse(
         periodeId = UUID.randomUUID(),
         startet =
+        MetadataResponse(
+            tidspunkt = tidspunktForRegistrering,
+            utfoertAv =
+            BrukerResponse(
+                type = "SLUTTBRUKER",
+                id = "12345678910",
+            ),
+            kilde = "kilde",
+            aarsak = "årsak",
+            tidspunktFraKilde = null,
+        ),
+        avsluttet =
+        if (avsluttet) {
             MetadataResponse(
-                tidspunkt = tidspunktForRegistrering,
+                tidspunkt = LocalDateTime.now(),
                 utfoertAv =
-                    BrukerResponse(
-                        type = "SLUTTBRUKER",
-                        id = "12345678910",
-                    ),
+                BrukerResponse(
+                    type = "SYSTEM",
+                    id = "systemid",
+                ),
                 kilde = "kilde",
                 aarsak = "årsak",
                 tidspunktFraKilde = null,
-            ),
-        avsluttet =
-            if (avsluttet) {
-                MetadataResponse(
-                    tidspunkt = LocalDateTime.now(),
-                    utfoertAv =
-                        BrukerResponse(
-                            type = "SYSTEM",
-                            id = "systemid",
-                        ),
-                    kilde = "kilde",
-                    aarsak = "årsak",
-                    tidspunktFraKilde = null,
-                )
-            } else {
-                null
-            },
+            )
+        } else {
+            null
+        },
     ),
 )

@@ -32,6 +32,19 @@ class PostgresPersonRepository(
             }
         }
 
+
+    override fun finnesPerson(ident: String): Boolean =
+        actionTimer.timedAction("db-finnesPerson") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT EXISTS(SELECT 1 FROM person WHERE ident = :ident)", mapOf("ident" to ident))
+                        .map { it.string(1).toBoolean() }
+                        .asSingle,
+                ) ?: false
+            }
+        }
+
+
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {
             using(sessionOf(dataSource)) { session ->

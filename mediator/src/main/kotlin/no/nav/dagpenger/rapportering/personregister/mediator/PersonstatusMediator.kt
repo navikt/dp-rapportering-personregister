@@ -42,11 +42,11 @@ class PersonstatusMediator(
 
     fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
         sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
-//        if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
-//            behandleHendelse(arbeidssøkerHendelse.tilHendelse())
-//        } else {
-//            sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
-//        }
+        if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
+            behandleHendelse(arbeidssøkerHendelse.tilHendelse())
+        } else {
+            sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
+        }
     }
 
     private fun behandleHendelse(hendelse: Hendelse) {
