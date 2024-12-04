@@ -1,19 +1,25 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.MockKafkaProdusent
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Test
 import kotlin.test.BeforeTest
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.MockKafkaProducer
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 
 class OvertaArbeidssøkerBekreftelseTest {
-    private lateinit var mockProdusent: MockKafkaProdusent<OvertaArbeidssøkerBekreftelseMelding>
+    private var mockProdusent = MockKafkaProducer<OvertaArbeidssøkerBekreftelseMelding>()
+
     private lateinit var overtaBekreftelse: OvertaArbeidssøkerBekreftelse
 
     @BeforeTest
     fun setup() {
-        mockProdusent = MockKafkaProdusent("bekreftelse-topic")
         overtaBekreftelse = OvertaArbeidssøkerBekreftelse(mockProdusent)
+    }
+
+    @BeforeEach
+    fun reset() {
+        mockProdusent.reset()
     }
 
     @Test
@@ -22,7 +28,8 @@ class OvertaArbeidssøkerBekreftelseTest {
 
         overtaBekreftelse.behandle(periodeId)
 
-        val meldinger = mockProdusent.getSentMessages()
+
+        val meldinger = mockProdusent.meldinger
         val melding = meldinger.first()
 
         meldinger.size shouldBe 1
@@ -39,7 +46,7 @@ class OvertaArbeidssøkerBekreftelseTest {
         overtaBekreftelse.behandle("periode123")
         overtaBekreftelse.behandle("periode456")
 
-        val meldinger = mockProdusent.getSentMessages()
+        val meldinger = mockProdusent.meldinger
         assertEquals(2, meldinger.size)
 
         with(meldinger) {

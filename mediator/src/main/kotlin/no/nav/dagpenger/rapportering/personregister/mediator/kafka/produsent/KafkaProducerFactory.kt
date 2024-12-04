@@ -10,7 +10,7 @@ class KafkaProducerFactory(
         val kafkaProducer = ConsumerProducerFactory(kafkaConfig).createProducer()
 
         return KafkaProducerImpl(
-            producer = kafkaProducer,
+            kafkaProducer = kafkaProducer,
             topic = topic,
         )
     }

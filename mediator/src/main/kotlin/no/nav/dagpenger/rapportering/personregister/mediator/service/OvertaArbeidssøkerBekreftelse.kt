@@ -19,6 +19,7 @@ data class OvertaArbeidssøkerBekreftelseMelding(
     )
 }
 
+
 class OvertaArbeidssøkerBekreftelse(
     private val kafkaProdusent: KafkaProdusent<OvertaArbeidssøkerBekreftelseMelding>,
 ) {
@@ -27,10 +28,10 @@ class OvertaArbeidssøkerBekreftelse(
     fun behandle(periodeId: String) {
         val melding = OvertaArbeidssøkerBekreftelseMelding(periodeId)
         try {
-            kafkaProdusent.send(melding)
-            logger.info { "Sendt bekreftelse for periodeId=$periodeId" }
+            kafkaProdusent.send(key = periodeId, value = melding)
+            logger.info { "Successfully sent confirmation for periodeId=$periodeId" }
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved sending av bekreftelse for periodeId=$periodeId" }
+            logger.error(e) { "Error while sending confirmation for periodeId=$periodeId" }
         }
     }
 }

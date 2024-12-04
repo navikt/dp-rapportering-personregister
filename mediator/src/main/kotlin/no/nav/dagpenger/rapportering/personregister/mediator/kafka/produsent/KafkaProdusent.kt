@@ -1,15 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 
-abstract class KafkaProdusent<T>(
-    private val topic: String,
-    private val objectMapper: ObjectMapper = jacksonObjectMapper(),
-) {
-    protected fun serialize(value: T): String = objectMapper.writeValueAsString(value)
 
-    abstract fun send(value: T): Pair<Int, Long>
+abstract class KafkaProdusent<T>{
+    protected fun serialize(value: T): String = defaultObjectMapper.writeValueAsString(value)
+
+    abstract fun send(key: String,  value: T)
 
     abstract fun close()
 }
