@@ -19,7 +19,6 @@ data class OvertaArbeidssøkerBekreftelseMelding(
     )
 }
 
-
 class OvertaArbeidssøkerBekreftelse(
     private val kafkaProdusent: KafkaProdusent<OvertaArbeidssøkerBekreftelseMelding>,
 ) {

@@ -8,6 +8,7 @@ data class Periode(
     val startet: Metadata,
     val avsluttet: Metadata?,
 )
+
 data class Metadata(
     val tidspunkt: Long,
     val utfoertAv: Bruker,
@@ -20,6 +21,7 @@ data class Bruker(
     val type: String,
     val id: String,
 )
+
 data class TidspunktFraKilde(
     val tidspunkt: Long,
     val avviksType: String,

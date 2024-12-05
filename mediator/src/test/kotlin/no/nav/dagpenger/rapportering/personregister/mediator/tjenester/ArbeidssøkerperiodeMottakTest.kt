@@ -70,24 +70,24 @@ class ArbeidssøkerperiodeMottakTest {
 
 val gyldigArbeidssøkerperiode =
     """
-{
-  "id": "123e4567-e89b-12d3-a456-426614174000",
-  "identitetsnummer": "12345678910",
-  "startet": {
-    "tidspunkt": 1672531200000,
-    "utfoertAv": {
-      "id": "system-user",
-      "type": "SYSTEM"
-    },
-    "kilde": "system-api",
-    "aarsak": "INITIAL_REGISTRATION",
-    "tidspunktFraKilde": {
-      "tidspunkt": 1672531200000,
-      "avviksType": "EPOCH_MILLIS"
+    {
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "identitetsnummer": "12345678910",
+      "startet": {
+        "tidspunkt": 1672531200000,
+        "utfoertAv": {
+          "id": "system-user",
+          "type": "SYSTEM"
+        },
+        "kilde": "system-api",
+        "aarsak": "INITIAL_REGISTRATION",
+        "tidspunktFraKilde": {
+          "tidspunkt": 1672531200000,
+          "avviksType": "EPOCH_MILLIS"
+        }
+      },
+      "avsluttet": null
     }
-  },
-  "avsluttet": null
-}
     """.trimIndent()
 
 val ugylidaAbeidssøkerperiode =

@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
@@ -10,7 +11,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.util.UUID
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,

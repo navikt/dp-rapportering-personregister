@@ -198,32 +198,32 @@ fun arbeidssøkerperiodeResponse(
     ArbeidssøkerperiodeResponse(
         periodeId = UUID.randomUUID(),
         startet =
-        MetadataResponse(
-            tidspunkt = tidspunktForRegistrering,
-            utfoertAv =
-            BrukerResponse(
-                type = "SLUTTBRUKER",
-                id = "12345678910",
-            ),
-            kilde = "kilde",
-            aarsak = "årsak",
-            tidspunktFraKilde = null,
-        ),
-        avsluttet =
-        if (avsluttet) {
             MetadataResponse(
-                tidspunkt = LocalDateTime.now(),
+                tidspunkt = tidspunktForRegistrering,
                 utfoertAv =
-                BrukerResponse(
-                    type = "SYSTEM",
-                    id = "systemid",
-                ),
+                    BrukerResponse(
+                        type = "SLUTTBRUKER",
+                        id = "12345678910",
+                    ),
                 kilde = "kilde",
                 aarsak = "årsak",
                 tidspunktFraKilde = null,
-            )
-        } else {
-            null
-        },
+            ),
+        avsluttet =
+            if (avsluttet) {
+                MetadataResponse(
+                    tidspunkt = LocalDateTime.now(),
+                    utfoertAv =
+                        BrukerResponse(
+                            type = "SYSTEM",
+                            id = "systemid",
+                        ),
+                    kilde = "kilde",
+                    aarsak = "årsak",
+                    tidspunktFraKilde = null,
+                )
+            } else {
+                null
+            },
     ),
 )

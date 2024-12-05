@@ -32,7 +32,6 @@ class PostgresPersonRepository(
             }
         }
 
-
     override fun finnesPerson(ident: String): Boolean =
         actionTimer.timedAction("db-finnesPerson") {
             using(sessionOf(dataSource)) { session ->
@@ -43,7 +42,6 @@ class PostgresPersonRepository(
                 ) ?: false
             }
         }
-
 
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {

@@ -1,11 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import io.kotest.matchers.shouldBe
-import kotlin.test.BeforeTest
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.MockKafkaProducer
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import kotlin.test.BeforeTest
 
 class OvertaArbeidssøkerBekreftelseTest {
     private var mockProdusent = MockKafkaProducer<OvertaArbeidssøkerBekreftelseMelding>()
@@ -27,7 +27,6 @@ class OvertaArbeidssøkerBekreftelseTest {
         val periodeId = "periode123"
 
         overtaBekreftelse.behandle(periodeId)
-
 
         val meldinger = mockProdusent.meldinger
         val melding = meldinger.first()

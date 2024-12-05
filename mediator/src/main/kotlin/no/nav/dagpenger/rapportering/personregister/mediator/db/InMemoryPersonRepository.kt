@@ -9,7 +9,6 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun finnesPerson(ident: String): Boolean = personList.containsKey(ident)
 
-
     override fun lagrePerson(person: Person) {
         personList[person.ident] = person
     }
