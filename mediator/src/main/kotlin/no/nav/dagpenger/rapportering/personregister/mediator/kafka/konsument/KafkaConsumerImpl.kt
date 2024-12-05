@@ -10,10 +10,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Duration
 
-open class KafkaConsumerImpl<T>(
-    private val kafkaConsumer: KafkaConsumer<String, T>,
+abstract class KafkaConsumerImpl<T>(
+    private val kafkaConsumer: KafkaConsumer<String, String>,
     override val topic: String,
-    private val handler: (ConsumerRecord<String, T>) -> Unit,
 ) : KafkaKonsument {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO.limitedParallelism(1)) // Use single-threaded context
 
@@ -30,9 +29,9 @@ open class KafkaConsumerImpl<T>(
                             return@launch
                         }
 
-                    records.forEach { record ->
+                    records.forEach {record ->
                         runCatching {
-                            handler(record)
+                            process(record)
                         }.onFailure { e ->
                             println("Failed to process record: ${record.value()}, error: ${e.message}")
                         }
@@ -41,6 +40,8 @@ open class KafkaConsumerImpl<T>(
             }
         }
     }
+
+    abstract override fun process(record: ConsumerRecord<String, String>)
 
     fun stop() {
         scope.cancel("Stopping Kafka Consumer for topic $topic")

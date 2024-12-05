@@ -20,17 +20,18 @@ class ArbeidssøkerperiodeMottak(
 ) : KafkaConsumerImpl<String>(
     kafkaConsumer = kafkaConsumer,
     topic = ARBEIDSSØKER_PERIODE_TOPIC,
-    handler = { melding ->
-        logger.info { "Mottok melding om endring i arbeidssøkerperiode" }
-        runCatching {
-            personstatusMediator.behandle(melding.tilHendelse())
-        }.onFailure { e ->
-            logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
-        }
-    }
 ){
     companion object {
         private val logger = KotlinLogging.logger {}
+    }
+
+    override fun process(record: ConsumerRecord<String, String>) {
+        logger.info { "Mottok melding om endring i arbeidssøkerperiode" }
+        runCatching {
+            personstatusMediator.behandle(record.tilHendelse())
+        }.onFailure { e ->
+            logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
+        }
     }
 }
 

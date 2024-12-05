@@ -5,6 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.TestTopicMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.TestTopicHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaConsumerImpl
+import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.clients.consumer.KafkaConsumer
 
 private val logger = KotlinLogging.logger {}
@@ -16,12 +17,15 @@ class TestTopicConsumer(
 ) : KafkaConsumerImpl<String>(
         kafkaConsumer = kafkaConsumer,
         topic = topic,
-        handler = { record ->
-            logger.info("Received message: Key=${record.key()}, Value=${record.value().trim()}")
-            val hendelse = objectMapper.readValue(record.value().trim(), TestTopicHendelse::class.java)
-            mediator.behandle(hendelse)
-        },
     ) {
+
+    override fun process(record: ConsumerRecord<String, String>) {
+        logger.info("Received message: Key=${record.key()}, Value=${record.value().toString()}")
+        val hendelse = objectMapper.readValue(record.value(), TestTopicHendelse::class.java)
+        mediator.behandle(hendelse)
+    }
+
+
     companion object {
         private val objectMapper = defaultObjectMapper
     }
