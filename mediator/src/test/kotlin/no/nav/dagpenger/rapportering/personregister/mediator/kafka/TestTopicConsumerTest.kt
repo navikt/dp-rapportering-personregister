@@ -16,8 +16,7 @@ class TestTopicConsumerTest {
     private var testKafkaContainer: TestKafkaContainer = TestKafkaContainer()
 
     private var testTopicMediator: TestTopicMediator = mockk(relaxed = true)
-    private var producer: KafkaProducer<String, String> = testKafkaContainer.createProducer()
-    private val testProducer = TestKafkaProducer<TestTopicHendelse>(producer, topic)
+    private val testProducer = TestKafkaProducer<TestTopicHendelse>( topic, testKafkaContainer)
     private var consumer: KafkaConsumer<String, String> = testKafkaContainer.createConsumer()
 
     @AfterEach
