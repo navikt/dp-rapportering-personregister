@@ -16,13 +16,13 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestTopicConsumer
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaConsumerRunner
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -31,7 +31,8 @@ import io.ktor.server.cio.CIO as CIOEngine
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
 ) : RapidsConnection.StatusListener {
-    private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
+    private val meterRegistry =
+        PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
@@ -40,14 +41,6 @@ internal class ApplicationBuilder(
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-
-    private val factory = ConsumerProducerFactory(AivenConfig.default)
-    private val testTopicKonsument =
-        TestTopicConsumer(
-            kafkaConsumer = factory.createConsumer(APP_NAME),
-            topic = "teamdagpenger.test-topic",
-            mediator = TestTopicMediator(),
-        )
 
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
@@ -63,6 +56,7 @@ internal class ApplicationBuilder(
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
+
             }
 
     init {
@@ -76,8 +70,13 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
+
+        val factory = ConsumerProducerFactory(AivenConfig.default)
         KafkaConsumerRunner(
-            consumer = testTopicKonsument,
+            consumer = ArbeidssøkerperiodeMottak(
+                kafkaConsumer = factory.createConsumer(APP_NAME),
+                personstatusMediator = personstatusMediator,
+            ),
         ).apply {
             start()
         }
