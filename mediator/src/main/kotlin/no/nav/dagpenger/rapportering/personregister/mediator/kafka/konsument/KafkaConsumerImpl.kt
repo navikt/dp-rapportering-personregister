@@ -29,7 +29,7 @@ abstract class KafkaConsumerImpl<T>(
                             return@launch
                         }
 
-                    records.forEach {record ->
+                    records.forEach { record ->
                         runCatching {
                             process(record)
                         }.onFailure { e ->

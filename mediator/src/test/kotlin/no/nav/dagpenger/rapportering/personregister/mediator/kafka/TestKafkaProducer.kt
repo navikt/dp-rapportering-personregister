@@ -5,9 +5,8 @@ import org.apache.kafka.clients.producer.ProducerRecord
 
 class TestKafkaProducer<T>(
     private val topic: String,
-    private val container: TestKafkaContainer
+    private val container: TestKafkaContainer,
 ) {
-
     private val producer: KafkaProducer<String, String> = container.createProducer()
 
     fun send(

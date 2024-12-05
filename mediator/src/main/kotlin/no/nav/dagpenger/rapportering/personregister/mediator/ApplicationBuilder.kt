@@ -56,7 +56,6 @@ internal class ApplicationBuilder(
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
-
             }
 
     init {
@@ -73,10 +72,11 @@ internal class ApplicationBuilder(
 
         val factory = ConsumerProducerFactory(AivenConfig.default)
         KafkaConsumerRunner(
-            consumer = ArbeidssøkerperiodeMottak(
-                kafkaConsumer = factory.createConsumer(APP_NAME),
-                personstatusMediator = personstatusMediator,
-            ),
+            consumer =
+                ArbeidssøkerperiodeMottak(
+                    kafkaConsumer = factory.createConsumer(APP_NAME),
+                    personstatusMediator = personstatusMediator,
+                ),
         ).apply {
             start()
         }

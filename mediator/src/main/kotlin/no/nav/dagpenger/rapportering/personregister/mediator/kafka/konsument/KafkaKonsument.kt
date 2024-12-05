@@ -7,7 +7,7 @@ interface KafkaKonsument {
 
     fun stream()
 
-    fun  process(record: ConsumerRecord<String, String>)
+    fun process(record: ConsumerRecord<String, String>)
 
     fun close()
 }
