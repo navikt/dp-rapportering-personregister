@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent
 
+import mu.KotlinLogging
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 
@@ -14,14 +15,18 @@ class KafkaProducerImpl<T>(
         val record = ProducerRecord(topic, key, serialize(value))
         kafkaProducer.send(record) { metadata, exception ->
             if (exception != null) {
-                println("Failed to send message: Key=$key, Value=$value, Error=${exception.message}")
+                logger.info { "Kunne ikke sende melding: Nøkkel=$key, Verdi=$value, Feil=${exception.message}" }
             } else {
-                println("Message sent successfully: Key=$key, Value=$value to Topic=${metadata.topic()} at Offset=${metadata.offset()}")
+                logger.info { "Melding sendt: Nøkkel=$key, Verdi=$value til Topic=${metadata.topic()} på Offset=${metadata.offset()}" }
             }
         }
     }
 
     override fun close() {
         kafkaProducer.close()
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger {}
     }
 }
