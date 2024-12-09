@@ -1,14 +1,14 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import KafkaConsumerFactory
+import KafkaConsumerRunner
 import com.github.navikt.tbd_libs.kafka.AivenConfig
-import com.github.navikt.tbd_libs.kafka.ConsumerProducerFactory
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.engine.embeddedServer
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.APP_NAME
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
@@ -16,7 +16,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaConsumerRunner
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -41,7 +40,6 @@ internal class ApplicationBuilder(
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     private val rapidsConnection =
         RapidApplication
@@ -58,27 +56,23 @@ internal class ApplicationBuilder(
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
             }
 
+    private val arbeidssøkerperiodeConsumer =
+        KafkaConsumerRunner(
+            kafkaConsumerFactory = KafkaConsumerFactory(AivenConfig.default),
+            listener = ArbeidssøkerperiodeMottak(personstatusMediator),
+        )
+
     init {
         rapidsConnection.register(this)
     }
 
     internal fun start() {
         rapidsConnection.start()
+        arbeidssøkerperiodeConsumer.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-
-        val factory = ConsumerProducerFactory(AivenConfig.default)
-        KafkaConsumerRunner(
-            consumer =
-                ArbeidssøkerperiodeMottak(
-                    kafkaConsumer = factory.createConsumer(APP_NAME),
-                    personstatusMediator = personstatusMediator,
-                ),
-        ).apply {
-            start()
-        }
     }
 }

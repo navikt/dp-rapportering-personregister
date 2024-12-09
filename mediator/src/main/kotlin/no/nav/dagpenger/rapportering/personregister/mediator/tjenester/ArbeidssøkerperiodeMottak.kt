@@ -5,33 +5,29 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.Periode
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaConsumerImpl
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaMessageHandler
 import org.apache.kafka.clients.consumer.ConsumerRecord
-import org.apache.kafka.clients.consumer.KafkaConsumer
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 
-private const val ARBEIDSSØKER_PERIODE_TOPIC = "paw.arbeidssokerperioder-v1"
-
 class ArbeidssøkerperiodeMottak(
-    kafkaConsumer: KafkaConsumer<String, String>,
-    private val personstatusMediator: PersonstatusMediator,
-) : KafkaConsumerImpl<String>(
-        kafkaConsumer = kafkaConsumer,
-        topic = ARBEIDSSØKER_PERIODE_TOPIC,
-    ) {
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
+    private val personStatusMediator: PersonstatusMediator,
+) : KafkaMessageHandler {
+    override val topic: String = "paw.arbeidssokerperioder-v1"
 
-    override fun process(record: ConsumerRecord<String, String>) {
-        logger.info { "Mottok melding om endring i arbeidssøkerperiode" }
-        runCatching {
-            personstatusMediator.behandle(record.tilHendelse())
-        }.onFailure { e ->
+    override fun onMessage(record: ConsumerRecord<String, String>) {
+        logger.info { "Mottok melding om endring i arbeidssøkerperiode: ${record.value()}" }
+        try {
+            val hendelse = record.tilHendelse()
+            personStatusMediator.behandle(hendelse)
+        } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
         }
+    }
+
+    companion object {
+        private val logger = KotlinLogging.logger {}
     }
 }
 

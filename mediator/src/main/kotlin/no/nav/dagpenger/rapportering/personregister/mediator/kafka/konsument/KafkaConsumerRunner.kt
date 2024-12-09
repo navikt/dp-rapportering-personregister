@@ -1,48 +1,53 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument
-
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaMessageHandler
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.cancellation.CancellationException
 
 private val logger = KotlinLogging.logger {}
 
 class KafkaConsumerRunner(
-    private val consumer: KafkaKonsument,
+    private val kafkaConsumerFactory: KafkaConsumerFactory,
+    private val listener: KafkaMessageHandler,
 ) {
     private val isRunning = AtomicBoolean(false)
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    private val kafkaKonsument by lazy {
+        kafkaConsumerFactory.createConsumer(listener.topic)
+    }
+
     fun start() {
         if (isRunning.compareAndSet(false, true)) {
+            logger.info { "Starter Kafka-consumer for topic: ${listener.topic}" }
             scope.launch {
                 try {
-                    logger.info { "Starter KafkaRunner for topic: ${consumer.topic}" }
-                    consumer.stream()
+                    kafkaKonsument.start()
                 } catch (e: CancellationException) {
-                    logger.info { "KafkaRunner for topic ${consumer.topic} ble kansellert" }
+                    logger.info { "Kafka-consumer for topic ${listener.topic} ble avbrutt" }
                 } catch (e: Exception) {
-                    logger.error(e) { "Feil i KafkaRunner for topic: ${consumer.topic}" }
+                    logger.error(e) { "En feil oppstod i Kafka-consumer for topic: ${listener.topic}" }
                 } finally {
                     stop()
                 }
             }
         } else {
-            logger.warn { "KafkaRunner for topic ${consumer.topic} kjører allerede" }
+            logger.warn { "Kafka-consumer for topic ${listener.topic} kjører allerede og kan ikke startes på nytt" }
         }
     }
 
-    private fun stop() {
+    fun stop() {
         if (isRunning.compareAndSet(true, false)) {
-            logger.info { "Stopper KafkaRunner for topic: ${consumer.topic}" }
-            scope.cancel("KafkaRunner stopped")
-            consumer.close()
+            logger.info { "Stopper Kafka-consumer for topic: ${listener.topic}" }
+            scope.cancel("Kafka-consumer stoppet")
+            runCatching { kafkaKonsument.stop() }
+                .onFailure { logger.error(it) { "En feil oppstod under lukking av Kafka-consumer for topic: ${listener.topic}" } }
         } else {
-            logger.warn { "KafkaRunner for topic ${consumer.topic} kjører ikke" }
+            logger.warn { "Kafka-consumer for topic ${listener.topic} er allerede stoppet" }
         }
     }
 }

@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaMessageConsumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -20,51 +21,50 @@ class ArbeidssøkerperiodeMottakTest {
     private val personstatusMediator: PersonstatusMediator = mockk(relaxed = true)
     private lateinit var testProducer: TestKafkaProducer<String>
     private lateinit var testConsumer: KafkaConsumer<String, String>
+    private lateinit var kafkaMessageConsumer: KafkaMessageConsumer
 
     @BeforeEach
     fun setup() {
         testKafkaContainer = TestKafkaContainer()
         testProducer = TestKafkaProducer(topic, testKafkaContainer)
         testConsumer = testKafkaContainer.createConsumer(topic)
+        kafkaMessageConsumer = KafkaMessageConsumer(testConsumer, topic)
+
+        ArbeidssøkerperiodeMottak(personstatusMediator).apply {
+            kafkaMessageConsumer.register(this)
+        }
     }
 
     @AfterEach
     fun tearDown() {
+        kafkaMessageConsumer.stop()
         testKafkaContainer.stop()
     }
 
     @Test
     fun `skal håndtere arbeidssøkerperiode-melding`() =
         runBlocking {
-            val arbeidssøkerperiodeMottak =
-                ArbeidssøkerperiodeMottak(
-                    kafkaConsumer = testConsumer,
-                    personstatusMediator = personstatusMediator,
-                ).apply { stream() }
+            kafkaMessageConsumer.start()
 
             testProducer.send("key1", gyldigArbeidssøkerperiode)
 
             delay(2000)
             verify(exactly = 1) { personstatusMediator.behandle(ofType<ArbeidssøkerHendelse>()) }
 
-            arbeidssøkerperiodeMottak.stop()
+            kafkaMessageConsumer.stop()
         }
 
     @Test
     fun `skal håndtere ugyldig arbeidssøkerperiode-melding`() =
         runBlocking {
-            val arbeidssøkerperiodeMottak =
-                ArbeidssøkerperiodeMottak(
-                    kafkaConsumer = testConsumer,
-                    personstatusMediator = personstatusMediator,
-                ).apply { stream() }
+            kafkaMessageConsumer.start()
 
             testProducer.send("key1", ugylidaAbeidssøkerperiode)
 
             delay(2000)
             verify(exactly = 0) { personstatusMediator.behandle(ofType<ArbeidssøkerHendelse>()) }
 
-            arbeidssøkerperiodeMottak.stop()
+            kafkaMessageConsumer.stop()
         }
 }
 
