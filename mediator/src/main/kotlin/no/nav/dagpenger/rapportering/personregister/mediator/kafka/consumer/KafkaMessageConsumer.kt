@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument
+package no.nav.dagpenger.rapportering.personregister.mediator.kafka.consumer
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +12,8 @@ import java.time.Duration
 
 class KafkaMessageConsumer(
     private val kafkaConsumer: KafkaConsumer<String, String>,
-    private val topic: String,
+    val topic: String,
+    private val pollTimeoutInSeconds: Duration = Duration.ofSeconds(10),
 ) {
     private val listeners = mutableListOf<KafkaMessageHandler>()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -28,7 +29,7 @@ class KafkaMessageConsumer(
                 consumer.subscribe(listOf(topic))
                 try {
                     while (isActive) {
-                        val records = consumer.pollSafely(Duration.ofSeconds(1)) ?: continue
+                        val records = consumer.pollSafely(pollTimeoutInSeconds) ?: continue
                         records.forEach { record ->
                             listeners.forEach { listener ->
                                 runCatching { listener.onMessage(record) }.onFailure {

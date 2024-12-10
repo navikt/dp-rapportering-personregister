@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent
+package no.nav.dagpenger.rapportering.personregister.mediator.kafka.producer
 
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 

@@ -11,7 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProducerFactory
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.producer.KafkaProducerFactory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.OvertaArbeidssøkerBekreftelseMelding
 

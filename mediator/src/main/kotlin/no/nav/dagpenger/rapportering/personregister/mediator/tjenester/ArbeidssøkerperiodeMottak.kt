@@ -5,7 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.Periode
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaMessageHandler
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.consumer.KafkaMessageHandler
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import java.time.Instant
 import java.time.LocalDateTime

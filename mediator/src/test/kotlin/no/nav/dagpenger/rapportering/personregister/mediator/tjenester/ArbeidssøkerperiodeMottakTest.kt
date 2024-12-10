@@ -8,11 +8,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.kafka.TestKafkaProducer
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument.KafkaMessageConsumer
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.consumer.KafkaMessageConsumer
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.Duration
 
 class ArbeidssøkerperiodeMottakTest {
     private val topic = "paw.arbeidssokerperioder-v1"
@@ -28,11 +29,14 @@ class ArbeidssøkerperiodeMottakTest {
         testKafkaContainer = TestKafkaContainer()
         testProducer = TestKafkaProducer(topic, testKafkaContainer)
         testConsumer = testKafkaContainer.createConsumer(topic)
-        kafkaMessageConsumer = KafkaMessageConsumer(testConsumer, topic)
-
-        ArbeidssøkerperiodeMottak(personstatusMediator).apply {
-            kafkaMessageConsumer.register(this)
-        }
+        kafkaMessageConsumer =
+            KafkaMessageConsumer(
+                kafkaConsumer = testConsumer,
+                topic = topic,
+                pollTimeoutInSeconds = Duration.ofSeconds(1),
+            ).apply {
+                register(ArbeidssøkerperiodeMottak(personstatusMediator))
+            }
     }
 
     @AfterEach

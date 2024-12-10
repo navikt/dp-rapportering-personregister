@@ -1,6 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.producer.KafkaProdusent
 
 class MockKafkaProducer<T> : KafkaProdusent<T>() {
     private var isClosed = false

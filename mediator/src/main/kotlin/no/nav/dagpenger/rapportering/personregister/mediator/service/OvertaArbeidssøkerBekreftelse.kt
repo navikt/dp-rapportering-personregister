@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.kafka.produsent.KafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.producer.KafkaProdusent
 import java.util.concurrent.TimeUnit
 
 data class OvertaArbeidssøkerBekreftelseMelding(

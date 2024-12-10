@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.kafka.konsument
+package no.nav.dagpenger.rapportering.personregister.mediator.kafka.consumer
 
 import org.apache.kafka.clients.consumer.ConsumerRecord
 
