@@ -6,10 +6,13 @@ import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.pdl.PersonOppslag
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -77,11 +80,13 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+            val personOppslag = mockk<PersonOppslag>()
+            val pdlConnector = PdlConnector(personOppslag)
 
             application {
                 konfigurasjon(meterRegistry)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository)
+                personstatusApi(personRepository, pdlConnector)
             }
 
             block()
@@ -98,6 +103,8 @@ open class ApiTestSetup {
         System.setProperty("GITHUB_SHA", "some_sha")
         System.setProperty("ARBEIDSSOKERREGISTER_HOST", "http://arbeidssokerregister")
         System.setProperty("ARBEIDSSOKERREGISTER_SCOPE", "api://arbeidssokerregister/.default")
+        System.setProperty("PDL_API_HOST", "pdl-api.test.nais.io")
+        System.setProperty("PDL_AUDIENCE", "test:pdl:pdl-api")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =

@@ -3,3 +3,5 @@ kafka:
 
 ARBEIDSSOKERREGISTER_HOST: oppslag-arbeidssoekerregisteret.intern.dev.nav.no
 ARBEIDSSOKERREGISTER_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default
+PDL_API_HOST: pdl-api.dev-fss-pub.nais.io
+PDL_AUDIENCE: dev-fss:pdl:pdl-api

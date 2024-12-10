@@ -9,10 +9,12 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -41,6 +43,8 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
+
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -50,7 +54,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     konfigurasjon(meterRegistry)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository)
+                    personstatusApi(personRepository, pdlConnector)
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)

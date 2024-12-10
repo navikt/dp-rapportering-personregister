@@ -12,7 +12,7 @@ version = "unspecified"
 
 repositories {
     mavenCentral()
-    maven { setUrl("https://github-package-registry-mirror.gc.nav.no/cached/maven-release") }
+    maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
 }
 
 dependencies {
@@ -30,6 +30,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
+    implementation("no.nav.dagpenger:pdl-klient:2024.12.10-14.29.b14a663ac6da")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)

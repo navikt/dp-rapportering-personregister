@@ -9,7 +9,6 @@ import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
-import com.natpryce.konfig.getValue
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import kotlinx.coroutines.runBlocking
@@ -58,6 +57,21 @@ internal object Configuration {
                     .accessToken ?: throw RuntimeException("Failed to get token")
             }
         }
+    }
+
+    val pdlUrl by lazy {
+        properties[Key("PDL_API_HOST", stringType)].let {
+            "https://$it/graphql"
+        }
+    }
+    val pdlAudience by lazy { properties[Key("PDL_AUDIENCE", stringType)] }
+
+    val tokenXClient by lazy {
+        val tokenX = OAuth2Config.TokenX(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = tokenX.tokenEndpointUrl,
+            authType = tokenX.privateKey(),
+        )
     }
 
     val defaultObjectMapper: ObjectMapper =
