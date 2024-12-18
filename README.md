@@ -1,17 +1,15 @@
 # dp-rapportering-personregister
+Personregister over dagpengebrukere som sender meldekort.
 
-## Komme i gang
+## Appens ansvar
+- Registeret holder i dagpengerbrukernes status basert på innsendt søknad, arbeidssøkerstatus og vedtak i Arena.
+- Dp-rapportering bruker registeret for å sjekke hvilke meldekortbrukere som skal videresendes fra meldekort-frontend til dp-rapportering-frontend.
+- Registeret har ansvar for at dagpenger-meldekort blir opprettet for brukere (når arena ikke lenger oppretter meldekort).
 
-Gradle brukes som byggverktøy og er bundlet inn.
-
-`./gradlew build`
-
-## Sjekkliste for ny app
-1. Bytt navn på app i nais.yaml, settings.gradle og dockerfile.
-2. Fjern kommentering i deploy.yaml (står beskrevet hva man skal kommentere ut)
-3. Legge til deploysecreten i repoet.
-
----
+## Integrasjoner
+- dp-soknad: Bruker innsending av søknad for å opprette brukere i registeret. Innsending av søknad er et krav for å kunne sende meldekort.
+- dp-arbeidssokeregister-adapter: Brukes for å hente arbeidssøkerstatus og perioder fra arbeidssøkerregisteret, samt å overta/frasi ansvaret for å bekrefte brukers arbeidssøkerperioder.
+- arena: Bruker endring i vedtak i arena for å oppdatere brukerens status i registeret.
 
 # Henvendelser
 
