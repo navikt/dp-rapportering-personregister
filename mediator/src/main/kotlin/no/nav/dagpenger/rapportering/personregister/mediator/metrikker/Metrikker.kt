@@ -38,6 +38,26 @@ class VedtakMetrikker(
             .register(meterRegistry)
 }
 
+class MeldegruppeendringMetrikker(
+    private val meterRegistry: MeterRegistry,
+) {
+    fun meldegruppeendringMottatt() =
+        Counter
+            .builder("${NAMESPACE}_meldegruppeendring_mottatt_total")
+            .description("Indikerer antall mottatte meldegruppeendringer")
+            .register(meterRegistry)
+}
+
+class MeldepliktendringMetrikker(
+    private val meterRegistry: MeterRegistry,
+) {
+    fun meldepliktendringMottatt() =
+        Counter
+            .builder("${NAMESPACE}_meldepliktendring_mottatt_total")
+            .description("Indikerer antall mottatte meldepliktendringer")
+            .register(meterRegistry)
+}
+
 class DatabaseMetrikker(
     meterRegistry: MeterRegistry,
 ) {

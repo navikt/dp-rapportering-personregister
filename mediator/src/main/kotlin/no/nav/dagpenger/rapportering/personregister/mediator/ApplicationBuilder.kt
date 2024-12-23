@@ -18,10 +18,14 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -34,6 +38,8 @@ internal class ApplicationBuilder(
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
+    private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
+    private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
 
@@ -41,6 +47,9 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+    private val meldegruppeendringMediator = MeldegruppeendringMediator()
+    private val meldepliktendringMediator = MeldepliktendringMediator()
+
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -54,6 +63,8 @@ internal class ApplicationBuilder(
                 }
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
+                MeldegruppeendringMottak(rapid, meldegruppeendringMediator, meldegruppeendringMetrikker)
+                MeldepliktendringMottak(rapid, meldepliktendringMediator, meldepliktendringMetrikker)
             }
 
     private val arbeidssøkerperiodeConsumer =
