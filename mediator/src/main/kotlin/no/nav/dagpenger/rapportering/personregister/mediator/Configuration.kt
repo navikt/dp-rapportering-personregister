@@ -9,7 +9,6 @@ import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
-import com.natpryce.konfig.getValue
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
 import kotlinx.coroutines.runBlocking
@@ -24,6 +23,7 @@ internal object Configuration {
                 "RAPID_APP_NAME" to APP_NAME,
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-personregister-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
+                "KAFKA_EXTRA_TOPIC" to "teamarenanais.aapen-arena-meldegruppeendret-v1-q1,teamarenanais.aapen-arena-meldepliktendret-v1-q1",
                 "KAFKA_RESET_POLICY" to "LATEST",
             ),
         )
