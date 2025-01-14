@@ -23,19 +23,19 @@ class PersonSteps : No {
             println(person)
         }
 
-        Gitt("en person som fikk avslag") {
+        Gitt("en person som fikk avslag den {string} med avslagId {string}") { avslagsdato: String, avslagId: String ->
             person = Person(ident)
-            person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.AVSLÅTT, Kildesystem.Arena))
+            person.behandle(lagHendelse(avslagsdato, avslagId, Status.AVSLÅTT, Kildesystem.Arena))
         }
 
-        Gitt("en person som fikk stans") {
+        Gitt("en person som fikk stans fra {string}") { stansDato: String ->
             person = Person(ident)
-            person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.STANSET, Kildesystem.Arena))
+            person.behandle(lagHendelse(stansDato, "123", Status.STANSET, Kildesystem.Arena))
         }
 
-        Gitt("en person som har dagpengerrettighet") {
+        Gitt("en person som har dagpengerrettighet fra {string}") { dato: String ->
             person = Person(ident)
-            person.behandle(lagHendelse(LocalDateTime.now().toString(), "123", Status.INNVILGET, Kildesystem.Arena))
+            person.behandle(lagHendelse(dato, "123", Status.INNVILGET, Kildesystem.Arena))
         }
 
         Når("personen søker om dagpenger den {string} med søknadId {string}") { søknadsdato: String, søknadId: String ->

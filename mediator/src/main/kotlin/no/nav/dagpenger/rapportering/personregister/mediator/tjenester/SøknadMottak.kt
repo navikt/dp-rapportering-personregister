@@ -55,7 +55,3 @@ private fun JsonMessage.tilHendelse(): SøknadHendelse {
 
     return SøknadHendelse(ident, referanseId, dato)
 }
-
-fun main() {
-    println("Hello, World!")
-}
