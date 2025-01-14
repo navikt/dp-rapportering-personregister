@@ -29,5 +29,11 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
         get("/metrics") {
             call.respondText(meterRegistry.scrape())
         }
+
+        get("/leader") {
+            Leader.isLeader().let {
+                call.respondText("Is leader: $it")
+            } ?: call.respondText("Error fetching leader status")
+        }
     }
 }

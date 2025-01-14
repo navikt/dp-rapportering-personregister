@@ -6,6 +6,8 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.api.Leader
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
@@ -59,6 +61,11 @@ internal class ApplicationBuilder(
 
     internal fun start() {
         rapidsConnection.start()
+
+        runBlocking {
+            val isLeader = Leader.isLeader()
+            println("Is this instance the leader? $isLeader")
+        }
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
