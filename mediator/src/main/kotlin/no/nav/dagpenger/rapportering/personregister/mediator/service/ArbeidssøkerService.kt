@@ -19,17 +19,16 @@ class ArbeidssøkerService(
 
     fun sendArbeidssøkerBehov(ident: String) {
         publiserBehov(ArbeidssøkerstatusBehov(ident))
-        logger.info { "Publiserte behov for arbeidssøkerstatus for ident $ident" }
+        sikkerlogg.info { "Publiserte behov for arbeidssøkerstatus for ident $ident" }
     }
 
     private fun publiserBehov(behov: Behovmelding) {
-        // sikkerlogg.info { "Publiserer behov ${behov.behovType} for ident ${behov.ident}" }
+        sikkerlogg.info { "Publiserer behov ${behov.behovType} for ident ${behov.ident}" }
         rapidsConnection.publish(behov.tilMelding().toJson())
     }
 
     companion object {
-        val logger = KotlinLogging.logger {}
-        // val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
+        val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
     }
 }
 

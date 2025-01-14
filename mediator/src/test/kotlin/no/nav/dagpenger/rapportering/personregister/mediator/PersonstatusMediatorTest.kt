@@ -152,8 +152,6 @@ class PersonstatusMediatorTest {
         )
 
         personRepository.hentPerson(ident)?.apply {
-            println(statusHistorikk.allItems())
-            println(dato)
             ident shouldBe ident
             status shouldBe Status.INNVILGET
             status(dato) shouldBe Status.SØKT
