@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
@@ -18,10 +17,7 @@ class PersonstatusMediator(
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        runBlocking { arbeidssøkerService.hentArbeidssøkerHendelse(søknadHendelse.ident) }
-            ?.let { arbeidssøkerHendelse ->
-                behandleHendelse(arbeidssøkerHendelse.tilHendelse())
-            }
+        arbeidssøkerService.sendArbeidssøkerBehov(søknadHendelse.ident)
         behandleHendelse(søknadHendelse.tilHendelse())
     }
 

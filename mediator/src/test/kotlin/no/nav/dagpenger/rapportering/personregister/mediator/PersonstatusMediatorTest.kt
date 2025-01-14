@@ -2,20 +2,16 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
-import io.mockk.coEvery
-import io.mockk.mockk
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.BrukerResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.MetadataResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -25,21 +21,18 @@ class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
     private lateinit var personstatusMediator: PersonstatusMediator
-    private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var arbeidssøkerService: ArbeidssøkerService
 
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
-        arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
-        arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
+        arbeidssøkerService = ArbeidssøkerService(rapidsConnection)
         personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     }
 
     @Test
     fun `kan behandle en ny hendelse med ny person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse(true)
         val ident = "12345678910"
         val søknadId = "123"
 
@@ -55,6 +48,12 @@ class PersonstatusMediatorTest {
         personstatusMediator
             .behandle(søknadHendelse)
 
+        with(rapidsConnection.inspektør) {
+            size shouldBe 1
+            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["ident"].asText() shouldBe ident
+        }
+
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
             status shouldBe Status.SØKT
@@ -63,7 +62,6 @@ class PersonstatusMediatorTest {
 
     @Test
     fun `kan behandle eksisterende person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse(true)
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now()
@@ -88,6 +86,12 @@ class PersonstatusMediatorTest {
         personRepository.lagrePerson(person)
 
         personstatusMediator.behandle(søknadHendelse)
+
+        with(rapidsConnection.inspektør) {
+            size shouldBe 1
+            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["ident"].asText() shouldBe ident
+        }
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
@@ -118,7 +122,6 @@ class PersonstatusMediatorTest {
 
     @Test
     fun `kan behandle vedtak hendelse for eksisterende person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse()
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now().minusDays(1)
@@ -132,6 +135,14 @@ class PersonstatusMediatorTest {
         )
 
         personstatusMediator.behandle(
+            ArbeidssøkerHendelse(
+                ident,
+                UUID.randomUUID(),
+                dato.minusDays(1),
+            ),
+        )
+
+        personstatusMediator.behandle(
             VedtakHendelse(
                 ident = ident,
                 referanseId = søknadId,
@@ -141,6 +152,8 @@ class PersonstatusMediatorTest {
         )
 
         personRepository.hentPerson(ident)?.apply {
+            println(statusHistorikk.allItems())
+            println(dato)
             ident shouldBe ident
             status shouldBe Status.INNVILGET
             status(dato) shouldBe Status.SØKT
@@ -150,7 +163,6 @@ class PersonstatusMediatorTest {
 
     @Test
     fun `kan behandle søknad hendelse for person som ikke eksisterer i databasen og ikke er registrert som arbeidssøker`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now()
@@ -162,6 +174,12 @@ class PersonstatusMediatorTest {
                 dato = dato,
             ),
         )
+
+        with(rapidsConnection.inspektør) {
+            size shouldBe 1
+            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["ident"].asText() shouldBe ident
+        }
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
@@ -190,40 +208,3 @@ class PersonRepositoryFaker : PersonRepository {
 
     override fun hentAntallHendelser(): Int = personliste.values.sumOf { it.hendelser.size }
 }
-
-fun arbeidssøkerperiodeResponse(
-    avsluttet: Boolean = false,
-    tidspunktForRegistrering: LocalDateTime = LocalDateTime.now().minusWeeks(3),
-) = listOf(
-    ArbeidssøkerperiodeResponse(
-        periodeId = UUID.randomUUID(),
-        startet =
-            MetadataResponse(
-                tidspunkt = tidspunktForRegistrering,
-                utfoertAv =
-                    BrukerResponse(
-                        type = "SLUTTBRUKER",
-                        id = "12345678910",
-                    ),
-                kilde = "kilde",
-                aarsak = "årsak",
-                tidspunktFraKilde = null,
-            ),
-        avsluttet =
-            if (avsluttet) {
-                MetadataResponse(
-                    tidspunkt = LocalDateTime.now(),
-                    utfoertAv =
-                        BrukerResponse(
-                            type = "SYSTEM",
-                            id = "systemid",
-                        ),
-                    kilde = "kilde",
-                    aarsak = "årsak",
-                    tidspunktFraKilde = null,
-                )
-            } else {
-                null
-            },
-    ),
-)
