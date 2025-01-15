@@ -1,6 +1,12 @@
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.Status.ARBS
+import no.nav.dagpenger.rapportering.personregister.modell.Status.AVSLÅTT
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_ARBS
+import no.nav.dagpenger.rapportering.personregister.modell.Status.INNVILGET
+import no.nav.dagpenger.rapportering.personregister.modell.Status.STANSET
+import no.nav.dagpenger.rapportering.personregister.modell.Status.SØKT
 
 interface StatusStrategy {
     fun håndter(
@@ -36,7 +42,7 @@ object SøktStatusStrategy : BaseStatusStrategy() {
         person: Person,
         hendelse: Hendelse,
     ) {
-        oppdaterStatus(person, hendelse, setOf(Status.ARBS, Status.INNVILGET, Status.AVSLÅTT))
+        oppdaterStatus(person, hendelse, setOf(Status.ARBS, Status.IKKE_ARBS, Status.INNVILGET, Status.AVSLÅTT))
     }
 }
 
@@ -45,7 +51,16 @@ object ArbsStatusStrategy : BaseStatusStrategy() {
         person: Person,
         hendelse: Hendelse,
     ) {
-        oppdaterStatus(person, hendelse, setOf(Status.SØKT, Status.INNVILGET, Status.AVSLÅTT))
+        oppdaterStatus(person, hendelse, setOf(Status.SØKT, Status.INNVILGET, Status.AVSLÅTT, Status.IKKE_ARBS))
+    }
+}
+
+object IkkeArbsStatusStrategy : BaseStatusStrategy() {
+    override fun håndter(
+        person: Person,
+        hendelse: Hendelse,
+    ) {
+        oppdaterStatus(person, hendelse, setOf(Status.ARBS, Status.SØKT, Status.AVSLÅTT))
     }
 }
 
@@ -85,11 +100,12 @@ class SimpleStatusStrategyFactory : StatusStrategyFactory {
 
         try {
             when (person.status) {
-                Status.SØKT -> SøktStatusStrategy
-                Status.ARBS -> ArbsStatusStrategy
-                Status.AVSLÅTT -> AvslåttStatusStrategy
-                Status.INNVILGET -> InnvilgetStatusStrategy
-                Status.STANSET -> StansetStatusStrategy
+                SØKT -> SøktStatusStrategy
+                ARBS -> ArbsStatusStrategy
+                AVSLÅTT -> AvslåttStatusStrategy
+                INNVILGET -> InnvilgetStatusStrategy
+                STANSET -> StansetStatusStrategy
+                IKKE_ARBS -> IkkeArbsStatusStrategy
             }
         } catch (e: Exception) {
             DefaultStatusStrategy
