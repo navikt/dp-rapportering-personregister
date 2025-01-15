@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
@@ -74,6 +75,16 @@ class PostgresPersonRepositoryTest {
             personRepository.hentPerson(ident)?.apply {
                 hendelser.size shouldBe 2
                 status shouldBe Status.INNVILGET
+            }
+        }
+    }
+
+    @Test
+    fun `oppdatering av person som ikke finnes i databasen kaster IllegalStateException`() {
+        withMigratedDb {
+            val person = Person(ident = "12345678901")
+            shouldThrow<IllegalStateException> {
+                personRepository.oppdaterPerson(person)
             }
         }
     }
