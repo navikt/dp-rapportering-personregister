@@ -4,6 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -184,6 +185,56 @@ class PersonstatusMediatorTest {
             status shouldBe Status.SØKT
             statusHistorikk.allItems().size shouldBe 1
         }
+    }
+
+    // Stans
+    @Test
+    fun `kan behandle stans hendelse for eksisterende person`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            VedtakHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+                status = Status.INNVILGET,
+            ),
+        )
+
+        personstatusMediator.behandle(
+            MeldegruppeendringHendelse(
+                ident = ident,
+                meldegruppeKode = "ARBS",
+                fraOgMed = dato.plusDays(1).toLocalDate(),
+                hendelseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe Status.STANSET
+            status(dato) shouldBe Status.INNVILGET
+        }
+    }
+
+    @Test
+    fun `kan behandle stans hendelse for person som ikke eksisterer i databasen`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            MeldegruppeendringHendelse(
+                ident = ident,
+                meldegruppeKode = "ARBS",
+                fraOgMed = dato.plusDays(1).toLocalDate(),
+                hendelseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident) shouldBe null
     }
 }
 
