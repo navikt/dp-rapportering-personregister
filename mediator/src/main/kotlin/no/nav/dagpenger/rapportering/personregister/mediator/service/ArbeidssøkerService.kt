@@ -3,23 +3,48 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.OvertaBekreftelse
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import java.util.UUID
 
 class ArbeidssøkerService(
     private val rapidsConnection: RapidsConnection,
+    private val personRepository: PersonRepository,
+    private val arbeidssøkerRepository: ArbeidssøkerRepository,
 ) {
     fun sendOvertaBekreftelseBehov(
         ident: String,
-        periodeId: String,
+        periodeId: UUID,
     ) {
-        publiserBehov(OvertaBekreftelseBehov(ident, periodeId))
+        publiserBehov(OvertaBekreftelseBehov(ident, periodeId.toString()))
     }
 
     fun sendArbeidssøkerBehov(ident: String) {
         publiserBehov(ArbeidssøkerstatusBehov(ident))
         sikkerlogg.info { "Publiserte behov for arbeidssøkerstatus for ident $ident" }
+    }
+
+    fun oppdaterOvertagelse(
+        periodeId: UUID,
+        overtattBekreftelse: Boolean,
+    ) = arbeidssøkerRepository.oppdaterOvertagelse(periodeId, overtattBekreftelse)
+
+    fun erArbeidssøker(ident: String): Boolean = arbeidssøkerRepository.hentArbeidssøkerperioder(ident).any { it.avsluttet == null }
+
+    fun finnesPerson(ident: String): Boolean = personRepository.finnesPerson(ident)
+
+    fun hentArbeidssøkerperioder(ident: String) = arbeidssøkerRepository.hentArbeidssøkerperioder(ident)
+
+    fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) =
+        arbeidssøkerRepository.lagreArbeidssøkerperiode(arbeidssøkerperiode)
+
+    fun avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode: Arbeidssøkerperiode) {
+        arbeidssøkerRepository.avsluttArbeidssøkerperiode(arbeidssøkerperiode.periodeId, arbeidssøkerperiode.avsluttet!!)
+        arbeidssøkerRepository.oppdaterOvertagelse(arbeidssøkerperiode.periodeId, false)
     }
 
     private fun publiserBehov(behov: Behovmelding) {

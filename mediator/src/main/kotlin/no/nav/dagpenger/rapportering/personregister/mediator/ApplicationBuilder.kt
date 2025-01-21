@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -36,6 +37,7 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
 
     private val rapidsConnection =
         RapidApplication
@@ -48,7 +50,7 @@ internal class ApplicationBuilder(
                     internalApi(meterRegistry)
                     personstatusApi(personRepository)
                 }
-                val arbeidssøkerService = ArbeidssøkerService(rapid)
+                val arbeidssøkerService = ArbeidssøkerService(rapid, personRepository, arbeidssøkerRepository)
                 val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
