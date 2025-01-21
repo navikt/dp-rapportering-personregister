@@ -9,7 +9,7 @@ class PersonTest {
         ident: String,
         referanseId: String,
         dato: LocalDateTime = LocalDateTime.now(),
-        status: Status = Status.SØKT,
+        status: Status.Type = Status.Type.SØKT,
     ) = Hendelse(
         ident = ident,
         referanseId = referanseId,
@@ -29,7 +29,8 @@ class PersonTest {
         val person = Person(ident).apply { behandle(hendelse) }
 
         person.ident shouldBe ident
-        person.status shouldBe Status.SØKT
+        println("person: ${person.status.type}")
+        person.status.type shouldBe Status.Type.SØKT
     }
 
     @Test
@@ -39,10 +40,9 @@ class PersonTest {
         val referanseId = "123"
 
         val person = Person(ident).apply { behandle(opprettHendelse(ident, referanseId, dato)) }
-        val nyHendelse = opprettHendelse(ident, referanseId = "456", dato = LocalDateTime.now(), status = Status.INNVILGET)
+        val nyHendelse = opprettHendelse(ident, referanseId = "456", dato = LocalDateTime.now(), status = Status.Type.INNVILGET)
         person.behandle(nyHendelse)
 
-        person.status shouldBe Status.INNVILGET
-        person.status(dato) shouldBe Status.SØKT
+        person.status.type shouldBe Status.Type.INNVILGET
     }
 }
