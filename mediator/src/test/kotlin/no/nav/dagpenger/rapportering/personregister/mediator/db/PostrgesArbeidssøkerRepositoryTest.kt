@@ -23,7 +23,11 @@ class PostrgesArbeidssøkerRepositoryTest {
 
             with(arbeidssøkerRepository.hentArbeidssøkerperioder(arbeidssøkerperiode.ident)) {
                 size shouldBe 1
-                first() shouldBe arbeidssøkerperiode
+                first().periodeId shouldBe arbeidssøkerperiode.periodeId
+                first().ident shouldBe arbeidssøkerperiode.ident
+                first().startet shouldBe arbeidssøkerperiode.startet
+                first().avsluttet shouldBe arbeidssøkerperiode.avsluttet
+                first().overtattBekreftelse shouldBe arbeidssøkerperiode.overtattBekreftelse
             }
         }
     }
@@ -72,7 +76,7 @@ class PostrgesArbeidssøkerRepositoryTest {
 
             with(arbeidssøkerRepository.hentArbeidssøkerperioder(arbeidssøkerperiode.ident)) {
                 size shouldBe 1
-                first().avsluttet shouldBe avsluttetDato
+                first().avsluttet.toString() shouldBe avsluttetDato.toString()
             }
         }
     }
