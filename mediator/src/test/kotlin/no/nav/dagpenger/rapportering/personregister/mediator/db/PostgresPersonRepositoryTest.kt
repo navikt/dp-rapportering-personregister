@@ -6,9 +6,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSou
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.SØKT
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -27,7 +29,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.SØKT,
+                    status = Status.Type.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 
@@ -37,7 +39,7 @@ class PostgresPersonRepositoryTest {
             personRepository.hentPerson(ident)?.apply {
                 ident shouldBe ident
                 hendelse shouldBe hendelse
-                //                status shouldBe Status.SØKT
+                status shouldBe SØKT
             }
         }
     }
@@ -54,7 +56,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.SØKT,
+                    status = Status.Type.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 
@@ -66,7 +68,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = "123",
                     dato = dato.plusDays(1),
-                    status = Status.INNVILGET,
+                    status = Status.Type.INNVILGET,
                     kilde = Kildesystem.Arena,
                 )
             person.behandle(vedtakHendelse)
@@ -74,7 +76,7 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentPerson(ident)?.apply {
                 hendelser.size shouldBe 2
-                status shouldBe Status.INNVILGET
+                status shouldBe INNVILGET
             }
         }
     }
@@ -108,7 +110,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.SØKT,
+                    status = Status.Type.SØKT,
                     kilde = Kildesystem.Søknad,
                 )
 

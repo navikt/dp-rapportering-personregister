@@ -49,14 +49,14 @@ class PersonstatusMediator(
             personRepository
                 .hentPerson(ident)
                 ?.let { person ->
-                    if (person.status === Status.INNVILGET && meldegruppeKode === "ARBS") {
+                    if (person.status.type === Status.Type.INNVILGET && meldegruppeKode === "ARBS") {
                         val hendelse =
                             Hendelse(
                                 id = UUID.randomUUID(),
                                 ident = ident,
                                 referanseId = meldegruppeendringHendelse.hendelseId,
                                 dato = meldegruppeendringHendelse.fraOgMed.atStartOfDay(),
-                                status = Status.STANSET,
+                                status = Status.Type.STANSET,
                                 kilde = Kildesystem.Arena,
                             )
                         person.behandle(hendelse)

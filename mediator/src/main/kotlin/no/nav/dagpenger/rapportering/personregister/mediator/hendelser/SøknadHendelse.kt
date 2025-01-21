@@ -16,5 +16,5 @@ fun SøknadHendelse.tilHendelse(): Hendelse {
     val ident = this.ident
     val referanseId = this.referanseId
     val dato = this.dato
-    return Hendelse(UUID.randomUUID(), ident, referanseId, dato, Status.SØKT, Kildesystem.Søknad)
+    return Hendelse(UUID.randomUUID(), ident, referanseId, dato, Status.Type.SØKT, Kildesystem.Søknad)
 }

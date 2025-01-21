@@ -10,6 +10,17 @@ sealed interface Status {
         STANSET,
     }
 
+    companion object {
+        fun rehydrer(type: String): Status =
+            when (Type.valueOf(type)) {
+                Type.SØKT -> SØKT
+                Type.INNVILGET -> INNVILGET
+                Type.AVSLÅTT -> AVSLÅTT
+                Type.STANSET -> STANSET
+                else -> SØKT
+            }
+    }
+
     fun håndter(hendelse: Hendelse): Status
 }
 

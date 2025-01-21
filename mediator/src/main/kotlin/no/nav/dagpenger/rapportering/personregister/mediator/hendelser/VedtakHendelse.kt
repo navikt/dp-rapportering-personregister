@@ -8,6 +8,6 @@ data class VedtakHendelse(
     val ident: String,
     val referanseId: String,
     val dato: LocalDateTime,
-    val status: Status,
+    val status: Status.Type,
     val kildesystem: Kildesystem = Kildesystem.Arena,
 )

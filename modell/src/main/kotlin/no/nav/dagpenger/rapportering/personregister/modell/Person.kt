@@ -5,7 +5,6 @@ data class Person(
     var status: Status = SØKT,
 ) {
     val hendelser = mutableListOf<Hendelse>()
-    val statusHistorikk = TemporalCollection<Status>()
 
     fun behandle(hendelse: Hendelse) {
         hendelser.add(hendelse)
