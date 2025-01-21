@@ -46,7 +46,8 @@ class ArbeidssøkerMediator(
             sikkerlogg.info { "Bekreftelse for periode ${overtaBekreftelseLøsning.periodeId} overtatt." }
         } else {
             sikkerlogg.error {
-                "Feil ved overtagelse av bekreftelse for periode ${overtaBekreftelseLøsning.periodeId}.\n${overtaBekreftelseLøsning.feil}. Sender overtakelse på nytt."
+                "Feil ved overtagelse av bekreftelse for periode ${overtaBekreftelseLøsning.periodeId}." +
+                    "\n${overtaBekreftelseLøsning.feil}. Sender overtakelse på nytt."
             }
             arbeidssøkerService.sendOvertaBekreftelseBehov(overtaBekreftelseLøsning.ident, overtaBekreftelseLøsning.periodeId)
         }
