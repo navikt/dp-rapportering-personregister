@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
@@ -9,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHe
 import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -21,6 +23,7 @@ import java.util.UUID
 class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
+    private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var personstatusMediator: PersonstatusMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
 
@@ -28,7 +31,8 @@ class PersonstatusMediatorTest {
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
-        arbeidssøkerService = ArbeidssøkerService(rapidsConnection)
+        arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
+        arbeidssøkerService = ArbeidssøkerService(rapidsConnection, personRepository, arbeidssøkerRepository)
         personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
     }
 
@@ -256,4 +260,59 @@ class PersonRepositoryFaker : PersonRepository {
     override fun hentAnallPersoner(): Int = personliste.size
 
     override fun hentAntallHendelser(): Int = personliste.values.sumOf { it.hendelser.size }
+}
+
+class ArbeidssøkerRepositoryFaker : ArbeidssøkerRepository {
+    private val arbeidssøkerperioder = mutableListOf<Arbeidssøkerperiode>()
+
+    override fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> = arbeidssøkerperioder.filter { it.ident == ident }
+
+    override fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) {
+        arbeidssøkerperioder.add(arbeidssøkerperiode)
+    }
+
+    override fun oppdaterOvertagelse(
+        periodeId: UUID,
+        overtattBekreftelse: Boolean,
+    ) {
+        hentPeriode(periodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(overtattBekreftelse = overtattBekreftelse)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+    }
+
+    override fun avsluttArbeidssøkerperiode(
+        periodeId: UUID,
+        avsluttetDato: LocalDateTime,
+    ) {
+        hentPeriode(periodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(avsluttet = avsluttetDato)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+    }
+
+    override fun oppdaterPeriodeId(
+        ident: String,
+        gammelPeriodeId: UUID,
+        nyPeriodeId: UUID,
+    ) {
+        hentPeriode(gammelPeriodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(periodeId = nyPeriodeId)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $gammelPeriodeId")
+    }
+
+    private fun hentPeriode(periodeId: UUID) = arbeidssøkerperioder.find { it.periodeId == periodeId }
 }

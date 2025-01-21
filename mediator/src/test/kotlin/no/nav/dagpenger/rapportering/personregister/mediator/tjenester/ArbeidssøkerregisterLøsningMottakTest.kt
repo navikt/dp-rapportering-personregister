@@ -3,17 +3,17 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class ArbeidssøkerregisterLøsningMottakTest {
     private val testRapid = TestRapid()
-    private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
+    private val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
 
     init {
-        ArbeidssøkerregisterLøsningMottak(testRapid, personstatusMediator)
+        ArbeidssøkerregisterLøsningMottak(testRapid, arbeidssøkerMediator)
     }
 
     @BeforeEach
@@ -25,7 +25,7 @@ class ArbeidssøkerregisterLøsningMottakTest {
     fun `skal motta arbeidssøkerregister løsning event`() {
         testRapid.sendTestMessage(løsning_arbeidssøkerstatus_behov)
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<ArbeidssøkerHendelse>()) }
+        verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>()) }
     }
 }
 
@@ -53,6 +53,11 @@ private val løsning_arbeidssøkerstatus_behov =
             "startDato": "2024-12-20T08:04:33.692289",
             "sluttDato": null
           }
+        }
+      },
+      "@feil": {
+        "Arbeidssøkerstatus": {
+          "verdi": null
         }
       }
     }
