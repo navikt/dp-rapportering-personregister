@@ -113,13 +113,13 @@ class PostrgesArbeidssøkerRepositoryTest {
             }
         }
     }
-}
 
-val arbeidssøkerperiode =
-    Arbeidssøkerperiode(
-        periodeId = UUID.randomUUID(),
-        ident = "12345678901",
-        startet = LocalDateTime.now().minusDays(7),
-        avsluttet = null,
-        overtattBekreftelse = false,
-    )
+    val arbeidssøkerperiode =
+        Arbeidssøkerperiode(
+            periodeId = UUID.randomUUID(),
+            ident = "12345678901",
+            startet = LocalDateTime.now().minusDays(7),
+            avsluttet = null,
+            overtattBekreftelse = false,
+        )
+}
