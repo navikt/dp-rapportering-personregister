@@ -33,7 +33,7 @@ private val løsning_arbeidssøkerstatus_behov =
     // language=json
     """
     {
-      "@event_name": "behov_arbeissokerstatus",
+      "@event_name": "behov_arbeidssokerstatus",
       "@behov": ["Arbeidssøkerstatus"],
       "ident": "12345678910",
       "@id": "98be414a-e7f6-4b70-8fc7-c147e34dff9c",

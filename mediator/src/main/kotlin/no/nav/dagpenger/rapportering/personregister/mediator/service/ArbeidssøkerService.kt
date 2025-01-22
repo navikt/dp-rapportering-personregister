@@ -72,7 +72,7 @@ data class ArbeidssøkerstatusBehov(
 ) : Behovmelding(ident, Arbeidssøkerstatus) {
     override fun tilMelding(): JsonMessage =
         JsonMessage.newMessage(
-            "behov_arbeissokerstatus",
+            "behov_arbeidssokerstatus",
             mutableMapOf(
                 "@behov" to listOf(behovType.name),
                 "ident" to ident,
@@ -86,7 +86,7 @@ data class OvertaBekreftelseBehov(
 ) : Behovmelding(ident, OvertaBekreftelse) {
     override fun tilMelding(): JsonMessage =
         JsonMessage.newMessage(
-            "behov_arbeissokerstatus",
+            "behov_arbeidssokerstatus",
             mutableMapOf(
                 "@behov" to listOf(behovType.name),
                 "ident" to ident,

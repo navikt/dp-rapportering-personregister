@@ -29,7 +29,7 @@ class ArbeidssøkerServiceTest {
 
         with(testRapid.inspektør) {
             size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
+            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
             message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
             message(0)["ident"].asText() shouldBe ident
             message(0)["periodeId"].asText() shouldBe periodeId.toString()
@@ -42,7 +42,7 @@ class ArbeidssøkerServiceTest {
 
         with(testRapid.inspektør) {
             size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
+            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
             message(0)["@behov"][0].asText() shouldBe "Arbeidssøkerstatus"
             message(0)["ident"].asText() shouldBe ident
         }

@@ -24,7 +24,7 @@ class ArbeidssøkerregisterLøsningMottak(
         River(rapidsConnection)
             .apply {
                 validate {
-                    it.requireValue("@event_name", "behov_arbeissokerstatus")
+                    it.requireValue("@event_name", "behov_arbeidssokerstatus")
                     it.requireKey("@løsning", "@feil", "ident")
                     it.requireAllOrAny("@behov", BehovType.entries.map { behov -> behov.toString() })
                     it.interestedIn("periodeId", "arbeidssøkerNestePeriode", "arbeidet", "meldeperiode")
