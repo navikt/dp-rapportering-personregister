@@ -67,7 +67,7 @@ class ArbeidssøkerMediatorTest {
         with(rapidsConnection.inspektør) {
             size shouldBe 1
             message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
-            message(0)["@behov"].asText() shouldBe "OvertaBekreftelse"
+            message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
             message(0)["periodeId"].asText() shouldBe periode.periodeId.toString()
             message(0)["ident"].asText() shouldBe person.ident
         }
@@ -170,7 +170,7 @@ class ArbeidssøkerMediatorTest {
         with(rapidsConnection.inspektør) {
             size shouldBe 1
             message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
-            message(0)["@behov"].asText() shouldBe "OvertaBekreftelse"
+            message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
             message(0)["periodeId"].asText() shouldBe periode.periodeId.toString()
             message(0)["ident"].asText() shouldBe person.ident
         }
