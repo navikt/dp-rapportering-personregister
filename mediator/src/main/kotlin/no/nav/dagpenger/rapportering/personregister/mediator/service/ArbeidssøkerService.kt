@@ -50,7 +50,9 @@ class ArbeidssøkerService(
 
     private fun publiserBehov(behov: Behovmelding) {
         sikkerlogg.info { "Publiserer behov ${behov.behovType} for ident ${behov.ident}" }
-        rapidsConnection.publish(behov.tilMelding().toJson())
+        val melding = behov.tilMelding().toJson()
+        sikkerlogg.info { "Publiserte melding: $melding" }
+        rapidsConnection.publish(melding)
     }
 
     companion object {
