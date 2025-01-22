@@ -74,7 +74,7 @@ data class ArbeidssøkerstatusBehov(
         JsonMessage.newMessage(
             "behov_arbeissokerstatus",
             mutableMapOf(
-                "@behov" to behovType.name,
+                "@behov" to listOf(behovType.name),
                 "ident" to ident,
             ),
         )
@@ -88,7 +88,7 @@ data class OvertaBekreftelseBehov(
         JsonMessage.newMessage(
             "behov_arbeissokerstatus",
             mutableMapOf(
-                "@behov" to behovType.name,
+                "@behov" to listOf(behovType.name),
                 "ident" to ident,
                 "periodeId" to periodeId,
             ),
