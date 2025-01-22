@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.modell
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PersonTest {
     @Test
@@ -23,7 +22,6 @@ class PersonTest {
 
     @Test
     fun `kan behandle flere hendelser`() {
-        val id = UUID.randomUUID().toString()
         val ident = "12345678901"
         val dato = LocalDateTime.now()
         val referanseId = "123"

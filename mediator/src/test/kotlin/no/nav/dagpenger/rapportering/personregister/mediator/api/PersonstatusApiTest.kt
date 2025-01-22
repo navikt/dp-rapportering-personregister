@@ -14,10 +14,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PersonstatusApiTest : ApiTestSetup() {
-    private val id = UUID.randomUUID()
     private val ident = "12345678910"
 
     @Test

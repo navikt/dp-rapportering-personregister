@@ -23,8 +23,8 @@ class PostgresPersonRepository(
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
             val personId = hentPersonId(ident) ?: return@timedAction null
-            val status = hentPersonStatus(ident) ?: return@timedAction null
-            val hendelser = hentHendelser(personId, ident)
+            val status = hentPersonStatus(ident)
+            val hendelser = hentHendelser(personId)
 
             if (hendelser.isNotEmpty()) {
                 Person(ident, status).apply {
@@ -119,7 +119,7 @@ class PostgresPersonRepository(
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("SELECT status FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> Status.rehydrer(row.string("status")) ?: SØKT }
+                    .map { row -> Status.rehydrer(row.string("status")) }
                     .asSingle,
             ) ?: SØKT
         }
@@ -162,10 +162,7 @@ class PostgresPersonRepository(
         }
     }
 
-    private fun hentHendelser(
-        personId: Long,
-        ident: String,
-    ): List<Hendelse> =
+    private fun hentHendelser(personId: Long): List<Hendelse> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))

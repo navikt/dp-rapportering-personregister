@@ -17,7 +17,6 @@ sealed interface Status {
                 Type.INNVILGET -> INNVILGET
                 Type.AVSLÅTT -> AVSLÅTT
                 Type.STANSET -> STANSET
-                else -> SØKT
             }
     }
 

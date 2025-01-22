@@ -10,7 +10,10 @@ import org.junit.jupiter.api.Test
 class MeldegruppeendringMottakTest {
     private val testRapid = TestRapid()
     private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
-    private val meldegruppeendringMottak = MeldegruppeendringMottak(testRapid, personstatusMediator)
+
+    init {
+        MeldegruppeendringMottak(testRapid, personstatusMediator)
+    }
 
     @Test
     fun `kan motta meldegruppendring event`() {

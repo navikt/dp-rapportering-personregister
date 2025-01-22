@@ -24,7 +24,6 @@ class PersonSteps : No {
         Gitt("en person som søkt om dagpenger den {string} med søknadId {string}") { søknadsdato: String, søknadId: String ->
             person = Person(ident)
             person.behandle(SøknadHendelse(ident, LocalDateTime.parse(søknadsdato), søknadId))
-            println(person)
         }
 
         Gitt("en person som fikk avslag den {string} med avslagId {string}") { avslagsdato: String, avslagId: String ->
@@ -48,7 +47,6 @@ class PersonSteps : No {
 
         Når("personen får vedtak om innvilgelse den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->
             person.behandle(InnvilgelseHendelse(ident, LocalDateTime.parse(vedtaksdato), vedtakId))
-            println(person)
         }
 
         Når("personen får vedtak om avslag den {string} med vedtakId {string}") { vedtaksdato: String, vedtakId: String ->

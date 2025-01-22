@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
-import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -53,7 +52,6 @@ private fun JsonMessage.tilHendelse(): StansHendelse {
     val ident: String = this["FODSELSNR"].asText()
     val meldegruppeKode = this["MELDEGRUPPEKODE"].asText()
     val fraOgMed = this["DATO_FRA"].asLocalDate()
-    val tilOgMed = if (this["DATO_TIL"].isMissingOrNull()) null else this["DATO_TIL"].asLocalDate()
     val hendelseId = this["HENDELSE_ID"].asText()
 
     return StansHendelse(

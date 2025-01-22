@@ -7,13 +7,6 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import mu.KotlinLogging
-
-data class KafkaMessage(
-    val periodeId: String,
-)
-
-private val logger = KotlinLogging.logger {}
 
 fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
     routing {

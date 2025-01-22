@@ -21,6 +21,14 @@ sealed class Hendelse(
 
         return true
     }
+
+    override fun hashCode(): Int {
+        var result = ident.hashCode()
+        result = 31 * result + dato.hashCode()
+        result = 31 * result + kilde.hashCode()
+        result = 31 * result + referanseId.hashCode()
+        return result
+    }
 }
 
 class SøknadHendelse(

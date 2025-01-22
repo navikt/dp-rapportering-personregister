@@ -57,7 +57,7 @@ class VedtakMottak(
 
                 is AvslagHendelse -> {
                     logger.info { "Mottok avslag vedtak for person ${hendelse.ident}" }
-                    personStatusMediator.behandle(hendelse as AvslagHendelse)
+                    personStatusMediator.behandle(hendelse)
                 }
 
                 else -> {
