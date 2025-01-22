@@ -8,12 +8,12 @@ CREATE TABLE person
 
 CREATE TABLE hendelse
 (
-    id           UUID PRIMARY KEY,
     person_id    BIGINT,
-    referanse_id VARCHAR(255),
+    referanse_id VARCHAR(255) UNIQUE,
     dato         TIMESTAMP,
     status       VARCHAR(50),
     kilde        VARCHAR(50),
+    type         VARCHAR(50),
     FOREIGN KEY (person_id) REFERENCES person (id)
 );
 

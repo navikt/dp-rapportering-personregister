@@ -10,15 +10,14 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
 class PersonstatusApiTest : ApiTestSetup() {
+    private val id = UUID.randomUUID()
     private val ident = "12345678910"
 
     @Test
@@ -64,11 +63,8 @@ class PersonstatusApiTest : ApiTestSetup() {
 }
 
 fun lagHendelse(ident: String) =
-    Hendelse(
-        id = UUID.randomUUID(),
+    SøknadHendelse(
         ident = ident,
         referanseId = "123",
         dato = LocalDateTime.now(),
-        status = Status.Type.SØKT,
-        kilde = Søknad,
     )

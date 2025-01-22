@@ -2,17 +2,14 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.tilHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status
-import java.util.UUID
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
@@ -21,59 +18,44 @@ class PersonstatusMediator(
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
         arbeidssøkerService.sendArbeidssøkerBehov(søknadHendelse.ident)
-        behandleHendelse(søknadHendelse.tilHendelse())
+        behandleHendelse(søknadHendelse)
     }
 
-    fun behandle(vedtakHendelse: VedtakHendelse) {
-        val hendelse =
-            Hendelse(
-                id = UUID.randomUUID(),
-                ident = vedtakHendelse.ident,
-                referanseId = vedtakHendelse.referanseId,
-                dato = vedtakHendelse.dato,
-                status = vedtakHendelse.status,
-                kilde = vedtakHendelse.kildesystem,
-            )
-
+    fun behandle(hendelse: InnvilgelseHendelse) {
         sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
         behandleHendelse(hendelse)
     }
 
-    fun behandle(meldegruppeendringHendelse: MeldegruppeendringHendelse) {
-        sikkerlogg.info { "Behandler meldegruppeendringhendelse: $meldegruppeendringHendelse" }
+    fun behandle(hendelse: AvslagHendelse) {
+        sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
+        behandleHendelse(hendelse)
+    }
+
+    fun behandle(hendelse: StansHendelse) {
+        sikkerlogg.info { "Behandler meldegruppeendringhendelse: $hendelse" }
 
         try {
-            val ident = meldegruppeendringHendelse.ident
-            val meldegruppeKode = meldegruppeendringHendelse.meldegruppeKode
-
             personRepository
-                .hentPerson(ident)
+                .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    if (person.status.type === Status.Type.INNVILGET && meldegruppeKode === "ARBS") {
-                        val hendelse =
-                            Hendelse(
-                                id = UUID.randomUUID(),
-                                ident = ident,
-                                referanseId = meldegruppeendringHendelse.hendelseId,
-                                dato = meldegruppeendringHendelse.fraOgMed.atStartOfDay(),
-                                status = Status.Type.STANSET,
-                                kilde = Kildesystem.Arena,
-                            )
+                    if (person.status is INNVILGET &&
+                        hendelse.meldegruppeKode === "ARBS"
+                    ) {
                         person.behandle(hendelse)
                         personRepository.oppdaterPerson(person)
                     }
                 }
 
-            sikkerlogg.info { "Behandlet hendelse: $meldegruppeendringHendelse" }
+            sikkerlogg.info { "Behandlet hendelse: $hendelse" }
         } catch (e: Exception) {
-            sikkerlogg.error(e) { "Feil ved behandling av hendelse: $meldegruppeendringHendelse" }
+            sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
         }
     }
 
-    fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
+    fun behandle(arbeidssøkerHendelse: no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse) {
         sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
         if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
-            behandleHendelse(arbeidssøkerHendelse.tilHendelse())
+            behandleHendelse(arbeidssøkerHendelse)
         } else {
             sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
         }

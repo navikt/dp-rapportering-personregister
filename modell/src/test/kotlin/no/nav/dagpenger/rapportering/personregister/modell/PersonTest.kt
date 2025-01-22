@@ -3,28 +3,16 @@ package no.nav.dagpenger.rapportering.personregister.modell
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PersonTest {
-    private fun opprettHendelse(
-        ident: String,
-        referanseId: String,
-        dato: LocalDateTime = LocalDateTime.now(),
-        status: Status.Type = Status.Type.SØKT,
-    ) = Hendelse(
-        ident = ident,
-        referanseId = referanseId,
-        dato = dato,
-        status = status,
-        kilde = Kildesystem.Søknad,
-    )
-
     @Test
     fun `kan behandle første hendelse`() {
         val ident = "12345678901"
         val dato = LocalDateTime.now()
         val referanseId = "123"
 
-        val hendelse = opprettHendelse(ident, referanseId, dato)
+        val hendelse = SøknadHendelse(ident, dato, referanseId)
 
         val person = Person(ident).apply { behandle(hendelse) }
 
@@ -35,12 +23,15 @@ class PersonTest {
 
     @Test
     fun `kan behandle flere hendelser`() {
+        val id = UUID.randomUUID().toString()
         val ident = "12345678901"
         val dato = LocalDateTime.now()
         val referanseId = "123"
 
-        val person = Person(ident).apply { behandle(opprettHendelse(ident, referanseId, dato)) }
-        val nyHendelse = opprettHendelse(ident, referanseId = "456", dato = LocalDateTime.now(), status = Status.Type.INNVILGET)
+        val søknadHendelse = SøknadHendelse(ident, dato, referanseId)
+        val person = Person(ident).apply { behandle(søknadHendelse) }
+
+        val nyHendelse = InnvilgelseHendelse(ident, dato = LocalDateTime.now(), referanseId = "456")
         person.behandle(nyHendelse)
 
         person.status.type shouldBe Status.Type.INNVILGET

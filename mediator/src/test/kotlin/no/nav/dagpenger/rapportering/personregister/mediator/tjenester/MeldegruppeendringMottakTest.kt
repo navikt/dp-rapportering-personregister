@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import org.junit.jupiter.api.Test
 
 class MeldegruppeendringMottakTest {
@@ -16,14 +16,14 @@ class MeldegruppeendringMottakTest {
     fun `kan motta meldegruppendring event`() {
         testRapid.sendTestMessage(meldegruppeendring_event)
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<MeldegruppeendringHendelse>()) }
+        verify(exactly = 1) { personstatusMediator.behandle(any<StansHendelse>()) }
     }
 
     @Test
     fun `kan motta meldegruppendring event uten 'tilOgMed' dato`() {
         testRapid.sendTestMessage(meldegruppeendring_uten_tom_dato)
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<MeldegruppeendringHendelse>()) }
+        verify(exactly = 1) { personstatusMediator.behandle(any<StansHendelse>()) }
     }
 }
 

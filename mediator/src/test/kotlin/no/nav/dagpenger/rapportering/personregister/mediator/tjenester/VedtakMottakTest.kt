@@ -4,8 +4,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.vedtakMetrikker
+import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -43,14 +44,14 @@ class VedtakMottakTest {
             ),
         )
 
-        val vedtakHendelse =
-            VedtakHendelse(
+        val innvilgelseHendelse =
+            InnvilgelseHendelse(
                 ident = ident,
-                referanseId = referenseId,
                 dato = LocalDateTime.parse(dato, formatter),
-                status = status,
+                referanseId = referenseId,
             )
-        verify(exactly = 1) { personstatusMediator.behandle(vedtakHendelse) }
+
+        verify(exactly = 1) { personstatusMediator.behandle(innvilgelseHendelse) }
     }
 
     @Test
@@ -69,15 +70,14 @@ class VedtakMottakTest {
             ),
         )
 
-        val vedtakHendelse =
-            VedtakHendelse(
+        val avslagHendelse =
+            AvslagHendelse(
                 ident = ident,
-                referanseId = referenseId,
                 dato = LocalDateTime.parse(dato, formatter),
-                status = status,
+                referanseId = referenseId,
             )
 
-        verify(exactly = 1) { personstatusMediator.behandle(vedtakHendelse) }
+        verify(exactly = 1) { personstatusMediator.behandle(avslagHendelse) }
     }
 }
 

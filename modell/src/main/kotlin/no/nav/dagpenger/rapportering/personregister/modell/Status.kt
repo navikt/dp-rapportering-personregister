@@ -28,9 +28,9 @@ data object SØKT : Status {
     override val type = Status.Type.SØKT
 
     override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse.status) {
-            Status.Type.INNVILGET -> INNVILGET
-            Status.Type.AVSLÅTT -> AVSLÅTT
+        when (hendelse) {
+            is InnvilgelseHendelse -> INNVILGET
+            is AvslagHendelse -> AVSLÅTT
             else -> this
         }
 }
@@ -39,8 +39,8 @@ object INNVILGET : Status {
     override val type = Status.Type.INNVILGET
 
     override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse.status) {
-            Status.Type.STANSET -> STANSET
+        when (hendelse) {
+            is StansHendelse -> STANSET
             else -> this
         }
 }
@@ -49,9 +49,9 @@ data object AVSLÅTT : Status {
     override val type = Status.Type.AVSLÅTT
 
     override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse.status) {
-            Status.Type.INNVILGET -> INNVILGET
-            Status.Type.SØKT -> SØKT
+        when (hendelse) {
+            is InnvilgelseHendelse -> INNVILGET
+            is SøknadHendelse -> SØKT
             else -> this
         }
 }
@@ -60,8 +60,8 @@ data object STANSET : Status {
     override val type = Status.Type.STANSET
 
     override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse.status) {
-            Status.Type.INNVILGET -> INNVILGET
+        when (hendelse) {
+            is InnvilgelseHendelse -> INNVILGET
             else -> this
         }
 }

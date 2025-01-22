@@ -10,7 +10,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 
 class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
@@ -49,18 +49,17 @@ class MeldegruppeendringMottak(
     }
 }
 
-private fun JsonMessage.tilHendelse(): MeldegruppeendringHendelse {
+private fun JsonMessage.tilHendelse(): StansHendelse {
     val ident: String = this["FODSELSNR"].asText()
     val meldegruppeKode = this["MELDEGRUPPEKODE"].asText()
     val fraOgMed = this["DATO_FRA"].asLocalDate()
     val tilOgMed = if (this["DATO_TIL"].isMissingOrNull()) null else this["DATO_TIL"].asLocalDate()
     val hendelseId = this["HENDELSE_ID"].asText()
 
-    return MeldegruppeendringHendelse(
-        ident,
-        meldegruppeKode,
-        fraOgMed,
-        tilOgMed,
-        hendelseId,
+    return StansHendelse(
+        ident = ident,
+        dato = fraOgMed.atStartOfDay(),
+        referanseId = hendelseId,
+        meldegruppeKode = meldegruppeKode,
     )
 }

@@ -5,11 +5,15 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SØKT
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import javax.sql.DataSource
 
 class PostgresPersonRepository(
@@ -138,22 +142,20 @@ class PostgresPersonRepository(
                 tx.run(
                     queryOf(
                         """
-                INSERT INTO hendelse (id, person_id, referanse_id, dato, status, kilde) 
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (id) 
+                INSERT INTO hendelse (person_id, dato, kilde,referanse_id, type) 
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
                     person_id = EXCLUDED.person_id,
-                    referanse_id = EXCLUDED.referanse_id,
                     dato = EXCLUDED.dato,
-                    status = EXCLUDED.status,
-                    kilde = EXCLUDED.kilde
+                    kilde = EXCLUDED.kilde,
+                    type = EXCLUDED.type
                 """,
-                        hendelse.id,
                         personId,
-                        hendelse.referanseId,
                         hendelse.dato,
-                        hendelse.status.name,
                         hendelse.kilde.name,
+                        hendelse.referanseId,
+                        hendelse::class.simpleName,
                     ).asUpdate,
                 )
             }
@@ -167,20 +169,36 @@ class PostgresPersonRepository(
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
-                    .map { tilHendelse(it, ident) }
+                    .map(::tilHendelse)
                     .asList,
             )
         }
 
-    private fun tilHendelse(
-        row: Row,
-        ident: String,
-    ) = Hendelse(
-        id = row.uuid("id"),
-        ident = ident,
-        referanseId = row.string("referanse_id"),
-        dato = row.localDateTime("dato"),
-        status = Status.Type.valueOf(row.string("status")),
-        kilde = Kildesystem.valueOf(row.string("kilde")),
-    )
+    private fun tilHendelse(row: Row): Hendelse {
+        val type = row.string("type")
+        val ident = row.string("person_id")
+        val dato = row.localDateTime("dato")
+        val referanseId = row.string("referanse_id")
+
+        return when (type) {
+            "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
+            "InnvilgelseHendelse" -> InnvilgelseHendelse(ident, dato, referanseId)
+            "AvslagHendelse" -> AvslagHendelse(ident, dato, referanseId)
+            "StansHendelse" ->
+                StansHendelse(
+                    ident,
+                    dato,
+                    row.string("meldegruppe_kode"),
+                    referanseId,
+                )
+            "ArbeidssøkerHendelse" ->
+                ArbeidssøkerHendelse(
+                    ident,
+                    row.uuid("periode_id"),
+                    row.localDateTime("start_dato"),
+                    row.localDateTimeOrNull("slutt_dato"),
+                )
+            else -> throw IllegalArgumentException("Unknown type: $type")
+        }
+    }
 }

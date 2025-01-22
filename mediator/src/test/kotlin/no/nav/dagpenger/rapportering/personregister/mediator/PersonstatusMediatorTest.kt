@@ -4,20 +4,17 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.MeldegruppeendringHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.STANSET
-import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SØKT
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -82,12 +79,10 @@ class PersonstatusMediatorTest {
             )
 
         val hendelse =
-            Hendelse(
+            SøknadHendelse(
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.Type.SØKT,
-                kilde = Kildesystem.Søknad,
             )
 
         val person = Person(ident).apply { behandle(hendelse) }
@@ -114,11 +109,10 @@ class PersonstatusMediatorTest {
         val dato = LocalDateTime.now()
 
         personstatusMediator.behandle(
-            VedtakHendelse(
+            InnvilgelseHendelse(
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.Type.INNVILGET,
             ),
         )
 
@@ -151,11 +145,10 @@ class PersonstatusMediatorTest {
         )
 
         personstatusMediator.behandle(
-            VedtakHendelse(
+            InnvilgelseHendelse(
                 ident = ident,
                 referanseId = søknadId,
-                dato = dato.plusDays(1),
-                status = Status.Type.INNVILGET,
+                dato = dato,
             ),
         )
 
@@ -188,7 +181,6 @@ class PersonstatusMediatorTest {
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
             status shouldBe SØKT
-//            statusHistorikk.allItems().size shouldBe 1 // ToDO fix this
         }
     }
 
@@ -200,20 +192,19 @@ class PersonstatusMediatorTest {
         val dato = LocalDateTime.now().minusDays(1)
 
         personstatusMediator.behandle(
-            VedtakHendelse(
+            InnvilgelseHendelse(
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.Type.INNVILGET,
             ),
         )
 
         personstatusMediator.behandle(
-            MeldegruppeendringHendelse(
+            StansHendelse(
                 ident = ident,
                 meldegruppeKode = "ARBS",
-                fraOgMed = dato.plusDays(1).toLocalDate(),
-                hendelseId = UUID.randomUUID().toString(),
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
             ),
         )
 
@@ -226,15 +217,14 @@ class PersonstatusMediatorTest {
     @Test
     fun `kan behandle stans hendelse for person som ikke eksisterer i databasen`() {
         val ident = "12345678910"
-        val søknadId = "123"
         val dato = LocalDateTime.now().minusDays(1)
 
         personstatusMediator.behandle(
-            MeldegruppeendringHendelse(
+            StansHendelse(
                 ident = ident,
                 meldegruppeKode = "ARBS",
-                fraOgMed = dato.plusDays(1).toLocalDate(),
-                hendelseId = UUID.randomUUID().toString(),
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
             ),
         )
 

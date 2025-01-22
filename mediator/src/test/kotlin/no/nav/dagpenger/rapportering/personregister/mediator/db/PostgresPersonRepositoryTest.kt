@@ -5,12 +5,11 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SØKT
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -25,12 +24,10 @@ class PostgresPersonRepositoryTest {
             val dato = LocalDateTime.now()
             val person = Person(ident = ident)
             val hendelse =
-                Hendelse(
+                SøknadHendelse(
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.Type.SØKT,
-                    kilde = Kildesystem.Søknad,
                 )
 
             person.behandle(hendelse)
@@ -52,26 +49,22 @@ class PostgresPersonRepositoryTest {
             val dato = LocalDateTime.now().minusDays(1)
             val person = Person(ident = ident)
             val søknadHendelse =
-                Hendelse(
+                SøknadHendelse(
                     ident = ident,
-                    referanseId = referanseId,
                     dato = dato,
-                    status = Status.Type.SØKT,
-                    kilde = Kildesystem.Søknad,
+                    referanseId = referanseId,
                 )
 
             person.behandle(søknadHendelse)
             personRepository.lagrePerson(person)
 
-            val vedtakHendelse =
-                Hendelse(
+            val innvilgelseHendelse =
+                InnvilgelseHendelse(
                     ident = ident,
-                    referanseId = "123",
+                    referanseId = "456",
                     dato = dato.plusDays(1),
-                    status = Status.Type.INNVILGET,
-                    kilde = Kildesystem.Arena,
                 )
-            person.behandle(vedtakHendelse)
+            person.behandle(innvilgelseHendelse)
             personRepository.oppdaterPerson(person)
 
             personRepository.hentPerson(ident)?.apply {
@@ -106,12 +99,10 @@ class PostgresPersonRepositoryTest {
             val dato = LocalDateTime.now()
             val person = Person(ident = ident)
             val hendelse =
-                Hendelse(
+                SøknadHendelse(
                     ident = ident,
                     referanseId = referanseId,
                     dato = dato,
-                    status = Status.Type.SØKT,
-                    kilde = Kildesystem.Søknad,
                 )
 
             person.behandle(hendelse)

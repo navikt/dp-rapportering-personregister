@@ -8,8 +8,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.OffsetDateTime
 
 class SøknadMottak(
@@ -21,8 +21,7 @@ class SøknadMottak(
         River(rapidsConnection)
             .apply {
                 validate { it.requireValue("@event_name", "søknad_innsendt_varsel") }
-                validate { it.requireKey("ident", "søknadId", "søknadstidspunkt") }
-                validate { it.interestedIn("@id") }
+                validate { it.requireKey("@id", "ident", "søknadId", "søknadstidspunkt") }
             }.register(this)
     }
 
@@ -53,5 +52,5 @@ private fun JsonMessage.tilHendelse(): SøknadHendelse {
     val datoString = this["søknadstidspunkt"].asText()
     val dato = OffsetDateTime.parse(datoString).toLocalDateTime()
 
-    return SøknadHendelse(ident, referanseId, dato)
+    return SøknadHendelse(ident = ident, dato = dato, referanseId = referanseId)
 }
