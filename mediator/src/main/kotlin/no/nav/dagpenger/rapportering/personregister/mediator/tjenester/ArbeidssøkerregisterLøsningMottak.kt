@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.River.PacketListener
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.withMDC
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
@@ -13,13 +14,14 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediat
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.OvertaBekreftelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeLøsning
 import no.nav.dagpenger.rapportering.personregister.modell.OvertaBekreftelseLøsning
 import java.util.UUID
 
 class ArbeidssøkerregisterLøsningMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
-) : River.PacketListener {
+) : PacketListener {
     init {
         River(rapidsConnection)
             .apply {
@@ -45,7 +47,7 @@ class ArbeidssøkerregisterLøsningMottak(
             try {
                 val behov = BehovType.valueOf(packet.get("@behov")[0].asText())
                 when (behov) {
-                    Arbeidssøkerstatus -> arbeidssøkerMediator.behandle(packet.tilArbeidssøkerperiode())
+                    Arbeidssøkerstatus -> arbeidssøkerMediator.behandle(packet.tilArbeidssøkerperiodeLøsning())
                     OvertaBekreftelse -> arbeidssøkerMediator.behandle(packet.tilOvertaBekreftelseLøsning())
                 }
             } catch (e: Exception) {
@@ -66,16 +68,25 @@ enum class BehovType {
     OvertaBekreftelse,
 }
 
-fun JsonMessage.tilArbeidssøkerperiode(): Arbeidssøkerperiode =
-    with(this["@løsning"]["Arbeidssøkerstatus"]["verdi"]) {
-        Arbeidssøkerperiode(
-            ident = this["ident"].asText(),
-            periodeId = UUID.fromString(this["periodeId"].asText()),
-            startet = this["startDato"].asLocalDateTime(),
-            avsluttet = with(this["sluttDato"]) { if (isNull) null else asLocalDateTime() },
-            overtattBekreftelse = null,
-        )
-    }
+fun JsonMessage.tilArbeidssøkerperiodeLøsning(): ArbeidssøkerperiodeLøsning =
+    ArbeidssøkerperiodeLøsning(
+        ident = this["ident"].asText(),
+        løsning =
+            with(this["@løsning"]["Arbeidssøkerstatus"]["verdi"]) {
+                if (isNull) {
+                    null
+                } else {
+                    Arbeidssøkerperiode(
+                        ident = this["ident"].asText(),
+                        periodeId = UUID.fromString(this["periodeId"].asText()),
+                        startet = this["startDato"].asLocalDateTime(),
+                        avsluttet = with(this["sluttDato"]) { if (isNull) null else asLocalDateTime() },
+                        overtattBekreftelse = null,
+                    )
+                }
+            },
+        feil = with(this["@feil"]["Arbeidssøkerstatus"]["verdi"]) { if (isNull) null else asText() },
+    )
 
 fun JsonMessage.tilOvertaBekreftelseLøsning(): OvertaBekreftelseLøsning =
     OvertaBekreftelseLøsning(
