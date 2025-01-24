@@ -28,10 +28,10 @@ class ArbeidssøkerMediator(
             if (lagredePerioder.none { it.periodeId == arbeidssøkerperiode.periodeId }) {
                 try {
                     arbeidssøkerService.lagreArbeidssøkerperiode(arbeidssøkerperiode)
-                    arbeidssøkerService.sendOvertaBekreftelseBehov(
+                    /*arbeidssøkerService.sendOvertaBekreftelseBehov(
                         arbeidssøkerperiode.ident,
                         arbeidssøkerperiode.periodeId,
-                    )
+                    )*/
                     sikkerlogg.info { "Ny periode lagret og overtagelsesbehov sendt. $arbeidssøkerperiode " }
                 } catch (e: IllegalStateException) {
                     sikkerlogg.info(e) { "Behandlet ikke arbeidssøkerperiode $arbeidssøkerperiode" }
@@ -44,7 +44,6 @@ class ArbeidssøkerMediator(
                         if (arbeidssøkerperiode.avsluttet != null && lagretPeriode.avsluttet != arbeidssøkerperiode.avsluttet) {
                             sikkerlogg.info { "Oppdaterer arbeidssøkerperiode ${arbeidssøkerperiode.periodeId} med avsluttet dato" }
                             arbeidssøkerService.avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode)
-                            // TODO: Regner ikke med at vi må si fra oss ansvaret for bekreftelsen når perioden er avsluttet?
                         }
                     }
             }
