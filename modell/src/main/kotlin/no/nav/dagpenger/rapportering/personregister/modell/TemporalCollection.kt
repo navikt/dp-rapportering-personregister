@@ -32,7 +32,7 @@ class TemporalCollection<R> {
         put(at.atStartOfDay(), item)
     }
 
-    fun isNotEmpty() = contents.isNotEmpty()
+    fun isEmpty() = contents.isEmpty()
 
     fun allItems(): List<Pair<LocalDateTime, R>> = contents.toList()
 }
