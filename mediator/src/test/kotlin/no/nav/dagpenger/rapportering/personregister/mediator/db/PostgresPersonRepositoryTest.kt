@@ -16,10 +16,11 @@ import java.time.LocalDateTime
 class PostgresPersonRepositoryTest {
     private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
 
+    private val ident = "12345678901"
+
     @Test
     fun `skal lagre og finne person`() {
         withMigratedDb {
-            val ident = "12345678901"
             val referanseId = "123"
             val dato = LocalDateTime.now()
             val person = Person(ident = ident)
@@ -44,7 +45,6 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `kan oppdatere person`() {
         withMigratedDb {
-            val ident = "12345678901"
             val referanseId = "123"
             val dato = LocalDateTime.now().minusDays(1)
             val person = Person(ident = ident)
@@ -77,7 +77,7 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `oppdatering av person som ikke finnes i databasen kaster IllegalStateException`() {
         withMigratedDb {
-            val person = Person(ident = "12345678901")
+            val person = Person(ident = ident)
             shouldThrow<IllegalStateException> {
                 personRepository.oppdaterPerson(person)
             }
@@ -87,7 +87,34 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `kan ikke hente person dersom person ikke finnes`() {
         withMigratedDb {
-            personRepository.hentPerson("12345678901") shouldBe null
+            personRepository.hentPerson(ident) shouldBe null
+        }
+    }
+
+    @Test
+    fun `kan sjekke om person finnes i databasen hvis personen finnes`() {
+        val referanseId = "123"
+        val dato = LocalDateTime.now()
+        withMigratedDb {
+            val person = Person(ident = ident)
+            val hendelse =
+                SøknadHendelse(
+                    ident = ident,
+                    referanseId = referanseId,
+                    dato = dato,
+                )
+
+            person.behandle(hendelse)
+            personRepository.lagrePerson(person)
+
+            personRepository.finnesPerson(ident) shouldBe true
+        }
+    }
+
+    @Test
+    fun `kan sjekke om person finnes i databasen hvis personen ikke finnes`() {
+        withMigratedDb {
+            personRepository.finnesPerson(ident) shouldBe false
         }
     }
 
