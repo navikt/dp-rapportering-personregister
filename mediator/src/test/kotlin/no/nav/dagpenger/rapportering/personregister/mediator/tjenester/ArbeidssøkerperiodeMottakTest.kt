@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 

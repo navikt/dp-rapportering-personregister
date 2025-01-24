@@ -10,10 +10,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
-import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -49,12 +49,21 @@ class VedtakMottak(
         logger.info { "Mottok nytt vedtak" }
 
         try {
-            personStatusMediator
-                .behandle(
-                    packet
-                        .tilHendelse()
-                        .also { vedtakMetrikker.vedtakMottatt(it.status).increment() },
-                )
+            when (val hendelse = packet.tilHendelse()) {
+                is InnvilgelseHendelse -> {
+                    logger.info { "Mottok innvilgelse vedtak for person ${hendelse.ident}" }
+                    personStatusMediator.behandle(hendelse)
+                }
+
+                is AvslagHendelse -> {
+                    logger.info { "Mottok avslag vedtak for person ${hendelse.ident}" }
+                    personStatusMediator.behandle(hendelse)
+                }
+
+                else -> {
+                    logger.error { "Ukjent hendelse $hendelse" }
+                }
+            }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av vedtak $e" }
         }
@@ -65,19 +74,16 @@ class VedtakMottak(
     }
 }
 
-private fun JsonMessage.tilHendelse(): VedtakHendelse {
+private fun JsonMessage.tilHendelse(): Hendelse {
     val ident: String = this.fødselsnummer()
     val referanseId = this["after"]["VEDTAK_ID"].asText()
     val dato = this["op_ts"].asArenaDato()
 
-    val status =
-        when (this["after"]["UTFALLKODE"].asText()) {
-            "JA" -> Status.INNVILGET
-            "NEI" -> Status.AVSLÅTT
-            else -> throw IllegalArgumentException("Ukjent utfallskode")
-        }
-
-    return VedtakHendelse(ident, referanseId, dato, status = status, Kildesystem.Arena)
+    return when (val status = this["after"]["UTFALLKODE"].asText()) {
+        "JA" -> InnvilgelseHendelse(ident, dato, referanseId)
+        "NEI" -> AvslagHendelse(ident, dato, referanseId)
+        else -> throw IllegalArgumentException("Ukjent utfallkode $status")
+    }
 }
 
 private fun JsonNode.asArenaDato() =

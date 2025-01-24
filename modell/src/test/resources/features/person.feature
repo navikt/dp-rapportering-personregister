@@ -28,12 +28,3 @@ Egenskap: Person
     Eksempler:
       | vedtakdato                    | vedtakId                             | forventetStatus |
       | 2024-09-01T11:00:27.899791748 | 123e4567-e89b-12d3-a456-426614174000 | AVSLÅTT         |
-
-  Scenariomal: Vedtak om stans gir status "STANSET"
-    Gitt en person
-    Når personen får vedtak om stans den "<vedtakdato>" med vedtakId "<vedtakId>"
-    Så skal status være "<forventetStatus>"
-
-    Eksempler:
-      | vedtakdato                    | vedtakId                             | forventetStatus |
-      | 2024-09-01T11:00:27.899791748 | 123e4567-e89b-12d3-a456-426614174000 | STANSET         |
