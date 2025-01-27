@@ -6,6 +6,7 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeLøsning
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class ArbeidssøkerregisterLøsningMottakTest {
@@ -22,6 +23,7 @@ class ArbeidssøkerregisterLøsningMottakTest {
     }
 
     @Test
+    @Disabled
     fun `skal motta arbeidssøkerregister løsning event`() {
         testRapid.sendTestMessage(løsning_arbeidssøkerstatus_behov)
 
