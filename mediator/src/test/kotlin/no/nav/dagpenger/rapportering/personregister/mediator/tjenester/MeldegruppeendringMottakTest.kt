@@ -34,23 +34,32 @@ private val meldegruppeendring_event =
     //language=json
     """
     {
-      "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
-      "FODSELSNR": "12345678903",
-      "MELDEGRUPPEKODE": "DAGP",
-      "DATO_FRA": "2024-10-03",
-      "DATO_TIL": "2025-10-03",
-      "HENDELSE_ID": 12345678 
-    }
+       "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
+       "after": {
+           "MELDEGRUPPE_ID": 51685079,
+           "MELDEGRUPPEKODE": "ARBS",
+           "DATO_FRA": "2021-05-17 00:00:00",
+           "DATO_TIL": null,
+           "HENDELSESDATO": "2021-06-08 14:05:10",
+           "FODSELSNR": "##MASKERT##",
+           "HENDELSE_ID": 3773236
+       }
+       }
     """.trimIndent()
 
 private val meldegruppeendring_uten_tom_dato =
     //language=json
     """
     {
-      "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
-      "FODSELSNR": "12345678903",
-      "MELDEGRUPPEKODE": "DAGP",
-      "DATO_FRA": "2024-10-03",
-      "HENDELSE_ID": 12345678 
+     "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
+       "after": {
+           "MELDEGRUPPE_ID": 51685079,
+           "MELDEGRUPPEKODE": "ARBS",
+           "DATO_FRA": "2021-05-17 00:00:00",
+           "DATO_TIL": "2024-10-03",
+           "HENDELSESDATO": "2021-06-08 14:05:10",
+           "FODSELSNR": "##MASKERT##",
+           "HENDELSE_ID": 3773236
+       }
     }
     """.trimIndent()
