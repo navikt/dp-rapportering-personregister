@@ -11,7 +11,8 @@ class ArbeidssøkerMediator(
     fun behandle(arbeidssøkerperiodeLøsning: ArbeidssøkerperiodeLøsning) {
         if (arbeidssøkerperiodeLøsning.feil != null) {
             sikkerlogg.error {
-                "Feil ved henting av arbeidssøkerperiode for person med ident ${arbeidssøkerperiodeLøsning.ident}. Prøver å hente status igjen."
+                "Feil ved henting av arbeidssøkerperiode for person med ident ${arbeidssøkerperiodeLøsning.ident}. " +
+                    "Prøver å hente status igjen."
             }
             arbeidssøkerService.erArbeidssøker(arbeidssøkerperiodeLøsning.ident)
         } else if (arbeidssøkerperiodeLøsning.løsning != null) {
