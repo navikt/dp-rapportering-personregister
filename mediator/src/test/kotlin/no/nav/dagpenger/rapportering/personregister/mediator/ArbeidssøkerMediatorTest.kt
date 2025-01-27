@@ -11,7 +11,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeL
 import no.nav.dagpenger.rapportering.personregister.modell.OvertaBekreftelseLøsning
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -55,7 +54,6 @@ class ArbeidssøkerMediatorTest {
     )
 
     @Test
-    @Disabled // TODO: Fix this test
     fun `kan behandle ny arbeidssøkerperiode`() {
         personRepository.hentPerson(person.ident) shouldBe null
         personRepository.lagrePerson(person)

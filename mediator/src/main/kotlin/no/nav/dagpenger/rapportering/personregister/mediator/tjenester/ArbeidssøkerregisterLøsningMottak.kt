@@ -48,13 +48,9 @@ class ArbeidssøkerregisterLøsningMottak(
                 val behov = BehovType.valueOf(packet.get("@behov")[0].asText())
                 when (behov) {
                     Arbeidssøkerstatus ->
-                        logger.info {
-                            "Mottok behov om OvertaBekreftelse"
-                        } // arbeidssøkerMediator.behandle(packet.tilArbeidssøkerperiodeLøsning())
+                        arbeidssøkerMediator.behandle(packet.tilArbeidssøkerperiodeLøsning())
                     OvertaBekreftelse ->
-                        logger.info {
-                            "Mottok behov om OvertaBekreftelse"
-                        } // arbeidssøkerMediator.behandle(packet.tilOvertaBekreftelseLøsning())
+                        arbeidssøkerMediator.behandle(packet.tilOvertaBekreftelseLøsning())
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved behandling av behov" }

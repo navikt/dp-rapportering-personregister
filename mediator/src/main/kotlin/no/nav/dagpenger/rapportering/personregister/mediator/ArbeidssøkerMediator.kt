@@ -29,10 +29,10 @@ class ArbeidssøkerMediator(
             if (lagredePerioder.none { it.periodeId == arbeidssøkerperiode.periodeId }) {
                 try {
                     arbeidssøkerService.lagreArbeidssøkerperiode(arbeidssøkerperiode)
-                    /*arbeidssøkerService.sendOvertaBekreftelseBehov(
+                    arbeidssøkerService.sendOvertaBekreftelseBehov(
                         arbeidssøkerperiode.ident,
                         arbeidssøkerperiode.periodeId,
-                    )*/
+                    )
                     sikkerlogg.info { "Ny periode lagret og overtagelsesbehov sendt. $arbeidssøkerperiode " }
                 } catch (e: IllegalStateException) {
                     sikkerlogg.info(e) { "Behandlet ikke arbeidssøkerperiode $arbeidssøkerperiode" }
