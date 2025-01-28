@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -14,6 +15,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.databas
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -75,11 +78,13 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+            val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
+            val arbeidssøkerService = ArbeidssøkerService(TestRapid(), personRepository, arbeidssøkerRepository)
 
             application {
                 konfigurasjon(meterRegistry)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository)
+                personstatusApi(personRepository, arbeidssøkerService)
             }
 
             block()
