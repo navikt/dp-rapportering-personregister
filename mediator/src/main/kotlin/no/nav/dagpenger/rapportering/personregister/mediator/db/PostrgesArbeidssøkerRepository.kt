@@ -41,7 +41,7 @@ class PostrgesArbeidssøkerRepository(
             ident = ident,
             startet = row.localDateTime("startet"),
             avsluttet = row.localDateTimeOrNull("avsluttet"),
-            overtattBekreftelse = row.string("overtatt_bekreftelse").toBooleanOrNull(),
+            overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
         )
 
     override fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) =
