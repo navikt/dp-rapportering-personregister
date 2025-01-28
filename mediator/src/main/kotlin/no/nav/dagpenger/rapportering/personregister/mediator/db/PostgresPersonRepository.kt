@@ -42,7 +42,7 @@ class PostgresPersonRepository(
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf("SELECT EXISTS(SELECT 1 FROM person WHERE ident = :ident)", mapOf("ident" to ident))
-                        .map { it.string(1).toBoolean() }
+                        .map { it.boolean(1) }
                         .asSingle,
                 ) ?: false
             }

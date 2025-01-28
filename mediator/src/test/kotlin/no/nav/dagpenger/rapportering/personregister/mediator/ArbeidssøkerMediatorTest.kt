@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRep
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeLøsning
 import no.nav.dagpenger.rapportering.personregister.modell.OvertaBekreftelseLøsning
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.BeforeEach
@@ -32,18 +33,24 @@ class ArbeidssøkerMediatorTest {
 
     val person = Person("12345678910")
 
-    private fun arbeidssøkerperiode(
+    private fun arbeidssøkerperiodeLøsning(
         periodeId: UUID = UUID.randomUUID(),
         ident: String = person.ident,
         startet: LocalDateTime = LocalDateTime.now(),
         avsluttet: LocalDateTime? = null,
         overtattBekreftelse: Boolean? = null,
-    ) = Arbeidssøkerperiode(
-        periodeId = periodeId,
+        feil: String? = null,
+    ) = ArbeidssøkerperiodeLøsning(
         ident = ident,
-        startet = startet,
-        avsluttet = avsluttet,
-        overtattBekreftelse = overtattBekreftelse,
+        løsning =
+            Arbeidssøkerperiode(
+                periodeId = periodeId,
+                ident = ident,
+                startet = startet,
+                avsluttet = avsluttet,
+                overtattBekreftelse = overtattBekreftelse,
+            ),
+        feil = feil,
     )
 
     @Test
@@ -51,24 +58,24 @@ class ArbeidssøkerMediatorTest {
         personRepository.hentPerson(person.ident) shouldBe null
         personRepository.lagrePerson(person)
 
-        val periode = arbeidssøkerperiode()
+        val periode = arbeidssøkerperiodeLøsning()
         arbeidssøkerMediator.behandle(periode)
 
         with(arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident)) {
             size shouldBe 1
             with(first()) {
                 ident shouldBe person.ident
-                startet shouldBe periode.startet
-                avsluttet shouldBe periode.avsluttet
-                overtattBekreftelse shouldBe periode.overtattBekreftelse
+                startet shouldBe periode.løsning!!.startet
+                avsluttet shouldBe periode.løsning!!.avsluttet
+                overtattBekreftelse shouldBe periode.løsning!!.overtattBekreftelse
             }
         }
 
         with(rapidsConnection.inspektør) {
             size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
-            message(0)["@behov"].asText() shouldBe "OvertaBekreftelse"
-            message(0)["periodeId"].asText() shouldBe periode.periodeId.toString()
+            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
+            message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
+            message(0)["periodeId"].asText() shouldBe periode.løsning!!.periodeId.toString()
             message(0)["ident"].asText() shouldBe person.ident
         }
     }
@@ -77,19 +84,19 @@ class ArbeidssøkerMediatorTest {
     fun `kan behandle eksisterende arbeidssøkerperiode`() {
         personRepository.lagrePerson(person)
 
-        val periode = arbeidssøkerperiode()
-        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode)
+        val periode = arbeidssøkerperiodeLøsning()
+        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode.løsning!!)
 
         arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident).size shouldBe 1
 
         val avsluttet = LocalDateTime.now()
-        arbeidssøkerMediator.behandle(periode.copy(avsluttet = LocalDateTime.now()))
+        arbeidssøkerMediator.behandle(periode.copy(løsning = periode.løsning!!.copy(avsluttet = LocalDateTime.now())))
 
         with(arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident)) {
             size shouldBe 1
             with(first()) {
                 ident shouldBe person.ident
-                startet shouldBe periode.startet
+                startet shouldBe periode.løsning!!.startet
                 avsluttet shouldBe avsluttet
                 overtattBekreftelse shouldBe false
             }
@@ -100,7 +107,7 @@ class ArbeidssøkerMediatorTest {
 
     @Test
     fun `utfører ingen operasjoner hvis personen perioden omhandler ikke finnes`() {
-        val periode = arbeidssøkerperiode()
+        val periode = arbeidssøkerperiodeLøsning()
         arbeidssøkerMediator.behandle(periode)
 
         with(arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident)) {
@@ -114,13 +121,13 @@ class ArbeidssøkerMediatorTest {
     fun `kan behandle overtaBekreftelseLøsning som ikke inneholder feil`() {
         personRepository.lagrePerson(person)
 
-        val periode = arbeidssøkerperiode()
-        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode)
+        val periode = arbeidssøkerperiodeLøsning()
+        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode.løsning!!)
 
         val overtaBekreftelseLøsning =
             OvertaBekreftelseLøsning(
                 ident = person.ident,
-                periodeId = periode.periodeId,
+                periodeId = periode.løsning!!.periodeId,
                 løsning = "OK",
                 feil = null,
             )
@@ -131,8 +138,8 @@ class ArbeidssøkerMediatorTest {
             size shouldBe 1
             with(first()) {
                 ident shouldBe person.ident
-                startet shouldBe periode.startet
-                avsluttet shouldBe periode.avsluttet
+                startet shouldBe periode.løsning!!.startet
+                avsluttet shouldBe periode.løsning!!.avsluttet
                 overtattBekreftelse shouldBe true
             }
         }
@@ -144,13 +151,13 @@ class ArbeidssøkerMediatorTest {
     fun `kan behandle overtaBekreftelseLøsning med feil`() {
         personRepository.lagrePerson(person)
 
-        val periode = arbeidssøkerperiode()
-        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode)
+        val periode = arbeidssøkerperiodeLøsning()
+        arbeidssøkerRepository.lagreArbeidssøkerperiode(periode.løsning!!)
 
         val overtaBekreftelseLøsning =
             OvertaBekreftelseLøsning(
                 ident = person.ident,
-                periodeId = periode.periodeId,
+                periodeId = periode.løsning!!.periodeId,
                 løsning = null,
                 feil = "Feil",
             )
@@ -161,17 +168,17 @@ class ArbeidssøkerMediatorTest {
             size shouldBe 1
             with(first()) {
                 ident shouldBe person.ident
-                startet shouldBe periode.startet
-                avsluttet shouldBe periode.avsluttet
+                startet shouldBe periode.løsning!!.startet
+                avsluttet shouldBe periode.løsning!!.avsluttet
                 overtattBekreftelse shouldBe null
             }
         }
 
         with(rapidsConnection.inspektør) {
             size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeissokerstatus"
-            message(0)["@behov"].asText() shouldBe "OvertaBekreftelse"
-            message(0)["periodeId"].asText() shouldBe periode.periodeId.toString()
+            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
+            message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
+            message(0)["periodeId"].asText() shouldBe periode.løsning!!.periodeId.toString()
             message(0)["ident"].asText() shouldBe person.ident
         }
     }

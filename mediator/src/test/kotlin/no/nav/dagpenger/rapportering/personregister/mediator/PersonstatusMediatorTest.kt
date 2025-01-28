@@ -55,7 +55,7 @@ class PersonstatusMediatorTest {
 
         with(rapidsConnection.inspektør) {
             size shouldBe 1
-            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
             message(0)["ident"].asText() shouldBe ident
         }
 
@@ -92,7 +92,7 @@ class PersonstatusMediatorTest {
 
         with(rapidsConnection.inspektør) {
             size shouldBe 1
-            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
             message(0)["ident"].asText() shouldBe ident
         }
 
@@ -174,7 +174,7 @@ class PersonstatusMediatorTest {
 
         with(rapidsConnection.inspektør) {
             size shouldBe 1
-            message(0)["@behov"].asText() shouldBe Arbeidssøkerstatus.name
+            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
             message(0)["ident"].asText() shouldBe ident
         }
 

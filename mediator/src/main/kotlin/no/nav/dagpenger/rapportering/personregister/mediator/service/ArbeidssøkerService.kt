@@ -44,13 +44,14 @@ class ArbeidssøkerService(
 
     fun avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode: Arbeidssøkerperiode) {
         arbeidssøkerRepository.avsluttArbeidssøkerperiode(arbeidssøkerperiode.periodeId, arbeidssøkerperiode.avsluttet!!)
-        // TODO: Må vi sjekke dato for avslutting?
         arbeidssøkerRepository.oppdaterOvertagelse(arbeidssøkerperiode.periodeId, false)
     }
 
     private fun publiserBehov(behov: Behovmelding) {
         sikkerlogg.info { "Publiserer behov ${behov.behovType} for ident ${behov.ident}" }
-        rapidsConnection.publish(behov.tilMelding().toJson())
+        val melding = behov.tilMelding().toJson()
+        sikkerlogg.info { "Publiserte melding: $melding" }
+        rapidsConnection.publish(melding)
     }
 
     companion object {
@@ -70,9 +71,9 @@ data class ArbeidssøkerstatusBehov(
 ) : Behovmelding(ident, Arbeidssøkerstatus) {
     override fun tilMelding(): JsonMessage =
         JsonMessage.newMessage(
-            "behov_arbeissokerstatus",
+            "behov_arbeidssokerstatus",
             mutableMapOf(
-                "@behov" to behovType.name,
+                "@behov" to listOf(behovType.name),
                 "ident" to ident,
             ),
         )
@@ -84,9 +85,9 @@ data class OvertaBekreftelseBehov(
 ) : Behovmelding(ident, OvertaBekreftelse) {
     override fun tilMelding(): JsonMessage =
         JsonMessage.newMessage(
-            "behov_arbeissokerstatus",
+            "behov_arbeidssokerstatus",
             mutableMapOf(
-                "@behov" to behovType.name,
+                "@behov" to listOf(behovType.name),
                 "ident" to ident,
                 "periodeId" to periodeId,
             ),

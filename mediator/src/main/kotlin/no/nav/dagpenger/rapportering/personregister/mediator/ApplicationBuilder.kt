@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMet
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerregisterLøsningMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
@@ -44,6 +45,7 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
+
                 with(engine.application) {
                     konfigurasjon(meterRegistry)
                     internalApi(meterRegistry)
@@ -51,10 +53,12 @@ internal class ApplicationBuilder(
                 }
                 val arbeidssøkerService = ArbeidssøkerService(rapid, personRepository, arbeidssøkerRepository)
                 val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
                 ArbeidssøkerperiodeMottak(rapid, personstatusMediator)
+                ArbeidssøkerregisterLøsningMottak(rapid, arbeidssøkerMediator)
             }
 
     init {
