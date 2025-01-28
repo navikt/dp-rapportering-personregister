@@ -44,7 +44,6 @@ class ArbeidssøkerService(
 
     fun avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode: Arbeidssøkerperiode) {
         arbeidssøkerRepository.avsluttArbeidssøkerperiode(arbeidssøkerperiode.periodeId, arbeidssøkerperiode.avsluttet!!)
-        // TODO: Må vi sjekke dato for avslutting?
         arbeidssøkerRepository.oppdaterOvertagelse(arbeidssøkerperiode.periodeId, false)
     }
 

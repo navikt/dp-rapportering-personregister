@@ -14,7 +14,7 @@ class ArbeidssøkerMediator(
                 "Feil ved henting av arbeidssøkerperiode for person med ident ${arbeidssøkerperiodeLøsning.ident}. " +
                     "Prøver å hente status igjen."
             }
-            arbeidssøkerService.erArbeidssøker(arbeidssøkerperiodeLøsning.ident)
+            arbeidssøkerService.sendArbeidssøkerBehov(arbeidssøkerperiodeLøsning.ident)
         } else if (arbeidssøkerperiodeLøsning.løsning != null) {
             val arbeidssøkerperiode = arbeidssøkerperiodeLøsning.løsning!!
 
@@ -29,13 +29,16 @@ class ArbeidssøkerMediator(
             if (lagredePerioder.none { it.periodeId == arbeidssøkerperiode.periodeId }) {
                 try {
                     arbeidssøkerService.lagreArbeidssøkerperiode(arbeidssøkerperiode)
-                    arbeidssøkerService.sendOvertaBekreftelseBehov(
-                        arbeidssøkerperiode.ident,
-                        arbeidssøkerperiode.periodeId,
-                    )
-                    sikkerlogg.info { "Ny periode lagret og overtagelsesbehov sendt. $arbeidssøkerperiode " }
+                    sikkerlogg.info { "Ny periode lagret. $arbeidssøkerperiode " }
+                    if (arbeidssøkerperiode.avsluttet == null) {
+                        arbeidssøkerService.sendOvertaBekreftelseBehov(
+                            arbeidssøkerperiode.ident,
+                            arbeidssøkerperiode.periodeId,
+                        )
+                        sikkerlogg.info { "Sendte overtagelsesbehov for perioden: $arbeidssøkerperiode " }
+                    }
                 } catch (e: IllegalStateException) {
-                    sikkerlogg.info(e) { "Behandlet ikke arbeidssøkerperiode $arbeidssøkerperiode" }
+                    sikkerlogg.error(e) { "Behandlet ikke arbeidssøkerperiode $arbeidssøkerperiode" }
                 }
             } else {
                 // Hvis perioden finnes fra før, sjekk om overtagelsebehov må sendes og om avsluttet dato har endret seg
@@ -60,15 +63,23 @@ class ArbeidssøkerMediator(
     }
 
     fun behandle(overtaBekreftelseLøsning: OvertaBekreftelseLøsning) {
-        if (overtaBekreftelseLøsning.feil == null) {
-            arbeidssøkerService.oppdaterOvertagelse(overtaBekreftelseLøsning.periodeId, true)
-            sikkerlogg.info { "Bekreftelse for periode ${overtaBekreftelseLøsning.periodeId} overtatt." }
-        } else {
-            sikkerlogg.error {
-                "Feil ved overtagelse av bekreftelse for periode ${overtaBekreftelseLøsning.periodeId}." +
-                    "\n${overtaBekreftelseLøsning.feil}. Sender overtakelse på nytt."
+        try {
+            if (overtaBekreftelseLøsning.feil == null) {
+                arbeidssøkerService.oppdaterOvertagelse(overtaBekreftelseLøsning.periodeId, true)
+                sikkerlogg.info { "Bekreftelse for periode ${overtaBekreftelseLøsning.periodeId} overtatt." }
+            } else {
+                sikkerlogg.error {
+                    "Feil ved overtagelse av bekreftelse for periode ${overtaBekreftelseLøsning.periodeId}." +
+                        "\n${overtaBekreftelseLøsning.feil}. Sender overtakelse på nytt."
+                }
+                arbeidssøkerService.sendOvertaBekreftelseBehov(overtaBekreftelseLøsning.ident, overtaBekreftelseLøsning.periodeId)
             }
-            arbeidssøkerService.sendOvertaBekreftelseBehov(overtaBekreftelseLøsning.ident, overtaBekreftelseLøsning.periodeId)
+        } catch (e: Exception) {
+            sikkerlogg.error(e) {
+                "Feil ved behandling av løsning for overtagelse av bekreftelse. " +
+                    "Prøver ikke å overta bekreftelse på nytt. $overtaBekreftelseLøsning"
+            }
+            throw e
         }
     }
 
