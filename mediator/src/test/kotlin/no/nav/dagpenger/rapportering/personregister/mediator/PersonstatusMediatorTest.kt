@@ -215,6 +215,35 @@ class PersonstatusMediatorTest {
     }
 
     @Test
+    fun `kan behandle meldegruppeendring hendelse som ikke er stans`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            InnvilgelseHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+            ),
+        )
+
+        personstatusMediator.behandle(
+            StansHendelse(
+                ident = ident,
+                meldegruppeKode = "IKKE_ARBS",
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe INNVILGET
+        }
+    }
+
+    @Test
     fun `kan behandle stans hendelse for person som ikke eksisterer i databasen`() {
         val ident = "12345678910"
         val dato = LocalDateTime.now().minusDays(1)

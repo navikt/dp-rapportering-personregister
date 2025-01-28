@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
@@ -52,7 +53,7 @@ class PersonstatusMediator(
         }
     }
 
-    fun behandle(arbeidssøkerHendelse: no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse) {
+    fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
         sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
         if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
             behandleHendelse(arbeidssøkerHendelse)
