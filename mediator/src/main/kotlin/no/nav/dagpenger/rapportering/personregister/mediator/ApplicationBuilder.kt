@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMet
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -52,6 +53,7 @@ internal class ApplicationBuilder(
                 val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
+                MeldegruppeendringMottak(rapid, personstatusMediator)
                 ArbeidssøkerperiodeMottak(rapid, personstatusMediator)
             }
 
