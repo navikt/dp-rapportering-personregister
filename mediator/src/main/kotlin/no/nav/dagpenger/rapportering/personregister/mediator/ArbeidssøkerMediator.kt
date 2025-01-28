@@ -38,10 +38,17 @@ class ArbeidssøkerMediator(
                     sikkerlogg.info(e) { "Behandlet ikke arbeidssøkerperiode $arbeidssøkerperiode" }
                 }
             } else {
-                // Hvis perioden finnes fra før, sjekk om avsluttet dato har endret seg
+                // Hvis perioden finnes fra før, sjekk om overtagelsebehov må sendes og om avsluttet dato har endret seg
                 lagredePerioder
                     .find { it.periodeId == arbeidssøkerperiode.periodeId }
                     ?.let { lagretPeriode ->
+                        if (arbeidssøkerperiode.avsluttet == null && lagretPeriode.overtattBekreftelse != true) {
+                            sikkerlogg.info { "Sender overtagelsesbehov for periode ${arbeidssøkerperiode.periodeId}" }
+                            arbeidssøkerService.sendOvertaBekreftelseBehov(
+                                arbeidssøkerperiode.ident,
+                                arbeidssøkerperiode.periodeId,
+                            )
+                        }
                         if (arbeidssøkerperiode.avsluttet != null && lagretPeriode.avsluttet != arbeidssøkerperiode.avsluttet) {
                             sikkerlogg.info { "Oppdaterer arbeidssøkerperiode ${arbeidssøkerperiode.periodeId} med avsluttet dato" }
                             arbeidssøkerService.avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode)
