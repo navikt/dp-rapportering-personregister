@@ -18,6 +18,7 @@ internal object Configuration {
                 "RAPID_APP_NAME" to APP_NAME,
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-personregister-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
+                "KAFKA_EXTRA_TOPIC" to "aapen-arena-meldegruppeendret-v1-q1",
                 "KAFKA_RESET_POLICY" to "earliest",
             ),
         )
