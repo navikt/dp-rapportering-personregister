@@ -13,14 +13,10 @@ import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 
 private val logger = KotlinLogging.logger {}
 
-internal fun Application.personstatusApi(
-    personRepository: PersonRepository,
-    arbeidssøkerService: ArbeidssøkerService,
-) {
+internal fun Application.personstatusApi(personRepository: PersonRepository) {
     routing {
         authenticate("tokenX") {
             route("/personstatus") {
@@ -39,14 +35,6 @@ internal fun Application.personstatusApi(
                             )
                         }
                         ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
-                }
-            }
-            route("/test") {
-                get {
-                    logger.info { "GET /test" }
-                    val ident = call.ident()
-                    arbeidssøkerService.sendArbeidssøkerBehov(ident)
-                    call.respond(HttpStatusCode.OK, "Hello, world!")
                 }
             }
         }
