@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
@@ -11,6 +10,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.UUID
 
 class ArbeidssøkerperiodeMottak(
@@ -20,9 +22,8 @@ class ArbeidssøkerperiodeMottak(
     init {
         River(rapidsConnection)
             .apply {
-                validate { it.requireValue("@event_name", "arbeidssøkerperiode_event") }
-                validate { it.requireKey("ident", "periodeId", "startDato") }
-                validate { it.interestedIn("sluttDato") }
+                validate { it.requireKey("id", "identitetsnummer", "startet") }
+                validate { it.interestedIn("avsluttet") }
             }.register(this)
     }
 
@@ -48,8 +49,14 @@ class ArbeidssøkerperiodeMottak(
 
 private fun JsonMessage.tilHendelse(): ArbeidssøkerHendelse =
     ArbeidssøkerHendelse(
-        ident = this["ident"].asText(),
-        periodeId = UUID.fromString(this["periodeId"].asText()),
-        startDato = this["startDato"].asLocalDateTime(),
-        sluttDato = if (this["sluttDato"].isMissingOrNull()) null else this["sluttDato"].asLocalDateTime(),
+        ident = this["identitetsnummer"].asText(),
+        periodeId = UUID.fromString(this["id"].asText()),
+        startDato = this["startet"]["tidspunkt"].asLong().asLocalDateTime(),
+        sluttDato = if (this["avsluttet"].isMissingOrNull()) null else this["avsluttet"]["tidspunkt"].asLong().asLocalDateTime(),
+    )
+
+private fun Long.asLocalDateTime() =
+    LocalDateTime.ofInstant(
+        Instant.ofEpochMilli(this),
+        ZoneId.systemDefault(),
     )

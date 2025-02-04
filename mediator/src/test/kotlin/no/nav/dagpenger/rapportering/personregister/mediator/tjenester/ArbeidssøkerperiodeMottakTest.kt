@@ -29,13 +29,24 @@ class ArbeidssøkerperiodeMottakTest {
     }
 }
 
-private val arbeidssøkerperiode_event =
-    //language=json
+val arbeidssøkerperiode_event =
     """
     {
-      "@event_name": "arbeidssøkerperiode_event",
-      "ident": "12345678910",
-      "periodeId": "123e4567-e89b-12d3-a456-426614174000",
-      "startDato": "2021-01-01T12:00:00"
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "identitetsnummer": "12345678910",
+      "startet": {
+        "tidspunkt": 1672531200000,
+        "utfoertAv": {
+          "id": "system-user",
+          "type": "SYSTEM"
+        },
+        "kilde": "system-api",
+        "aarsak": "INITIAL_REGISTRATION",
+        "tidspunktFraKilde": {
+          "tidspunkt": 1672531200000,
+          "avviksType": "EPOCH_MILLIS"
+        }
+      },
+      "avsluttet": null
     }
     """.trimIndent()
