@@ -6,6 +6,11 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
+import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
+import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
@@ -24,6 +29,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Meldegrup
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import org.apache.kafka.common.serialization.LongSerializer
 import io.ktor.server.cio.CIO as CIOEngine
 
 internal class ApplicationBuilder(
@@ -38,6 +45,16 @@ internal class ApplicationBuilder(
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
+
+    private val overtaBekreftelseTopic = configuration.getValue("OVERTA_BEKREFTELSE_TOPIC")
+    private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
+    private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
+    private val overtaBekreftelseKafkaProdusent =
+        kafkaFactory.createProducer<Long, PaaVegneAv>(
+            clientId = "teamdagpenger-arbeidssokerregister-producer",
+            keySerializer = LongSerializer::class,
+            valueSerializer = PaaVegneAvAvroSerializer::class,
+        )
 
     private val rapidsConnection =
         RapidApplication

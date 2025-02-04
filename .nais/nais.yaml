@@ -28,6 +28,9 @@ spec:
     enabled: true
   tokenx:
     enabled: true
+  azure:
+    application:
+      enabled: true
   kafka:
     pool: {{ kafka.pool }}
   ingresses:
@@ -52,3 +55,16 @@ spec:
         - application: tokenx-token-generator
           namespace: aura
           cluster: dev-gcp
+  env:
+    - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
+      value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}
+    - name: ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE
+      value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE }}
+    - name: ARBEIDSSOKERREGISTER_RECORD_KEY_HOST
+      value: {{ ARBEIDSSOKERREGISTER_RECORD_KEY_HOST }}
+    - name: ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE
+      value: {{ ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE }}
+    - name: ARBEIDSSOKERPERIODER_TOPIC
+      value: {{ ARBEIDSSOKERPERIODER_TOPIC }}
+    - name: OVERTA_BEKREFTELSE_TOPIC
+      value: {{ OVERTA_BEKREFTELSE_TOPIC }}
