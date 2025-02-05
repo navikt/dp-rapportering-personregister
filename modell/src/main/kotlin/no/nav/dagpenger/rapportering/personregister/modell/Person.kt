@@ -2,10 +2,20 @@ package no.nav.dagpenger.rapportering.personregister.modell
 
 import java.time.LocalDateTime
 
+interface PersonObserver {
+    fun frasiArbeidssøkerBekreftelse(person: Person)
+}
+
 data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
 ) {
+    private val observers = mutableListOf<PersonObserver>()
+
+    fun addObserver(observer: PersonObserver) {
+        observers.add(observer)
+    }
+
     fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
 
     val status: Status
@@ -14,14 +24,14 @@ data class Person(
     val hendelser = mutableListOf<Hendelse>()
 
     fun behandle(hendelse: Hendelse) {
-        if (statusHistorikk.isEmpty()) {
-            statusHistorikk.put(hendelse.dato, SØKT)
-        }
+        statusHistorikk.takeIf { it.isEmpty() }?.put(hendelse.dato, SØKT)
 
         status
             .håndter(hendelse)
-            .takeIf { it != status }
-            ?.let { statusHistorikk.put(hendelse.dato, it) }
+            .takeIf { nyStatus -> nyStatus != status }
+            ?.also { statusHistorikk.put(hendelse.dato, it) }
+            ?.takeIf { nyStatus -> nyStatus == STANSET }
+            ?.let { observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) } }
 
         hendelser.add(hendelse)
     }

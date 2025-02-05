@@ -8,12 +8,14 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
 import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
+    private val personObservers: List<PersonObserver> = emptyList(),
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
@@ -66,6 +68,7 @@ class PersonstatusMediator(
             personRepository
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
+                    personObservers.forEach { person.addObserver(it) }
                     person.behandle(hendelse)
                     personRepository.oppdaterPerson(person)
                 } ?: run {

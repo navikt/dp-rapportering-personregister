@@ -1,6 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
@@ -100,6 +102,20 @@ class PersonTest {
         person.status(tidligere) shouldBe AVSLÅTT
     }
 
+    @Test
+    fun `frasier ansvaret for innsending av bekreftelse på vegne av personen ved stans`() {
+        val observer = mockk<PersonObserver>(relaxed = true)
+        val person = Person(ident, withStatusHistorikk(tidligere to INNVILGET))
+
+        person.addObserver(observer)
+        person.behandle(stansHendelse())
+
+        person.status shouldBe STANSET
+        person.status(tidligere) shouldBe INNVILGET
+
+        verify(exactly = 1) { observer.frasiArbeidssøkerBekreftelse(person) }
+    }
+
     private fun søknadHendelse(dato: LocalDateTime = LocalDateTime.now()) =
         SøknadHendelse(
             ident = ident,
@@ -133,4 +149,8 @@ class PersonTest {
         TemporalCollection<Status>().apply {
             entries.forEach { (time, status) -> put(time, status) }
         }
+}
+
+private class PersonObserFaker : PersonObserver {
+    override fun frasiArbeidssøkerBekreftelse(person: Person) {}
 }

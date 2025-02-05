@@ -13,6 +13,7 @@ version = "unspecified"
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.kotest.assertions)
+    testImplementation(libs.mockk)
 
     testApi("org.junit.platform:junit-platform-suite-api:1.10.2")
     testImplementation("org.junit.platform:junit-platform-suite-engine:1.10.2")
