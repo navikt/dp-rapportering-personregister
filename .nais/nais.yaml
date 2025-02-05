@@ -55,6 +55,14 @@ spec:
         - application: tokenx-token-generator
           namespace: aura
           cluster: dev-gcp
+    outbound:
+      rules:
+        - application: paw-arbeidssoekerregisteret-api-oppslag
+          namespace: paw
+          cluster: dev-gcp
+        - application: paw-kafka-key-generator
+          namespace: paw
+          cluster: dev-gcp
   env:
     - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
       value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}
