@@ -6,9 +6,9 @@ plugins {
 group = "no.nav.dapenger.rapportering.personregister"
 version = "unspecified"
 
-repositories {
+/*repositories {
     mavenCentral()
-}
+}*/
 
 dependencies {
     testImplementation(kotlin("test"))
@@ -23,6 +23,7 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }

@@ -2,10 +2,15 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
+import io.mockk.mockk
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
@@ -15,6 +20,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.STANSET
 import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SØKT
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -24,20 +31,38 @@ class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
     private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
+    private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
+    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProdusent<PaaVegneAv>
     private lateinit var personstatusMediator: PersonstatusMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
+    private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
+    private val overtaBekreftelseTopic = "paa_vegne_av"
 
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
-        arbeidssøkerService = ArbeidssøkerService(rapidsConnection, personRepository, arbeidssøkerRepository)
-        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+        arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+        overtaBekreftelseKafkaProdusent = MockKafkaProdusent()
+        arbeidssøkerService =
+            ArbeidssøkerService(
+                personRepository,
+                arbeidssøkerRepository,
+                arbeidssøkerConnector,
+                overtaBekreftelseKafkaProdusent,
+                overtaBekreftelseTopic,
+            )
+        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
     }
 
     @Test
     fun `kan behandle en ny hendelse med ny person`() {
+        val periodeId = UUID.randomUUID()
+        val recordKey = 1234L
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
+        coEvery { arbeidssøkerConnector.hentRecordKey(any()) } returns RecordKeyResponse(recordKey)
         val ident = "12345678910"
         val søknadId = "123"
 
@@ -53,10 +78,14 @@ class PersonstatusMediatorTest {
         personstatusMediator
             .behandle(søknadHendelse)
 
-        with(rapidsConnection.inspektør) {
+        with(overtaBekreftelseKafkaProdusent.meldinger) {
             size shouldBe 1
-            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
-            message(0)["ident"].asText() shouldBe ident
+            with(first()) {
+                topic() shouldBe overtaBekreftelseTopic
+                key() shouldBe recordKey
+                value().periodeId shouldBe periodeId
+                value().bekreftelsesloesning shouldBe no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
+            }
         }
 
         personRepository.hentPerson(ident)?.apply {
@@ -67,6 +96,8 @@ class PersonstatusMediatorTest {
 
     @Test
     fun `kan behandle eksisterende person`() {
+        val periodeId = UUID.randomUUID()
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now()
@@ -89,12 +120,6 @@ class PersonstatusMediatorTest {
         personRepository.lagrePerson(person)
 
         personstatusMediator.behandle(søknadHendelse)
-
-        with(rapidsConnection.inspektør) {
-            size shouldBe 1
-            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
-            message(0)["ident"].asText() shouldBe ident
-        }
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
@@ -160,6 +185,7 @@ class PersonstatusMediatorTest {
 
     @Test
     fun `kan behandle søknad hendelse for person som ikke eksisterer i databasen og ikke er registrert som arbeidssøker`() {
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now()
@@ -171,12 +197,6 @@ class PersonstatusMediatorTest {
                 dato = dato,
             ),
         )
-
-        with(rapidsConnection.inspektør) {
-            size shouldBe 1
-            message(0)["@behov"][0].asText() shouldBe Arbeidssøkerstatus.name
-            message(0)["ident"].asText() shouldBe ident
-        }
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident

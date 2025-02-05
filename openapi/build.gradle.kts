@@ -19,9 +19,9 @@ tasks.named("runKtlintFormatOverMainSourceSet").configure {
     dependsOn("openApiGenerate")
 }
 
-repositories {
+/*repositories {
     mavenCentral()
-}
+}*/
 
 dependencies {
     implementation(libs.jackson.annotation)
