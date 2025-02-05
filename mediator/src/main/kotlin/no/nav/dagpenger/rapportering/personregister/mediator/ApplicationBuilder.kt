@@ -53,7 +53,7 @@ internal class ApplicationBuilder(
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
     private val overtaBekreftelseKafkaProdusent =
         kafkaFactory.createProducer<Long, PaaVegneAv>(
-            clientId = "teamdagpenger-arbeidssokerregister-producer",
+            clientId = "teamdagpenger-personregister-producer",
             keySerializer = LongSerializer::class,
             valueSerializer = PaaVegneAvAvroSerializer::class,
         )
