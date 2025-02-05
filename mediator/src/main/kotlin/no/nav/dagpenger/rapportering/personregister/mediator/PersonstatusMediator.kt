@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -14,12 +13,12 @@ import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
-    private val arbeidssøkerService: ArbeidssøkerService,
+    private val arbeidssøkerMediator: ArbeidssøkerMediator,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        arbeidssøkerService.sendArbeidssøkerBehov(søknadHendelse.ident)
         behandleHendelse(søknadHendelse)
+        arbeidssøkerMediator.behandle(søknadHendelse.ident)
     }
 
     fun behandle(hendelse: InnvilgelseHendelse) {

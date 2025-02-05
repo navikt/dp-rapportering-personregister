@@ -1,32 +1,63 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.kafka.sendDeferred
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.Arbeidssøkerstatus
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehovType.OvertaBekreftelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
+import org.apache.kafka.clients.producer.Producer
+import org.apache.kafka.clients.producer.ProducerRecord
 import java.util.UUID
+import java.util.concurrent.TimeUnit.DAYS
 
 class ArbeidssøkerService(
-    private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
     private val arbeidssøkerRepository: ArbeidssøkerRepository,
+    private val arbeidssøkerConnector: ArbeidssøkerConnector,
+    private val overtaBekreftelseKafkaProdusent: Producer<Long, PaaVegneAv>,
+    private val overtaBekreftelseTopic: String,
 ) {
     fun sendOvertaBekreftelseBehov(
         ident: String,
         periodeId: UUID,
     ) {
-        publiserBehov(OvertaBekreftelseBehov(ident, periodeId.toString()))
+        val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(ident) }
+        val record =
+            ProducerRecord(
+                overtaBekreftelseTopic,
+                recordKeyResponse.key,
+                PaaVegneAv(
+                    periodeId,
+                    DAGPENGER,
+                    Start(
+                        DAYS.toMillis(14),
+                        DAYS.toMillis(8),
+                    ),
+                ),
+            )
+        val metadata = runBlocking { overtaBekreftelseKafkaProdusent.sendDeferred(record).await() }
+        sikkerlogg.info {
+            "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
+                "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+        }
+        oppdaterOvertagelse(periodeId, true)
     }
 
-    fun sendArbeidssøkerBehov(ident: String) {
-        publiserBehov(ArbeidssøkerstatusBehov(ident))
-        sikkerlogg.info { "Publiserte behov for arbeidssøkerstatus for ident $ident" }
-    }
+    suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =
+        arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
+            Arbeidssøkerperiode(
+                periodeId = it.periodeId,
+                startet = it.startet.tidspunkt,
+                avsluttet = it.avsluttet?.tidspunkt,
+                ident = ident,
+                overtattBekreftelse = null,
+            )
+        }
 
     fun oppdaterOvertagelse(
         periodeId: UUID,
@@ -37,7 +68,7 @@ class ArbeidssøkerService(
 
     fun finnesPerson(ident: String): Boolean = personRepository.finnesPerson(ident)
 
-    fun hentArbeidssøkerperioder(ident: String) = arbeidssøkerRepository.hentArbeidssøkerperioder(ident)
+    fun hentLagredeArbeidssøkerperioder(ident: String) = arbeidssøkerRepository.hentArbeidssøkerperioder(ident)
 
     fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) =
         arbeidssøkerRepository.lagreArbeidssøkerperiode(arbeidssøkerperiode)
@@ -47,49 +78,7 @@ class ArbeidssøkerService(
         arbeidssøkerRepository.oppdaterOvertagelse(arbeidssøkerperiode.periodeId, false)
     }
 
-    private fun publiserBehov(behov: Behovmelding) {
-        sikkerlogg.info { "Publiserer behov ${behov.behovType} for ident ${behov.ident}" }
-        val melding = behov.tilMelding().toJson()
-        sikkerlogg.info { "Publiserte melding: $melding" }
-        rapidsConnection.publish(melding)
-    }
-
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
     }
-}
-
-sealed class Behovmelding(
-    open val ident: String,
-    val behovType: BehovType,
-) {
-    abstract fun tilMelding(): JsonMessage
-}
-
-data class ArbeidssøkerstatusBehov(
-    override val ident: String,
-) : Behovmelding(ident, Arbeidssøkerstatus) {
-    override fun tilMelding(): JsonMessage =
-        JsonMessage.newMessage(
-            "behov_arbeidssokerstatus",
-            mutableMapOf(
-                "@behov" to listOf(behovType.name),
-                "ident" to ident,
-            ),
-        )
-}
-
-data class OvertaBekreftelseBehov(
-    override val ident: String,
-    val periodeId: String,
-) : Behovmelding(ident, OvertaBekreftelse) {
-    override fun tilMelding(): JsonMessage =
-        JsonMessage.newMessage(
-            "behov_arbeidssokerstatus",
-            mutableMapOf(
-                "@behov" to listOf(behovType.name),
-                "ident" to ident,
-                "periodeId" to periodeId,
-            ),
-        )
 }

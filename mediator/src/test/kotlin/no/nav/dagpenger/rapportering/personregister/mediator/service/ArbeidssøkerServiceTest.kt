@@ -1,51 +1,71 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerServiceTest {
-    private val testRapid = TestRapid()
     private val personRepository = mockk<PersonRepository>()
     private val arbeidssøkerRepository = mockk<ArbeidssøkerRepository>()
-    private val arbeidssøkerService = ArbeidssøkerService(testRapid, personRepository, arbeidssøkerRepository)
+    val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+    val overtaBekreftelseKafkaProdusent = MockKafkaProdusent<PaaVegneAv>()
+    private val overtaBekreftelseTopic = "paa_vegne_av"
+    private val arbeidssøkerService =
+        ArbeidssøkerService(
+            personRepository,
+            arbeidssøkerRepository,
+            arbeidssøkerConnector,
+            overtaBekreftelseKafkaProdusent,
+            overtaBekreftelseTopic,
+        )
 
     private val ident = "12345678901"
 
     @Test
-    fun `kan sende OvertaBekreftelseBehov`() {
+    fun `kan sende melding for å overta bekreftelse`() {
         val periodeId = UUID.randomUUID()
+        val recordKey = 1234L
+        coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+        justRun { arbeidssøkerRepository.oppdaterOvertagelse(any(), any()) }
 
         arbeidssøkerService.sendOvertaBekreftelseBehov(ident, periodeId)
 
-        with(testRapid.inspektør) {
+        with(overtaBekreftelseKafkaProdusent.meldinger) {
             size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
-            message(0)["@behov"][0].asText() shouldBe "OvertaBekreftelse"
-            message(0)["ident"].asText() shouldBe ident
-            message(0)["periodeId"].asText() shouldBe periodeId.toString()
+            with(first()) {
+                topic() shouldBe overtaBekreftelseTopic
+                key() shouldBe recordKey
+                value().periodeId shouldBe periodeId
+                value().bekreftelsesloesning shouldBe DAGPENGER
+            }
         }
     }
 
     @Test
-    fun `kan sende ArbeidssøkerstatusBehov`() {
-        arbeidssøkerService.sendArbeidssøkerBehov(ident)
+    fun `kan hente siste arbeidssøkerperiode`() {
+        val response = arbeidssøkerResponse(UUID.randomUUID())
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident) } returns listOf(response)
 
-        with(testRapid.inspektør) {
-            size shouldBe 1
-            message(0)["@event_name"].asText() shouldBe "behov_arbeidssokerstatus"
-            message(0)["@behov"][0].asText() shouldBe "Arbeidssøkerstatus"
-            message(0)["ident"].asText() shouldBe ident
-        }
+        val periode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+
+        response.periodeId shouldBe periode?.periodeId
+        response.startet.tidspunkt shouldBe periode?.startet
     }
 
     @Test

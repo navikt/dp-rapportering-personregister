@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafka
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.konfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -24,7 +25,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMet
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerregisterLøsningMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
@@ -46,6 +46,8 @@ internal class ApplicationBuilder(
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
 
+    private val arbeidssøkerConnector = ArbeidssøkerConnector()
+
     private val overtaBekreftelseTopic = configuration.getValue("OVERTA_BEKREFTELSE_TOPIC")
     private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
@@ -56,26 +58,33 @@ internal class ApplicationBuilder(
             valueSerializer = PaaVegneAvAvroSerializer::class,
         )
 
+    val arbeidssøkerService =
+        ArbeidssøkerService(
+            personRepository,
+            arbeidssøkerRepository,
+            arbeidssøkerConnector,
+            overtaBekreftelseKafkaProdusent,
+            overtaBekreftelseTopic,
+        )
+
     private val rapidsConnection =
         RapidApplication
             .create(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
-                val arbeidssøkerService = ArbeidssøkerService(rapid, personRepository, arbeidssøkerRepository)
-
+                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
                 with(engine.application) {
                     konfigurasjon(meterRegistry)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, arbeidssøkerService)
+                    personstatusApi(personRepository, arbeidssøkerMediator)
                 }
-                val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
-                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+
+                val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
                 ArbeidssøkerperiodeMottak(rapid, personstatusMediator)
-                ArbeidssøkerregisterLøsningMottak(rapid, arbeidssøkerMediator)
             }
 
     init {

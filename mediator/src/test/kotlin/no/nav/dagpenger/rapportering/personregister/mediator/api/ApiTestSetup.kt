@@ -1,16 +1,18 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -18,6 +20,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.junit.jupiter.api.AfterAll
@@ -79,12 +83,22 @@ open class ApiTestSetup {
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
-            val arbeidssøkerService = ArbeidssøkerService(TestRapid(), personRepository, arbeidssøkerRepository)
+            val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+            val overtaBekreftelseKafkaProdusent = MockKafkaProdusent<PaaVegneAv>()
+            val arbeidssøkerService =
+                ArbeidssøkerService(
+                    personRepository,
+                    arbeidssøkerRepository,
+                    arbeidssøkerConnector,
+                    overtaBekreftelseKafkaProdusent,
+                    "paa-vegne-av",
+                )
+            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
 
             application {
                 konfigurasjon(meterRegistry)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerService)
+                personstatusApi(personRepository, arbeidssøkerMediator)
             }
 
             block()
