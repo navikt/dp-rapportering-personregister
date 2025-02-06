@@ -16,7 +16,7 @@ dependencies {
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
