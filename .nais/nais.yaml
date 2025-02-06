@@ -39,6 +39,9 @@ spec:
     logging:
       destinations:
         - id: elastic
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   gcp:
     sqlInstances:
       - type: POSTGRES_15
