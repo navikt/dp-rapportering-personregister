@@ -11,7 +11,7 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -21,7 +21,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class PersonObserverKafkaTest {
-    private var producer = MockKafkaProdusent<PaaVegneAv>()
+    private var producer = MockKafkaProducer<PaaVegneAv>()
     private val arbeiDssøkerConnector = mockk<ArbeidssøkerConnector>()
     private val arbeidssøkerRepository = mockk<PostrgesArbeidssøkerRepository>()
     private val frasiBekreftelseTopic = "frasiBekreftelseTopic"
