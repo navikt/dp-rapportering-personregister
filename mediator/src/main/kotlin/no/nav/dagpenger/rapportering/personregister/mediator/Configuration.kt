@@ -58,7 +58,7 @@ internal object Configuration {
             runBlocking {
                 azureAdClient
                     .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE", stringType)])
-                    .accessToken ?: throw RuntimeException("Failed to get token")
+                    .access_token ?: throw RuntimeException("Failed to get token")
             }
         }
     }
@@ -67,7 +67,7 @@ internal object Configuration {
             runBlocking {
                 azureAdClient
                     .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE", stringType)])
-                    .accessToken ?: throw RuntimeException("Failed to get token")
+                    .access_token ?: throw RuntimeException("Failed to get token")
             }
         }
     }
