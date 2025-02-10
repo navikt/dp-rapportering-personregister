@@ -3,10 +3,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator.observers
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.sendDeferred
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService.Companion.sikkerlogg
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -16,31 +14,27 @@ import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 
 class PersonObserverKafka(
-    val producer: Producer<Long, PaaVegneAv>,
-    val arbeidssøkerConnector: ArbeidssøkerConnector,
-    val arbeidssøkerRepository: PostrgesArbeidssøkerRepository,
+    private val producer: Producer<Long, PaaVegneAv>,
+    private val arbeidssøkerConnector: ArbeidssøkerConnector,
+    private val arbeidssøkerRepository: PostrgesArbeidssøkerRepository,
+    private val frasiBekreftelseTopic: String,
 ) : PersonObserver {
-    val topic = Configuration.config.getValue("OVERTA_BEKREFTELSE_TOPIC") // TODO: Fix denne
-
-    override fun frasiArbeidssøkerBekreftelse(person: Person) =
+    override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
         runBlocking {
-            val periodeId =
-                arbeidssøkerRepository
-                    .hentArbeidssøkerperioder(
-                        person.ident,
-                    ).filter { it.avsluttet == null }
-                    .firstOrNull()
-                    ?.periodeId
-            if (periodeId != null) {
-                val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
-                val record = ProducerRecord(topic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
-                val metadata = producer.sendDeferred(record).await()
-                sikkerlogg.info {
-                    "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
-                        "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+            arbeidssøkerRepository
+                .hentArbeidssøkerperioder(person.ident)
+                .firstOrNull { it.avsluttet == null }
+                ?.periodeId
+                ?.let { periodeId ->
+                    val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
+                    val record = ProducerRecord(frasiBekreftelseTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
+                    val metadata = producer.sendDeferred(record).await()
+                    sikkerlogg.info {
+                        "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
+                            "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                    }
+                    arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false)
                 }
-                arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false)
-            }
         }
 
     companion object {
