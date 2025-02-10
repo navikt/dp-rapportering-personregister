@@ -114,6 +114,7 @@ class PersonTest {
         person.status(tidligere) shouldBe INNVILGET
 
         verify(exactly = 1) { observer.frasiArbeidssøkerBekreftelse(person) }
+        // TODO Person har ingen aktive perioder
     }
 
     private fun søknadHendelse(dato: LocalDateTime = LocalDateTime.now()) =

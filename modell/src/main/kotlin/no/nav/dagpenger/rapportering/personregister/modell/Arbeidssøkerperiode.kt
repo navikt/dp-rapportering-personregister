@@ -13,8 +13,8 @@ data class Arbeidssøkerperiode(
     val periodeId: UUID,
     val ident: String,
     val startet: LocalDateTime,
-    val avsluttet: LocalDateTime?,
-    val overtattBekreftelse: Boolean?,
+    var avsluttet: LocalDateTime?,
+    var overtattBekreftelse: Boolean?,
 )
 
 data class OvertaBekreftelseLøsning(

@@ -3,6 +3,8 @@ package no.nav.dagpenger.rapportering.personregister.modell
 import java.time.LocalDateTime
 
 interface PersonObserver {
+    fun ovetaArbeidssøkerBekreftelse(person: Person) {}
+
     fun frasiArbeidssøkerBekreftelse(person: Person)
 }
 
@@ -10,7 +12,9 @@ data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
 ) {
-    private val observers = mutableListOf<PersonObserver>()
+    val observers = mutableListOf<PersonObserver>()
+
+    val arbeidssøkerperioder = mutableListOf<Arbeidssøkerperiode>()
 
     fun addObserver(observer: PersonObserver) {
         observers.add(observer)
