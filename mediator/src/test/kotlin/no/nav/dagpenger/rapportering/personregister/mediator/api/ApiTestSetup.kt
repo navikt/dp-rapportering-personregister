@@ -20,7 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -84,7 +84,7 @@ open class ApiTestSetup {
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
             val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-            val overtaBekreftelseKafkaProdusent = MockKafkaProdusent<PaaVegneAv>()
+            val overtaBekreftelseKafkaProdusent = MockKafkaProducer<PaaVegneAv>()
             val arbeidssøkerService =
                 ArbeidssøkerService(
                     personRepository,

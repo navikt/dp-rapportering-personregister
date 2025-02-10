@@ -8,7 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKey
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -23,7 +23,7 @@ class ArbeidssøkerMediatorTest {
     private lateinit var personRepository: PersonRepository
     private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
-    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProdusent<PaaVegneAv>
+    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
     private val overtaBekreftelseTopic = "paa_vegne_av"
@@ -33,7 +33,7 @@ class ArbeidssøkerMediatorTest {
         personRepository = PersonRepositoryFaker()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
-        overtaBekreftelseKafkaProdusent = MockKafkaProdusent()
+        overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService =
             ArbeidssøkerService(
                 personRepository,

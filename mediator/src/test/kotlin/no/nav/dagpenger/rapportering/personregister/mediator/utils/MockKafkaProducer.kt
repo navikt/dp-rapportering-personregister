@@ -15,7 +15,7 @@ import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 
-class MockKafkaProdusent<T> : Producer<Long, T> {
+class MockKafkaProducer<T> : Producer<Long, T> {
     private var isClosed = false
     private val _meldinger = mutableListOf<ProducerRecord<Long, T>>()
 

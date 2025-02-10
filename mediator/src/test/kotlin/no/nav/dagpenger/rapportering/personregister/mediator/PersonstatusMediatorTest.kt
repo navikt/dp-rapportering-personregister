@@ -9,7 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKey
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -21,7 +21,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SØKT
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -32,7 +31,7 @@ class PersonstatusMediatorTest {
     private lateinit var personRepository: PersonRepository
     private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
-    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProdusent<PaaVegneAv>
+    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personstatusMediator: PersonstatusMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
@@ -44,7 +43,7 @@ class PersonstatusMediatorTest {
         personRepository = PersonRepositoryFaker()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-        overtaBekreftelseKafkaProdusent = MockKafkaProdusent()
+        overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService =
             ArbeidssøkerService(
                 personRepository,

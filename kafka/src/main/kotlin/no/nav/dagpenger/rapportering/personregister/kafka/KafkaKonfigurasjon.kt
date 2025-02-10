@@ -54,7 +54,8 @@ data class KafkaKonfigurasjon(
         mapOf(
             KafkaAvroSerializerConfig.SCHEMA_REGISTRY_URL_CONFIG to schemaRegistryKonfigurasjon.url,
             SchemaRegistryClientConfig.BASIC_AUTH_CREDENTIALS_SOURCE to "USER_INFO",
-            SchemaRegistryClientConfig.USER_INFO_CONFIG to "${schemaRegistryKonfigurasjon.username}:${schemaRegistryKonfigurasjon.password}",
+            SchemaRegistryClientConfig.USER_INFO_CONFIG to
+                "${schemaRegistryKonfigurasjon.username}:${schemaRegistryKonfigurasjon.password}",
             KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS to schemaRegistryKonfigurasjon.autoRegisterSchema,
             KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to schemaRegistryKonfigurasjon.avroSpecificReaderConfig,
         ).apply {

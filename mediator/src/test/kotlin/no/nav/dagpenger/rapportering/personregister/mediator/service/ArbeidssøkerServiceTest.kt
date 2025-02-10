@@ -11,7 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProdusent
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -24,7 +24,7 @@ class ArbeidssøkerServiceTest {
     private val personRepository = mockk<PersonRepository>()
     private val arbeidssøkerRepository = mockk<ArbeidssøkerRepository>()
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-    val overtaBekreftelseKafkaProdusent = MockKafkaProdusent<PaaVegneAv>()
+    val overtaBekreftelseKafkaProdusent = MockKafkaProducer<PaaVegneAv>()
     private val overtaBekreftelseTopic = "paa_vegne_av"
     private val arbeidssøkerService =
         ArbeidssøkerService(
