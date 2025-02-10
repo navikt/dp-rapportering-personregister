@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -15,26 +16,25 @@ import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
 import java.net.URI
 
 class ArbeidssøkerConnector(
-    private val arbeidssøkerregisterUrl: String = Configuration.arbeidssoekerregisterUrl,
-    private val tokenProvider: () -> String? = Configuration.tokenProvider,
+    private val arbeidssøkerregisterOppslagUrl: String = Configuration.arbeidssokerregisterOppslagUrl,
+    private val oppslagTokenProvider: () -> String? = Configuration.oppslagTokenProvider,
+    private val arbeidssokerregisterRecordKeyUrl: String = Configuration.arbeidssokerregisterRecordKeyUrl,
+    private val recordKeyTokenProvider: () -> String? = Configuration.recordKeyTokenProvider,
     private val httpClient: HttpClient = createHttpClient(),
 ) {
     suspend fun hentSisteArbeidssøkerperiode(ident: String): List<ArbeidssøkerperiodeResponse> =
         withContext(Dispatchers.IO) {
-            val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
             val result =
                 httpClient
-                    .post(URI("$arbeidssøkerregisterUrl/api/v1/veileder/arbeidssoekerperioder").toURL()) {
-                        bearerAuth(token)
+                    .post(URI("$arbeidssøkerregisterOppslagUrl/api/v1/veileder/arbeidssoekerperioder").toURL()) {
+                        bearerAuth(oppslagTokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token"))
                         contentType(ContentType.Application.Json)
                         parameter("siste", true)
                         setBody(defaultObjectMapper.writeValueAsString(ArbeidssøkerperiodeRequestBody(ident)))
                     }.also {
-                        logger.info { "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode ga status ${it.status}" }
                         sikkerlogg.info {
                             "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for $ident ga status ${it.status}"
                         }
@@ -42,7 +42,6 @@ class ArbeidssøkerConnector(
 
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
-                logger.warn { "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode" }
                 sikkerlogg.warn {
                     "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for $ident. Response: $body"
                 }
@@ -51,12 +50,31 @@ class ArbeidssøkerConnector(
             result.body()
         }
 
+    suspend fun hentRecordKey(ident: String): RecordKeyResponse =
+        withContext(Dispatchers.IO) {
+            val result =
+                httpClient
+                    .post(URI("$arbeidssokerregisterRecordKeyUrl/api/v1/record-key").toURL()) {
+                        bearerAuth(recordKeyTokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token"))
+                        contentType(ContentType.Application.Json)
+                        setBody(defaultObjectMapper.writeValueAsString(RecordKeyRequestBody(ident)))
+                    }.also {
+                        sikkerlogg.info {
+                            "Kall til arbeidssøkerregister for å hente record key for $ident ga status ${it.status}"
+                        }
+                    }
+
+            if (result.status != HttpStatusCode.OK) {
+                val body = result.bodyAsText()
+                sikkerlogg.warn {
+                    "Uforventet status ${result.status.value} ved henting av record key for $ident. Response: $body"
+                }
+                throw RuntimeException("Uforventet status ${result.status.value} ved henting av record key")
+            }
+            result.body()
+        }
+
     companion object {
-        private val logger = KotlinLogging.logger {}
-        val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
     }
 }
-
-data class ArbeidssøkerperiodeRequestBody(
-    val identitetsnummer: String,
-)

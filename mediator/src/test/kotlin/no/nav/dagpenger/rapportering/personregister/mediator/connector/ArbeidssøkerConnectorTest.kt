@@ -5,28 +5,36 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.BrukerResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.MetadataResponse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.random.Random
 
 class ArbeidssøkerConnectorTest {
-    private val arbeidssøkerregisterUrl = "http://arbeidssøkerregister"
+    private val arbeidssøkerregisterOppslagUrl = "http://arbeidssøkerregister-oppslag"
+    private val arbeidssokerregisterRecordKeyUrl = "http://arbeidssøkerregister-record-key"
     private val testTokenProvider: () -> String = { "testToken" }
+
+    init {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+    }
 
     private fun arbeidssøkerConnector(
         responseBody: String,
         statusCode: Int,
     ) = ArbeidssøkerConnector(
-        arbeidssøkerregisterUrl,
+        arbeidssøkerregisterOppslagUrl,
+        testTokenProvider,
+        arbeidssokerregisterRecordKeyUrl,
         testTokenProvider,
         createMockClient(statusCode, responseBody),
     )
 
     @Test
-    fun `Kan mappe fult objekt`() {
+    fun `Oppslag - Kan mappe fult objekt`() {
         val periodeId = UUID.randomUUID()
         val response =
             runBlocking {
@@ -41,7 +49,7 @@ class ArbeidssøkerConnectorTest {
     }
 
     @Test
-    fun `Kan mappe objekt uten avsluttet`() {
+    fun `Oppslag - Kan mappe objekt uten avsluttet`() {
         val periodeId = UUID.randomUUID()
         val response =
             runBlocking {
@@ -59,7 +67,7 @@ class ArbeidssøkerConnectorTest {
     }
 
     @Test
-    fun `Kan håndtere tom liste`() {
+    fun `Oppslag - Kan håndtere tom liste`() {
         val response =
             runBlocking {
                 arbeidssøkerConnector(
@@ -72,7 +80,7 @@ class ArbeidssøkerConnectorTest {
     }
 
     @Test
-    fun `Kaster exception hvis response status ikke er 200`() {
+    fun `Oppslag - Kaster exception hvis response status ikke er 200`() {
         shouldThrow<RuntimeException> {
             runBlocking {
                 arbeidssøkerConnector(
@@ -82,7 +90,37 @@ class ArbeidssøkerConnectorTest {
             }
         }
     }
+
+    @Test
+    fun `Record key - Kan mappe fult objekt`() {
+        val response =
+            runBlocking {
+                arbeidssøkerConnector(recordKeyResponse(), 200).hentRecordKey("12345678901")
+            }
+
+        response shouldNotBe null
+    }
+
+    @Test
+    fun `Record key - Kaster exception hvis response status ikke er 200`() {
+        shouldThrow<RuntimeException> {
+            runBlocking {
+                arbeidssøkerConnector(
+                    """{feilkode: "400", melding: "Bad request error"}""",
+                    400,
+                ).hentRecordKey("12345678901")
+            }
+        }
+    }
 }
+
+fun recordKeyResponse() =
+    defaultObjectMapper
+        .writeValueAsString(
+            RecordKeyResponse(
+                key = Random.nextLong(),
+            ),
+        )
 
 fun arbeidssøkerResponse(
     periodeId: UUID,

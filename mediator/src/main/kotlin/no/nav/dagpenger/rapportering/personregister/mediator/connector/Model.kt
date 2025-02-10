@@ -1,7 +1,19 @@
-package no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker
+package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
 import java.time.LocalDateTime
 import java.util.UUID
+
+data class ArbeidssøkerperiodeRequestBody(
+    val identitetsnummer: String,
+)
+
+data class RecordKeyRequestBody(
+    val ident: String,
+)
+
+data class RecordKeyResponse(
+    val key: Long,
+)
 
 data class ArbeidssøkerperiodeResponse(
     val periodeId: UUID,

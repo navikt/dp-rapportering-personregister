@@ -1,24 +1,38 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
-import SimpleStatusStrategyFactory
 import java.time.LocalDateTime
+
+interface PersonObserver {
+    fun frasiArbeidssøkerBekreftelse(person: Person)
+}
 
 data class Person(
     val ident: String,
+    val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
 ) {
-    val hendelser = mutableListOf<Hendelse>()
-    val statusHistorikk = TemporalCollection<Status>()
+    private val observers = mutableListOf<PersonObserver>()
+
+    fun addObserver(observer: PersonObserver) {
+        observers.add(observer)
+    }
 
     fun status(dato: LocalDateTime): Status = statusHistorikk.get(dato)
 
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun behandle(hendelse: Hendelse) {
-        hendelser.add(hendelse)
+    val hendelser = mutableListOf<Hendelse>()
 
-        SimpleStatusStrategyFactory()
-            .createStrategy(this)
-            .also { it.håndter(this, hendelse) }
+    fun behandle(hendelse: Hendelse) {
+        statusHistorikk.takeIf { it.isEmpty() }?.put(hendelse.dato, SØKT)
+
+        status
+            .håndter(hendelse)
+            .takeIf { nyStatus -> nyStatus != status }
+            ?.also { statusHistorikk.put(hendelse.dato, it) }
+            ?.takeIf { nyStatus -> nyStatus == STANSET }
+            ?.let { observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) } }
+
+        hendelser.add(hendelse)
     }
 }

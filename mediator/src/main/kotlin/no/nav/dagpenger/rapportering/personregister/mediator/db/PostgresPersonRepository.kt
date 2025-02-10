@@ -5,10 +5,14 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import java.time.LocalDateTime
 import javax.sql.DataSource
@@ -19,8 +23,9 @@ class PostgresPersonRepository(
 ) : PersonRepository {
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
-            val hendelser = hentHendelser(ident)
-            val statusHistorikk = hentStatusHistorikk(ident).allItems()
+            val personId = hentPersonId(ident) ?: return@timedAction null
+            val hendelser = hentHendelser(personId)
+            val statusHistorikk = hentStatusHistorikk(personId).allItems()
 
             if (hendelser.isNotEmpty()) {
                 Person(ident).apply {
@@ -37,7 +42,7 @@ class PostgresPersonRepository(
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf("SELECT EXISTS(SELECT 1 FROM person WHERE ident = :ident)", mapOf("ident" to ident))
-                        .map { it.string(1).toBoolean() }
+                        .map { it.boolean(1) }
                         .asSingle,
                 ) ?: false
             }
@@ -45,30 +50,37 @@ class PostgresPersonRepository(
 
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {
-            using(sessionOf(dataSource)) { session ->
-                session.transaction { tx ->
-                    tx.run(
-                        queryOf("INSERT INTO person (ident) VALUES (:ident)", mapOf("ident" to person.ident))
-                            .asUpdate,
-                    )
-                }
-            }
+            val personId =
+                using(sessionOf(dataSource)) { session ->
+                    session.transaction { tx ->
+                        tx.run(
+                            queryOf(
+                                "INSERT INTO person (ident) VALUES (:ident) RETURNING id",
+                                mapOf(
+                                    "ident" to person.ident,
+                                ),
+                            ).map { row -> row.long("id") }
+                                .asSingle,
+                        )
+                    }
+                } ?: throw IllegalStateException("Klarte ikke å lagre person")
 
-            person.hendelser.forEach { lagreHendelse(it) }
+            person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
                 .allItems()
                 .forEach { (dato, status) ->
-                    lagreStatusHistorikk(person.ident, dato, status)
+                    lagreStatusHistorikk(personId, dato, status)
                 }
         }
 
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
-            person.hendelser.forEach { lagreHendelse(it) }
+            val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
+            person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
                 .allItems()
                 .forEach { (dato, status) ->
-                    lagreStatusHistorikk(person.ident, dato, status)
+                    lagreStatusHistorikk(personId, dato, status)
                 }
         }
 
@@ -94,55 +106,99 @@ class PostgresPersonRepository(
             }
         }
 
-    private fun lagreHendelse(hendelse: Hendelse) {
+    private fun hentPersonId(ident: String): Long? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT * FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.long("id") }
+                    .asSingle,
+            )
+        }
+
+    private fun lagreHendelse(
+        personId: Long,
+        hendelse: Hendelse,
+    ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
-                INSERT INTO hendelse (id, ident, referanse_id, dato, status, kilde) 
-                VALUES (?, ?, ?, ?, ?, ?)
-                ON CONFLICT (id) 
+                INSERT INTO hendelse (person_id, dato, kilde,referanse_id, type) 
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
-                    ident = EXCLUDED.ident,
-                    referanse_id = EXCLUDED.referanse_id,
+                    person_id = EXCLUDED.person_id,
                     dato = EXCLUDED.dato,
-                    status = EXCLUDED.status,
-                    kilde = EXCLUDED.kilde
+                    kilde = EXCLUDED.kilde,
+                    type = EXCLUDED.type
                 """,
-                        hendelse.id,
-                        hendelse.ident,
-                        hendelse.referanseId,
+                        personId,
                         hendelse.dato,
-                        hendelse.status.name,
                         hendelse.kilde.name,
+                        hendelse.referanseId,
+                        hendelse::class.simpleName,
                     ).asUpdate,
                 )
             }
         }
     }
 
-    private fun hentHendelser(ident: String): List<Hendelse> =
+    private fun hentHendelser(personId: Long): List<Hendelse> =
         using(sessionOf(dataSource)) { session ->
             session.run(
-                queryOf("SELECT * FROM hendelse WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> tilHendelse(row) }
+                queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
+                    .map(::tilHendelse)
                     .asList,
             )
         }
 
-    private fun tilHendelse(row: Row) =
-        Hendelse(
-            id = row.uuid("id"),
-            ident = row.string("ident"),
-            referanseId = row.string("referanse_id"),
-            dato = row.localDateTime("dato"),
-            status = Status.valueOf(row.string("status")),
-            kilde = Kildesystem.valueOf(row.string("kilde")),
-        )
+    private fun tilHendelse(row: Row): Hendelse {
+        val type = row.string("type")
+        val ident = row.string("person_id")
+        val dato = row.localDateTime("dato")
+        val referanseId = row.string("referanse_id")
+
+        return when (type) {
+            "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
+            "InnvilgelseHendelse" -> InnvilgelseHendelse(ident, dato, referanseId)
+            "AvslagHendelse" -> AvslagHendelse(ident, dato, referanseId)
+            "StansHendelse" ->
+                StansHendelse(
+                    ident,
+                    dato,
+                    row.string("meldegruppe_kode"),
+                    referanseId,
+                )
+            "ArbeidssøkerHendelse" ->
+                ArbeidssøkerHendelse(
+                    ident,
+                    row.uuid("periode_id"),
+                    row.localDateTime("start_dato"),
+                    row.localDateTimeOrNull("slutt_dato"),
+                )
+            else -> throw IllegalArgumentException("Unknown type: $type")
+        }
+    }
+
+    private fun hentStatusHistorikk(personId: Long): TemporalCollection<Status> =
+        TemporalCollection<Status>().apply {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        "SELECT * FROM status_historikk WHERE person_id = :person_id",
+                        mapOf("person_id" to personId),
+                    ).map { row ->
+                        val dato = row.localDateTime("dato")
+                        val status = Status.rehydrer(row.string("status")) // TOOD: fix
+                        put(dato, status)
+                    }.asList,
+                )
+            }
+        }
 
     private fun lagreStatusHistorikk(
-        personIdent: String,
+        personId: Long,
         dato: LocalDateTime,
         status: Status,
     ) {
@@ -150,29 +206,11 @@ class PostgresPersonRepository(
             session.transaction { tx ->
                 tx.run(
                     queryOf(
-                        "INSERT INTO status_historikk (person_ident, dato, status) VALUES (:person_ident, :dato, :status)",
-                        mapOf("person_ident" to personIdent, "dato" to dato, "status" to status.toString()),
+                        "INSERT INTO status_historikk (person_id, dato, status) VALUES (:person_id, :dato, :status)",
+                        mapOf("person_id" to personId, "dato" to dato, "status" to status.type.name),
                     ).asUpdate,
                 )
             }
         }
     }
-
-    private fun hentStatusHistorikk(personIdent: String): TemporalCollection<Status> =
-        TemporalCollection<Status>().apply {
-            using(sessionOf(dataSource)) { session ->
-                session.run(
-                    queryOf(
-                        "SELECT * FROM status_historikk WHERE person_ident = :person_ident",
-                        mapOf("person_ident" to personIdent),
-                    ).map { row ->
-                        val dato = row.localDateTime("dato")
-                        val status = Status.valueOf(row.string("status"))
-                        put(dato, status)
-                    }.asList,
-                )
-            }
-        }
 }
-
-private fun String?.toBooleanOrNull(): Boolean? = this?.let { this == "t" }

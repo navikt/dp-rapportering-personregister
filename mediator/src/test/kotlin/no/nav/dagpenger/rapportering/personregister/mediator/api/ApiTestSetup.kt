@@ -6,15 +6,22 @@ import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.mockk
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.junit.jupiter.api.AfterAll
@@ -23,8 +30,6 @@ import org.junit.jupiter.api.BeforeAll
 open class ApiTestSetup {
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
-
-        // const val AZURE_ISSUER_ID = "azure"
         const val REQUIRED_AUDIENCE = "tokenx"
         val TEST_PRIVATE_JWK =
             """
@@ -77,11 +82,23 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+            val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
+            val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+            val overtaBekreftelseKafkaProdusent = MockKafkaProducer<PaaVegneAv>()
+            val arbeidssøkerService =
+                ArbeidssøkerService(
+                    personRepository,
+                    arbeidssøkerRepository,
+                    arbeidssøkerConnector,
+                    overtaBekreftelseKafkaProdusent,
+                    "paa-vegne-av",
+                )
+            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
 
             application {
                 konfigurasjon(meterRegistry)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository)
+                personstatusApi(personRepository, arbeidssøkerMediator)
             }
 
             block()
@@ -96,8 +113,10 @@ open class ApiTestSetup {
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("GITHUB_SHA", "some_sha")
-        System.setProperty("ARBEIDSSOKERREGISTER_HOST", "http://arbeidssokerregister")
-        System.setProperty("ARBEIDSSOKERREGISTER_SCOPE", "api://arbeidssokerregister/.default")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =
@@ -114,7 +133,7 @@ open class ApiTestSetup {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
-                    "TRUNCATE TABLE person, hendelse, status_historikk",
+                    "TRUNCATE TABLE person, hendelse,status_historikk,  arbeidssoker",
                 ).asExecute,
             )
         }

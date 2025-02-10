@@ -5,17 +5,22 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
+import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.ArbeidssøkerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.BrukerResponse
-import no.nav.dagpenger.rapportering.personregister.modell.arbeidssøker.MetadataResponse
+import no.nav.dagpenger.rapportering.personregister.modell.STANSET
+import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.SØKT
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -24,22 +29,39 @@ import java.util.UUID
 class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
-    private lateinit var personstatusMediator: PersonstatusMediator
+    private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
+    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
+    private lateinit var personstatusMediator: PersonstatusMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
+    private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
+    private val overtaBekreftelseTopic = "paa_vegne_av"
 
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = PersonRepositoryFaker()
-        arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
-        arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerService)
+        arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
+        arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+        overtaBekreftelseKafkaProdusent = MockKafkaProducer()
+        arbeidssøkerService =
+            ArbeidssøkerService(
+                personRepository,
+                arbeidssøkerRepository,
+                arbeidssøkerConnector,
+                overtaBekreftelseKafkaProdusent,
+                overtaBekreftelseTopic,
+            )
+        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
     }
 
     @Test
     fun `kan behandle en ny hendelse med ny person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse(true)
+        val periodeId = UUID.randomUUID()
+        val recordKey = 1234L
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
+        coEvery { arbeidssøkerConnector.hentRecordKey(any()) } returns RecordKeyResponse(recordKey)
         val ident = "12345678910"
         val søknadId = "123"
 
@@ -55,15 +77,26 @@ class PersonstatusMediatorTest {
         personstatusMediator
             .behandle(søknadHendelse)
 
+        with(overtaBekreftelseKafkaProdusent.meldinger) {
+            size shouldBe 1
+            with(first()) {
+                topic() shouldBe overtaBekreftelseTopic
+                key() shouldBe recordKey
+                value().periodeId shouldBe periodeId
+                value().bekreftelsesloesning shouldBe no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
+            }
+        }
+
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.SØKT
+            status shouldBe SØKT
         }
     }
 
     @Test
     fun `kan behandle eksisterende person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse(true)
+        val periodeId = UUID.randomUUID()
+        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now()
@@ -76,12 +109,10 @@ class PersonstatusMediatorTest {
             )
 
         val hendelse =
-            Hendelse(
+            SøknadHendelse(
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.SØKT,
-                kilde = Kildesystem.Søknad,
             )
 
         val person = Person(ident).apply { behandle(hendelse) }
@@ -91,7 +122,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.SØKT
+            status shouldBe SØKT
         }
     }
 
@@ -102,23 +133,21 @@ class PersonstatusMediatorTest {
         val dato = LocalDateTime.now()
 
         personstatusMediator.behandle(
-            VedtakHendelse(
+            InnvilgelseHendelse(
                 ident = ident,
                 referanseId = søknadId,
                 dato = dato,
-                status = Status.INNVILGET,
             ),
         )
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.INNVILGET
+            status shouldBe INNVILGET
         }
     }
 
     @Test
     fun `kan behandle vedtak hendelse for eksisterende person`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse()
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now().minusDays(1)
@@ -132,19 +161,24 @@ class PersonstatusMediatorTest {
         )
 
         personstatusMediator.behandle(
-            VedtakHendelse(
+            ArbeidssøkerHendelse(
+                ident,
+                UUID.randomUUID(),
+                dato.minusDays(1),
+            ),
+        )
+
+        personstatusMediator.behandle(
+            InnvilgelseHendelse(
                 ident = ident,
                 referanseId = søknadId,
-                dato = dato.plusDays(1),
-                status = Status.INNVILGET,
+                dato = dato,
             ),
         )
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.INNVILGET
-            status(dato) shouldBe Status.SØKT
-            status(dato.minusDays(1)) shouldBe Status.ARBS
+            status shouldBe INNVILGET
         }
     }
 
@@ -165,9 +199,84 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            status shouldBe Status.SØKT
-            statusHistorikk.allItems().size shouldBe 1
+            status shouldBe SØKT
         }
+    }
+
+    // Stans
+    @Test
+    fun `kan behandle stans hendelse for eksisterende person`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            InnvilgelseHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+            ),
+        )
+
+        personstatusMediator.behandle(
+            StansHendelse(
+                ident = ident,
+                meldegruppeKode = "ARBS",
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe STANSET
+        }
+    }
+
+    @Test
+    fun `kan behandle meldegruppeendring hendelse som ikke er stans`() {
+        val ident = "12345678910"
+        val søknadId = "123"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            InnvilgelseHendelse(
+                ident = ident,
+                referanseId = søknadId,
+                dato = dato,
+            ),
+        )
+
+        personstatusMediator.behandle(
+            StansHendelse(
+                ident = ident,
+                meldegruppeKode = "IKKE_ARBS",
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe INNVILGET
+        }
+    }
+
+    @Test
+    fun `kan behandle stans hendelse for person som ikke eksisterer i databasen`() {
+        val ident = "12345678910"
+        val dato = LocalDateTime.now().minusDays(1)
+
+        personstatusMediator.behandle(
+            StansHendelse(
+                ident = ident,
+                meldegruppeKode = "ARBS",
+                dato = dato.plusDays(1),
+                referanseId = UUID.randomUUID().toString(),
+            ),
+        )
+
+        personRepository.hentPerson(ident) shouldBe null
     }
 }
 
@@ -191,39 +300,57 @@ class PersonRepositoryFaker : PersonRepository {
     override fun hentAntallHendelser(): Int = personliste.values.sumOf { it.hendelser.size }
 }
 
-fun arbeidssøkerperiodeResponse(
-    avsluttet: Boolean = false,
-    tidspunktForRegistrering: LocalDateTime = LocalDateTime.now().minusWeeks(3),
-) = listOf(
-    ArbeidssøkerperiodeResponse(
-        periodeId = UUID.randomUUID(),
-        startet =
-            MetadataResponse(
-                tidspunkt = tidspunktForRegistrering,
-                utfoertAv =
-                    BrukerResponse(
-                        type = "SLUTTBRUKER",
-                        id = "12345678910",
-                    ),
-                kilde = "kilde",
-                aarsak = "årsak",
-                tidspunktFraKilde = null,
-            ),
-        avsluttet =
-            if (avsluttet) {
-                MetadataResponse(
-                    tidspunkt = LocalDateTime.now(),
-                    utfoertAv =
-                        BrukerResponse(
-                            type = "SYSTEM",
-                            id = "systemid",
-                        ),
-                    kilde = "kilde",
-                    aarsak = "årsak",
-                    tidspunktFraKilde = null,
-                )
-            } else {
-                null
-            },
-    ),
-)
+class ArbeidssøkerRepositoryFaker : ArbeidssøkerRepository {
+    private val arbeidssøkerperioder = mutableListOf<Arbeidssøkerperiode>()
+
+    override fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> = arbeidssøkerperioder.filter { it.ident == ident }
+
+    override fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) {
+        arbeidssøkerperioder.add(arbeidssøkerperiode)
+    }
+
+    override fun oppdaterOvertagelse(
+        periodeId: UUID,
+        overtattBekreftelse: Boolean,
+    ) {
+        hentPeriode(periodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(overtattBekreftelse = overtattBekreftelse)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+    }
+
+    override fun avsluttArbeidssøkerperiode(
+        periodeId: UUID,
+        avsluttetDato: LocalDateTime,
+    ) {
+        hentPeriode(periodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(avsluttet = avsluttetDato)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+    }
+
+    override fun oppdaterPeriodeId(
+        ident: String,
+        gammelPeriodeId: UUID,
+        nyPeriodeId: UUID,
+    ) {
+        hentPeriode(gammelPeriodeId)
+            .takeIf { it != null }
+            ?.let { periode ->
+                arbeidssøkerperioder.remove(periode)
+                periode
+                    .copy(periodeId = nyPeriodeId)
+                    .let { arbeidssøkerperioder.add(it) }
+            } ?: throw RuntimeException("Fant ikke periode med id $gammelPeriodeId")
+    }
+
+    private fun hentPeriode(periodeId: UUID) = arbeidssøkerperioder.find { it.periodeId == periodeId }
+}

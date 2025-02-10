@@ -30,7 +30,7 @@ class SoknadMetrikker(
 class VedtakMetrikker(
     private val meterRegistry: MeterRegistry,
 ) {
-    fun vedtakMottatt(status: Status) =
+    fun vedtakMottatt(status: Status.Type) =
         Counter
             .builder("${NAMESPACE}_vedtak_mottatt_total")
             .description("Indikerer antall mottatte vedtak")

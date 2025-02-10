@@ -5,11 +5,14 @@ plugins {
 }
 dependencyResolutionManagement {
     repositories {
+        mavenCentral()
+        gradlePluginPortal()
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+        maven("https://packages.confluent.io/maven/")
     }
     versionCatalogs {
         create("libs") {
-            from("no.nav.dagpenger:dp-version-catalog:20241219.117.d9df42")
+            from("no.nav.dagpenger:dp-version-catalog:20250127.127.889f17")
         }
     }
 }
@@ -17,3 +20,4 @@ dependencyResolutionManagement {
 include("mediator")
 include("modell")
 include("openapi")
+include("kafka")
