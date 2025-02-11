@@ -4,6 +4,8 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import org.apache.kafka.clients.consumer.ConsumerRecords
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -20,6 +22,9 @@ class ArbeidssøkerMediator(
             sikkerlogg.error(e) { "Feil ved behandling av arbeidssøkerperiode for ident $ident" }
         }
     }
+
+    fun behandle(records: ConsumerRecords<Long, Periode>) =
+        records.forEach { sikkerlogg.info { "Behandler periode med key: ${it.key()} og value: ${it.value()}" } }
 
     fun behandle(arbeidssøkerperiode: Arbeidssøkerperiode) {
         // Gjør ikke noe hvis person ikke finnes i databasen fra før

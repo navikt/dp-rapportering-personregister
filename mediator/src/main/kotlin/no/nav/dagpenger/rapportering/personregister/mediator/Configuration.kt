@@ -41,7 +41,6 @@ internal object Configuration {
     val arbeidssokerregisterOppslagUrl by lazy {
         properties[Key("ARBEIDSSOKERREGISTER_OPPSLAG_HOST", stringType)].formatUrl()
     }
-
     val arbeidssokerregisterRecordKeyUrl by lazy {
         properties[Key("ARBEIDSSOKERREGISTER_RECORD_KEY_HOST", stringType)].formatUrl()
     }
