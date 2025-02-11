@@ -151,7 +151,3 @@ class PersonTest {
             entries.forEach { (time, status) -> put(time, status) }
         }
 }
-
-private class PersonObserFaker : PersonObserver {
-    override fun frasiArbeidssøkerBekreftelse(person: Person) {}
-}
