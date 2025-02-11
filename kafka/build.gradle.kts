@@ -14,7 +14,7 @@ val schema by configurations.creating {
 }
 
 dependencies {
-    api("io.confluent:kafka-avro-serializer:7.8.0")
+    api("io.confluent:kafka-avro-serializer:7.8.1")
     api("io.confluent:kafka-schema-registry:7.8.0")
     api("io.confluent:kafka-streams-avro-serde:7.8.0")
     api("org.apache.avro:avro:1.12.0")
