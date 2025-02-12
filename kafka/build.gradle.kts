@@ -17,14 +17,14 @@ val mainavroSchema by configurations.creating {
 }
 
 dependencies {
-    api("io.confluent:kafka-avro-serializer:7.8.0")
-    api("io.confluent:kafka-schema-registry:7.8.0")
-    api("io.confluent:kafka-streams-avro-serde:7.8.0")
-    api("org.apache.avro:avro:1.11.4")
+    api("io.confluent:kafka-avro-serializer:7.8.1")
+    api("io.confluent:kafka-schema-registry:7.8.1")
+    api("io.confluent:kafka-streams-avro-serde:7.8.1")
+    api("org.apache.avro:avro:1.12.0")
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
-    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:24.10.28.13-1")
+    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
     mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.9348086045.48-1")
 
     testImplementation(platform("org.junit:junit-bom:5.11.4"))

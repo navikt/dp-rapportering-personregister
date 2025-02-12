@@ -6,12 +6,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
-class PersonSteps : No {
+class Steps : No {
     private lateinit var person: Person
     private val id = UUID.randomUUID().toString()
     private val ident = "12345678901"
@@ -60,8 +61,46 @@ class PersonSteps : No {
             person.behandle(InnvilgelseHendelse(ident, LocalDateTime.parse(vedtaksdato), vedtakId))
         }
 
+        Når("personen registrerer seg som arbeidssøker og søker dagpenger") {
+            SøknadHendelse(
+                ident,
+                LocalDateTime.now(),
+                UUID.randomUUID().toString(),
+            ).apply { person.behandle(this) }
+
+            StartetArbeidssøkerperiodeHendelse(
+                UUID.randomUUID(),
+                ident,
+                LocalDateTime.now(),
+            ).apply { håndter(person) }
+        }
+
+        Når("personen senere får innvilget dagpenger") {
+            person.behandle(InnvilgelseHendelse(ident, LocalDateTime.now(), UUID.randomUUID().toString()))
+        }
+
+        Når("vedtaket til personen blir stanset") {
+            person.behandle(StansHendelse(ident, LocalDateTime.now(), "ARBS", UUID.randomUUID().toString()))
+        }
+
         Så("skal status være {string}") { status: String ->
             person.status.type shouldBe Status.Type.valueOf(status)
+        }
+
+        Og("vi skal ikke lenger ha ansvaret for personen") {
+            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
+        }
+
+        Og("vi skal ha overtatt bekreftelse for personen") {
+            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
+        }
+
+        Og("vi skal fortsatt ha ansvaret for personen") {
+            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
+        }
+
+        Og("vi skal ikke lenger ha ansvaret for arbeidssøkeren") {
+            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
         }
     }
 }
