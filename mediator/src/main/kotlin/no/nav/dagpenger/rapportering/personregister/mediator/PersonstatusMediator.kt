@@ -2,11 +2,11 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
 class PersonstatusMediator(
@@ -20,7 +20,7 @@ class PersonstatusMediator(
         arbeidssøkerMediator.behandle(søknadHendelse.ident)
     }
 
-    fun behandle(hendelse: StansHendelse) {
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler meldegruppeendringhendelse: $hendelse" }
 
         try {

@@ -5,13 +5,12 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerStatus
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import java.time.LocalDateTime
@@ -161,10 +160,15 @@ class PostgresPersonRepository(
 
         return when (type) {
             "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
-            "InnvilgelseHendelse" -> InnvilgelseHendelse(ident, dato, referanseId)
-            "AvslagHendelse" -> AvslagHendelse(ident, dato, referanseId)
-            "StansHendelse" ->
-                StansHendelse(
+            "DagpengerMeldegruppeHendelse" ->
+                DagpengerMeldegruppeHendelse(
+                    ident,
+                    dato,
+                    row.string("meldegruppe_kode"),
+                    referanseId,
+                )
+            "AnnenMeldegruppeHendelse" ->
+                AnnenMeldegruppeHendelse(
                     ident,
                     dato,
                     row.string("meldegruppe_kode"),

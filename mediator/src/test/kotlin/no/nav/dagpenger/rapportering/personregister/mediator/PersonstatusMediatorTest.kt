@@ -12,10 +12,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AKTIV
+import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
@@ -216,7 +216,7 @@ class PersonstatusMediatorTest {
 //        )
 
         personstatusMediator.behandle(
-            StansHendelse(
+            AnnenMeldegruppeHendelse(
                 ident = ident,
                 meldegruppeKode = "ARBS",
                 dato = dato.plusDays(1),
@@ -265,7 +265,7 @@ class PersonstatusMediatorTest {
         val dato = LocalDateTime.now().minusDays(1)
 
         personstatusMediator.behandle(
-            StansHendelse(
+            AnnenMeldegruppeHendelse(
                 ident = ident,
                 meldegruppeKode = "ARBS",
                 dato = dato.plusDays(1),

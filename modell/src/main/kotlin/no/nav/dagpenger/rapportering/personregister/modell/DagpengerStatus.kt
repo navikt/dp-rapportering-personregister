@@ -24,7 +24,7 @@ data object AKTIV : DagpengerStatus {
 
     override fun håndter(hendelse: Hendelse): DagpengerStatus =
         when (hendelse) {
-            is StansHendelse -> INAKTIV
+            is AnnenMeldegruppeHendelse -> INAKTIV
             else -> this
         }
 }
@@ -34,7 +34,9 @@ data object INAKTIV : DagpengerStatus {
 
     override fun håndter(hendelse: Hendelse): DagpengerStatus =
         when (hendelse) {
-            is SøknadHendelse -> AKTIV
+            is SøknadHendelse,
+            is DagpengerMeldegruppeHendelse,
+            -> AKTIV
             else -> this
         }
 }

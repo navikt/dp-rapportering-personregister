@@ -6,7 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSou
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AKTIV
-import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
@@ -57,13 +57,14 @@ class PostgresPersonRepositoryTest {
             person.behandle(søknadHendelse)
             personRepository.lagrePerson(person)
 
-            val innvilgelseHendelse =
-                InnvilgelseHendelse(
+            val hendelse =
+                DagpengerMeldegruppeHendelse(
                     ident = ident,
                     referanseId = "456",
                     dato = dato.plusDays(1),
+                    meldegruppeKode = "DAGP",
                 )
-            person.behandle(innvilgelseHendelse)
+            person.behandle(hendelse)
             personRepository.oppdaterPerson(person)
 
             personRepository.hentPerson(ident)?.apply {
