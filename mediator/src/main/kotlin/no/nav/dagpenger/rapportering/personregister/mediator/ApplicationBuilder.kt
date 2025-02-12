@@ -27,7 +27,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.apache.kafka.common.serialization.LongSerializer
@@ -82,7 +81,6 @@ internal class ApplicationBuilder(
 
                 val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
-                VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
                 ArbeidssøkerperiodeMottak(rapid, personstatusMediator)
             }

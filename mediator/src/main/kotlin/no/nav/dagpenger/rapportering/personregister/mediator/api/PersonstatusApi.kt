@@ -33,7 +33,7 @@ internal fun Application.personstatusApi(
                                 HttpStatusCode.OK,
                                 PersonResponse(
                                     ident = it.ident,
-                                    status = StatusResponse.valueOf(it.status.type.name),
+                                    status = StatusResponse.valueOf(it.dagpengerstatus.type.name),
                                 ),
                             )
                         }

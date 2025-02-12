@@ -3,10 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.AvslagHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
-import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
@@ -23,16 +20,6 @@ class PersonstatusMediator(
         arbeidssøkerMediator.behandle(søknadHendelse.ident)
     }
 
-    fun behandle(hendelse: InnvilgelseHendelse) {
-        sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
-        behandleHendelse(hendelse)
-    }
-
-    fun behandle(hendelse: AvslagHendelse) {
-        sikkerlogg.info { "Behandler vedtakshendelse: $hendelse" }
-        behandleHendelse(hendelse)
-    }
-
     fun behandle(hendelse: StansHendelse) {
         sikkerlogg.info { "Behandler meldegruppeendringhendelse: $hendelse" }
 
@@ -40,12 +27,12 @@ class PersonstatusMediator(
             personRepository
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    if (person.status is INNVILGET &&
-                        hendelse.meldegruppeKode === "ARBS"
-                    ) {
-                        person.behandle(hendelse)
-                        personRepository.oppdaterPerson(person)
-                    }
+//                    if (person.status is INNVILGET &&
+//                        hendelse.meldegruppeKode === "ARBS"
+//                    ) {
+//                        person.behandle(hendelse)
+//                        personRepository.oppdaterPerson(person)
+//                    }
                 }
 
             sikkerlogg.info { "Behandlet hendelse: $hendelse" }

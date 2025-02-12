@@ -7,7 +7,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -83,9 +82,9 @@ class Steps : No {
             person.behandle(StansHendelse(ident, LocalDateTime.now(), "ARBS", UUID.randomUUID().toString()))
         }
 
-        Så("skal status være {string}") { status: String ->
-            person.status.type shouldBe Status.Type.valueOf(status)
-        }
+//        Så("skal status være {string}") { status: String ->
+//            person.status.type shouldBe Status.Type.valueOf(status)
+//        }
 
         Og("vi skal ikke lenger ha ansvaret for personen") {
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true

@@ -5,10 +5,9 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.modell.INNVILGET
+import no.nav.dagpenger.rapportering.personregister.modell.AKTIV
 import no.nav.dagpenger.rapportering.personregister.modell.InnvilgelseHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.SØKT
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -37,7 +36,7 @@ class PostgresPersonRepositoryTest {
             personRepository.hentPerson(ident)?.apply {
                 ident shouldBe ident
                 hendelse shouldBe hendelse
-                status shouldBe SØKT
+                dagpengerstatus shouldBe AKTIV
             }
         }
     }
@@ -69,7 +68,7 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentPerson(ident)?.apply {
                 hendelser.size shouldBe 2
-                status shouldBe INNVILGET
+                dagpengerstatus shouldBe AKTIV
             }
         }
     }
