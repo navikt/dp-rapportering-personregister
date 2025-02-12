@@ -5,6 +5,7 @@ import java.time.LocalDateTime
 data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
+    val dagpengerStatus: TemporalCollection<DagpengerStatus> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
     val hendelser = mutableListOf<Hendelse>()
