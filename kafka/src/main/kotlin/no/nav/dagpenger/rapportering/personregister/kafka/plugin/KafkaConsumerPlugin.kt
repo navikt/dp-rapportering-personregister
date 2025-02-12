@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package no.nav.dagpenger.rapportering.personregister.kafka.plugin
 
 import io.ktor.server.application.ApplicationPlugin
