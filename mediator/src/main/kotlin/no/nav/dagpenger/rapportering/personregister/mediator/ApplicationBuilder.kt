@@ -24,7 +24,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseM
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
@@ -52,6 +51,7 @@ internal class ApplicationBuilder(
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
 
     private val overtaBekreftelseTopic = configuration.getValue("OVERTA_BEKREFTELSE_TOPIC")
+    private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
     private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
     private val overtaBekreftelseKafkaProdusent =
@@ -60,11 +60,10 @@ internal class ApplicationBuilder(
             keySerializer = LongSerializer::class,
             valueSerializer = PaaVegneAvAvroSerializer::class,
         )
-    private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
     private val arbeidssøkerperioderKafkaConsumer =
         kafkaFactory.createConsumer<Long, Periode>(
-            groupId = "teamdagpenger-personregister-paavegneav-consumer",
-            clientId = "teamdagpenger-personregister-paavegneav-consumer",
+            groupId = "teamdagpenger-personregister-arbeidssokerperiode-v1",
+            clientId = "teamdagpenger-personregister-arbeidssokerperiode-consumer",
             keyDeserializer = LongDeserializer::class,
             valueDeserializer = PeriodeAvroDeserializer::class,
         )
@@ -77,6 +76,14 @@ internal class ApplicationBuilder(
             overtaBekreftelseKafkaProdusent,
             overtaBekreftelseTopic,
         )
+    val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+    private val kafkaContext =
+        KafkaContext(
+            overtaBekreftelseKafkaProdusent,
+            arbeidssøkerperioderKafkaConsumer,
+            arbeidssøkerperioderTopic,
+            arbeidssøkerMediator,
+        )
 
     private val rapidsConnection =
         RapidApplication
@@ -84,17 +91,9 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
-                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+
                 with(engine.application) {
-                    pluginConfiguration(
-                        meterRegistry,
-                        KafkaContext(
-                            overtaBekreftelseKafkaProdusent,
-                            arbeidssøkerperioderKafkaConsumer,
-                            arbeidssøkerperioderTopic,
-                            arbeidssøkerMediator,
-                        ),
-                    )
+                    pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
                     personstatusApi(personRepository, arbeidssøkerMediator)
                 }
@@ -103,7 +102,6 @@ internal class ApplicationBuilder(
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
-                ArbeidssøkerperiodeMottak(rapid, personstatusMediator)
             }
 
     init {
