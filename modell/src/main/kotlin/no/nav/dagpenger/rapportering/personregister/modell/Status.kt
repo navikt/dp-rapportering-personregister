@@ -8,7 +8,10 @@ sealed interface Status {
         IKKE_DAGPENGERBRUKER,
     }
 
-    fun håndter(hendelse: Hendelse): Status
+    fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status
 
     companion object {
         fun rehydrer(type: String): Status =
@@ -22,9 +25,12 @@ sealed interface Status {
 data object Dagpengerbruker : Status {
     override val type = Status.Type.DAGPENGERBRUKER
 
-    override fun håndter(hendelse: Hendelse): Status =
+    override fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status =
         when (hendelse) {
-            is AnnenMeldegruppeHendelse -> IkkeDagpengerbruker
+            is AnnenMeldegruppeHendelse -> IkkeDagpengerbruker.also(action)
             else -> this
         }
 }
@@ -32,11 +38,14 @@ data object Dagpengerbruker : Status {
 data object IkkeDagpengerbruker : Status {
     override val type = Status.Type.IKKE_DAGPENGERBRUKER
 
-    override fun håndter(hendelse: Hendelse): Status =
+    override fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status =
         when (hendelse) {
             is SøknadHendelse,
             is DagpengerMeldegruppeHendelse,
-            -> Dagpengerbruker
+            -> Dagpengerbruker.also(action)
             else -> this
         }
 }

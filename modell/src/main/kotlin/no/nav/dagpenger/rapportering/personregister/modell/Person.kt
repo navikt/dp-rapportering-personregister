@@ -10,6 +10,9 @@ data class Person(
     val hendelser = mutableListOf<Hendelse>()
     val observers = mutableListOf<PersonObserver>()
 
+    val gjeldendeArbeidssøkerperiode: Arbeidssøkerperiode?
+        get() = arbeidssøkerperioder.lastOrNull { it.avsluttet == null }
+
     fun addObserver(observer: PersonObserver) {
         observers.add(observer)
     }
@@ -19,14 +22,25 @@ data class Person(
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun behandle(hendelse: Hendelse) {
-        statusHistorikk.takeIf { it.isEmpty() }?.put(hendelse.dato, IkkeDagpengerbruker)
+    fun behandle(hendelse: SøknadHendelse) {
+        status.håndter(hendelse) { nyStatus ->
+            statusHistorikk.put(hendelse.dato, nyStatus)
+            hendelser.add(hendelse)
+        }
+    }
 
-        status
-            .håndter(hendelse)
-            ?.also { statusHistorikk.put(hendelse.dato, it) }
-            ?.let { observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) } }
+    fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
+        status.håndter(hendelse) { nyStatus ->
+            statusHistorikk.put(hendelse.dato, nyStatus)
+            hendelser.add(hendelse)
+        }
+    }
 
-        hendelser.add(hendelse)
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) {
+        status.håndter(hendelse) { nyStatus ->
+            observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+            statusHistorikk.put(hendelse.dato, nyStatus)
+            gjeldendeArbeidssøkerperiode?.let { it.overtattBekreftelse = false }
+        }
     }
 }

@@ -1,99 +1,117 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 import io.kotest.matchers.shouldBe
+import io.mockk.mockk
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
-class StatusTest {
+class PersonTest {
     private val ident = "12345678901"
     private val nå = LocalDateTime.now()
     private val tidligere = nå.minusDays(1)
 
+    private val arbeidssøkerperiodeObserver = mockk<PersonObserver>(relaxed = true)
+
     @Nested
     inner class SøknadHendelser {
         @Test
-        fun `søknad gir status Dagpengerbruker`() =
+        fun `håndterer søknad hendelse for ny bruker`() =
             testPerson {
                 behandle(søknadHendelse())
+
                 status shouldBe Dagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
         @Test
-        fun `ny søknad beholder Dagpengerbruker status`() =
+        fun `håndterer søknad hendelse for dagpengerbruker`() =
             testPerson {
                 behandle(søknadHendelse(tidligere, "123"))
                 status shouldBe Dagpengerbruker
 
                 behandle(søknadHendelse(nå, "456"))
+
                 status shouldBe Dagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
 
     @Nested
     inner class DagpengerHendelser {
         @Test
-        fun `dagpengerhendelse gir Dagpenger status for ny bruker`() =
+        fun `håndterer dagpengermeldegruppe hendelse for ny bruker`() =
             testPerson {
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse())
+
                 status shouldBe Dagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
         @Test
-        fun `dagpengerhendelse endrer ikke allerede aktiv status`() =
+        fun `dagpengerhendelse endrer ikke allerede Dagpengerbruker status`() =
             testPerson {
                 behandle(søknadHendelse(tidligere))
                 status shouldBe Dagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
                 status shouldBe Dagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
 
         @Test
-        fun `dagpengerhendelse gir aktiv status til inaktiv bruker`() =
+        fun `dagpengerhendelse gir Dagpengerbruker status til IkkeDagpengerbruker`() =
             testPerson {
                 behandle(annenMeldegruppeHendelse(tidligere))
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
+
                 status shouldBe Dagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
 
     @Nested
     inner class AnnenMeldegruppeHendelser {
         @Test
-        fun `annen meldegruppe hendelse gir inaktiv status`() =
-            testPerson {
-                behandle(annenMeldegruppeHendelse())
-                status shouldBe IkkeDagpengerbruker
-            }
-
-        @Test
-        fun `Dagpengerbruker blir IkkeDagpengerbruker med annen meldegruppe hendelse`() =
+        fun `annen meldegruppe hendelse gir IkkeDagpengerbruker`() =
             testPerson {
                 behandle(søknadHendelse())
-                status shouldBe Dagpengerbruker
-
                 behandle(annenMeldegruppeHendelse())
+
                 status shouldBe IkkeDagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
 
         @Test
-        fun `IkkeDagpengerbruker status forblir det samme med annen meldegruppe hendelse`() =
+        fun `IkkeDagpengerbruker status forblir samme med annen meldegruppe hendelse`() =
             testPerson {
+                behandle(søknadHendelse())
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
+                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
 
     private fun testPerson(block: Person.() -> Unit) {
-        Person(ident).apply(block)
+        Person(ident)
+            .apply { addObserver(arbeidssøkerperiodeObserver) }
+            .apply { aktivArbeidssøkerperiodeHendelse().håndter(this) }
+            .apply(block)
     }
 
     private fun søknadHendelse(
@@ -110,4 +128,9 @@ class StatusTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
+
+    private fun aktivArbeidssøkerperiodeHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 }

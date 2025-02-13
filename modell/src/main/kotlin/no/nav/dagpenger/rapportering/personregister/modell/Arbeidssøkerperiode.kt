@@ -9,7 +9,10 @@ data class Arbeidssøkerperiode(
     val startet: LocalDateTime,
     var avsluttet: LocalDateTime?,
     var overtattBekreftelse: Boolean?,
-)
+) {
+    val erAktiv: Boolean
+        get() = avsluttet == null
+}
 
 sealed class ArbeidssøkerperiodeHendelse(
     open val periodeId: UUID,
