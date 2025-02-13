@@ -14,7 +14,8 @@ data class Person(
         observers.add(observer)
     }
 
-    fun dagpengerstatus(dato: LocalDateTime): DagpengerStatus = dagpengerstatusHistorikk.get(dato)
+    fun dagpengerstatus(dato: LocalDateTime): DagpengerStatus =
+        if (dagpengerstatusHistorikk.isEmpty()) INAKTIV else dagpengerstatusHistorikk.get(dato)
 
     val dagpengerstatus: DagpengerStatus
         get() = dagpengerstatus(LocalDateTime.now())
