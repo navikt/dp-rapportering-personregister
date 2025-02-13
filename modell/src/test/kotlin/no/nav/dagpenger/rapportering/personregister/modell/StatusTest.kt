@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class DagpengerStatusTest {
+class StatusTest {
     private val ident = "12345678901"
     private val nå = LocalDateTime.now()
     private val tidligere = nå.minusDays(1)
@@ -16,17 +16,17 @@ class DagpengerStatusTest {
         fun `søknad gir aktiv status`() =
             testPerson {
                 behandle(søknadHendelse())
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
             }
 
         @Test
         fun `ny søknad beholder aktiv status`() =
             testPerson {
                 behandle(søknadHendelse(tidligere, "123"))
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
 
                 behandle(søknadHendelse(nå, "456"))
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
             }
     }
 
@@ -35,27 +35,27 @@ class DagpengerStatusTest {
         @Test
         fun `dagpengerhendelse gir aktiv status for ny bruker`() =
             testPerson {
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
                 behandle(dagpengerMeldegruppeHendelse())
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
             }
 
         @Test
         fun `dagpengerhendelse endrer ikke allerede aktiv status`() =
             testPerson {
                 behandle(søknadHendelse(tidligere))
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
                 behandle(dagpengerMeldegruppeHendelse(nå))
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
             }
 
         @Test
         fun `dagpengerhendelse gir aktiv status til inaktiv bruker`() =
             testPerson {
                 behandle(annenMeldegruppeHendelse(tidligere))
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
                 behandle(dagpengerMeldegruppeHendelse(nå))
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
             }
     }
 
@@ -65,25 +65,25 @@ class DagpengerStatusTest {
         fun `annen meldegruppe hendelse gir inaktiv status`() =
             testPerson {
                 behandle(annenMeldegruppeHendelse())
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
             }
 
         @Test
         fun `aktiv status blir inaktiv med annen meldegruppe hendelse`() =
             testPerson {
                 behandle(søknadHendelse())
-                dagpengerstatus shouldBe AKTIV
+                status shouldBe Dagpengerbruker
                 behandle(annenMeldegruppeHendelse())
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
             }
 
         @Test
         fun `inaktiv status forblir inaktiv med annen meldegruppe hendelse`() =
             testPerson {
                 behandle(annenMeldegruppeHendelse())
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
                 behandle(annenMeldegruppeHendelse())
-                dagpengerstatus shouldBe INAKTIV
+                status shouldBe IkkeDagpengerbruker
             }
     }
 

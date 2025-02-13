@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class Person(
     val ident: String,
-    val dagpengerstatusHistorikk: TemporalCollection<DagpengerStatus> = TemporalCollection(),
+    val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
     val hendelser = mutableListOf<Hendelse>()
@@ -14,20 +14,17 @@ data class Person(
         observers.add(observer)
     }
 
-    fun dagpengerstatus(dato: LocalDateTime): DagpengerStatus =
-        if (dagpengerstatusHistorikk.isEmpty()) INAKTIV else dagpengerstatusHistorikk.get(dato)
+    fun status(dato: LocalDateTime): Status = if (statusHistorikk.isEmpty()) IkkeDagpengerbruker else statusHistorikk.get(dato)
 
-    val dagpengerstatus: DagpengerStatus
-        get() = dagpengerstatus(LocalDateTime.now())
+    val status: Status
+        get() = status(LocalDateTime.now())
 
     fun behandle(hendelse: Hendelse) {
-        dagpengerstatusHistorikk.takeIf { it.isEmpty() }?.put(hendelse.dato, INAKTIV)
+        statusHistorikk.takeIf { it.isEmpty() }?.put(hendelse.dato, IkkeDagpengerbruker)
 
-        dagpengerstatus
+        status
             .håndter(hendelse)
-            .takeIf { nyStatus -> nyStatus != dagpengerstatus }
-            ?.also { dagpengerstatusHistorikk.put(hendelse.dato, it) }
-//            ?.takeIf { nyStatus -> nyStatus == STANSET }
+            ?.also { statusHistorikk.put(hendelse.dato, it) }
             ?.let { observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) } }
 
         hendelser.add(hendelse)

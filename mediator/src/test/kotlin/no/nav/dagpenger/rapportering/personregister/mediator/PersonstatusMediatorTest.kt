@@ -11,10 +11,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
-import no.nav.dagpenger.rapportering.personregister.modell.AKTIV
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -86,7 +86,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            dagpengerstatus shouldBe AKTIV
+            status shouldBe Dagpengerbruker
         }
     }
 
@@ -119,7 +119,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            dagpengerstatus shouldBe AKTIV
+            status shouldBe Dagpengerbruker
         }
     }
 
@@ -196,7 +196,7 @@ class PersonstatusMediatorTest {
 
         personRepository.hentPerson(ident)?.apply {
             ident shouldBe ident
-            dagpengerstatus shouldBe AKTIV
+            status shouldBe Dagpengerbruker
         }
     }
 

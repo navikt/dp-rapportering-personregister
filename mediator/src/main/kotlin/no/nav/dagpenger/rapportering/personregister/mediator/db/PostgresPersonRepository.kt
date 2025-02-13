@@ -8,9 +8,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerStatus
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import java.time.LocalDateTime
@@ -29,7 +29,7 @@ class PostgresPersonRepository(
             if (hendelser.isNotEmpty()) {
                 Person(ident).apply {
                     hendelser.forEach { this.hendelser.add(it) }
-                    statusHistorikk.forEach { (dato, status) -> this.dagpengerstatusHistorikk.put(dato, status) }
+                    statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
                 }
             } else {
                 null
@@ -65,7 +65,7 @@ class PostgresPersonRepository(
                 } ?: throw IllegalStateException("Klarte ikke å lagre person")
 
             person.hendelser.forEach { lagreHendelse(personId, it) }
-            person.dagpengerstatusHistorikk
+            person.statusHistorikk
                 .allItems()
                 .forEach { (dato, status) ->
                     lagreStatusHistorikk(personId, dato, status)
@@ -76,7 +76,7 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-oppdaterPerson") {
             val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
             person.hendelser.forEach { lagreHendelse(personId, it) }
-            person.dagpengerstatusHistorikk
+            person.statusHistorikk
                 .allItems()
                 .forEach { (dato, status) ->
                     lagreStatusHistorikk(personId, dato, status)
@@ -185,8 +185,8 @@ class PostgresPersonRepository(
         }
     }
 
-    private fun hentStatusHistorikk(personId: Long): TemporalCollection<DagpengerStatus> =
-        TemporalCollection<DagpengerStatus>().apply {
+    private fun hentStatusHistorikk(personId: Long): TemporalCollection<Status> =
+        TemporalCollection<Status>().apply {
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf(
@@ -194,7 +194,7 @@ class PostgresPersonRepository(
                         mapOf("person_id" to personId),
                     ).map { row ->
                         val dato = row.localDateTime("dato")
-                        val status = DagpengerStatus.rehydrer(row.string("status")) // TOOD: fix
+                        val status = Status.rehydrer(row.string("status")) // TOOD: fix
                         put(dato, status)
                     }.asList,
                 )
@@ -204,7 +204,7 @@ class PostgresPersonRepository(
     private fun lagreStatusHistorikk(
         personId: Long,
         dato: LocalDateTime,
-        status: DagpengerStatus,
+        status: Status,
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
