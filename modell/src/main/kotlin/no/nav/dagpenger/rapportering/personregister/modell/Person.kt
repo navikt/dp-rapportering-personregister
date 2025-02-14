@@ -30,14 +30,32 @@ data class Person(
         status.håndter(hendelse) { nyStatus ->
             statusHistorikk.put(hendelse.dato, nyStatus)
             hendelser.add(hendelse)
+            overtaArbeidssøkerBekreftelse()
         }
     }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         status.håndter(hendelse) { nyStatus ->
-            observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
             statusHistorikk.put(hendelse.dato, nyStatus)
-            arbeidssøkerperioder.gjeldende?.let { it.overtattBekreftelse = false }
+            frasiArbeidssøkerBekreftelse()
+        }
+    }
+}
+
+fun Person.overtaArbeidssøkerBekreftelse() {
+    arbeidssøkerperioder.gjeldende?.let {
+        if (it.overtattBekreftelse != true) {
+            observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+            it.overtattBekreftelse = true
+        }
+    }
+}
+
+fun Person.frasiArbeidssøkerBekreftelse() {
+    arbeidssøkerperioder.gjeldende?.let {
+        if (it.overtattBekreftelse == true) {
+            observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+            it.overtattBekreftelse = false
         }
     }
 }

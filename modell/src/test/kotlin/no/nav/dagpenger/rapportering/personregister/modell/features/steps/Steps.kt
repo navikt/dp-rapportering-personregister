@@ -43,6 +43,20 @@ class Steps : No {
             person.behandle(DagpengerMeldegruppeHendelse(ident, LocalDateTime.now(), "DAGP", UUID.randomUUID().toString()))
         }
 
+        Når("personen senere får avslag") {
+            person.behandle(AnnenMeldegruppeHendelse(ident, LocalDateTime.now(), "ARBS", UUID.randomUUID().toString()))
+        }
+
+        Når("personen klager på vedtaket") {
+            person.behandle(DagpengerMeldegruppeHendelse(ident, LocalDateTime.now(), "DAGP", UUID.randomUUID().toString()))
+        }
+        Når("personen senere får medhold i klagen") {
+            person.behandle(DagpengerMeldegruppeHendelse(ident, LocalDateTime.now(), "DAGP", UUID.randomUUID().toString()))
+        }
+        Når("personen senere får avslag på klagen") {
+            person.behandle(AnnenMeldegruppeHendelse(ident, LocalDateTime.now(), "ARBS", UUID.randomUUID().toString()))
+        }
+
         Når("personen registrerer seg som arbeidssøker og søker dagpenger") {
             SøknadHendelse(
                 ident,
