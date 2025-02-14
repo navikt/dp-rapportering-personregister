@@ -12,15 +12,18 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -84,7 +87,10 @@ open class ApiTestSetup {
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
             val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-            val overtaBekreftelseKafkaProdusent = MockKafkaProducer<PaaVegneAv>()
+            val testKafkaContainer = TestKafkaContainer()
+            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
+            val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
+
             val arbeidssøkerService =
                 ArbeidssøkerService(
                     personRepository,
@@ -94,9 +100,16 @@ open class ApiTestSetup {
                     "paa-vegne-av",
                 )
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+            val kafkaContext =
+                KafkaContext(
+                    overtaBekreftelseKafkaProdusent,
+                    arbedssøkerperiodeKafkaConsumer,
+                    "ARBEIDSSOKERPERIODER_TOPIC",
+                    arbeidssøkerMediator,
+                )
 
             application {
-                konfigurasjon(meterRegistry)
+                pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
                 personstatusApi(personRepository, arbeidssøkerMediator)
             }

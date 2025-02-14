@@ -1,12 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.kafka
 
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
+import org.apache.kafka.clients.consumer.ConsumerConfig
+import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.clients.producer.RecordMetadata
+import org.apache.kafka.common.serialization.Deserializer
 import org.apache.kafka.common.serialization.Serializer
 import java.util.Properties
 import kotlin.reflect.KClass
@@ -34,6 +33,28 @@ class KafkaFactory(
                     ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to valueSerializer.java,
                 ),
         )
+
+    fun <K : Any, V : Any> createConsumer(
+        groupId: String,
+        clientId: String,
+        keyDeserializer: KClass<out Deserializer<K>>,
+        valueDeserializer: KClass<out Deserializer<V>>,
+        autoCommit: Boolean = false,
+        autoOffsetReset: String = "earliest",
+        maxPollrecords: Int = ConsumerConfig.DEFAULT_MAX_POLL_RECORDS,
+    ): KafkaConsumer<K, V> =
+        KafkaConsumer(
+            baseProperties +
+                mapOf(
+                    ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG to autoCommit,
+                    ConsumerConfig.AUTO_OFFSET_RESET_CONFIG to autoOffsetReset,
+                    ConsumerConfig.GROUP_ID_CONFIG to groupId,
+                    ConsumerConfig.CLIENT_ID_CONFIG to clientId,
+                    ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG to keyDeserializer.java,
+                    ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG to valueDeserializer.java,
+                    ConsumerConfig.MAX_POLL_RECORDS_CONFIG to maxPollrecords,
+                ),
+        )
 }
 
 operator fun Properties.plus(other: Map<String, Any>): Properties =
@@ -41,15 +62,3 @@ operator fun Properties.plus(other: Map<String, Any>): Properties =
         putAll(this@plus)
         putAll(other)
     }
-
-fun <K, V> Producer<K, V>.sendDeferred(record: ProducerRecord<K, V>): Deferred<RecordMetadata> {
-    val deferred = CompletableDeferred<RecordMetadata>()
-    send(record) { metadata, exception ->
-        if (exception != null) {
-            deferred.completeExceptionally(exception)
-        } else {
-            deferred.complete(metadata)
-        }
-    }
-    return deferred
-}

@@ -8,8 +8,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKey
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv

@@ -9,7 +9,10 @@ plugins {
 group = "no.nav.dagpenger.rapportering.personregister"
 version = "unspecified"
 
-val schema by configurations.creating {
+val paavegneavSchema by configurations.creating {
+    isTransitive = false
+}
+val mainavroSchema by configurations.creating {
     isTransitive = false
 }
 
@@ -21,7 +24,8 @@ dependencies {
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
-    schema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
+    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
+    mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.9348086045.48-1")
 
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -36,7 +40,8 @@ tasks.test {
 }
 
 tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
-    source(zipTree(schema.singleFile))
+    source(zipTree(paavegneavSchema.singleFile))
+    source(zipTree(mainavroSchema.singleFile))
 }
 
 kotlin {
