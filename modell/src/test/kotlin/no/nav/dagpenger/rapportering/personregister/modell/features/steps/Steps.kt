@@ -3,8 +3,10 @@ package no.nav.dagpenger.rapportering.personregister.modell.features.steps
 import io.cucumber.java8.No
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,6 +39,10 @@ class Steps : No {
             person.behandle(AnnenMeldegruppeHendelse(ident, LocalDateTime.parse(vedtaksdato), "ARBS", vedtakId))
         }
 
+        Når("personen senere får innvilget dagpenger") {
+            person.behandle(DagpengerMeldegruppeHendelse(ident, LocalDateTime.now(), "DAGP", UUID.randomUUID().toString()))
+        }
+
         Når("personen registrerer seg som arbeidssøker og søker dagpenger") {
             SøknadHendelse(
                 ident,
@@ -55,12 +61,12 @@ class Steps : No {
             person.behandle(AnnenMeldegruppeHendelse(ident, LocalDateTime.now(), "ARBS", UUID.randomUUID().toString()))
         }
 
-//        Så("skal status være {string}") { status: String ->
-//            person.status.type shouldBe Status.Type.valueOf(status)
-//        }
+        Så("skal personen være {string}") { status: String ->
 
+            person.status.type shouldBe Status.Type.valueOf(status)
+        }
         Og("vi skal ikke lenger ha ansvaret for personen") {
-            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
+            person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
         }
 
         Og("vi skal ha overtatt bekreftelse for personen") {
