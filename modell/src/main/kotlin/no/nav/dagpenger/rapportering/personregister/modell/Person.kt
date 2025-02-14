@@ -8,6 +8,7 @@ data class Person(
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
     val hendelser = mutableListOf<Hendelse>()
+
     val observers = mutableListOf<PersonObserver>()
 
     fun addObserver(observer: PersonObserver) {
@@ -19,27 +20,22 @@ data class Person(
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun behandle(hendelse: SøknadHendelse) {
+    fun <T : Hendelse> behandle(
+        hendelse: T,
+        håndter: (T) -> Unit = {},
+    ) {
         status.håndter(hendelse) { nyStatus ->
             statusHistorikk.put(hendelse.dato, nyStatus)
             hendelser.add(hendelse)
+            håndter(hendelse)
         }
     }
 
-    fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
-        status.håndter(hendelse) { nyStatus ->
-            statusHistorikk.put(hendelse.dato, nyStatus)
-            hendelser.add(hendelse)
-            overtaArbeidssøkerBekreftelse()
-        }
-    }
+    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) {}
 
-    fun behandle(hendelse: AnnenMeldegruppeHendelse) {
-        status.håndter(hendelse) { nyStatus ->
-            statusHistorikk.put(hendelse.dato, nyStatus)
-            frasiArbeidssøkerBekreftelse()
-        }
-    }
+    fun behandle(hendelse: DagpengerMeldegruppeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
+
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) = behandle(hendelse) { frasiArbeidssøkerBekreftelse() }
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {
