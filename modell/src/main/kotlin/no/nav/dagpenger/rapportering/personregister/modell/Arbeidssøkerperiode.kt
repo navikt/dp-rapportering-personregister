@@ -9,10 +9,7 @@ data class Arbeidssøkerperiode(
     val startet: LocalDateTime,
     var avsluttet: LocalDateTime?,
     var overtattBekreftelse: Boolean?,
-) {
-    val erAktiv: Boolean
-        get() = avsluttet == null
-}
+)
 
 sealed class ArbeidssøkerperiodeHendelse(
     open val periodeId: UUID,
@@ -59,3 +56,8 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             ?: person.arbeidssøkerperioder.add(Arbeidssøkerperiode(periodeId, ident, startet, avsluttet, overtattBekreftelse = false))
     }
 }
+
+fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
+
+val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
+    get() = this.lastOrNull { it.aktiv() }

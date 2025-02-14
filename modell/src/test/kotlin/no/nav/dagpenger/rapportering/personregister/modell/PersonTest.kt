@@ -17,17 +17,17 @@ class PersonTest {
     @Nested
     inner class SøknadHendelser {
         @Test
-        fun `håndterer søknad hendelse for ny bruker`() =
+        fun `behandler søknad hendelse for ny bruker`() =
             testPerson {
                 behandle(søknadHendelse())
 
                 status shouldBe Dagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
         @Test
-        fun `håndterer søknad hendelse for dagpengerbruker`() =
+        fun `behandler søknad hendelse for dagpengerbruker`() =
             testPerson {
                 behandle(søknadHendelse(tidligere, "123"))
                 status shouldBe Dagpengerbruker
@@ -35,7 +35,7 @@ class PersonTest {
                 behandle(søknadHendelse(nå, "456"))
 
                 status shouldBe Dagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
@@ -43,14 +43,14 @@ class PersonTest {
     @Nested
     inner class DagpengerHendelser {
         @Test
-        fun `håndterer dagpengermeldegruppe hendelse for ny bruker`() =
+        fun `behandler dagpengermeldegruppe hendelse for ny bruker`() =
             testPerson {
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe Dagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
@@ -62,7 +62,7 @@ class PersonTest {
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
                 status shouldBe Dagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
 
@@ -75,7 +75,7 @@ class PersonTest {
                 behandle(dagpengerMeldegruppeHendelse(nå))
 
                 status shouldBe Dagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe true
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
@@ -89,7 +89,7 @@ class PersonTest {
                 behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IkkeDagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe false
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
 
@@ -102,7 +102,7 @@ class PersonTest {
 
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
-                gjeldendeArbeidssøkerperiode?.overtattBekreftelse shouldBe false
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
@@ -129,8 +129,5 @@ class PersonTest {
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
 
-    private fun aktivArbeidssøkerperiodeHendelse(
-        dato: LocalDateTime = nå,
-        referanseId: String = "123",
-    ) = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
+    private fun aktivArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 }

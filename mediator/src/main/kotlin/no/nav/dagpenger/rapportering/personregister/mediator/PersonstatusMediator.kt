@@ -56,11 +56,11 @@ class PersonstatusMediator(
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
                     personObservers.forEach { person.addObserver(it) }
-                    person.behandle(hendelse)
+//                    person.behandle(hendelse)
                     personRepository.oppdaterPerson(person)
                 } ?: run {
                 Person(hendelse.ident).apply {
-                    behandle(hendelse)
+//                    behandle(hendelse)
                     personRepository.lagrePerson(this)
                 }
             }

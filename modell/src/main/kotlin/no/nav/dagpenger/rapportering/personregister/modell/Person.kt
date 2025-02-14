@@ -10,9 +10,6 @@ data class Person(
     val hendelser = mutableListOf<Hendelse>()
     val observers = mutableListOf<PersonObserver>()
 
-    val gjeldendeArbeidssøkerperiode: Arbeidssøkerperiode?
-        get() = arbeidssøkerperioder.lastOrNull { it.avsluttet == null }
-
     fun addObserver(observer: PersonObserver) {
         observers.add(observer)
     }
@@ -40,7 +37,7 @@ data class Person(
         status.håndter(hendelse) { nyStatus ->
             observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
             statusHistorikk.put(hendelse.dato, nyStatus)
-            gjeldendeArbeidssøkerperiode?.let { it.overtattBekreftelse = false }
+            arbeidssøkerperioder.gjeldende?.let { it.overtattBekreftelse = false }
         }
     }
 }
