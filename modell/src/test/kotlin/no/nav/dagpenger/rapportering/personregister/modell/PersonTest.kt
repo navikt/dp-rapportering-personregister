@@ -20,6 +20,7 @@ class PersonTest {
         fun `behandler søknad hendelse for ny bruker`() =
             testPerson {
                 behandle(søknadHendelse())
+                behandle(startetArbeidssøkerperiodeHendelse())
 
                 status shouldBe Dagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -30,6 +31,8 @@ class PersonTest {
         fun `behandler søknad hendelse for dagpengerbruker`() =
             testPerson {
                 behandle(søknadHendelse(tidligere, "123"))
+                behandle(startetArbeidssøkerperiodeHendelse())
+
                 status shouldBe Dagpengerbruker
 
                 behandle(søknadHendelse(nå, "456"))
@@ -44,7 +47,7 @@ class PersonTest {
     inner class DagpengerHendelser {
         @Test
         fun `behandler dagpengermeldegruppe hendelse for ny bruker`() =
-            testPerson {
+            arbeidssøker {
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse())
@@ -56,19 +59,19 @@ class PersonTest {
 
         @Test
         fun `dagpengerhendelse endrer ikke allerede Dagpengerbruker status`() =
-            testPerson {
+            arbeidssøker {
                 behandle(søknadHendelse(tidligere))
                 status shouldBe Dagpengerbruker
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
                 status shouldBe Dagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
+                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 
         @Test
         fun `dagpengerhendelse gir Dagpengerbruker status til IkkeDagpengerbruker`() =
-            testPerson {
+            arbeidssøker {
                 behandle(annenMeldegruppeHendelse(tidligere))
                 status shouldBe IkkeDagpengerbruker
 
@@ -84,7 +87,7 @@ class PersonTest {
     inner class AnnenMeldegruppeHendelser {
         @Test
         fun `annen meldegruppe hendelse gir IkkeDagpengerbruker`() =
-            testPerson {
+            arbeidssøker {
                 behandle(søknadHendelse())
                 behandle(annenMeldegruppeHendelse())
 
@@ -95,7 +98,7 @@ class PersonTest {
 
         @Test
         fun `IkkeDagpengerbruker status forblir samme med annen meldegruppe hendelse`() =
-            testPerson {
+            arbeidssøker {
                 behandle(søknadHendelse())
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
@@ -110,8 +113,23 @@ class PersonTest {
     private fun testPerson(block: Person.() -> Unit) {
         Person(ident)
             .apply { addObserver(arbeidssøkerperiodeObserver) }
-            .apply { aktivArbeidssøkerperiodeHendelse().håndter(this) }
             .apply(block)
+    }
+
+    private fun arbeidssøker(block: Person.() -> Unit) {
+        Person(ident)
+            .apply { addObserver(arbeidssøkerperiodeObserver) }
+            .apply {
+                arbeidssøkerperioder.add(
+                    Arbeidssøkerperiode(
+                        UUID.randomUUID(),
+                        ident,
+                        LocalDateTime.now(),
+                        null,
+                        overtattBekreftelse = true,
+                    ),
+                )
+            }.apply(block)
     }
 
     private fun søknadHendelse(
@@ -129,5 +147,5 @@ class PersonTest {
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
 
-    private fun aktivArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
+    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 }

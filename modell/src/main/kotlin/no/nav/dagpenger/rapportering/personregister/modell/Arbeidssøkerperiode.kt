@@ -28,15 +28,15 @@ data class StartetArbeidssøkerperiodeHendelse(
             .find { it.periodeId == periodeId }
             ?.let {
                 if (it.overtattBekreftelse != true) {
-                    person.overtaArbeidssøkerBekreftelse()
                     it.overtattBekreftelse = true
+                    person.overtaArbeidssøkerBekreftelse()
                 }
             }
             ?: run {
-                person.overtaArbeidssøkerBekreftelse()
                 person.arbeidssøkerperioder.add(
                     Arbeidssøkerperiode(periodeId, ident, startet, avsluttet = null, overtattBekreftelse = true),
                 )
+                person.overtaArbeidssøkerBekreftelse()
             }
     }
 }

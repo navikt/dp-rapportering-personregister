@@ -127,5 +127,5 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { overtaArbeidssøkerBekreftelse(person) }
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
 }

@@ -42,10 +42,8 @@ data class Person(
 
 fun Person.overtaArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
-        if (it.overtattBekreftelse != true) {
-            observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-            it.overtattBekreftelse = true
-        }
+        observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+        it.overtattBekreftelse = true
     }
 }
 
