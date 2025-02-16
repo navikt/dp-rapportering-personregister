@@ -4,6 +4,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -16,60 +17,50 @@ class PersonstatusMediator(
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        behandleHendelse(søknadHendelse)
-        arbeidssøkerMediator.behandle(søknadHendelse.ident)
+        behandle(søknadHendelse) { arbeidssøkerMediator.behandle(it.ident) }
+    }
+
+    fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
+        sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
+        behandle(hendelse) {}
     }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
-        sikkerlogg.info { "Behandler meldegruppeendringhendelse: $hendelse" }
-
-        try {
-            personRepository
-                .hentPerson(hendelse.ident)
-                ?.let { person ->
-//                    if (person.status is INNVILGET &&
-//                        hendelse.meldegruppeKode === "ARBS"
-//                    ) {
-//                        person.behandle(hendelse)
-//                        personRepository.oppdaterPerson(person)
-//                    }
-                }
-
-            sikkerlogg.info { "Behandlet hendelse: $hendelse" }
-        } catch (e: Exception) {
-            sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
-        }
+        sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
+        behandle(hendelse) {}
     }
 
     fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
         sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
-        if (personRepository.finnesPerson(arbeidssøkerHendelse.ident)) {
-            behandleHendelse(arbeidssøkerHendelse)
-        } else {
-            sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
-        }
+        personRepository
+            .finnesPerson(arbeidssøkerHendelse.ident)
+            .takeIf { it }
+            ?.let { behandle(arbeidssøkerHendelse) }
+            ?: sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
     }
 
-    private fun behandleHendelse(hendelse: Hendelse) {
+    private fun <T : Hendelse> behandle(
+        hendelse: T,
+        håndter: (T) -> Unit = {},
+    ) {
         try {
-            personRepository
-                .hentPerson(hendelse.ident)
-                ?.let { person ->
-                    personObservers.forEach { person.addObserver(it) }
-//                    person.behandle(hendelse)
-                    personRepository.oppdaterPerson(person)
-                } ?: run {
-                Person(hendelse.ident).apply {
-//                    behandle(hendelse)
-                    personRepository.lagrePerson(this)
-                }
-            }
-
-            sikkerlogg.info { "Behandlet hendelse: $hendelse" }
+            val person = hentEllerOpprettPerson(hendelse.ident)
+            personObservers.forEach { person.addObserver(it) }
+            person.behandle(hendelse)
+            personRepository.oppdaterPerson(person)
+            sikkerlogg.info { "Hendelse behandlet: $hendelse" }
+            håndter(hendelse)
         } catch (e: Exception) {
-            sikkerlogg.error(e) { "Feil ved behandling av hendelse: $hendelse" }
+            sikkerlogg.info { "Feil ved behandling av hendelse: $hendelse" }
         }
     }
+
+    private fun hentEllerOpprettPerson(ident: String): Person =
+        personRepository
+            .hentPerson(ident) ?: Person(ident)
+            .also {
+                personRepository.lagrePerson(it)
+            }
 
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall")

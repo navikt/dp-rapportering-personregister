@@ -12,9 +12,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
+import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -124,62 +124,6 @@ class PersonstatusMediatorTest {
     }
 
     @Test
-    fun `kan behandle vedtak hendelse`() {
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now()
-
-//        personstatusMediator.behandle(
-//            InnvilgelseHendelse(
-//                ident = ident,
-//                referanseId = søknadId,
-//                dato = dato,
-//            ),
-//        )
-
-//        personRepository.hentPerson(ident)?.apply {
-//            ident shouldBe ident
-//            status shouldBe INNVILGET
-//        }
-    }
-
-    @Test
-    fun `kan behandle vedtak hendelse for eksisterende person`() {
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now().minusDays(1)
-
-        personstatusMediator.behandle(
-            SøknadHendelse(
-                ident = ident,
-                referanseId = søknadId,
-                dato = dato,
-            ),
-        )
-
-        personstatusMediator.behandle(
-            ArbeidssøkerHendelse(
-                ident,
-                UUID.randomUUID(),
-                dato.minusDays(1),
-            ),
-        )
-
-//        personstatusMediator.behandle(
-//            InnvilgelseHendelse(
-//                ident = ident,
-//                referanseId = søknadId,
-//                dato = dato,
-//            ),
-//        )
-
-//        personRepository.hentPerson(ident)?.apply {
-//            ident shouldBe ident
-//            status shouldBe INNVILGET
-//        }
-    }
-
-    @Test
     fun `kan behandle søknad hendelse for person som ikke eksisterer i databasen og ikke er registrert som arbeidssøker`() {
         coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
         val ident = "12345678910"
@@ -200,20 +144,11 @@ class PersonstatusMediatorTest {
         }
     }
 
-    // Stans
     @Test
     fun `kan behandle stans hendelse for eksisterende person`() {
         val ident = "12345678910"
         val søknadId = "123"
         val dato = LocalDateTime.now().minusDays(1)
-
-//        personstatusMediator.behandle(
-//            InnvilgelseHendelse(
-//                ident = ident,
-//                referanseId = søknadId,
-//                dato = dato,
-//            ),
-//        )
 
         personstatusMediator.behandle(
             AnnenMeldegruppeHendelse(
@@ -224,39 +159,10 @@ class PersonstatusMediatorTest {
             ),
         )
 
-//        personRepository.hentPerson(ident)?.apply {
-//            ident shouldBe ident
-//            status shouldBe STANSET
-//        }
-    }
-
-    @Test
-    fun `kan behandle meldegruppeendring hendelse som ikke er stans`() {
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now().minusDays(1)
-
-//        personstatusMediator.behandle(
-//            InnvilgelseHendelse(
-//                ident = ident,
-//                referanseId = søknadId,
-//                dato = dato,
-//            ),
-//        )
-//
-//        personstatusMediator.behandle(
-//            StansHendelse(
-//                ident = ident,
-//                meldegruppeKode = "IKKE_ARBS",
-//                dato = dato.plusDays(1),
-//                referanseId = UUID.randomUUID().toString(),
-//            ),
-//        )
-//
-//        personRepository.hentPerson(ident)?.apply {
-//            ident shouldBe ident
-//            status shouldBe INNVILGET
-//        }
+        personRepository.hentPerson(ident)?.apply {
+            ident shouldBe ident
+            status shouldBe IkkeDagpengerbruker
+        }
     }
 
     @Test
@@ -273,7 +179,12 @@ class PersonstatusMediatorTest {
             ),
         )
 
-        personRepository.hentPerson(ident) shouldBe null
+        personRepository
+            .hentPerson(ident)
+            ?.apply {
+                ident shouldBe ident
+                status shouldBe IkkeDagpengerbruker
+            }
     }
 }
 
