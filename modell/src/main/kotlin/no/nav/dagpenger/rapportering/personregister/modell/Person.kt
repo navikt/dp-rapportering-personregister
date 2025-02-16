@@ -20,6 +20,14 @@ data class Person(
     val status: Status
         get() = status(LocalDateTime.now())
 
+    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) {}
+
+    fun behandle(hendelse: DagpengerMeldegruppeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
+
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) = behandle(hendelse) { frasiArbeidssøkerBekreftelse() }
+
+    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = hendelse.håndter(this)
+
     fun <T : Hendelse> behandle(
         hendelse: T,
         håndter: (T) -> Unit = {},
@@ -30,12 +38,6 @@ data class Person(
             håndter(hendelse)
         }
     }
-
-    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) {}
-
-    fun behandle(hendelse: DagpengerMeldegruppeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
-
-    fun behandle(hendelse: AnnenMeldegruppeHendelse) = behandle(hendelse) { frasiArbeidssøkerBekreftelse() }
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {

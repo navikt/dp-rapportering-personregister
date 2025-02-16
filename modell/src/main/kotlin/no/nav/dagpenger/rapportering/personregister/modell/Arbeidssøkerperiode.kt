@@ -28,12 +28,12 @@ data class StartetArbeidssøkerperiodeHendelse(
             .find { it.periodeId == periodeId }
             ?.let {
                 if (it.overtattBekreftelse != true) {
-                    person.observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(person) }
+                    person.overtaArbeidssøkerBekreftelse()
                     it.overtattBekreftelse = true
                 }
             }
             ?: run {
-                person.observers.forEach { it.overtaArbeidssøkerBekreftelse(person) }
+                person.overtaArbeidssøkerBekreftelse()
                 person.arbeidssøkerperioder.add(
                     Arbeidssøkerperiode(periodeId, ident, startet, avsluttet = null, overtattBekreftelse = true),
                 )
@@ -60,4 +60,4 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
 fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
 
 val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
-    get() = this.lastOrNull { it.aktiv() }
+    get() = this.firstOrNull { it.aktiv() }
