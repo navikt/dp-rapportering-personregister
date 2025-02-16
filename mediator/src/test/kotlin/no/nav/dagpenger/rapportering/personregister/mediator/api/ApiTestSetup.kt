@@ -93,7 +93,7 @@ open class ApiTestSetup {
                     overtaBekreftelseKafkaProdusent,
                     "paa-vegne-av",
                 )
-            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
 
             application {
                 konfigurasjon(meterRegistry)

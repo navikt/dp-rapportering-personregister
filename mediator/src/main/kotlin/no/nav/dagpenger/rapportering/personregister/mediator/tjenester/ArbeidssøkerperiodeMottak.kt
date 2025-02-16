@@ -8,8 +8,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -17,7 +19,7 @@ import java.util.UUID
 
 class ArbeidssøkerperiodeMottak(
     rapidsConnection: RapidsConnection,
-    private val personstatusMediator: PersonstatusMediator,
+    private val arbeidssøkerMediator: ArbeidssøkerMediator,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -36,7 +38,7 @@ class ArbeidssøkerperiodeMottak(
         logger.info { "Mottok arbeidssøkerperiode: ${packet.toJson()}" }
 
         try {
-            personstatusMediator.behandle(packet.tilHendelse())
+            arbeidssøkerMediator.behandle(packet.tilHendelse())
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
         }
@@ -47,13 +49,27 @@ class ArbeidssøkerperiodeMottak(
     }
 }
 
-private fun JsonMessage.tilHendelse(): ArbeidssøkerHendelse =
-    ArbeidssøkerHendelse(
-        ident = this["identitetsnummer"].asText(),
-        periodeId = UUID.fromString(this["id"].asText()),
-        startDato = this["startet"]["tidspunkt"].asLong().asLocalDateTime(),
-        sluttDato = if (this["avsluttet"].isMissingOrNull()) null else this["avsluttet"]["tidspunkt"].asLong().asLocalDateTime(),
+private fun JsonMessage.tilHendelse(): ArbeidssøkerperiodeHendelse {
+    val ident = this["identitetsnummer"].asText()
+    val periodeId = UUID.fromString(this["id"].asText())
+    val startDato = this["startet"]["tidspunkt"].asLong().asLocalDateTime()
+    val sluttDato = if (this["avsluttet"].isMissingOrNull()) null else this["avsluttet"]["tidspunkt"].asLong().asLocalDateTime()
+
+    if (sluttDato == null) {
+        return StartetArbeidssøkerperiodeHendelse(
+            periodeId = periodeId,
+            ident = ident,
+            startet = startDato,
+        )
+    }
+
+    return AvsluttetArbeidssøkerperiodeHendelse(
+        periodeId = periodeId,
+        ident = ident,
+        startet = startDato,
+        avsluttet = sluttDato,
     )
+}
 
 private fun Long.asLocalDateTime() =
     LocalDateTime.ofInstant(

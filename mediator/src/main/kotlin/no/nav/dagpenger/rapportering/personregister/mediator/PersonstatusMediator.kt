@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -28,15 +27,6 @@ class PersonstatusMediator(
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
         behandle(hendelse) {}
-    }
-
-    fun behandle(arbeidssøkerHendelse: ArbeidssøkerHendelse) {
-        sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
-        personRepository
-            .finnesPerson(arbeidssøkerHendelse.ident)
-            .takeIf { it }
-            ?.let { behandle(arbeidssøkerHendelse) }
-            ?: sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
     }
 
     private fun <T : Hendelse> behandle(
