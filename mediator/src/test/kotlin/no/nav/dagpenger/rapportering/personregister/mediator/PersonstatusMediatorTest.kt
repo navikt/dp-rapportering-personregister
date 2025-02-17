@@ -1,24 +1,28 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepositoryFaker
+import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,7 +41,7 @@ class PersonstatusMediatorTest {
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
-        personRepository = PersonRepositoryFaker()
+        personRepository = InMemoryPersonRepository()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
@@ -53,212 +57,162 @@ class PersonstatusMediatorTest {
         personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
     }
 
-    @Test
-    fun `kan behandle en ny hendelse med ny person`() {
-        val periodeId = UUID.randomUUID()
-        val recordKey = 1234L
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
-        coEvery { arbeidssøkerConnector.hentRecordKey(any()) } returns RecordKeyResponse(recordKey)
-        val ident = "12345678910"
-        val søknadId = "123"
+    private val ident = "12345678910"
+    private val nå = LocalDateTime.now()
+    private val tidligere = nå.minusDays(1)
+    private val periodeId = UUID.randomUUID()
 
-        val søknadHendelse =
-            SøknadHendelse(
-                ident = ident,
-                referanseId = søknadId,
-                dato = LocalDateTime.now(),
-            )
+    @Nested
+    inner class SøknadHendelser {
+        @Test
+        fun `søknad for ny person som ikke er arbeidssøkerregistrert`() {
+            testPerson {
+                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
 
-        personRepository.hentPerson(ident) shouldBe null
+                personstatusMediator.behandle(søknadHendelse())
 
-        personstatusMediator
-            .behandle(søknadHendelse)
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder shouldHaveSize 0
+            }
+        }
 
-//        with(overtaBekreftelseKafkaProdusent.meldinger) {
-//            size shouldBe 1
-//            with(first()) {
-//                topic() shouldBe overtaBekreftelseTopic
-//                key() shouldBe recordKey
-//                value().periodeId shouldBe periodeId
-//                value().bekreftelsesloesning shouldBe no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
-//            }
-//        }
+        @Test
+        fun `søknad for ny person som er arbeidssøkerregistrert`() {
+            testPerson {
+                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
 
-//        personRepository.hentPerson(ident)?.apply {
-//            ident shouldBe ident
-//            status shouldBe Dagpengerbruker
-//        }
-    }
+                personstatusMediator.behandle(søknadHendelse())
 
-    @Test
-    fun `kan behandle eksisterende person`() {
-        val periodeId = UUID.randomUUID()
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now()
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder.gjeldende?.periodeId shouldBe periodeId
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+            }
+        }
 
-        val søknadHendelse =
-            SøknadHendelse(
-                ident = ident,
-                referanseId = søknadId,
-                dato = dato,
-            )
+        @Test
+        fun `søknad for eksisterende person som ikke er arbeidssøkerregistrert`() {
+            testPerson {
+                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
 
-        val hendelse =
-            SøknadHendelse(
-                ident = ident,
-                referanseId = søknadId,
-                dato = dato,
-            )
+                personstatusMediator.behandle(søknadHendelse())
 
-        val person = Person(ident).apply { behandle(hendelse) }
-        personRepository.lagrePerson(person)
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder shouldHaveSize 0
+            }
+        }
 
-        personstatusMediator.behandle(søknadHendelse)
+        @Test
+        fun `søknad for eksisterende person som er arbeidssøkerregistrert`() {
+            testPerson {
+                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns
+                    listOf(
+                        arbeidssøkerResponse(periodeId),
+                    )
 
-        personRepository.hentPerson(ident)?.apply {
-            ident shouldBe ident
-            status shouldBe Dagpengerbruker
+                personstatusMediator.behandle(søknadHendelse())
+
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder shouldHaveSize 1
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+            }
         }
     }
 
-    @Test
-    fun `kan behandle søknad hendelse for person som ikke eksisterer i databasen og ikke er registrert som arbeidssøker`() {
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now()
+    @Nested
+    inner class Meldegruppeendring {
+        @Test
+        fun `dagpengerhendelse for ny person`() {
+            testPerson {
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
 
-        personstatusMediator.behandle(
-            SøknadHendelse(
-                ident = ident,
-                referanseId = søknadId,
-                dato = dato,
-            ),
-        )
-
-        personRepository.hentPerson(ident)?.apply {
-            ident shouldBe ident
-            status shouldBe Dagpengerbruker
+                status shouldBe Dagpengerbruker
+            }
         }
-    }
 
-    @Test
-    fun `kan behandle stans hendelse for eksisterende person`() {
-        val ident = "12345678910"
-        val søknadId = "123"
-        val dato = LocalDateTime.now().minusDays(1)
+        @Test
+        fun `dagpengerhendelse for eksisterende person som ikke er dagpengerbruker`() {
+            testPerson {
+                statusHistorikk.put(nå.minusDays(1), IkkeDagpengerbruker)
+                personRepository.oppdaterPerson(this)
 
-        personstatusMediator.behandle(
-            AnnenMeldegruppeHendelse(
-                ident = ident,
-                meldegruppeKode = "ARBS",
-                dato = dato.plusDays(1),
-                referanseId = UUID.randomUUID().toString(),
-            ),
-        )
+                status shouldBe IkkeDagpengerbruker
 
-        personRepository.hentPerson(ident)?.apply {
-            ident shouldBe ident
-            status shouldBe IkkeDagpengerbruker
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                status shouldBe Dagpengerbruker
+            }
         }
-    }
 
-    @Test
-    fun `kan behandle stans hendelse for person som ikke eksisterer i databasen`() {
-        val ident = "12345678910"
-        val dato = LocalDateTime.now().minusDays(1)
+        @Test
+        fun `dagpengerhendelse for eksisterende person som er dagpengerbruker`() {
+            testPerson {
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+                personRepository.oppdaterPerson(this)
 
-        personstatusMediator.behandle(
-            AnnenMeldegruppeHendelse(
-                ident = ident,
-                meldegruppeKode = "ARBS",
-                dato = dato.plusDays(1),
-                referanseId = UUID.randomUUID().toString(),
-            ),
-        )
+                status shouldBe Dagpengerbruker
 
-        personRepository
-            .hentPerson(ident)
-            ?.apply {
-                ident shouldBe ident
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                status shouldBe Dagpengerbruker
+            }
+        }
+
+        @Test
+        fun `annenMeldegruppeHendelse for ny person`() {
+            testPerson {
+                personstatusMediator.behandle(annenMeldegruppeHendelse())
+
                 status shouldBe IkkeDagpengerbruker
             }
-    }
-}
+        }
 
-class PersonRepositoryFaker : PersonRepository {
-    private val personliste = mutableMapOf<String, Person>()
+        @Test
+        fun `annenMeldegruppeHendelse for eksisterende person som er dagpengerbruker`() {
+            testPerson {
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+                personRepository.oppdaterPerson(this)
 
-    override fun hentPerson(ident: String): Person? = personliste[ident]
+                status shouldBe Dagpengerbruker
 
-    override fun finnesPerson(ident: String): Boolean = personliste.contains(ident)
+                personstatusMediator.behandle(annenMeldegruppeHendelse())
 
-    override fun lagrePerson(person: Person) {
-        personliste[person.ident] = person
-    }
+                status shouldBe IkkeDagpengerbruker
+            }
+        }
 
-    override fun oppdaterPerson(person: Person) {
-        personliste.replace(person.ident, person)
-    }
+        @Test
+        fun `annenMeldegruppeHendelse for eksisterende person som ikke er dagpengerbruker`() {
+            testPerson {
+                statusHistorikk.put(tidligere, IkkeDagpengerbruker)
+                personRepository.oppdaterPerson(this)
 
-    override fun hentAnallPersoner(): Int = personliste.size
+                status shouldBe IkkeDagpengerbruker
 
-    override fun hentAntallHendelser(): Int = personliste.values.sumOf { it.hendelser.size }
-}
+                personstatusMediator.behandle(annenMeldegruppeHendelse())
 
-class ArbeidssøkerRepositoryFaker : ArbeidssøkerRepository {
-    private val arbeidssøkerperioder = mutableListOf<Arbeidssøkerperiode>()
-
-    override fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> = arbeidssøkerperioder.filter { it.ident == ident }
-
-    override fun lagreArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) {
-        arbeidssøkerperioder.add(arbeidssøkerperiode)
-    }
-
-    override fun oppdaterOvertagelse(
-        periodeId: UUID,
-        overtattBekreftelse: Boolean,
-    ) {
-        hentPeriode(periodeId)
-            .takeIf { it != null }
-            ?.let { periode ->
-                arbeidssøkerperioder.remove(periode)
-                periode
-                    .copy(overtattBekreftelse = overtattBekreftelse)
-                    .let { arbeidssøkerperioder.add(it) }
-            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+                status shouldBe IkkeDagpengerbruker
+            }
+        }
     }
 
-    override fun avsluttArbeidssøkerperiode(
-        periodeId: UUID,
-        avsluttetDato: LocalDateTime,
-    ) {
-        hentPeriode(periodeId)
-            .takeIf { it != null }
-            ?.let { periode ->
-                arbeidssøkerperioder.remove(periode)
-                periode
-                    .copy(avsluttet = avsluttetDato)
-                    .let { arbeidssøkerperioder.add(it) }
-            } ?: throw RuntimeException("Fant ikke periode med id $periodeId")
+    private fun testPerson(block: Person.() -> Unit) {
+        val person = Person(ident = ident)
+        personRepository.lagrePerson(person)
+        person.apply(block)
     }
 
-    override fun oppdaterPeriodeId(
-        ident: String,
-        gammelPeriodeId: UUID,
-        nyPeriodeId: UUID,
-    ) {
-        hentPeriode(gammelPeriodeId)
-            .takeIf { it != null }
-            ?.let { periode ->
-                arbeidssøkerperioder.remove(periode)
-                periode
-                    .copy(periodeId = nyPeriodeId)
-                    .let { arbeidssøkerperioder.add(it) }
-            } ?: throw RuntimeException("Fant ikke periode med id $gammelPeriodeId")
-    }
+    private fun søknadHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = SøknadHendelse(ident, dato, referanseId)
 
-    private fun hentPeriode(periodeId: UUID) = arbeidssøkerperioder.find { it.periodeId == periodeId }
+    private fun dagpengerMeldegruppeHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = DagpengerMeldegruppeHendelse(ident, dato, "DAGP", referanseId)
+
+    private fun annenMeldegruppeHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
 }
