@@ -59,9 +59,8 @@ class PersonTest {
 
         @Test
         fun `dagpengerhendelse endrer ikke allerede Dagpengerbruker status`() =
-            arbeidssøker {
-                behandle(søknadHendelse(tidligere))
-                status shouldBe Dagpengerbruker
+            arbeidssøker(overtattBekreftelse = true) {
+                statusHistorikk.put(tidligere, Dagpengerbruker)
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
                 status shouldBe Dagpengerbruker
@@ -72,8 +71,7 @@ class PersonTest {
         @Test
         fun `dagpengerhendelse gir Dagpengerbruker status til IkkeDagpengerbruker`() =
             arbeidssøker {
-                behandle(annenMeldegruppeHendelse(tidligere))
-                status shouldBe IkkeDagpengerbruker
+                statusHistorikk.put(tidligere, IkkeDagpengerbruker)
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
 
@@ -87,7 +85,7 @@ class PersonTest {
     inner class AnnenMeldegruppeHendelser {
         @Test
         fun `annen meldegruppe hendelse gir IkkeDagpengerbruker`() =
-            arbeidssøker {
+            arbeidssøker(overtattBekreftelse = true) {
                 behandle(søknadHendelse())
                 behandle(annenMeldegruppeHendelse())
 
@@ -98,7 +96,7 @@ class PersonTest {
 
         @Test
         fun `IkkeDagpengerbruker status forblir samme med annen meldegruppe hendelse`() =
-            arbeidssøker {
+            arbeidssøker(overtattBekreftelse = true) {
                 behandle(søknadHendelse())
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
@@ -116,7 +114,10 @@ class PersonTest {
             .apply(block)
     }
 
-    private fun arbeidssøker(block: Person.() -> Unit) {
+    private fun arbeidssøker(
+        overtattBekreftelse: Boolean = false,
+        block: Person.() -> Unit,
+    ) {
         Person(ident)
             .apply { addObserver(arbeidssøkerperiodeObserver) }
             .apply {
@@ -126,7 +127,7 @@ class PersonTest {
                         ident,
                         LocalDateTime.now(),
                         null,
-                        overtattBekreftelse = true,
+                        overtattBekreftelse = overtattBekreftelse,
                     ),
                 )
             }.apply(block)

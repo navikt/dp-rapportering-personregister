@@ -28,9 +28,18 @@ data class Person(
 
     fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = hendelse.håndter(this)
 
-    fun <T : Hendelse> behandle(
-        hendelse: T,
-        håndter: (T) -> Unit = {},
+    fun behandle(hendelse: Hendelse) {
+        when (hendelse) {
+            is SøknadHendelse -> behandle(hendelse)
+            is DagpengerMeldegruppeHendelse -> behandle(hendelse)
+            is AnnenMeldegruppeHendelse -> behandle(hendelse)
+            else -> throw IllegalArgumentException("Ukjent hendelse: ${hendelse::class.simpleName}")
+        }
+    }
+
+    private fun behandle(
+        hendelse: Hendelse,
+        håndter: (Hendelse) -> Unit = {},
     ) {
         status.håndter(hendelse) { nyStatus ->
             statusHistorikk.put(hendelse.dato, nyStatus)
@@ -42,8 +51,10 @@ data class Person(
 
 fun Person.overtaArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
-        observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-        it.overtattBekreftelse = true
+        if (it.overtattBekreftelse != true) {
+            observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+            it.overtattBekreftelse = true
+        }
     }
 }
 

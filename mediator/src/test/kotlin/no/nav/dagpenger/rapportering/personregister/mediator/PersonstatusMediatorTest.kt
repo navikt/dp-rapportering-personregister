@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepositoryFaker
@@ -14,10 +15,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -38,6 +41,8 @@ class PersonstatusMediatorTest {
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
     private val overtaBekreftelseTopic = "paa_vegne_av"
 
+    private val personObserver = mockk<PersonObserver>(relaxed = true)
+
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
@@ -54,7 +59,7 @@ class PersonstatusMediatorTest {
                 overtaBekreftelseTopic,
             )
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
-        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
+        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))
     }
 
     private val ident = "12345678910"
@@ -116,22 +121,38 @@ class PersonstatusMediatorTest {
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
             }
         }
+
+        @Test
+        fun `overtar arbeidssøkerbekreftelse for søker som er arbeidssøkerregistrert`() {
+            testPerson {
+                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns
+                    listOf(arbeidssøkerResponse(periodeId))
+
+                personstatusMediator.behandle(søknadHendelse())
+
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder shouldHaveSize 1
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                personObserver skalHaSendtOvertakelseFor this
+            }
+        }
     }
 
     @Nested
     inner class Meldegruppeendring {
         @Test
         fun `dagpengerhendelse for ny person`() {
-            testPerson {
+            arbeidssøker {
                 personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe Dagpengerbruker
+                personObserver skalHaSendtOvertakelseFor this
             }
         }
 
         @Test
         fun `dagpengerhendelse for eksisterende person som ikke er dagpengerbruker`() {
-            testPerson {
+            arbeidssøker {
                 statusHistorikk.put(nå.minusDays(1), IkkeDagpengerbruker)
                 personRepository.oppdaterPerson(this)
 
@@ -140,6 +161,7 @@ class PersonstatusMediatorTest {
                 personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe Dagpengerbruker
+                personObserver skalHaSendtOvertakelseFor this
             }
         }
 
@@ -193,10 +215,68 @@ class PersonstatusMediatorTest {
                 status shouldBe IkkeDagpengerbruker
             }
         }
+
+        @Test
+        fun `overtar arbeidssøker bekreftelse når man blir dagpengerbruker`() {
+            arbeidssøker {
+                statusHistorikk.put(tidligere, IkkeDagpengerbruker)
+                personRepository.oppdaterPerson(this)
+
+                status shouldBe IkkeDagpengerbruker
+
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                status shouldBe Dagpengerbruker
+                personObserver skalHaSendtOvertakelseFor this
+            }
+        }
+
+        @Test
+        fun `sender ikke overtakelsesmelding dersom vi allerede har overtatt arbeidssøker bekreftelse`() {
+            arbeidssøker(overtattBekreftelse = true) {
+                statusHistorikk.put(tidligere, IkkeDagpengerbruker)
+                personRepository.oppdaterPerson(this)
+
+                status shouldBe IkkeDagpengerbruker
+
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                status shouldBe Dagpengerbruker
+                personObserver skalIkkeHaSendtOvertakelseFor this
+            }
+        }
+
+        @Test
+        fun `frasier arbeidssøker bekreftelse`() {
+            arbeidssøker(overtattBekreftelse = true) {
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+                personRepository.oppdaterPerson(this)
+
+                status shouldBe Dagpengerbruker
+
+                personstatusMediator.behandle(annenMeldegruppeHendelse())
+
+                status shouldBe IkkeDagpengerbruker
+                personObserver skalHaFrasagtAnsvaretFor this
+            }
+        }
     }
 
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
+        personRepository.lagrePerson(person)
+        person.apply(block)
+    }
+
+    private fun arbeidssøker(
+        overtattBekreftelse: Boolean = false,
+        block: Person.() -> Unit,
+    ) {
+        val person =
+            Person(
+                ident = ident,
+                arbeidssøkerperioder = mutableListOf(Arbeidssøkerperiode(periodeId, ident, tidligere, null, overtattBekreftelse)),
+            )
         personRepository.lagrePerson(person)
         person.apply(block)
     }
@@ -215,4 +295,16 @@ class PersonstatusMediatorTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
+}
+
+infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
+    verify(exactly = 1) { overtaArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
+    verify(exactly = 0) { overtaArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
 }

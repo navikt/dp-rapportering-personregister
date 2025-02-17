@@ -29,9 +29,9 @@ class PersonstatusMediator(
         behandle(hendelse) {}
     }
 
-    private fun <T : Hendelse> behandle(
-        hendelse: T,
-        håndter: (T) -> Unit = {},
+    private fun behandle(
+        hendelse: Hendelse,
+        håndter: (Hendelse) -> Unit = {},
     ) {
         try {
             val person = hentEllerOpprettPerson(hendelse.ident)
