@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka
 
-import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import mu.KotlinLogging
+import org.apache.avro.specific.SpecificRecordBase
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.clients.producer.Callback
@@ -15,18 +16,30 @@ import org.apache.kafka.common.Uuid
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
+import kotlin.reflect.KClass
 
-class TestKafkaProducer<T>(
+private val logger = KotlinLogging.logger {}
+
+class TestKafkaProducer<T : SpecificRecordBase>(
+    type: KClass<T>,
     private val topic: String,
     container: TestKafkaContainer,
 ) {
-    val producer: Producer<Long, PaaVegneAv> = container.createProducer()
+    val producer: Producer<Long, T> = container.createProducer(type, topic)
 
     fun send(
         key: Long,
-        message: PaaVegneAv,
+        message: T,
     ) {
-        producer.send(ProducerRecord(topic, key, message))
+        val record = ProducerRecord(topic, key, message)
+        producer.send(
+            record,
+        ) {
+            metadata,
+            exception,
+            ->
+            logger.info { "Send callback. Metadata: $metadata. Exception: $exception" }
+        }
         producer.flush()
     }
 }

@@ -57,6 +57,7 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
         on(MonitoringEvent(ApplicationStarted)) { application ->
             logger.info("Klargjør {} Kafka Consumer", pluginInstance)
             kafkaConsumer.subscribe(kafkaTopics, rebalanceListener)
+            println("Subscribed to topics: $kafkaTopics")
 
             consumeJob =
                 application.launch(coroutineDispatcher) {

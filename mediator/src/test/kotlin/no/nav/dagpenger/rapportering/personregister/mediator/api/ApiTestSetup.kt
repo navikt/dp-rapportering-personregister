@@ -52,6 +52,7 @@ open class ApiTestSetup {
             """.trimIndent()
 
         var mockOAuth2Server = MockOAuth2Server()
+        val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
 
         @BeforeAll
         @JvmStatic
@@ -74,48 +75,66 @@ open class ApiTestSetup {
         }
     }
 
-    fun setUpTestApplication(block: suspend ApplicationTestBuilder.() -> Unit) {
+    init {
         setEnvConfig()
+    }
+
+    fun setUpTestApplication(
+        kafkaContext: KafkaContext,
+        block: suspend ApplicationTestBuilder.() -> Unit,
+    ) {
         runMigration()
         clean()
 
+        val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+
         testApplication {
+            println("Setting up test application")
             environment {
                 config = mapAppConfig()
             }
-            val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
-            val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-            val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
-            val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-            val testKafkaContainer = TestKafkaContainer()
-            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
-            val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
-
-            val arbeidssøkerService =
-                ArbeidssøkerService(
-                    personRepository,
-                    arbeidssøkerRepository,
-                    arbeidssøkerConnector,
-                    overtaBekreftelseKafkaProdusent,
-                    "paa-vegne-av",
-                )
-            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
-            val kafkaContext =
-                KafkaContext(
-                    overtaBekreftelseKafkaProdusent,
-                    arbedssøkerperiodeKafkaConsumer,
-                    "ARBEIDSSOKERPERIODER_TOPIC",
-                    arbeidssøkerMediator,
-                )
 
             application {
+                println("Setting up application")
                 pluginConfiguration(meterRegistry, kafkaContext)
+                println("Setting up internal api")
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerMediator)
+                personstatusApi(personRepository, kafkaContext.arbeidssøkerMediator)
             }
 
             block()
         }
+    }
+
+    fun setUpTestApplication(block: suspend ApplicationTestBuilder.() -> Unit) {
+        val testKafkaContainer = TestKafkaContainer()
+        val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+        val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
+        val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+        val overtaBekreftelseKafkaProdusent = TestKafkaProducer(PaaVegneAv::class, "paa-vegne-av", testKafkaContainer).producer
+        val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
+
+        val arbeidssøkerService =
+            ArbeidssøkerService(
+                personRepository,
+                arbeidssøkerRepository,
+                arbeidssøkerConnector,
+                overtaBekreftelseKafkaProdusent,
+                "paa-vegne-av",
+            )
+        val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+        val kafkaContext =
+            KafkaContext(
+                overtaBekreftelseKafkaProdusent,
+                arbedssøkerperiodeKafkaConsumer,
+                "ARBEIDSSOKERPERIODER_TOPIC",
+                arbeidssøkerMediator,
+            )
+
+        setUpTestApplication(kafkaContext) {
+            block()
+        }
+        testKafkaContainer.stop()
     }
 
     private fun setEnvConfig() {
@@ -132,7 +151,7 @@ open class ApiTestSetup {
         System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
     }
 
-    private fun mapAppConfig(): MapApplicationConfig =
+    fun mapAppConfig(): MapApplicationConfig =
         MapApplicationConfig(
             "no.nav.security.jwt.issuers.size" to "1",
             "no.nav.security.jwt.issuers.0.issuer_name" to TOKENX_ISSUER_ID,

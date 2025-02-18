@@ -19,6 +19,7 @@ class KafkaProducerPluginConfig {
 val KafkaProducerPlugin: ApplicationPlugin<KafkaProducerPluginConfig> =
     createApplicationPlugin(KAFKA_PRODUCER_PLUGIN_ID, ::KafkaProducerPluginConfig) {
         logger.info("Installerer {}", KAFKA_PRODUCER_PLUGIN_ID)
+        pluginConfig.kafkaProducers?.forEach { logger.info { "KafkaProducer: $it" } }
         val kafkaProducers = requireNotNull(pluginConfig.kafkaProducers) { "KafkaProducers er null" }
         val shutDownTimeout = pluginConfig.shutDownTimeout ?: Duration.ofMillis(250)
 

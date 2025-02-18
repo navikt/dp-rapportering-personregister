@@ -30,11 +30,14 @@ fun Application.pluginConfiguration(
         jwt("tokenX") { tokenX() }
     },
 ) {
+    println("Installing plugins")
     install(Authentication) {
+        println("Installing authentication")
         auth()
     }
 
     install(ContentNegotiation) {
+        println("Installing content negotiation")
         jackson {
             registerModule(JavaTimeModule())
             registerModule(
@@ -54,6 +57,7 @@ fun Application.pluginConfiguration(
     }
 
     install(MicrometerMetrics) {
+        println("Installing micrometer metrics")
         registry = meterRegistry
         meterBinders =
             listOf(
@@ -63,11 +67,14 @@ fun Application.pluginConfiguration(
                 ProcessorMetrics(),
             )
     }
-
+    println("Installing kafka producer plugin")
     install(KafkaProducerPlugin) {
+        println("Installing kafka producer plugin")
         kafkaProducers = listOf(kafkaContext.overtaBekreftelseKafkaProdusent)
     }
+    println("Installing kafka consumer plugin")
     install(KafkaConsumerPlugin<Long, Periode>("Arbeidssøkerperioder")) {
+        println("Installing kafka consumer plugin")
         this.consumeFunction = kafkaContext.arbeidssøkerMediator::behandle
         // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
         this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
