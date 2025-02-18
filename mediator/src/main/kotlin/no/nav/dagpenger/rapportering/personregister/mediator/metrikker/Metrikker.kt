@@ -6,7 +6,6 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
@@ -29,14 +28,7 @@ class SoknadMetrikker(
 
 class VedtakMetrikker(
     private val meterRegistry: MeterRegistry,
-) {
-    fun vedtakMottatt(status: Status.Type) =
-        Counter
-            .builder("${NAMESPACE}_vedtak_mottatt_total")
-            .description("Indikerer antall mottatte vedtak")
-            .tag("status", status.name)
-            .register(meterRegistry)
-}
+)
 
 class DatabaseMetrikker(
     meterRegistry: MeterRegistry,

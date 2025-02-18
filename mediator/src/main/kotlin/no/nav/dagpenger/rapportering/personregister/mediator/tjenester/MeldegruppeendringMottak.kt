@@ -8,7 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.modell.StansHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -35,11 +37,11 @@ class MeldegruppeendringMottak(
         logger.info { "Mottok ny meldegruppeendring" }
 
         try {
-            personstatusMediator
-                .behandle(
-                    packet
-                        .tilHendelse(),
-                )
+            when (val hendelse = packet.tilHendelse()) {
+                is DagpengerMeldegruppeHendelse -> personstatusMediator.behandle(hendelse)
+                is AnnenMeldegruppeHendelse -> personstatusMediator.behandle(hendelse)
+                else -> logger.warn { "Ukjent hendelsetype mottatt: $hendelse" }
+            }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldegruppeendring $e" }
         }
@@ -50,13 +52,22 @@ class MeldegruppeendringMottak(
     }
 }
 
-private fun JsonMessage.tilHendelse(): StansHendelse {
+private fun JsonMessage.tilHendelse(): Hendelse {
     val ident: String = this["after"]["FODSELSNR"].asText()
     val meldegruppeKode = this["after"]["MELDEGRUPPEKODE"].asText()
     val fraOgMed = this["after"]["DATO_FRA"].asText().arenaDato()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
 
-    return StansHendelse(
+    if (meldegruppeKode == "DAGP") {
+        return DagpengerMeldegruppeHendelse(
+            ident = ident,
+            dato = fraOgMed,
+            referanseId = hendelseId,
+            meldegruppeKode = meldegruppeKode,
+        )
+    }
+
+    return AnnenMeldegruppeHendelse(
         ident = ident,
         dato = fraOgMed,
         referanseId = hendelseId,

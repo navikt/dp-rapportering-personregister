@@ -74,7 +74,10 @@ class ArbeidssøkerService(
         arbeidssøkerRepository.lagreArbeidssøkerperiode(arbeidssøkerperiode)
 
     fun avsluttPeriodeOgOppdaterOvertagelse(arbeidssøkerperiode: Arbeidssøkerperiode) {
-        arbeidssøkerRepository.avsluttArbeidssøkerperiode(arbeidssøkerperiode.periodeId, arbeidssøkerperiode.avsluttet!!)
+        arbeidssøkerRepository.avsluttArbeidssøkerperiode(
+            arbeidssøkerperiode.periodeId,
+            arbeidssøkerperiode.avsluttet!!,
+        )
         arbeidssøkerRepository.oppdaterOvertagelse(arbeidssøkerperiode.periodeId, false)
     }
 

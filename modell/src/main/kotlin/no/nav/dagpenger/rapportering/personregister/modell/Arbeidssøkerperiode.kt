@@ -28,15 +28,16 @@ data class StartetArbeidssøkerperiodeHendelse(
             .find { it.periodeId == periodeId }
             ?.let {
                 if (it.overtattBekreftelse != true) {
-                    person.observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(person) }
+                    person.overtaArbeidssøkerBekreftelse()
                     it.overtattBekreftelse = true
                 }
             }
             ?: run {
-                person.observers.forEach { it.overtaArbeidssøkerBekreftelse(person) }
-                person.arbeidssøkerperioder.add(
-                    Arbeidssøkerperiode(periodeId, ident, startet, avsluttet = null, overtattBekreftelse = true),
-                )
+                Arbeidssøkerperiode(periodeId, ident, startet, avsluttet = null, overtattBekreftelse = false)
+                    .apply {
+                        person.arbeidssøkerperioder.add(this)
+                        person.overtaArbeidssøkerBekreftelse()
+                    }
             }
     }
 }
@@ -56,3 +57,8 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             ?: person.arbeidssøkerperioder.add(Arbeidssøkerperiode(periodeId, ident, startet, avsluttet, overtattBekreftelse = false))
     }
 }
+
+fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
+
+val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
+    get() = this.firstOrNull { it.aktiv() }

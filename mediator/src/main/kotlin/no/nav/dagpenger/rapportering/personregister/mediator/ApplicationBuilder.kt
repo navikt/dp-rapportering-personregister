@@ -26,7 +26,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMet
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -91,7 +90,7 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
-
+                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
@@ -100,8 +99,8 @@ internal class ApplicationBuilder(
 
                 val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
-                VedtakMottak(rapid, personstatusMediator, vedtakMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
+                ArbeidssøkerperiodeMottak(rapid, arbeidssøkerMediator)
             }
 
     init {

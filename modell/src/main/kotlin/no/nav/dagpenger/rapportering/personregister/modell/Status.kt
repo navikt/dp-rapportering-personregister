@@ -4,63 +4,48 @@ sealed interface Status {
     val type: Type
 
     enum class Type {
-        SØKT,
-        INNVILGET,
-        AVSLÅTT,
-        STANSET,
+        DAGPENGERBRUKER,
+        IKKE_DAGPENGERBRUKER,
     }
+
+    fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status
 
     companion object {
         fun rehydrer(type: String): Status =
             when (Type.valueOf(type)) {
-                Type.SØKT -> SØKT
-                Type.INNVILGET -> INNVILGET
-                Type.AVSLÅTT -> AVSLÅTT
-                Type.STANSET -> STANSET
+                Type.DAGPENGERBRUKER -> Dagpengerbruker
+                Type.IKKE_DAGPENGERBRUKER -> IkkeDagpengerbruker
             }
     }
-
-    fun håndter(hendelse: Hendelse): Status
 }
 
-data object SØKT : Status {
-    override val type = Status.Type.SØKT
+data object Dagpengerbruker : Status {
+    override val type = Status.Type.DAGPENGERBRUKER
 
-    override fun håndter(hendelse: Hendelse): Status =
+    override fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status =
         when (hendelse) {
-            is InnvilgelseHendelse -> INNVILGET
-            is AvslagHendelse -> AVSLÅTT
+            is AnnenMeldegruppeHendelse -> IkkeDagpengerbruker.also(action)
             else -> this
         }
 }
 
-object INNVILGET : Status {
-    override val type = Status.Type.INNVILGET
+data object IkkeDagpengerbruker : Status {
+    override val type = Status.Type.IKKE_DAGPENGERBRUKER
 
-    override fun håndter(hendelse: Hendelse): Status =
+    override fun håndter(
+        hendelse: Hendelse,
+        action: (Status) -> Unit,
+    ): Status =
         when (hendelse) {
-            is StansHendelse -> STANSET
-            else -> this
-        }
-}
-
-data object AVSLÅTT : Status {
-    override val type = Status.Type.AVSLÅTT
-
-    override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse) {
-            is InnvilgelseHendelse -> INNVILGET
-            is SøknadHendelse -> SØKT
-            else -> this
-        }
-}
-
-data object STANSET : Status {
-    override val type = Status.Type.STANSET
-
-    override fun håndter(hendelse: Hendelse): Status =
-        when (hendelse) {
-            is InnvilgelseHendelse -> INNVILGET
+            is SøknadHendelse,
+            is DagpengerMeldegruppeHendelse,
+            -> Dagpengerbruker.also(action)
             else -> this
         }
 }

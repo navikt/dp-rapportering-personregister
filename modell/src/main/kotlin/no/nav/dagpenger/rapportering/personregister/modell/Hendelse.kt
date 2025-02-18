@@ -39,23 +39,16 @@ class SøknadHendelse(
     override val kilde = Kildesystem.Søknad
 }
 
-class InnvilgelseHendelse(
+class DagpengerMeldegruppeHendelse(
     ident: String,
     dato: LocalDateTime,
+    val meldegruppeKode: String,
     override val referanseId: String,
 ) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Arena
 }
 
-class AvslagHendelse(
-    ident: String,
-    dato: LocalDateTime,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
-    override val kilde = Kildesystem.Arena
-}
-
-class StansHendelse(
+class AnnenMeldegruppeHendelse(
     ident: String,
     dato: LocalDateTime,
     val meldegruppeKode: String,

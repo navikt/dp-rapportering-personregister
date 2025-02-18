@@ -11,14 +11,14 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerperiodeTest {
-    private val arbeidssøkerperiodeKafka = mockk<PersonObserver>(relaxed = true)
+    private val arbeidssøkerperiodeObserver = mockk<PersonObserver>(relaxed = true)
     private lateinit var person: Person
 
     @BeforeEach
     fun setup() {
         person =
             Person("12345678901")
-                .apply { addObserver(arbeidssøkerperiodeKafka) }
+                .apply { addObserver(arbeidssøkerperiodeObserver) }
     }
 
     @Nested
@@ -30,7 +30,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
@@ -46,7 +46,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
@@ -62,7 +62,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalIkkeHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe true
@@ -80,7 +80,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalIkkeHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
@@ -95,7 +95,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalIkkeHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
@@ -110,7 +110,7 @@ class ArbeidssøkerperiodeTest {
 
             hendelse.håndter(person)
 
-            arbeidssøkerperiodeKafka skalIkkeHaSendtOvertakelseFor person
+            arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor person
             person.arbeidssøkerperioder shouldHaveSize 1
             person.arbeidssøkerperioder.first().periodeId shouldBe periodeId
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
@@ -124,4 +124,8 @@ infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
 
 infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
     verify(exactly = 0) { overtaArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
 }
