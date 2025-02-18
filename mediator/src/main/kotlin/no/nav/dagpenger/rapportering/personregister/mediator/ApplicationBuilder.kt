@@ -24,6 +24,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseM
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -75,7 +76,7 @@ internal class ApplicationBuilder(
             overtaBekreftelseKafkaProdusent,
             overtaBekreftelseTopic,
         )
-    val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+    val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     private val kafkaContext =
         KafkaContext(
             overtaBekreftelseKafkaProdusent,

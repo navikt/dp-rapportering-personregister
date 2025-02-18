@@ -6,6 +6,8 @@ import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepositoryFaker
+import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
@@ -30,7 +32,7 @@ class ArbeidssøkerMediatorTest {
 
     @BeforeEach
     fun setup() {
-        personRepository = PersonRepositoryFaker()
+        personRepository = InMemoryPersonRepository()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
@@ -42,7 +44,7 @@ class ArbeidssøkerMediatorTest {
                 overtaBekreftelseKafkaProdusent,
                 overtaBekreftelseTopic,
             )
-        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService)
+        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     }
 
     val person = Person("12345678910")

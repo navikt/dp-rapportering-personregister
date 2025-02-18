@@ -74,7 +74,7 @@ class ArbeidssøkerMediator(
             ).also(::behandle)
         }
 
-    fun behandle(arbeidssøkerperiode: Arbeidssøkerperiode) {
+    /* fun behandle(arbeidssøkerperiode: Arbeidssøkerperiode) {
         // Gjør ikke noe hvis person ikke finnes i databasen fra før
         if (!arbeidssøkerService.finnesPerson(arbeidssøkerperiode.ident)) {
             sikkerlogg.info { "Personen arbeidssøkerperioden gjelder for er ikke dagpengebruker." }
@@ -116,7 +116,7 @@ class ArbeidssøkerMediator(
                 }
         }
         // TODO("Edgecase: Hvordan sjekker vi om periodeId har endret seg?")
-    }
+    } */
 
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall")
