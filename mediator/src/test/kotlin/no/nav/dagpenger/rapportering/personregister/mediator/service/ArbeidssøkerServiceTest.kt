@@ -8,14 +8,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -24,38 +20,14 @@ class ArbeidssøkerServiceTest {
     private val personRepository = mockk<PersonRepository>()
     private val arbeidssøkerRepository = mockk<ArbeidssøkerRepository>()
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-    val overtaBekreftelseKafkaProdusent = MockKafkaProducer<PaaVegneAv>()
-    private val overtaBekreftelseTopic = "paa_vegne_av"
     private val arbeidssøkerService =
         ArbeidssøkerService(
             personRepository,
             arbeidssøkerRepository,
             arbeidssøkerConnector,
-            overtaBekreftelseKafkaProdusent,
-            overtaBekreftelseTopic,
         )
 
     private val ident = "12345678901"
-
-    @Test
-    fun `kan sende melding for å overta bekreftelse`() {
-        val periodeId = UUID.randomUUID()
-        val recordKey = 1234L
-        coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
-        justRun { arbeidssøkerRepository.oppdaterOvertagelse(any(), any()) }
-
-        arbeidssøkerService.sendOvertaBekreftelseBehov(ident, periodeId)
-
-        with(overtaBekreftelseKafkaProdusent.meldinger) {
-            size shouldBe 1
-            with(first()) {
-                topic() shouldBe overtaBekreftelseTopic
-                key() shouldBe recordKey
-                value().periodeId shouldBe periodeId
-                value().bekreftelsesloesning shouldBe DAGPENGER
-            }
-        }
-    }
 
     @Test
     fun `kan hente siste arbeidssøkerperiode`() {

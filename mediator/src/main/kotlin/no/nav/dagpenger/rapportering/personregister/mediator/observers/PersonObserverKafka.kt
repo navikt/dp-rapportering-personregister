@@ -7,16 +7,20 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.aktiv
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
+import java.util.concurrent.TimeUnit.DAYS
 
 class PersonObserverKafka(
     private val producer: Producer<Long, PaaVegneAv>,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val arbeidssøkerRepository: PostrgesArbeidssøkerRepository,
+    private val overtaBekreftelseTopic: String,
     private val frasiBekreftelseTopic: String,
 ) : PersonObserver {
     override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
@@ -27,7 +31,8 @@ class PersonObserverKafka(
                 ?.periodeId
                 ?.let { periodeId ->
                     val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
-                    val record = ProducerRecord(frasiBekreftelseTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
+                    val record =
+                        ProducerRecord(frasiBekreftelseTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
                     val metadata = producer.sendDeferred(record).await()
                     sikkerlogg.info {
                         "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
@@ -36,6 +41,36 @@ class PersonObserverKafka(
                     arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false)
                 }
         }
+
+    override fun overtaArbeidssøkerBekreftelse(person: Person) {
+        arbeidssøkerRepository
+            .hentArbeidssøkerperioder(person.ident)
+            .firstOrNull { it.aktiv() }
+            ?.periodeId
+            ?.let { periodeId ->
+                val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
+                val record =
+                    ProducerRecord(
+                        overtaBekreftelseTopic,
+                        recordKeyResponse.key,
+                        PaaVegneAv(
+                            periodeId,
+                            DAGPENGER,
+                            Start(
+                                DAYS.toMillis(14),
+                                DAYS.toMillis(8),
+                            ),
+                        ),
+                    )
+
+                val metadata = runBlocking { producer.sendDeferred(record).await() }
+                sikkerlogg.info {
+                    "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
+                        "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                }
+            }
+            ?: run { sikkerlogg.info { "Fant ingen aktiv arbeidssøkerperiode for person ${person.ident}" } }
+    }
 
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall.PersonObserver")

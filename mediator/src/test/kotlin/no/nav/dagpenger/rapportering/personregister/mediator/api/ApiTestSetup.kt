@@ -90,8 +90,6 @@ open class ApiTestSetup {
                     personRepository,
                     arbeidssøkerRepository,
                     arbeidssøkerConnector,
-                    overtaBekreftelseKafkaProdusent,
-                    "paa-vegne-av",
                 )
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
 

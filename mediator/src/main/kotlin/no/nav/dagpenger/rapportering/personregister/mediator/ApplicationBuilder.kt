@@ -23,6 +23,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
@@ -47,14 +48,22 @@ internal class ApplicationBuilder(
 
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
 
-    private val overtaBekreftelseTopic = configuration.getValue("OVERTA_BEKREFTELSE_TOPIC")
     private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
-    private val overtaBekreftelseKafkaProdusent =
+    private val bekreftelsePåVegneAvProdusent =
         kafkaFactory.createProducer<Long, PaaVegneAv>(
             clientId = "teamdagpenger-personregister-producer",
             keySerializer = LongSerializer::class,
             valueSerializer = PaaVegneAvAvroSerializer::class,
+        )
+
+    private val personObserverKafka =
+        PersonObserverKafka(
+            bekreftelsePåVegneAvProdusent,
+            arbeidssøkerConnector,
+            arbeidssøkerRepository,
+            configuration.getValue("OVERTA_BEKREFTELSE_TOPIC"),
+            configuration.getValue("FRASI_BEKREFTELSE_TOPIC"),
         )
 
     val arbeidssøkerService =
@@ -62,8 +71,6 @@ internal class ApplicationBuilder(
             personRepository,
             arbeidssøkerRepository,
             arbeidssøkerConnector,
-            overtaBekreftelseKafkaProdusent,
-            overtaBekreftelseTopic,
         )
 
     private val rapidsConnection =
@@ -79,7 +86,7 @@ internal class ApplicationBuilder(
                     personstatusApi(personRepository, arbeidssøkerMediator)
                 }
 
-                val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
+                val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
                 ArbeidssøkerperiodeMottak(rapid, arbeidssøkerMediator)

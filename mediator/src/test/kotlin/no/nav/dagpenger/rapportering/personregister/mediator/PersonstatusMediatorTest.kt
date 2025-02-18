@@ -55,8 +55,6 @@ class PersonstatusMediatorTest {
                 personRepository,
                 arbeidssøkerRepository,
                 arbeidssøkerConnector,
-                overtaBekreftelseKafkaProdusent,
-                overtaBekreftelseTopic,
             )
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
         personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))

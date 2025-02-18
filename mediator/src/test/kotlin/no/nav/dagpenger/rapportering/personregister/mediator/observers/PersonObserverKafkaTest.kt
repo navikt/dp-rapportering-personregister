@@ -24,10 +24,17 @@ class PersonObserverKafkaTest {
     private var producer = MockKafkaProducer<PaaVegneAv>()
     private val arbeiDssøkerConnector = mockk<ArbeidssøkerConnector>()
     private val arbeidssøkerRepository = mockk<PostrgesArbeidssøkerRepository>()
+    private val overtaBekreftelseTopic = "overtaBekreftelseTopic"
     private val frasiBekreftelseTopic = "frasiBekreftelseTopic"
 
     private val personObserverKafka =
-        PersonObserverKafka(producer, arbeiDssøkerConnector, arbeidssøkerRepository, frasiBekreftelseTopic)
+        PersonObserverKafka(
+            producer,
+            arbeiDssøkerConnector,
+            arbeidssøkerRepository,
+            overtaBekreftelseTopic,
+            frasiBekreftelseTopic,
+        )
 
     @Test
     fun `når person ikke har arbeissøkerperioder`() {
