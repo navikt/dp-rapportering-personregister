@@ -1,5 +1,6 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.utils
+package no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka
 
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.apache.kafka.clients.consumer.ConsumerGroupMetadata
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.clients.producer.Callback
@@ -14,6 +15,21 @@ import org.apache.kafka.common.Uuid
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
+
+class TestKafkaProducer<T>(
+    private val topic: String,
+    container: TestKafkaContainer,
+) {
+    val producer: Producer<Long, PaaVegneAv> = container.createProducer()
+
+    fun send(
+        key: Long,
+        message: PaaVegneAv,
+    ) {
+        producer.send(ProducerRecord(topic, key, message))
+        producer.flush()
+    }
+}
 
 class MockKafkaProducer<T> : Producer<Long, T> {
     private var isClosed = false

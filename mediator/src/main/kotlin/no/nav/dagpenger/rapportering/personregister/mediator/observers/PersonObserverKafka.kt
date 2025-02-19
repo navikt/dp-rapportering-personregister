@@ -2,7 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.observers
 
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.kafka.sendDeferred
+import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -20,8 +20,7 @@ class PersonObserverKafka(
     private val producer: Producer<Long, PaaVegneAv>,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val arbeidssøkerRepository: PostrgesArbeidssøkerRepository,
-    private val overtaBekreftelseTopic: String,
-    private val frasiBekreftelseTopic: String,
+    private val bekreftelsePåVegneAvTopic: String,
 ) : PersonObserver {
     override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
         runBlocking {
@@ -32,10 +31,10 @@ class PersonObserverKafka(
                 ?.let { periodeId ->
                     val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
                     val record =
-                        ProducerRecord(frasiBekreftelseTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
+                        ProducerRecord(bekreftelsePåVegneAvTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
                     val metadata = producer.sendDeferred(record).await()
                     sikkerlogg.info {
-                        "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
+                        "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
                             "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
                     }
                     arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false)
@@ -51,7 +50,7 @@ class PersonObserverKafka(
                 val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
                 val record =
                     ProducerRecord(
-                        overtaBekreftelseTopic,
+                        bekreftelsePåVegneAvTopic,
                         recordKeyResponse.key,
                         PaaVegneAv(
                             periodeId,
@@ -65,7 +64,7 @@ class PersonObserverKafka(
 
                 val metadata = runBlocking { producer.sendDeferred(record).await() }
                 sikkerlogg.info {
-                    "Sendt overtagelse av bekreftelse for periodeId $periodeId til arbeidssøkerregisteret. " +
+                    "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
                         "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
                 }
             }

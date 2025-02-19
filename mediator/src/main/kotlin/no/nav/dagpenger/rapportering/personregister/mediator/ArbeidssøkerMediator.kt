@@ -8,6 +8,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
+import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import org.apache.kafka.clients.consumer.ConsumerRecords
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -57,6 +61,18 @@ class ArbeidssøkerMediator(
             sikkerlogg.error(e) { "Feil ved behandling av arbeidssøkerperiode for ident $ident" }
         }
     }
+
+    fun behandle(records: ConsumerRecords<Long, Periode>) =
+        records.forEach {
+            sikkerlogg.info { "Behandler periode med key: ${it.key()} og value: ${it.value()}" }
+            Arbeidssøkerperiode(
+                ident = it.value().identitetsnummer,
+                periodeId = it.value().id,
+                startet = LocalDateTime.ofInstant(it.value().startet.tidspunkt, ZoneOffset.systemDefault()),
+                avsluttet = it.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZoneOffset.systemDefault()) },
+                overtattBekreftelse = null,
+            ).also(::behandle)
+        }
 
     companion object {
         val sikkerlogg = KotlinLogging.logger("tjenestekall")
