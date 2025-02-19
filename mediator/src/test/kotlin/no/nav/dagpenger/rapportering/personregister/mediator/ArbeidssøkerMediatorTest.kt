@@ -47,12 +47,7 @@ class ArbeidssøkerMediatorTest {
                 arbeidssøkerRepository,
                 bekreftelsePåVegneAvTopic,
             )
-        arbeidssøkerService =
-            ArbeidssøkerService(
-                personRepository,
-                arbeidssøkerRepository,
-                arbeidssøkerConnector,
-            )
+        arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
     }
 

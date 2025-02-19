@@ -77,12 +77,7 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvTopic,
         )
 
-    val arbeidssøkerService =
-        ArbeidssøkerService(
-            personRepository,
-            arbeidssøkerRepository,
-            arbeidssøkerConnector,
-        )
+    val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     private val kafkaContext =
         KafkaContext(

@@ -25,15 +25,14 @@ class PersonObserverKafkaTest {
     private var producer = MockKafkaProducer<PaaVegneAv>()
     private val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
     private val arbeidssøkerRepository = mockk<PostrgesArbeidssøkerRepository>()
-    private val overtaBekreftelseTopic = "overtaBekreftelseTopic"
-    private val frasiBekreftelseTopic = "frasiBekreftelseTopic"
+    private val bekreftelsePåVegnAvTopic = "bekreftelsePåVegnAvTopic"
 
     private val personObserverKafka =
         PersonObserverKafka(
             producer,
             arbeidssøkerConnector,
             arbeidssøkerRepository,
-            overtaBekreftelseTopic,
+            bekreftelsePåVegnAvTopic,
         )
 
     @Test
@@ -71,7 +70,7 @@ class PersonObserverKafkaTest {
         with(producer.meldinger) {
             size shouldBe 1
             with(first()) {
-                topic() shouldBe frasiBekreftelseTopic
+                topic() shouldBe bekreftelsePåVegnAvTopic
                 key() shouldBe 1
                 value().periodeId shouldBe periodeId
                 value().bekreftelsesloesning shouldBe Bekreftelsesloesning.DAGPENGER

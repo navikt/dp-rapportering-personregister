@@ -91,12 +91,7 @@ open class ApiTestSetup {
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
 
-            val arbeidssøkerService =
-                ArbeidssøkerService(
-                    personRepository,
-                    arbeidssøkerRepository,
-                    arbeidssøkerConnector,
-                )
+            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
             val kafkaContext =
                 KafkaContext(
