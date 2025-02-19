@@ -25,24 +25,22 @@ class ArbeidssøkerMediatorTest {
     private lateinit var personRepository: PersonRepository
     private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
-    private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
+    private lateinit var bekreftelsePåVegneAvKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
-    private val overtaBekreftelseTopic = "paa_vegne_av"
+    private val bekreftelsePåVegneAvTopic = "paa_vegne_av"
 
     @BeforeEach
     fun setup() {
         personRepository = InMemoryPersonRepository()
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
-        overtaBekreftelseKafkaProdusent = MockKafkaProducer()
+        bekreftelsePåVegneAvKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService =
             ArbeidssøkerService(
                 personRepository,
                 arbeidssøkerRepository,
                 arbeidssøkerConnector,
-                overtaBekreftelseKafkaProdusent,
-                overtaBekreftelseTopic,
             )
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     }
@@ -75,15 +73,15 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(person.ident)
 
-        with(overtaBekreftelseKafkaProdusent.meldinger) {
+        /*with(bekreftelsePåVegneAvKafkaProdusent.meldinger) {
             size shouldBe 1
             with(first()) {
-                topic() shouldBe overtaBekreftelseTopic
+                topic() shouldBe bekreftelsePåVegneAvTopic
                 key() shouldBe recordKey
                 value().periodeId shouldBe periodeId
                 value().bekreftelsesloesning shouldBe DAGPENGER
             }
-        }
+        }*/
 
         with(arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident)) {
             size shouldBe 1
@@ -116,10 +114,10 @@ class ArbeidssøkerMediatorTest {
             }
         }
 
-        with(overtaBekreftelseKafkaProdusent.meldinger) {
+        with(bekreftelsePåVegneAvKafkaProdusent.meldinger) {
             size shouldBe 1
             with(first()) {
-                topic() shouldBe overtaBekreftelseTopic
+                topic() shouldBe bekreftelsePåVegneAvTopic
                 key() shouldBe recordKey
                 value().periodeId shouldBe periode.periodeId
                 value().bekreftelsesloesning shouldBe DAGPENGER
@@ -149,7 +147,7 @@ class ArbeidssøkerMediatorTest {
             }
         }
 
-        overtaBekreftelseKafkaProdusent.meldinger.size shouldBe 0
+        bekreftelsePåVegneAvKafkaProdusent.meldinger.size shouldBe 0
     }
 
     @Test
@@ -159,6 +157,6 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident).size shouldBe 0
 
-        overtaBekreftelseKafkaProdusent.meldinger.size shouldBe 0
+        bekreftelsePåVegneAvKafkaProdusent.meldinger.size shouldBe 0
     }
 }

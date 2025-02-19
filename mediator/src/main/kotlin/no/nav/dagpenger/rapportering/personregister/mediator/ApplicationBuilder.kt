@@ -51,7 +51,7 @@ internal class ApplicationBuilder(
     private val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
 
-    private val overtaBekreftelseTopic = configuration.getValue("OVERTA_BEKREFTELSE_TOPIC")
+    private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
     private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
@@ -74,8 +74,7 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvProdusent,
             arbeidssøkerConnector,
             arbeidssøkerRepository,
-            configuration.getValue("OVERTA_BEKREFTELSE_TOPIC"),
-            configuration.getValue("FRASI_BEKREFTELSE_TOPIC"),
+            bekreftelsePåVegneAvTopic,
         )
 
     val arbeidssøkerService =
@@ -87,7 +86,7 @@ internal class ApplicationBuilder(
     val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     private val kafkaContext =
         KafkaContext(
-            overtaBekreftelseKafkaProdusent,
+            bekreftelsePåVegneAvProdusent,
             arbeidssøkerperioderKafkaConsumer,
             arbeidssøkerperioderTopic,
             arbeidssøkerMediator,
@@ -127,7 +126,7 @@ internal class ApplicationBuilder(
 }
 
 data class KafkaContext(
-    val overtaBekreftelseKafkaProdusent: Producer<Long, PaaVegneAv>,
+    val bekreftelsePåVegneAvKafkaProdusent: Producer<Long, PaaVegneAv>,
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
     val arbeidssøkerMediator: ArbeidssøkerMediator,

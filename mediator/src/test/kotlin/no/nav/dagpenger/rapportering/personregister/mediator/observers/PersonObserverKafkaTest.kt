@@ -22,7 +22,7 @@ import java.util.UUID
 
 class PersonObserverKafkaTest {
     private var producer = MockKafkaProducer<PaaVegneAv>()
-    private val arbeiDssøkerConnector = mockk<ArbeidssøkerConnector>()
+    private val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
     private val arbeidssøkerRepository = mockk<PostrgesArbeidssøkerRepository>()
     private val overtaBekreftelseTopic = "overtaBekreftelseTopic"
     private val frasiBekreftelseTopic = "frasiBekreftelseTopic"
@@ -30,10 +30,9 @@ class PersonObserverKafkaTest {
     private val personObserverKafka =
         PersonObserverKafka(
             producer,
-            arbeiDssøkerConnector,
+            arbeidssøkerConnector,
             arbeidssøkerRepository,
             overtaBekreftelseTopic,
-            frasiBekreftelseTopic,
         )
 
     @Test
@@ -45,7 +44,7 @@ class PersonObserverKafkaTest {
         personObserverKafka.frasiArbeidssøkerBekreftelse(person)
 
         verify(exactly = 1) { arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident) }
-        coVerify(exactly = 0) { arbeiDssøkerConnector.hentRecordKey(person.ident) }
+        coVerify(exactly = 0) { arbeidssøkerConnector.hentRecordKey(person.ident) }
         producer.meldinger.size shouldBe 0
     }
 
@@ -61,12 +60,12 @@ class PersonObserverKafkaTest {
 
         every { arbeidssøkerRepository.hentArbeidssøkerperioder(any()) } returns arbeidssøkerperioder
         every { arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false) } just runs
-        coEvery { arbeiDssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(1)
+        coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(1)
 
         personObserverKafka.frasiArbeidssøkerBekreftelse(person)
 
         verify(exactly = 1) { arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident) }
-        coVerify(exactly = 1) { arbeiDssøkerConnector.hentRecordKey(person.ident) }
+        coVerify(exactly = 1) { arbeidssøkerConnector.hentRecordKey(person.ident) }
         with(producer.meldinger) {
             size shouldBe 1
             with(first()) {
