@@ -73,7 +73,7 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(person.ident)
 
-        /*with(bekreftelsePåVegneAvKafkaProdusent.meldinger) {
+        with(bekreftelsePåVegneAvKafkaProdusent.meldinger) {
             size shouldBe 1
             with(first()) {
                 topic() shouldBe bekreftelsePåVegneAvTopic
@@ -81,7 +81,7 @@ class ArbeidssøkerMediatorTest {
                 value().periodeId shouldBe periodeId
                 value().bekreftelsesloesning shouldBe DAGPENGER
             }
-        }*/
+        }
 
         with(arbeidssøkerRepository.hentArbeidssøkerperioder(person.ident)) {
             size shouldBe 1
