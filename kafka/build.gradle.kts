@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
     paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
-    mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.9348086045.48-1")
+    mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.11931397294.51-1")
 
     testImplementation(platform("org.junit:junit-bom:5.11.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
