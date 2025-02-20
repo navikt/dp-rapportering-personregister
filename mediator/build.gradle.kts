@@ -40,7 +40,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.4")
     testImplementation("io.ktor:ktor-server-test-host-jvm:${libs.versions.ktor.get()}")
     testImplementation(libs.rapids.and.rivers.test)
-    testImplementation("org.testcontainers:kafka:1.20.4")
+    testImplementation("org.testcontainers:kafka:1.20.5")
 }
 
 tasks.test {
