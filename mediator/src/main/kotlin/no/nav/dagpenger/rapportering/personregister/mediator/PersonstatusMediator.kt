@@ -5,6 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
@@ -27,6 +28,11 @@ class PersonstatusMediator(
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
         behandle(hendelse) {}
+    }
+
+    fun behandle(hendelse: MeldepliktHendelse) {
+        sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
+        behandle(hendelse)
     }
 
     private fun behandle(

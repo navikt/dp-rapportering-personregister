@@ -26,6 +26,8 @@ data class Person(
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) = behandle(hendelse) { frasiArbeidssøkerBekreftelse() }
 
+    fun behandle(hendelse: MeldepliktHendelse) = behandle(hendelse) {}
+
     fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = hendelse.håndter(this)
 
     fun behandle(hendelse: Hendelse) {
@@ -33,6 +35,7 @@ data class Person(
             is SøknadHendelse -> behandle(hendelse)
             is DagpengerMeldegruppeHendelse -> behandle(hendelse)
             is AnnenMeldegruppeHendelse -> behandle(hendelse)
+            is MeldepliktHendelse -> behandle(hendelse)
             else -> throw IllegalArgumentException("Ukjent hendelse: ${hendelse::class.simpleName}")
         }
     }

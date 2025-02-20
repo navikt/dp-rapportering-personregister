@@ -67,6 +67,19 @@ class AnnenMeldegruppeHendelse(
         "AnnenMeldegruppeHendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
 }
 
+class MeldepliktHendelse(
+    ident: String,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
+    val statusMeldeplikt: Boolean,
+    override val referanseId: String,
+) : Hendelse(ident = ident, dato = startDato) {
+    override val kilde = Kildesystem.Arena
+
+    override fun toString(): String =
+        "MeldepliktHendelse(ident='$ident', startDato=$startDato, sluttDato=$sluttDato, statusMeldeplikt=$statusMeldeplikt, kilde=$kilde, referanseId='$referanseId')"
+}
+
 class ArbeidssøkerHendelse(
     ident: String,
     val periodeId: UUID,

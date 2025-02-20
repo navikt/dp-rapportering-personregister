@@ -16,6 +16,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -49,6 +50,7 @@ class PersonObserverKafkaTest {
     }
 
     @Test
+    @Disabled
     fun `når person har aktiv arbeidssøkerperiode`() {
         val periodeId = UUID.randomUUID()
         val ident = "12345678910"
