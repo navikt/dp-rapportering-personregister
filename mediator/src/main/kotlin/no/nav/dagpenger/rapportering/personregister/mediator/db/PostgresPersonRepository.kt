@@ -164,14 +164,14 @@ class PostgresPersonRepository(
                 DagpengerMeldegruppeHendelse(
                     ident,
                     dato,
-                    row.string("meldegruppe_kode"),
+                    "DAGP",
                     referanseId,
                 )
             "AnnenMeldegruppeHendelse" ->
                 AnnenMeldegruppeHendelse(
                     ident,
                     dato,
-                    row.string("meldegruppe_kode"),
+                    "ARBS",
                     referanseId,
                 )
             "ArbeidssøkerHendelse" ->

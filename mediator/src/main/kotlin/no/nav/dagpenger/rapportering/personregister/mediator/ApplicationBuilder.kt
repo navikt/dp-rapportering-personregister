@@ -92,6 +92,8 @@ internal class ApplicationBuilder(
             arbeidssøkerMediator,
         )
 
+    val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
+
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -101,10 +103,9 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, arbeidssøkerMediator)
+                    personstatusApi(personRepository, arbeidssøkerMediator, personstatusMediator)
                 }
 
-                val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
                 MeldegruppeendringMottak(rapid, personstatusMediator)
                 MeldepliktendringMottak(rapid, personstatusMediator)
