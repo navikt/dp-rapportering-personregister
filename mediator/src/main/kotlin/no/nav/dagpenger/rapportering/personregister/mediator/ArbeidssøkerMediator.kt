@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -16,6 +17,7 @@ import java.time.ZoneOffset
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
     private val personRepository: PersonRepository,
+    private val personObservers: List<PersonObserver> = emptyList(),
 ) {
     fun behandle(arbeidssøkerperiode: Arbeidssøkerperiode) {
         if (arbeidssøkerperiode.avsluttet == null) {
@@ -44,6 +46,7 @@ class ArbeidssøkerMediator(
         personRepository
             .hentPerson(arbeidssøkerHendelse.ident)
             ?.let { person ->
+                personObservers.forEach { person.addObserver(it) }
                 person.behandle(arbeidssøkerHendelse)
                 personRepository.oppdaterPerson(person)
             } ?: sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }

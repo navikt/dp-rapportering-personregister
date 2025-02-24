@@ -18,7 +18,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -48,7 +47,6 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector()
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
@@ -73,16 +71,10 @@ internal class ApplicationBuilder(
         PersonObserverKafka(
             bekreftelsePåVegneAvProdusent,
             arbeidssøkerConnector,
-            arbeidssøkerRepository,
             bekreftelsePåVegneAvTopic,
         )
 
-    val arbeidssøkerService =
-        ArbeidssøkerService(
-            personRepository,
-            arbeidssøkerRepository,
-            arbeidssøkerConnector,
-        )
+    val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
     private val kafkaContext =
         KafkaContext(
@@ -100,6 +92,7 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
+                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
