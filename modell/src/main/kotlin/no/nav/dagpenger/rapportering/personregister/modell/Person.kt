@@ -71,3 +71,5 @@ fun Person.frasiArbeidssøkerBekreftelse() {
         }
     }
 }
+
+fun Person.erArbeidssøker() = arbeidssøkerperioder.gjeldende != null

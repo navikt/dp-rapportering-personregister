@@ -18,7 +18,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.databas
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -85,18 +84,12 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-            val arbeidssøkerRepository = PostrgesArbeidssøkerRepository(dataSource, actionTimer)
             val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
             val testKafkaContainer = TestKafkaContainer()
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
 
-            val arbeidssøkerService =
-                ArbeidssøkerService(
-                    personRepository,
-                    arbeidssøkerRepository,
-                    arbeidssøkerConnector,
-                )
+            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
             val kafkaContext =
                 KafkaContext(
