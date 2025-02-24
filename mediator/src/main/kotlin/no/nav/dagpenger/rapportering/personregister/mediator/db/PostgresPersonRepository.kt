@@ -128,7 +128,7 @@ class PostgresPersonRepository(
                     queryOf(
                         """
                 INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
                     person_id = EXCLUDED.person_id,
@@ -171,23 +171,30 @@ class PostgresPersonRepository(
             is SøknadHendelse -> null
         }
 
-    private fun Hendelse.hentEkstrafelter(): String? =
-        when (this) {
-            is DagpengerMeldegruppeHendelse ->
-                defaultObjectMapper.writeValueAsString(
-                    MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
-                )
-            is AnnenMeldegruppeHendelse ->
-                defaultObjectMapper.writeValueAsString(
-                    MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
-                )
-            is MeldepliktHendelse ->
-                defaultObjectMapper.writeValueAsString(
-                    MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt),
-                )
-            is ArbeidssøkerHendelse -> null
-            is SøknadHendelse -> null
-        }
+    private fun Hendelse.hentEkstrafelter(): String? {
+        val test =
+            when (this) {
+                is DagpengerMeldegruppeHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
+                    )
+
+                is AnnenMeldegruppeHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
+                    )
+
+                is MeldepliktHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt),
+                    )
+
+                is ArbeidssøkerHendelse -> null
+                is SøknadHendelse -> null
+            }
+
+        return test
+    }
 
     private fun hentHendelser(personId: Long): List<Hendelse> =
         using(sessionOf(dataSource)) { session ->
