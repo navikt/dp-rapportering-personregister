@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.api
+package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -18,10 +18,14 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
+import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
+import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 
-fun Application.konfigurasjon(
+fun Application.pluginConfiguration(
     meterRegistry: PrometheusMeterRegistry,
+    kafkaContext: KafkaContext,
     auth: AuthenticationConfig.() -> Unit = {
         jwt("tokenX") { tokenX() }
     },
@@ -58,5 +62,15 @@ fun Application.konfigurasjon(
                 JvmThreadMetrics(),
                 ProcessorMetrics(),
             )
+    }
+
+    install(KafkaProducerPlugin) {
+        kafkaProducers = listOf(kafkaContext.bekreftelsePåVegneAvKafkaProdusent)
+    }
+    install(KafkaConsumerPlugin<Long, Periode>("Arbeidssøkerperioder")) {
+        this.consumeFunction = kafkaContext.arbeidssøkerMediator::behandle
+        // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
+        this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
+        this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
     }
 }

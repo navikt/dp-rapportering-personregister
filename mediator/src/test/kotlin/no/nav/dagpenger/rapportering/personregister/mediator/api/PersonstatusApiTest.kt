@@ -3,6 +3,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -13,13 +15,45 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
 
     @Test
-    fun `personstatus uten token gir unauthorized`() =
+    fun `Post personstatus uten token gir unauthorized`() =
+        setUpTestApplication {
+            with(client.post("/personstatus")) {
+                status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
+
+    @Test
+    fun `Post personstatus lagrer person`() =
+        setUpTestApplication {
+            with(
+                client.post("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    setBody(LocalDate.now().format(DateTimeFormatter.ISO_DATE))
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+            }
+
+            with(
+                client.get("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
+            }
+        }
+
+    @Test
+    fun `Get personstatus uten token gir unauthorized`() =
         setUpTestApplication {
             with(client.get("/personstatus")) {
                 status shouldBe HttpStatusCode.Unauthorized
@@ -27,7 +61,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `personstatus gir not found hvis personen ikke finnes`() =
+    fun `Get personstatus gir not found hvis personen ikke finnes`() =
         setUpTestApplication {
             with(
                 client.get("/personstatus") {
@@ -39,7 +73,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `personstatus gir personen hvis den finnes`() =
+    fun `Get personstatus gir personen hvis den finnes`() =
         setUpTestApplication {
             val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
 

@@ -9,21 +9,25 @@ plugins {
 group = "no.nav.dagpenger.rapportering.personregister"
 version = "unspecified"
 
-val schema by configurations.creating {
+val paavegneavSchema by configurations.creating {
+    isTransitive = false
+}
+val mainavroSchema by configurations.creating {
     isTransitive = false
 }
 
 dependencies {
-    api("io.confluent:kafka-avro-serializer:7.8.1")
-    api("io.confluent:kafka-schema-registry:7.8.1")
-    api("io.confluent:kafka-streams-avro-serde:7.8.1")
+    api("io.confluent:kafka-avro-serializer:7.9.0")
+    api("io.confluent:kafka-schema-registry:7.9.0")
+    api("io.confluent:kafka-streams-avro-serde:7.9.0")
     api("org.apache.avro:avro:1.12.0")
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
-    schema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
+    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:25.02.07.15-1")
+    mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.11931397294.51-1")
 
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
@@ -36,7 +40,8 @@ tasks.test {
 }
 
 tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
-    source(zipTree(schema.singleFile))
+    source(zipTree(paavegneavSchema.singleFile))
+    source(zipTree(mainavroSchema.singleFile))
 }
 
 kotlin {

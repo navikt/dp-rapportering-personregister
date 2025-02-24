@@ -29,6 +29,8 @@ sealed class Hendelse(
         result = 31 * result + referanseId.hashCode()
         return result
     }
+
+    override fun toString(): String = "Hendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId')"
 }
 
 class SøknadHendelse(
@@ -37,31 +39,50 @@ class SøknadHendelse(
     override val referanseId: String,
 ) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Søknad
+
+    override fun toString(): String = "SøknadHendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId')"
 }
 
-class InnvilgelseHendelse(
+class DagpengerMeldegruppeHendelse(
     ident: String,
     dato: LocalDateTime,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
-    override val kilde = Kildesystem.Arena
-}
-
-class AvslagHendelse(
-    ident: String,
-    dato: LocalDateTime,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
-    override val kilde = Kildesystem.Arena
-}
-
-class StansHendelse(
-    ident: String,
-    dato: LocalDateTime,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     override val referanseId: String,
 ) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Arena
+
+    override fun toString(): String =
+        "DagpengerMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+}
+
+class AnnenMeldegruppeHendelse(
+    ident: String,
+    dato: LocalDateTime,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
+    val meldegruppeKode: String,
+    override val referanseId: String,
+) : Hendelse(ident = ident, dato = dato) {
+    override val kilde = Kildesystem.Arena
+
+    override fun toString(): String =
+        "AnnenMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+}
+
+class MeldepliktHendelse(
+    ident: String,
+    dato: LocalDateTime,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
+    val statusMeldeplikt: Boolean,
+    override val referanseId: String,
+) : Hendelse(ident = ident, dato = dato) {
+    override val kilde = Kildesystem.Arena
+
+    override fun toString(): String =
+        "MeldepliktHendelse(ident='$ident', startDato=$startDato, sluttDato=$sluttDato, statusMeldeplikt=$statusMeldeplikt, kilde=$kilde, referanseId='$referanseId')"
 }
 
 class ArbeidssøkerHendelse(
@@ -72,6 +93,9 @@ class ArbeidssøkerHendelse(
 ) : Hendelse(ident = ident, dato = startDato) {
     override val kilde = Kildesystem.Arbeidssokerregisteret
     override val referanseId = periodeId.toString()
+
+    override fun toString(): String =
+        "ArbeidssøkerHendelse(ident='$ident', periodeId=$periodeId, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId')"
 }
 
 enum class Kildesystem {
