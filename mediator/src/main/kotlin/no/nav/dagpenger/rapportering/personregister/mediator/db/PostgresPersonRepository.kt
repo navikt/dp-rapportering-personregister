@@ -165,6 +165,7 @@ class PostgresPersonRepository(
             is MeldepliktHendelse -> this.startDato
             is ArbeidssøkerHendelse -> this.startDato
             is SøknadHendelse -> null
+            else -> null
         }
 
     private fun Hendelse.hentSluttDato(): LocalDateTime? =
@@ -174,6 +175,7 @@ class PostgresPersonRepository(
             is MeldepliktHendelse -> this.sluttDato
             is ArbeidssøkerHendelse -> this.sluttDato
             is SøknadHendelse -> null
+            else -> null
         }
 
     private fun Hendelse.hentEkstrafelter(): String? {
@@ -196,6 +198,7 @@ class PostgresPersonRepository(
 
                 is ArbeidssøkerHendelse -> null
                 is SøknadHendelse -> null
+                else -> null
             }
 
         return test

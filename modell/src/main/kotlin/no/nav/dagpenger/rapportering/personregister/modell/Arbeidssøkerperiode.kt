@@ -13,8 +13,12 @@ data class Arbeidssøkerperiode(
 
 sealed class ArbeidssøkerperiodeHendelse(
     open val periodeId: UUID,
-    open val ident: String,
-) {
+    ident: String,
+    dato: LocalDateTime,
+) : Hendelse(ident = ident, dato = dato) {
+    override val referanseId by lazy { periodeId.toString() }
+    override val kilde: Kildesystem = Kildesystem.Arbeidssokerregisteret
+
     abstract fun håndter(person: Person)
 }
 
@@ -22,22 +26,25 @@ data class StartetArbeidssøkerperiodeHendelse(
     override val periodeId: UUID,
     override val ident: String,
     val startet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident) {
+) : ArbeidssøkerperiodeHendelse(periodeId, ident, startet) {
     override fun håndter(person: Person) {
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
             ?.let {
                 if (it.overtattBekreftelse != true) {
-                    person.overtaArbeidssøkerBekreftelse()
                     it.overtattBekreftelse = true
                 }
             }
             ?: run {
-                Arbeidssøkerperiode(periodeId, ident, startet, avsluttet = null, overtattBekreftelse = false)
-                    .apply {
-                        person.arbeidssøkerperioder.add(this)
-                        person.overtaArbeidssøkerBekreftelse()
-                    }
+                Arbeidssøkerperiode(
+                    periodeId,
+                    ident,
+                    startet,
+                    avsluttet = null,
+                    overtattBekreftelse = false,
+                ).apply {
+                    person.arbeidssøkerperioder.add(this)
+                }
             }
     }
 }
@@ -47,7 +54,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     override val ident: String,
     val startet: LocalDateTime,
     val avsluttet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident) {
+) : ArbeidssøkerperiodeHendelse(periodeId, ident, startet) {
     override fun håndter(person: Person) {
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }

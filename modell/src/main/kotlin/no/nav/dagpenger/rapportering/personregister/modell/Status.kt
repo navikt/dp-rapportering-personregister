@@ -1,4 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.modell
+import no.nav.dagpenger.rapportering.personregister.modell.Status.Type
 
 sealed interface Status {
     val type: Type
@@ -10,6 +11,7 @@ sealed interface Status {
 
     fun håndter(
         hendelse: Hendelse,
+        person: Person,
         action: (Status) -> Unit,
     ): Status
 
@@ -19,33 +21,54 @@ sealed interface Status {
                 Type.DAGPENGERBRUKER -> Dagpengerbruker
                 Type.IKKE_DAGPENGERBRUKER -> IkkeDagpengerbruker
             }
+
+        internal fun oppdater(
+            person: Person,
+            nåværendeStatus: Status,
+            action: (Status) -> Unit,
+        ): Status {
+            val nyStatus = if (person.oppfyllerKrav) Dagpengerbruker else IkkeDagpengerbruker
+
+            return if (nyStatus != nåværendeStatus) nyStatus.also(action) else nåværendeStatus
+        }
     }
 }
 
 data object Dagpengerbruker : Status {
-    override val type = Status.Type.DAGPENGERBRUKER
+    override val type = Type.DAGPENGERBRUKER
 
     override fun håndter(
         hendelse: Hendelse,
+        person: Person,
         action: (Status) -> Unit,
-    ): Status =
+    ): Status {
         when (hendelse) {
-            is AnnenMeldegruppeHendelse -> IkkeDagpengerbruker.also(action)
-            else -> this
+            is DagpengerMeldegruppeHendelse -> person.meldegruppe = hendelse.meldegruppeKode
+            is AnnenMeldegruppeHendelse -> person.meldegruppe = hendelse.meldegruppeKode
+            is MeldepliktHendelse -> person.meldeplikt = hendelse.statusMeldeplikt
+            is ArbeidssøkerperiodeHendelse -> hendelse.håndter(person)
+            else -> Unit
         }
+        return Status.oppdater(person, this, action)
+    }
 }
 
 data object IkkeDagpengerbruker : Status {
-    override val type = Status.Type.IKKE_DAGPENGERBRUKER
+    override val type = Type.IKKE_DAGPENGERBRUKER
 
     override fun håndter(
         hendelse: Hendelse,
+        person: Person,
         action: (Status) -> Unit,
-    ): Status =
+    ): Status {
         when (hendelse) {
-            is SøknadHendelse,
-            is DagpengerMeldegruppeHendelse,
-            -> Dagpengerbruker.also(action)
-            else -> this
+            is DagpengerMeldegruppeHendelse -> person.meldegruppe = hendelse.meldegruppeKode
+            is AnnenMeldegruppeHendelse -> person.meldegruppe = hendelse.meldegruppeKode
+            is MeldepliktHendelse -> person.meldeplikt = hendelse.statusMeldeplikt
+            is ArbeidssøkerperiodeHendelse -> hendelse.håndter(person)
+
+            else -> Unit
         }
+        return Status.oppdater(person, this, action)
+    }
 }

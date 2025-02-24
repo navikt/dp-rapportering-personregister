@@ -7,6 +7,9 @@ data class Person(
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
+    var meldegruppe: String? = null
+    var meldeplikt: Boolean = false
+
     val hendelser = mutableListOf<Hendelse>()
 
     val observers = mutableListOf<PersonObserver>()
@@ -28,7 +31,7 @@ data class Person(
 
     fun behandle(hendelse: MeldepliktHendelse) = behandle(hendelse) {}
 
-    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = hendelse.håndter(this)
+    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
 
     fun behandle(hendelse: Hendelse) {
         when (hendelse) {
@@ -44,20 +47,24 @@ data class Person(
         hendelse: Hendelse,
         håndter: (Hendelse) -> Unit = {},
     ) {
-        status.håndter(hendelse) { nyStatus ->
-            statusHistorikk.put(hendelse.dato, nyStatus)
-            hendelser.add(hendelse)
-            håndter(hendelse)
-        }
+        status
+            .håndter(hendelse, this) { nyStatus ->
+                statusHistorikk.put(hendelse.dato, nyStatus)
+                håndter(hendelse)
+            }.also { hendelser.add(hendelse) }
     }
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
         if (it.overtattBekreftelse != true) {
-            observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-            // TODO: Hva skjer hvis overtaArbeidssøkerBekreftelse feiler?
-            it.overtattBekreftelse = true
+            try {
+                observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+                // TODO: Hva skjer hvis overtaArbeidssøkerBekreftelse feiler?
+                it.overtattBekreftelse = true
+            } catch (e: Exception) {
+                it.overtattBekreftelse = false
+            }
         }
     }
 }
@@ -66,10 +73,12 @@ fun Person.frasiArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
         if (it.overtattBekreftelse == true) {
             observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
-            // TODO: Hva skjer hvis frasiArbeidssøkerBekreftelse feiler?
             it.overtattBekreftelse = false
         }
     }
 }
 
-fun Person.erArbeidssøker() = arbeidssøkerperioder.gjeldende != null
+val Person.erArbeidssøker: Boolean
+    get() = arbeidssøkerperioder.gjeldende != null
+
+val Person.oppfyllerKrav: Boolean get() = this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP"
