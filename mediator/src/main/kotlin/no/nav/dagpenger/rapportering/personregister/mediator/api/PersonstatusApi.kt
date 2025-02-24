@@ -17,7 +17,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.time.LocalDate
 import java.util.UUID
 
@@ -36,7 +35,16 @@ internal fun Application.personstatusApi(
                     val ident = call.ident()
 
                     val fraDato = LocalDate.parse(call.receiveText()).atStartOfDay()
-                    personstatusMediator.behandle(DagpengerMeldegruppeHendelse(ident, fraDato, "DAGP", UUID.randomUUID().toString()))
+                    personstatusMediator.behandle(
+                        DagpengerMeldegruppeHendelse(
+                            ident,
+                            fraDato,
+                            startDato = fraDato,
+                            sluttDato = null,
+                            "DAGP",
+                            UUID.randomUUID().toString(),
+                        ),
+                    )
 
                     call.respond(HttpStatusCode.OK)
                 }
