@@ -141,12 +141,12 @@ class PersonTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, "DAGP", referanseId)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, dato.plusDays(1), null, "DAGP", referanseId)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
+    ) = AnnenMeldegruppeHendelse(ident, dato, dato.plusDays(1), null, "ARBS", referanseId)
 
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 }

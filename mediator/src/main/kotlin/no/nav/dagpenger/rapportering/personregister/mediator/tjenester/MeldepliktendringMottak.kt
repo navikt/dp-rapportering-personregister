@@ -10,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
+import java.time.LocalDateTime
 
 val logger = KotlinLogging.logger {}
 
@@ -46,9 +47,17 @@ class MeldepliktendringMottak(
 private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     val ident: String = this["after"]["FODSELSNR"].asText()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
-    val fraOgMed = this["after"]["DATO_FRA"].asText().arenaDato()
-    val tilOgMed = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
+    val dato =
+        if (this["after"]["HENDELSESDATO"].isMissingOrNull()) {
+            LocalDateTime.now()
+        } else {
+            this["after"]["HENDELSESDATO"]
+                .asText()
+                .arenaDato()
+        }
+    val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
+    val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val statusMeldeplikt = this["after"]["STATUS_MELDEPLIKT"].asText().let { it == "J" }
 
-    return MeldepliktHendelse(ident, fraOgMed, tilOgMed, statusMeldeplikt, hendelseId)
+    return MeldepliktHendelse(ident, dato, startDato, sluttDato, statusMeldeplikt, hendelseId)
 }

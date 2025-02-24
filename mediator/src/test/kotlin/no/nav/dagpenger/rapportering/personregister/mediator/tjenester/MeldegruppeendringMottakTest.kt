@@ -56,7 +56,7 @@ private val meldegruppeendring_uten_tom_dato =
            "MELDEGRUPPE_ID": 51685079,
            "MELDEGRUPPEKODE": "ARBS",
            "DATO_FRA": "2021-05-17 00:00:00",
-           "DATO_TIL": "2024-10-03",
+           "DATO_TIL": "2024-10-03 00:00:00",
            "HENDELSESDATO": "2021-06-08 14:05:10",
            "FODSELSNR": "##MASKERT##",
            "HENDELSE_ID": 3773236
