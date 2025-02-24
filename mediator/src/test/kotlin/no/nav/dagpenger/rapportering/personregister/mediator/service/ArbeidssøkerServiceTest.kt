@@ -5,15 +5,11 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class ArbeidssøkerServiceTest {
-    private val personRepository = mockk<PersonRepository>()
-    private val arbeidssøkerRepository = mockk<ArbeidssøkerRepository>()
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
 

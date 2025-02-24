@@ -7,8 +7,6 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepositoryFaker
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -33,7 +31,6 @@ import java.util.UUID
 class PersonstatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
-    private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personstatusMediator: PersonstatusMediator
@@ -47,7 +44,6 @@ class PersonstatusMediatorTest {
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = InMemoryPersonRepository()
-        arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)

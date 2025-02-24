@@ -4,10 +4,9 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.aktiv
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning.DAGPENGER
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
@@ -19,14 +18,13 @@ import java.util.concurrent.TimeUnit.DAYS
 class PersonObserverKafka(
     private val producer: Producer<Long, PaaVegneAv>,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
-    private val arbeidssøkerRepository: ArbeidssøkerRepository,
     private val bekreftelsePåVegneAvTopic: String,
 ) : PersonObserver {
     override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
         runBlocking {
-            arbeidssøkerRepository
-                .hentArbeidssøkerperioder(person.ident)
-                .firstOrNull { it.avsluttet == null }
+            person
+                .arbeidssøkerperioder
+                .gjeldende
                 ?.periodeId
                 ?.let { periodeId ->
                     val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
@@ -34,17 +32,18 @@ class PersonObserverKafka(
                         ProducerRecord(bekreftelsePåVegneAvTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
                     val metadata = producer.sendDeferred(record).await()
                     sikkerlogg.info {
-                        "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
-                            "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                        "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
+                            " $periodeId til arbeidssøkerregisteret. " +
+                            "Metadata: topic=${metadata.topic()} " +
+                            "(partition=${metadata.partition()}, offset=${metadata.offset()})"
                     }
-                    arbeidssøkerRepository.oppdaterOvertagelse(periodeId, false)
                 }
         }
 
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
-        arbeidssøkerRepository
-            .hentArbeidssøkerperioder(person.ident)
-            .firstOrNull { it.aktiv() }
+        person
+            .arbeidssøkerperioder
+            .gjeldende
             ?.periodeId
             ?.let { periodeId ->
                 val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
