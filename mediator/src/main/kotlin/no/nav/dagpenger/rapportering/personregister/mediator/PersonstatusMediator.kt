@@ -32,7 +32,7 @@ class PersonstatusMediator(
 
     fun behandle(hendelse: MeldepliktHendelse) {
         sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
-        behandle(hendelse)
+        behandle(hendelse) {}
     }
 
     private fun behandle(

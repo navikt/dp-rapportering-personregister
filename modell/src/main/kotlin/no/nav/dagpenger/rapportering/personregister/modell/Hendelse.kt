@@ -46,34 +46,39 @@ class SøknadHendelse(
 class DagpengerMeldegruppeHendelse(
     ident: String,
     dato: LocalDateTime,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     override val referanseId: String,
 ) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Arena
 
     override fun toString(): String =
-        "DagpengerMeldegruppeHendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+        "DagpengerMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
 }
 
 class AnnenMeldegruppeHendelse(
     ident: String,
     dato: LocalDateTime,
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     override val referanseId: String,
 ) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Arena
 
     override fun toString(): String =
-        "AnnenMeldegruppeHendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+        "AnnenMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
 }
 
 class MeldepliktHendelse(
     ident: String,
+    dato: LocalDateTime,
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
     override val referanseId: String,
-) : Hendelse(ident = ident, dato = startDato) {
+) : Hendelse(ident = ident, dato = dato) {
     override val kilde = Kildesystem.Arena
 
     override fun toString(): String =

@@ -35,7 +35,16 @@ internal fun Application.personstatusApi(
                     val ident = call.ident()
 
                     val fraDato = LocalDate.parse(call.receiveText()).atStartOfDay()
-                    personstatusMediator.behandle(DagpengerMeldegruppeHendelse(ident, fraDato, "DAGP", UUID.randomUUID().toString()))
+                    personstatusMediator.behandle(
+                        DagpengerMeldegruppeHendelse(
+                            ident,
+                            fraDato,
+                            startDato = fraDato,
+                            sluttDato = null,
+                            "DAGP",
+                            UUID.randomUUID().toString(),
+                        ),
+                    )
 
                     call.respond(HttpStatusCode.OK)
                 }
