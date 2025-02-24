@@ -17,7 +17,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.time.LocalDate
 import java.util.UUID
 
