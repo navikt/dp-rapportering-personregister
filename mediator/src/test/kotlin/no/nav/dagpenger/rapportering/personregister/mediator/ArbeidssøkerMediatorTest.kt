@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRep
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepositoryFaker
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
@@ -27,6 +28,7 @@ class ArbeidssøkerMediatorTest {
     private lateinit var arbeidssøkerRepository: ArbeidssøkerRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var bekreftelsePåVegneAvKafkaProdusent: MockKafkaProducer<PaaVegneAv>
+    private lateinit var personObserverKafka: PersonObserverKafka
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
     private val bekreftelsePåVegneAvTopic = "paa_vegne_av"
@@ -37,13 +39,21 @@ class ArbeidssøkerMediatorTest {
         arbeidssøkerRepository = ArbeidssøkerRepositoryFaker()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
         bekreftelsePåVegneAvKafkaProdusent = MockKafkaProducer()
+
+        personObserverKafka =
+            PersonObserverKafka(
+                bekreftelsePåVegneAvKafkaProdusent,
+                arbeidssøkerConnector,
+                arbeidssøkerRepository,
+                bekreftelsePåVegneAvTopic,
+            )
         arbeidssøkerService =
             ArbeidssøkerService(
                 personRepository,
                 arbeidssøkerRepository,
                 arbeidssøkerConnector,
             )
-        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
     }
 
     val person = Person("12345678910")

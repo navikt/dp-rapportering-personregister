@@ -98,6 +98,7 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
             ) { engine, rapid ->
+                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)

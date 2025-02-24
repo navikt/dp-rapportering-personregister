@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
@@ -27,11 +28,13 @@ class PostgresPersonRepository(
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
             val personId = hentPersonId(ident) ?: return@timedAction null
+            val arbeidssøkerperioder = hentArbeidssøkerperioder(ident)
             val hendelser = hentHendelser(personId)
             val statusHistorikk = hentStatusHistorikk(personId).allItems()
 
             if (hendelser.isNotEmpty()) {
                 Person(ident).apply {
+                    arbeidssøkerperioder.forEach { this.arbeidssøkerperioder.add(it) }
                     hendelser.forEach { this.hendelser.add(it) }
                     statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
                 }
@@ -68,6 +71,7 @@ class PostgresPersonRepository(
                     }
                 } ?: throw IllegalStateException("Klarte ikke å lagre person")
 
+            person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
             person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
                 .allItems()
@@ -79,6 +83,7 @@ class PostgresPersonRepository(
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
             val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
+            person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
             person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
                 .allItems()
@@ -247,6 +252,34 @@ class PostgresPersonRepository(
         }
     }
 
+    fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT a.* 
+                    FROM arbeidssoker a
+                    JOIN person p ON a.person_id = p.id
+                    WHERE p.ident = :ident
+                    """.trimIndent(),
+                    mapOf("ident" to ident),
+                ).map { tilArbeidsøkerperiode(it, ident) }
+                    .asList,
+            )
+        }
+
+    private fun tilArbeidsøkerperiode(
+        row: Row,
+        ident: String,
+    ): Arbeidssøkerperiode =
+        Arbeidssøkerperiode(
+            periodeId = row.uuid("periode_id"),
+            ident = ident,
+            startet = row.localDateTime("startet"),
+            avsluttet = row.localDateTimeOrNull("avsluttet"),
+            overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
+        )
+
     private fun hentStatusHistorikk(personId: Long): TemporalCollection<Status> =
         TemporalCollection<Status>().apply {
             using(sessionOf(dataSource)) { session ->
@@ -262,6 +295,33 @@ class PostgresPersonRepository(
                 )
             }
         }
+
+    private fun lagreArbeidssøkerperiode(
+        personId: Long,
+        arbeidssøkerperiode: Arbeidssøkerperiode,
+    ) {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx
+                    .run(
+                        queryOf(
+                            """
+                            INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
+                            VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                            """.trimIndent(),
+                            mapOf(
+                                "periode_id" to arbeidssøkerperiode.periodeId,
+                                "person_id" to personId,
+                                "startet" to arbeidssøkerperiode.startet,
+                                "avsluttet" to arbeidssøkerperiode.avsluttet,
+                                "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
+                                "sist_endret" to LocalDateTime.now(),
+                            ),
+                        ).asUpdate,
+                    )
+            }
+        }
+    }
 
     private fun lagreStatusHistorikk(
         personId: Long,
@@ -280,6 +340,8 @@ class PostgresPersonRepository(
         }
     }
 }
+
+private fun String?.toBooleanOrNull(): Boolean? = this?.let { this == "t" }
 
 data class MeldegruppeKodeExtra(
     val meldegruppeKode: String,

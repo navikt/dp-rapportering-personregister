@@ -4,7 +4,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostrgesArbeidssøkerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.aktiv
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit.DAYS
 class PersonObserverKafka(
     private val producer: Producer<Long, PaaVegneAv>,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
-    private val arbeidssøkerRepository: PostrgesArbeidssøkerRepository,
+    private val arbeidssøkerRepository: ArbeidssøkerRepository,
     private val bekreftelsePåVegneAvTopic: String,
 ) : PersonObserver {
     override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
