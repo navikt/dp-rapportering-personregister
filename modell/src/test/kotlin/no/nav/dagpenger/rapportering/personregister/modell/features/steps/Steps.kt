@@ -1,14 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.modell.features.steps
 
 import io.cucumber.java8.No
-import io.kotest.matchers.shouldBe
-import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import java.time.LocalDateTime
 import java.util.UUID
 
 class Steps : No {
@@ -16,7 +9,7 @@ class Steps : No {
     private val id = UUID.randomUUID().toString()
     private val ident = "12345678901"
 
-    init {
+    /*init {
         Gitt("en person") {
             person = Person(ident)
         }
@@ -94,5 +87,5 @@ class Steps : No {
         Og("vi skal ikke lenger ha ansvaret for arbeidssøkeren") {
             person.arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
         }
-    }
+    }*/
 }

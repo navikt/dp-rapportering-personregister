@@ -56,6 +56,7 @@ fun Person.overtaArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
         if (it.overtattBekreftelse != true) {
             observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+            // TODO: Hva skjer hvis overtaArbeidssøkerBekreftelse feiler?
             it.overtattBekreftelse = true
         }
     }
@@ -65,6 +66,7 @@ fun Person.frasiArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
         if (it.overtattBekreftelse == true) {
             observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+            // TODO: Hva skjer hvis frasiArbeidssøkerBekreftelse feiler?
             it.overtattBekreftelse = false
         }
     }

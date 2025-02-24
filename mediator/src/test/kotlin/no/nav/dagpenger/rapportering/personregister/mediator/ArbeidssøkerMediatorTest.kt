@@ -128,8 +128,8 @@ class ArbeidssøkerMediatorTest {
         }
     }
 
-    @Test
     @Disabled
+    @Test
     fun `kan behandle eksisterende arbeidssøkerperiode`() {
         personRepository.lagrePerson(person)
 

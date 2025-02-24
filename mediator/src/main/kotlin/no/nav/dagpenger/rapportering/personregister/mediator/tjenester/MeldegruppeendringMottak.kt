@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.isMissingOrNull
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -55,13 +56,24 @@ class MeldegruppeendringMottak(
 private fun JsonMessage.tilHendelse(): Hendelse {
     val ident: String = this["after"]["FODSELSNR"].asText()
     val meldegruppeKode = this["after"]["MELDEGRUPPEKODE"].asText()
-    val fraOgMed = this["after"]["DATO_FRA"].asText().arenaDato()
+    val dato =
+        if (this["after"]["HENDELSESDATO"].isMissingOrNull()) {
+            LocalDateTime.now()
+        } else {
+            this["after"]["HENDELSESDATO"]
+                .asText()
+                .arenaDato()
+        }
+    val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
+    val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
 
     if (meldegruppeKode == "DAGP") {
         return DagpengerMeldegruppeHendelse(
             ident = ident,
-            dato = fraOgMed,
+            dato = dato,
+            startDato = startDato,
+            sluttDato = sluttDato,
             referanseId = hendelseId,
             meldegruppeKode = meldegruppeKode,
         )
@@ -69,7 +81,9 @@ private fun JsonMessage.tilHendelse(): Hendelse {
 
     return AnnenMeldegruppeHendelse(
         ident = ident,
-        dato = fraOgMed,
+        dato = dato,
+        startDato = startDato,
+        sluttDato = sluttDato,
         referanseId = hendelseId,
         meldegruppeKode = meldegruppeKode,
     )

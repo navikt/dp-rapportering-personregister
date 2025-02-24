@@ -287,12 +287,12 @@ class PersonstatusMediatorTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, "DAGP", referanseId)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, startDato = dato, sluttDato = null, "DAGP", referanseId)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, "ARBS", referanseId)
+    ) = AnnenMeldegruppeHendelse(ident, dato, startDato = dato, sluttDato = null, "ARBS", referanseId)
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {

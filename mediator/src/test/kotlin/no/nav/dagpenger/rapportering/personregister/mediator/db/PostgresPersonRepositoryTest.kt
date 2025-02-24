@@ -62,6 +62,8 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     referanseId = "456",
                     dato = dato.plusDays(1),
+                    startDato = dato,
+                    sluttDato = null,
                     meldegruppeKode = "DAGP",
                 )
             person.behandle(hendelse)
@@ -70,6 +72,7 @@ class PostgresPersonRepositoryTest {
             personRepository.hentPerson(ident)?.apply {
 //                hendelser.size shouldBe 2 // TODO Fix this
                 status shouldBe Dagpengerbruker
+                println(hendelser)
             }
         }
     }

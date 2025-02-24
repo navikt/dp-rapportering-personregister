@@ -19,8 +19,11 @@ CREATE TABLE hendelse
     person_id    BIGINT,
     referanse_id VARCHAR(255) UNIQUE,
     dato         TIMESTAMP,
+    start_dato   TIMESTAMP    NULL,
+    slutt_dato   TIMESTAMP    NULL,
     kilde        VARCHAR(50),
     type         VARCHAR(50),
+    extra        JSONB        NULL,
     FOREIGN KEY (person_id) REFERENCES person (id)
 );
 
