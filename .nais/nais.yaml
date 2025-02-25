@@ -52,7 +52,7 @@ spec:
     inbound:
       rules:
         - application: dp-rapportering
-        {{ #each additionalInbounds as |inbound|}}
+        {{#each additionalInbounds as |inbound|}}
           - application: {{inbound.application}}
             namespace: {{inbound.namespace}}
         {{/each}}
