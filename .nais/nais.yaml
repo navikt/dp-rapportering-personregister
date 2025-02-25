@@ -52,11 +52,10 @@ spec:
     inbound:
       rules:
         - application: dp-rapportering
-        - application: meldekort-api
-          namespace: meldekort
-        - application: tokenx-token-generator
-          namespace: aura
-          cluster: dev-gcp
+        {{ #each additionalInbounds as |inbound|}}
+          - application: {{inbound.application}}
+            namespace: {{inbound.namespace}}
+        {{/each}}
     outbound:
       rules:
         - application: paw-arbeidssoekerregisteret-api-oppslag

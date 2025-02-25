@@ -1,0 +1,6 @@
+kafka:
+  pool: nav-prod
+
+additionalInbounds:
+  - application: meldekort-api
+    namespace: meldekort
