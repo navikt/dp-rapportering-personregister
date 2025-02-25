@@ -23,15 +23,32 @@ data class Person(
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) {}
+    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
 
     fun behandle(hendelse: DagpengerMeldegruppeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
 
-    fun behandle(hendelse: AnnenMeldegruppeHendelse) = behandle(hendelse) { frasiArbeidssøkerBekreftelse() }
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) =
+        behandle(hendelse) {
+            frasiArbeidssøkerBekreftelse()
+        }
 
-    fun behandle(hendelse: MeldepliktHendelse) = behandle(hendelse) {}
+    fun behandle(hendelse: MeldepliktHendelse) =
+        behandle(hendelse) {
+            if (this.status == IkkeDagpengerbruker) {
+                frasiArbeidssøkerBekreftelse()
+            } else {
+                overtaArbeidssøkerBekreftelse()
+            }
+        }
 
-    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
+    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) =
+        behandle(hendelse) {
+            if (this.status == Dagpengerbruker) {
+                overtaArbeidssøkerBekreftelse()
+            } else {
+                frasiArbeidssøkerBekreftelse()
+            }
+        }
 
     fun behandle(hendelse: Hendelse) {
         when (hendelse) {
