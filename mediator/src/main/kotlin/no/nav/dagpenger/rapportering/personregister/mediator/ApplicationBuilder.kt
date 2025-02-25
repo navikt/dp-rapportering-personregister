@@ -18,6 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss√
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
@@ -85,7 +86,7 @@ internal class ApplicationBuilder(
         )
 
     val personstatusMediator = PersonstatusMediator(personRepository, arbeidss√∏kerMediator, listOf(personObserverKafka))
-
+    val aktiverHendelserJob = AktiverHendelserJob()
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -115,6 +116,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
+        aktiverHendelserJob.start(personRepository, personstatusMediator)
     }
 }
 

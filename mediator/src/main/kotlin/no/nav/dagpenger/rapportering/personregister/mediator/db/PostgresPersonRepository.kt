@@ -136,6 +136,44 @@ class PostgresPersonRepository(
             }
         }
 
+    override fun lagreFremtidigHendelse(hendelse: Hendelse) {
+        val personId = hentPersonId(hendelse.ident) ?: throw IllegalStateException("Person finnes ikke")
+        lagreHendelse(personId, hendelse, "fremtidig_hendelse")
+    }
+
+    override fun hentHendelserSomSkalAktiveres(): List<Hendelse> =
+        actionTimer.timedAction("db-hentHendelserSomSkalAktiveres") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT fh.*, p.ident 
+                        FROM fremtidig_hendelse fh 
+                        INNER JOIN person p ON fh.person_id = p.id 
+                        WHERE fh.start_dato <= current_date
+                        """.trimIndent(),
+                    ).map { tilHendelse(it, it.string("ident")) }
+                        .asList,
+                )
+            }
+        }
+
+    override fun slettFremtidigHendelse(referanseId: String) =
+        actionTimer.timedAction("db-slettFremtidigHendelse") {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE referanse_id = :referanse_id",
+                            mapOf(
+                                "referanse_id" to referanseId,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }.validateRowsAffected()
+        }
+
     private fun hentPersonId(ident: String): Long? =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -148,13 +186,14 @@ class PostgresPersonRepository(
     private fun lagreHendelse(
         personId: Long,
         hendelse: Hendelse,
+        hendelseTabell: String = "hendelse",
     ) {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
-                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                INSERT INTO $hendelseTabell (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
@@ -177,7 +216,7 @@ class PostgresPersonRepository(
                     ).asUpdate,
                 )
             }
-        }
+        }.validateRowsAffected()
     }
 
     private fun Hendelse.hentStartDato(): LocalDateTime? =
@@ -358,25 +397,26 @@ class PostgresPersonRepository(
         arbeidssøkerperiode: Arbeidssøkerperiode,
     ) {
         using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx
-                    .run(
-                        queryOf(
-                            """
-                            INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
-                            VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
-                            """.trimIndent(),
-                            mapOf(
-                                "periode_id" to arbeidssøkerperiode.periodeId,
-                                "person_id" to personId,
-                                "startet" to arbeidssøkerperiode.startet,
-                                "avsluttet" to arbeidssøkerperiode.avsluttet,
-                                "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
-                                "sist_endret" to LocalDateTime.now(),
-                            ),
-                        ).asUpdate,
-                    )
-            }
+            session
+                .transaction { tx ->
+                    tx
+                        .run(
+                            queryOf(
+                                """
+                                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
+                                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                                """.trimIndent(),
+                                mapOf(
+                                    "periode_id" to arbeidssøkerperiode.periodeId,
+                                    "person_id" to personId,
+                                    "startet" to arbeidssøkerperiode.startet,
+                                    "avsluttet" to arbeidssøkerperiode.avsluttet,
+                                    "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
+                                    "sist_endret" to LocalDateTime.now(),
+                                ),
+                            ).asUpdate,
+                        )
+                }.validateRowsAffected()
         }
     }
 
@@ -386,16 +426,21 @@ class PostgresPersonRepository(
         status: Status,
     ) {
         using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        "INSERT INTO status_historikk (person_id, dato, status) VALUES (:person_id, :dato, :status)",
-                        mapOf("person_id" to personId, "dato" to dato, "status" to status.type.name),
-                    ).asUpdate,
-                )
-            }
+            session
+                .transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "INSERT INTO status_historikk (person_id, dato, status) VALUES (:person_id, :dato, :status)",
+                            mapOf("person_id" to personId, "dato" to dato, "status" to status.type.name),
+                        ).asUpdate,
+                    )
+                }.validateRowsAffected()
         }
     }
+}
+
+private fun Int.validateRowsAffected(excepted: Int = 1) {
+    if (this != excepted) throw RuntimeException("Expected $excepted but got $this")
 }
 
 private fun String?.toBooleanOrNull(): Boolean? = this?.let { this == "t" }

@@ -35,6 +35,7 @@ spec:
     pool: {{ kafka.pool }}
   ingresses:
     - https://dp-rapportering-personregister.intern.dev.nav.no
+  leaderElection: true
   observability:
     logging:
       destinations:
