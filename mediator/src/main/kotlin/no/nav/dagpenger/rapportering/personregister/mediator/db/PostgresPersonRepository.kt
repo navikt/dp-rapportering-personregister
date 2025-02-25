@@ -28,12 +28,16 @@ class PostgresPersonRepository(
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
             val personId = hentPersonId(ident) ?: return@timedAction null
-            val arbeidssøkerperioder = hentArbeidssøkerperioder(ident)
-            val hendelser = hentHendelser(personId)
+            val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident)
+            val hendelser = hentHendelser(personId, ident)
             val statusHistorikk = hentStatusHistorikk(personId).allItems()
+            val meldeplikt = hentMeldeplikt(ident)
+            val meldegruppe = hentMeldegruppe(ident)
 
             if (hendelser.isNotEmpty()) {
                 Person(ident).apply {
+                    this.meldeplikt = meldeplikt
+                    this.meldegruppe = meldegruppe
                     arbeidssøkerperioder.forEach { this.arbeidssøkerperioder.add(it) }
                     hendelser.forEach { this.hendelser.add(it) }
                     statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
@@ -61,9 +65,12 @@ class PostgresPersonRepository(
                     session.transaction { tx ->
                         tx.run(
                             queryOf(
-                                "INSERT INTO person (ident) VALUES (:ident) RETURNING id",
+                                "INSERT INTO person (ident, status, meldeplikt, meldegruppe) VALUES (:ident, :status, :meldeplikt, :meldegruppe) RETURNING id",
                                 mapOf(
                                     "ident" to person.ident,
+                                    "status" to person.status.type.name,
+                                    "meldeplikt" to person.meldeplikt,
+                                    "meldegruppe" to person.meldegruppe,
                                 ),
                             ).map { row -> row.long("id") }
                                 .asSingle,
@@ -83,6 +90,21 @@ class PostgresPersonRepository(
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
             val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "UPDATE person SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe WHERE id = :id",
+                            mapOf(
+                                "id" to personId,
+                                "status" to person.status.type.name,
+                                "meldeplikt" to person.meldeplikt,
+                                "meldegruppe" to person.meldegruppe,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
             person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
             person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
@@ -165,6 +187,7 @@ class PostgresPersonRepository(
             is MeldepliktHendelse -> this.startDato
             is ArbeidssøkerHendelse -> this.startDato
             is SøknadHendelse -> null
+            else -> null
         }
 
     private fun Hendelse.hentSluttDato(): LocalDateTime? =
@@ -174,6 +197,7 @@ class PostgresPersonRepository(
             is MeldepliktHendelse -> this.sluttDato
             is ArbeidssøkerHendelse -> this.sluttDato
             is SøknadHendelse -> null
+            else -> null
         }
 
     private fun Hendelse.hentEkstrafelter(): String? {
@@ -196,23 +220,47 @@ class PostgresPersonRepository(
 
                 is ArbeidssøkerHendelse -> null
                 is SøknadHendelse -> null
+                else -> null
             }
 
         return test
     }
 
-    private fun hentHendelser(personId: Long): List<Hendelse> =
+    private fun hentMeldegruppe(ident: String): String? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT meldegruppe FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.stringOrNull("meldegruppe") }
+                    .asSingle,
+            )
+        }
+
+    private fun hentMeldeplikt(ident: String): Boolean =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT meldeplikt FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.boolean("meldeplikt") }
+                    .asSingle,
+            ) ?: throw IllegalStateException("Klarte ikke å hente meldeplikt")
+        }
+
+    private fun hentHendelser(
+        personId: Long,
+        ident: String,
+    ): List<Hendelse> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
-                    .map(::tilHendelse)
+                    .map { tilHendelse(it, ident) }
                     .asList,
             )
         }
 
-    private fun tilHendelse(row: Row): Hendelse {
+    private fun tilHendelse(
+        row: Row,
+        ident: String,
+    ): Hendelse {
         val type = row.string("type")
-        val ident = row.string("person_id") // TODO: PersonId er ikke ident!
         val dato = row.localDateTime("dato")
         val startDato = row.localDateTimeOrNull("start_dato")
         val sluttDato = row.localDateTimeOrNull("slutt_dato")
@@ -259,17 +307,19 @@ class PostgresPersonRepository(
         }
     }
 
-    fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> =
+    fun hentArbeidssøkerperioder(
+        personId: Long,
+        ident: String,
+    ): List<Arbeidssøkerperiode> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
                     """
-                    SELECT a.* 
-                    FROM arbeidssoker a
-                    JOIN person p ON a.person_id = p.id
-                    WHERE p.ident = :ident
+                    SELECT * 
+                    FROM arbeidssoker
+                    WHERE person_id = :person_id
                     """.trimIndent(),
-                    mapOf("ident" to ident),
+                    mapOf("person_id" to personId),
                 ).map { tilArbeidsøkerperiode(it, ident) }
                     .asList,
             )

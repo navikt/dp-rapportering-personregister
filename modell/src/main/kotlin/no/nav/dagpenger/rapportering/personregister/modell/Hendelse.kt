@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 sealed class Hendelse(
-    val ident: String,
+    open val ident: String,
     val dato: LocalDateTime,
 ) {
     abstract val kilde: Kildesystem

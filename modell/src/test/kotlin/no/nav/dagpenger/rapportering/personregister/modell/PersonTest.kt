@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.modell
 
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -17,25 +18,25 @@ class PersonTest {
     @Nested
     inner class SøknadHendelser {
         @Test
-        fun `behandler søknad hendelse for ny bruker`() =
+        fun `behandler søknad hendelse for bruker som ikke oppfyller kravet`() =
             testPerson {
                 behandle(søknadHendelse())
-                behandle(startetArbeidssøkerperiodeHendelse())
+                val hendelse = startetArbeidssøkerperiodeHendelse()
+                behandle(hendelse)
 
-                status shouldBe Dagpengerbruker
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 
         @Test
-        fun `behandler søknad hendelse for dagpengerbruker`() =
+        fun `behandler søknad hendelse for bruker som oppfyller kravet`() =
             testPerson {
-                behandle(søknadHendelse(tidligere, "123"))
+                this.meldegruppe = "DAGP"
+                this.meldeplikt = true
+
+                behandle(søknadHendelse())
                 behandle(startetArbeidssøkerperiodeHendelse())
-
-                status shouldBe Dagpengerbruker
-
-                behandle(søknadHendelse(nå, "456"))
 
                 status shouldBe Dagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -46,9 +47,21 @@ class PersonTest {
     @Nested
     inner class DagpengerHendelser {
         @Test
-        fun `behandler dagpengermeldegruppe hendelse for ny bruker`() =
+        fun `behandler dagpengermeldegruppe hendelse for bruker som ikke oppfyller kravet`() =
             arbeidssøker {
                 status shouldBe IkkeDagpengerbruker
+
+                behandle(dagpengerMeldegruppeHendelse())
+
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
+            }
+
+        @Test
+        fun `behandler dagpengermeldegruppe hendelse for bruker som oppfyller kravet`() =
+            arbeidssøker {
+                meldeplikt = true
 
                 behandle(dagpengerMeldegruppeHendelse())
 
@@ -60,9 +73,12 @@ class PersonTest {
         @Test
         fun `dagpengerhendelse endrer ikke allerede Dagpengerbruker status`() =
             arbeidssøker(overtattBekreftelse = true) {
+                meldeplikt = true
+
                 statusHistorikk.put(tidligere, Dagpengerbruker)
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
+
                 status shouldBe Dagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
@@ -71,6 +87,8 @@ class PersonTest {
         @Test
         fun `dagpengerhendelse gir Dagpengerbruker status til IkkeDagpengerbruker`() =
             arbeidssøker {
+                meldeplikt = true
+
                 statusHistorikk.put(tidligere, IkkeDagpengerbruker)
 
                 behandle(dagpengerMeldegruppeHendelse(nå))
@@ -85,8 +103,10 @@ class PersonTest {
     inner class AnnenMeldegruppeHendelser {
         @Test
         fun `annen meldegruppe hendelse gir IkkeDagpengerbruker`() =
-            arbeidssøker(overtattBekreftelse = true) {
-                behandle(søknadHendelse())
+            arbeidssøker {
+                meldeplikt = true
+
+                behandle(dagpengerMeldegruppeHendelse())
                 behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IkkeDagpengerbruker
@@ -96,15 +116,14 @@ class PersonTest {
 
         @Test
         fun `IkkeDagpengerbruker status forblir samme med annen meldegruppe hendelse`() =
-            arbeidssøker(overtattBekreftelse = true) {
+            arbeidssøker {
                 behandle(søknadHendelse())
-                behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
 
                 behandle(annenMeldegruppeHendelse())
                 status shouldBe IkkeDagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
-                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
+                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
     }
 
@@ -149,4 +168,16 @@ class PersonTest {
     ) = AnnenMeldegruppeHendelse(ident, dato, dato.plusDays(1), null, "ARBS", referanseId)
 
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
+}
+
+infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
+    verify(exactly = 1) { overtaArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
+    verify(exactly = 0) { overtaArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
 }
