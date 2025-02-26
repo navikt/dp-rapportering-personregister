@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import java.time.LocalDateTime
 
 class PersonstatusMediator(
     private val personRepository: PersonRepository,
@@ -22,17 +23,32 @@ class PersonstatusMediator(
 
     fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
-        behandle(hendelse) {}
+        if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+            hentEllerOpprettPerson(hendelse.ident)
+            personRepository.lagreFremtidigHendelse(hendelse)
+        } else {
+            behandle(hendelse) {}
+        }
     }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
-        behandle(hendelse) {}
+        if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+            hentEllerOpprettPerson(hendelse.ident)
+            personRepository.lagreFremtidigHendelse(hendelse)
+        } else {
+            behandle(hendelse) {}
+        }
     }
 
     fun behandle(hendelse: MeldepliktHendelse) {
         sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
-        behandle(hendelse) {}
+        if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+            hentEllerOpprettPerson(hendelse.ident)
+            personRepository.lagreFremtidigHendelse(hendelse)
+        } else {
+            behandle(hendelse) {}
+        }
     }
 
     private fun behandle(

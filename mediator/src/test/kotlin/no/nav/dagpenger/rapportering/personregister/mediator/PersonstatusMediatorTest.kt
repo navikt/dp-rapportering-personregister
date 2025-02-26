@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
+import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
@@ -198,8 +199,16 @@ class PersonstatusMediatorTest {
                 status shouldBe Dagpengerbruker
 
                 personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
-//
+
                 status shouldBe Dagpengerbruker
+            }
+        }
+
+        @Test
+        fun `dagpengerhendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
+            arbeidssøker {
+                personstatusMediator.behandle(dagpengerMeldegruppeHendelse(dato = nå.plusDays(1)))
+                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
             }
         }
 
@@ -237,6 +246,14 @@ class PersonstatusMediatorTest {
                 personstatusMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IkkeDagpengerbruker
+            }
+        }
+
+        @Test
+        fun `annenMeldegruppeHendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
+            testPerson {
+                personstatusMediator.behandle(annenMeldegruppeHendelse(dato = nå.plusDays(1)))
+                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
             }
         }
 
@@ -289,6 +306,17 @@ class PersonstatusMediatorTest {
         }
     }
 
+    @Nested
+    inner class Meldepliktending {
+        @Test
+        fun `meldepliktHendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
+            testPerson {
+                personstatusMediator.behandle(meldepliktHendelse(dato = nå.plusDays(1)))
+                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
+            }
+        }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -322,6 +350,18 @@ class PersonstatusMediatorTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, startDato = dato, sluttDato = null, "ARBS", referanseId)
+
+    private fun meldepliktHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = MeldepliktHendelse(
+        ident = ident,
+        dato = dato,
+        startDato = dato,
+        sluttDato = null,
+        statusMeldeplikt = true,
+        referanseId = referanseId,
+    )
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {

@@ -24,7 +24,7 @@ private val logger = KotlinLogging.logger {}
 internal class AktiverHendelserJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.of(0, 50)
+    private val tidspunktForKjoring = LocalTime.of(0, 1)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring).plusDays(1)
     private val millisekunderTilNesteKjoring =
