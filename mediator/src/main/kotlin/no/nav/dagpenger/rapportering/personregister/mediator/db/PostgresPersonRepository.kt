@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeH
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
@@ -186,6 +187,7 @@ class PostgresPersonRepository(
             is AnnenMeldegruppeHendelse -> this.startDato
             is MeldepliktHendelse -> this.startDato
             is ArbeidssøkerHendelse -> this.startDato
+            is StartetArbeidssøkerperiodeHendelse -> this.startet
             is SøknadHendelse -> null
             else -> null
         }
@@ -302,6 +304,12 @@ class PostgresPersonRepository(
                     UUID.fromString(referanseId),
                     startDato!!,
                     sluttDato,
+                )
+            "StartetArbeidssøkerperiodeHendelse" ->
+                StartetArbeidssøkerperiodeHendelse(
+                    UUID.fromString(referanseId),
+                    ident,
+                    startDato!!,
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }

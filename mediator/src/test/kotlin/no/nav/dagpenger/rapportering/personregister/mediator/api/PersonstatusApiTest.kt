@@ -34,6 +34,14 @@ class PersonstatusApiTest : ApiTestSetup() {
     fun `Post personstatus lagrer person`() =
         setUpTestApplication {
             with(
+                client.get("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                },
+            ) {
+                status shouldBe HttpStatusCode.NotFound
+            }
+
+            with(
                 client.post("/personstatus") {
                     header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
                     setBody(LocalDate.now().format(DateTimeFormatter.ISO_DATE))
@@ -49,6 +57,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             ) {
                 status shouldBe HttpStatusCode.OK
                 defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["status"].asText() shouldBe "DAGPENGERBRUKER"
             }
         }
 
