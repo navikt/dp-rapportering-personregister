@@ -21,22 +21,20 @@ class PersonTest {
         fun `behandler søknad hendelse for bruker som ikke oppfyller kravet`() =
             testPerson {
                 behandle(søknadHendelse())
-                val hendelse = startetArbeidssøkerperiodeHendelse()
-                behandle(hendelse)
 
                 status shouldBe IkkeDagpengerbruker
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe null
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 
         @Test
         fun `behandler søknad hendelse for bruker som oppfyller kravet`() =
-            testPerson {
+            arbeidssøker {
                 this.meldegruppe = "DAGP"
                 this.meldeplikt = true
 
                 behandle(søknadHendelse())
-                behandle(startetArbeidssøkerperiodeHendelse())
 
                 status shouldBe Dagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -48,13 +46,11 @@ class PersonTest {
     inner class DagpengerHendelser {
         @Test
         fun `behandler dagpengermeldegruppe hendelse for bruker som ikke oppfyller kravet`() =
-            arbeidssøker {
-                status shouldBe IkkeDagpengerbruker
-
+            testPerson {
+                meldeplikt = false
                 behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe IkkeDagpengerbruker
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 
@@ -69,41 +65,13 @@ class PersonTest {
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
-
-        @Test
-        fun `dagpengerhendelse endrer ikke allerede Dagpengerbruker status`() =
-            arbeidssøker(overtattBekreftelse = true) {
-                meldeplikt = true
-
-                statusHistorikk.put(tidligere, Dagpengerbruker)
-
-                behandle(dagpengerMeldegruppeHendelse(nå))
-
-                status shouldBe Dagpengerbruker
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
-            }
-
-        @Test
-        fun `dagpengerhendelse gir Dagpengerbruker status til IkkeDagpengerbruker`() =
-            arbeidssøker {
-                meldeplikt = true
-
-                statusHistorikk.put(tidligere, IkkeDagpengerbruker)
-
-                behandle(dagpengerMeldegruppeHendelse(nå))
-
-                status shouldBe Dagpengerbruker
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
-            }
     }
 
     @Nested
     inner class AnnenMeldegruppeHendelser {
         @Test
-        fun `annen meldegruppe hendelse gir IkkeDagpengerbruker`() =
-            arbeidssøker {
+        fun `behandler AnnenMeldegruppeHendelse for bruker som vi allerede har tatt ansvar for arbeidssøkerbekreftelse`() =
+            arbeidssøker(overtattBekreftelse = true) {
                 meldeplikt = true
 
                 behandle(dagpengerMeldegruppeHendelse())
@@ -115,15 +83,94 @@ class PersonTest {
             }
 
         @Test
-        fun `IkkeDagpengerbruker status forblir samme med annen meldegruppe hendelse`() =
-            arbeidssøker {
-                behandle(søknadHendelse())
-                status shouldBe IkkeDagpengerbruker
+        fun `behandler AnnenMeldegruppeHendelse for bruker som vi ikke har ansvar for arbeidssøkerbekreftelse`() =
+            arbeidssøker(overtattBekreftelse = false) {
+                meldeplikt = true
+                statusHistorikk.put(tidligere, Dagpengerbruker)
 
                 behandle(annenMeldegruppeHendelse())
+
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalIkkeHaFrasagtAnsvaretFor this
+            }
+    }
+
+    @Nested
+    inner class MeldepliktHendelser {
+        @Test
+        fun `behandler MeldepliktHendelse for bruker som oppfyller kravet`() =
+            arbeidssøker(overtattBekreftelse = false) {
+                meldegruppe = "DAGP"
+
+                behandle(meldepliktHendelse(status = true))
+
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
+            }
+
+        @Test
+        fun `behandler MeldepliktHendelse for bruker som ikke oppfyller kravet`() =
+            arbeidssøker(overtattBekreftelse = false) {
+                meldegruppe = "ARBS"
+
+                behandle(meldepliktHendelse(status = true))
+
                 status shouldBe IkkeDagpengerbruker
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
+            }
+
+        @Test
+        fun `behandler MeldepliktHendelse for Dagpengerbruker som ikke lenger oppfyller kravet `() =
+            arbeidssøker(overtattBekreftelse = true) {
+                meldegruppe = "ARBS"
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+
+                behandle(meldepliktHendelse(status = true))
+
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
+            }
+    }
+
+    @Nested
+    inner class ArbeidsøkerperiodeHendelser {
+        @Test
+        fun `behandler startet arbeidssøker hendelser for bruker som ikke oppfyller kravet`() =
+            testPerson {
+                behandle(startetArbeidssøkerperiodeHendelse())
+
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
+            }
+
+        @Test
+        fun `behandler StartetArbeidssøkerperiodeHendelse for bruker som oppfyller kravet`() =
+            testPerson {
+                meldeplikt = true
+                meldegruppe = "DAGP"
+
+                behandle(startetArbeidssøkerperiodeHendelse())
+
+                status shouldBe Dagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
+            }
+
+        @Test
+        fun `behandler avsluttet arbeidssøker hendelser for Dagpengerbruker`() =
+            arbeidssøker(overtattBekreftelse = true) {
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+
+                behandle(avsluttetArbeidssøkerperiodeHendelse())
+
+                status shouldBe IkkeDagpengerbruker
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
 
@@ -167,7 +214,14 @@ class PersonTest {
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, dato.plusDays(1), null, "ARBS", referanseId)
 
+    private fun meldepliktHendelse(
+        dato: LocalDateTime = nå,
+        status: Boolean = false,
+    ) = MeldepliktHendelse(ident, dato, dato.plusDays(1), null, status, referanseId = "123")
+
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
+
+    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere, nå)
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
@@ -180,4 +234,8 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
+}
+
+infix fun PersonObserver.skalIkkeHaFrasagtAnsvaretFor(person: Person) {
+    verify(exactly = 0) { frasiArbeidssøkerBekreftelse(person) }
 }

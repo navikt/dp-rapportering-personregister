@@ -18,6 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -38,7 +39,7 @@ internal fun Application.personstatusApi(
                     personstatusMediator.behandle(
                         DagpengerMeldegruppeHendelse(
                             ident,
-                            fraDato,
+                            LocalDateTime.now(),
                             startDato = fraDato,
                             sluttDato = null,
                             "DAGP",
