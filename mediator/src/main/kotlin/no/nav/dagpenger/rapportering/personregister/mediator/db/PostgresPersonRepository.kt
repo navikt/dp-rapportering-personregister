@@ -10,10 +10,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
@@ -150,7 +152,7 @@ class PostgresPersonRepository(
                         SELECT fh.*, p.ident 
                         FROM fremtidig_hendelse fh 
                         INNER JOIN person p ON fh.person_id = p.id 
-                        WHERE fh.start_dato <= current_date
+                        WHERE DATE(fh.start_dato) <= current_date
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
                         .asList,
@@ -224,7 +226,8 @@ class PostgresPersonRepository(
             is DagpengerMeldegruppeHendelse -> this.startDato
             is AnnenMeldegruppeHendelse -> this.startDato
             is MeldepliktHendelse -> this.startDato
-            is ArbeidssøkerHendelse -> this.startDato
+            is StartetArbeidssøkerperiodeHendelse -> this.startet
+            is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
             is SøknadHendelse -> null
             else -> null
         }
@@ -234,7 +237,8 @@ class PostgresPersonRepository(
             is DagpengerMeldegruppeHendelse -> this.sluttDato
             is AnnenMeldegruppeHendelse -> this.sluttDato
             is MeldepliktHendelse -> this.sluttDato
-            is ArbeidssøkerHendelse -> this.sluttDato
+            is StartetArbeidssøkerperiodeHendelse -> null
+            is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
             is SøknadHendelse -> null
             else -> null
         }
@@ -335,12 +339,18 @@ class PostgresPersonRepository(
                     defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
                     referanseId,
                 )
-            "ArbeidssøkerHendelse" ->
-                ArbeidssøkerHendelse(
-                    ident,
-                    UUID.fromString(referanseId),
-                    startDato!!,
-                    sluttDato,
+            "StartetArbeidssøkerperiodeHendelse" ->
+                StartetArbeidssøkerperiodeHendelse(
+                    periodeId = UUID.fromString(referanseId),
+                    ident = ident,
+                    startet = startDato!!,
+                )
+            "AvsluttetArbeidssøkerperiodeHendelse" ->
+                AvsluttetArbeidssøkerperiodeHendelse(
+                    periodeId = UUID.fromString(referanseId),
+                    ident = ident,
+                    startet = startDato!!,
+                    avsluttet = sluttDato!!,
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
@@ -405,6 +415,14 @@ class PostgresPersonRepository(
                                 """
                                 INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
                                 VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                                ON CONFLICT (periode_id) 
+                                DO UPDATE SET 
+                                periode_id = EXCLUDED.periode_id,
+                                person_id = EXCLUDED.person_id,
+                                startet = EXCLUDED.startet,
+                                avsluttet = EXCLUDED.avsluttet,
+                                overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
+                                sist_endret = EXCLUDED.sist_endret
                                 """.trimIndent(),
                                 mapOf(
                                     "periode_id" to arbeidssøkerperiode.periodeId,

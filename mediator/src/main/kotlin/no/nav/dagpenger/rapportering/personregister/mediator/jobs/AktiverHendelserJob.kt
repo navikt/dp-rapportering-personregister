@@ -48,17 +48,7 @@ internal class AktiverHendelserJob(
                         var antallHendelser: Int
                         val tidBrukt =
                             measureTime {
-                                val hendelser = personRepository.hentHendelserSomSkalAktiveres()
-                                antallHendelser = hendelser.size
-                                hendelser.forEach {
-                                    when (it) {
-                                        is DagpengerMeldegruppeHendelse -> personstatusMediator.behandle(it)
-                                        is AnnenMeldegruppeHendelse -> personstatusMediator.behandle(it)
-                                        is MeldepliktHendelse -> personstatusMediator.behandle(it)
-                                        else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
-                                    }
-                                    personRepository.slettFremtidigHendelse(it.referanseId)
-                                }
+                                antallHendelser = aktivererHendelser(personRepository, personstatusMediator)
                             }
                         logger.info {
                             "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
@@ -72,6 +62,23 @@ internal class AktiverHendelserJob(
                 }
             },
         )
+    }
+
+    fun aktivererHendelser(
+        personRepository: PersonRepository,
+        personstatusMediator: PersonstatusMediator,
+    ): Int {
+        val hendelser = personRepository.hentHendelserSomSkalAktiveres()
+        hendelser.forEach {
+            when (it) {
+                is DagpengerMeldegruppeHendelse -> personstatusMediator.behandle(it)
+                is AnnenMeldegruppeHendelse -> personstatusMediator.behandle(it)
+                is MeldepliktHendelse -> personstatusMediator.behandle(it)
+                else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
+            }
+            personRepository.slettFremtidigHendelse(it.referanseId)
+        }
+        return hendelser.size
     }
 
     private fun isLeader(): Boolean {

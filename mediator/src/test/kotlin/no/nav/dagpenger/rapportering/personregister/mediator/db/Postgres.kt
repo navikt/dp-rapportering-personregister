@@ -22,6 +22,7 @@ internal object Postgres {
 
     fun withMigratedDb(block: () -> Unit) {
         withCleanDb {
+            setupEnv()
             runMigration()
             block()
         }
@@ -45,5 +46,12 @@ internal object Postgres {
                 .migrations
                 .size
         }
+    }
+
+    private fun setupEnv() {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "http://localhost:8081")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "user")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "password")
+        System.setProperty("KAFKA_BROKERS", "localhost:9092")
     }
 }
