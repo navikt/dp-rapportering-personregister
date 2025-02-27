@@ -18,7 +18,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -61,13 +60,7 @@ internal fun Application.personstatusApi(
                         ),
                     )
 
-                    arbeidssøkerMediator.behandle(
-                        StartetArbeidssøkerperiodeHendelse(
-                            UUID.randomUUID(),
-                            ident,
-                            LocalDateTime.now(),
-                        ),
-                    )
+                    arbeidssøkerMediator.behandle(ident)
 
                     call.respond(HttpStatusCode.OK)
                 }

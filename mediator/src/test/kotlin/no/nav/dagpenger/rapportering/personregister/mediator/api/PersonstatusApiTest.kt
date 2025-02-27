@@ -8,7 +8,11 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.mockk.coEvery
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -18,6 +22,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
@@ -33,6 +38,21 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `Post personstatus lagrer person`() =
         setUpTestApplication {
+            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        UUID.randomUUID(),
+                        MetadataResponse(
+                            LocalDateTime.now(),
+                            BrukerResponse("", ""),
+                            "Arena",
+                            "Årsak",
+                            null,
+                        ),
+                        null,
+                    ),
+                )
+
             with(
                 client.get("/personstatus") {
                     header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")

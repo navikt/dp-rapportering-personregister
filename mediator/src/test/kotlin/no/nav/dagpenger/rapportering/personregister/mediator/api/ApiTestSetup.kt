@@ -31,6 +31,8 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
+    val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
         const val REQUIRED_AUDIENCE = "tokenx"
@@ -85,7 +87,6 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-            val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
             val testKafkaContainer = TestKafkaContainer()
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
