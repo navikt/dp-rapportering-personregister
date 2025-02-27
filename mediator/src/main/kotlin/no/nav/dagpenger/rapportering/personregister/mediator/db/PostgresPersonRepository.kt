@@ -341,16 +341,16 @@ class PostgresPersonRepository(
                 )
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
-                    periodeId = UUID.fromString(referanseId),
-                    ident = ident,
-                    startet = startDato!!,
+                    UUID.fromString(referanseId),
+                    ident,
+                    startDato!!,
                 )
             "AvsluttetArbeidssøkerperiodeHendelse" ->
                 AvsluttetArbeidssøkerperiodeHendelse(
-                    periodeId = UUID.fromString(referanseId),
-                    ident = ident,
-                    startet = startDato!!,
-                    avsluttet = sluttDato!!,
+                    UUID.fromString(referanseId),
+                    ident,
+                    startDato!!,
+                    sluttDato!!,
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
