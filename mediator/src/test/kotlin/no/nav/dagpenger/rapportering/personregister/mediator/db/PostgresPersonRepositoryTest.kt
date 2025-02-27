@@ -177,8 +177,8 @@ class PostgresPersonRepositoryTest {
 
             with(personRepository.hentHendelserSomSkalAktiveres()) {
                 size shouldBe 2
-                first() shouldBe meldepliktHendelse
-                last() shouldBe meldegruppeHendelse
+                first().javaClass shouldBe MeldepliktHendelse::class.java
+                last().javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
             }
 
             personRepository.slettFremtidigHendelse(meldepliktHendelse.referanseId)
@@ -218,13 +218,19 @@ class PostgresPersonRepositoryTest {
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
             with(personRepository.hentHendelserSomSkalAktiveres()) {
                 size shouldBe 1
-                first() shouldBe meldegruppeHendelse
+                with(first()) {
+                    referanseId shouldBe referanseId
+                    javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
+                }
             }
 
             personRepository.lagreFremtidigHendelse(meldepliktHendelse)
             with(personRepository.hentHendelserSomSkalAktiveres()) {
                 size shouldBe 1
-                first() shouldBe meldepliktHendelse
+                with(first()) {
+                    referanseId shouldBe referanseId
+                    javaClass shouldBe MeldepliktHendelse::class.java
+                }
             }
         }
     }
