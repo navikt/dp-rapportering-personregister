@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import java.time.LocalDateTime
@@ -17,6 +18,7 @@ val logger = KotlinLogging.logger {}
 class MeldepliktendringMottak(
     rapidsConnection: RapidsConnection,
     private val personstatusMediator: PersonstatusMediator,
+    private val fremtidigHendelseMediator: FremtidigHendelseMediator,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -24,7 +26,7 @@ class MeldepliktendringMottak(
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
                 validate { it.requireKey("after") }
                 validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
-                validate { it.interestedIn("after.DATO_TIL") }
+                validate { it.interestedIn("after.DATO_TIL, after.HENDELSESDATO") }
             }.register(this)
     }
 
@@ -37,7 +39,12 @@ class MeldepliktendringMottak(
         logger.info { "Mottok ny meldepliktendring" }
 
         try {
-            personstatusMediator.behandle(packet.tilHendelse())
+            val hendelse = packet.tilHendelse()
+            if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                fremtidigHendelseMediator.behandle(hendelse)
+            } else {
+                personstatusMediator.behandle(hendelse)
+            }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldepliktendring $e" }
         }

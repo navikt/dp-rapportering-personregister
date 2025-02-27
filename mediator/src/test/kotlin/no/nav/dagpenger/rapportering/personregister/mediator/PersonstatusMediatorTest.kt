@@ -205,14 +205,6 @@ class PersonstatusMediatorTest {
         }
 
         @Test
-        fun `dagpengerhendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
-            arbeidssøker {
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse(dato = nå.plusDays(1)))
-                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
-            }
-        }
-
-        @Test
         fun `annenMeldegruppeHendelse for ny person`() {
             testPerson {
                 personstatusMediator.behandle(annenMeldegruppeHendelse())
@@ -246,14 +238,6 @@ class PersonstatusMediatorTest {
                 personstatusMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IkkeDagpengerbruker
-            }
-        }
-
-        @Test
-        fun `annenMeldegruppeHendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
-            testPerson {
-                personstatusMediator.behandle(annenMeldegruppeHendelse(dato = nå.plusDays(1)))
-                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
             }
         }
 
@@ -302,17 +286,6 @@ class PersonstatusMediatorTest {
 
                 status shouldBe IkkeDagpengerbruker
                 personObserver skalHaFrasagtAnsvaretFor this
-            }
-        }
-    }
-
-    @Nested
-    inner class Meldepliktending {
-        @Test
-        fun `meldepliktHendelse frem i tid lagres ikke på personen, men heller som fremtidig hendelse`() {
-            testPerson {
-                personstatusMediator.behandle(meldepliktHendelse(dato = nå.plusDays(1)))
-                personRepository.hentPerson(ident)!!.hendelser shouldHaveSize 0
             }
         }
     }

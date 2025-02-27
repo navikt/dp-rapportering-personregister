@@ -3,38 +3,54 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 class MeldepliktendringMottakTest {
     private val testRapid = TestRapid()
     private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
+    private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
-        MeldepliktendringMottak(testRapid, personstatusMediator)
+        MeldepliktendringMottak(testRapid, personstatusMediator, fremtidigHendelseMediator)
     }
 
     @Test
     fun `kan motta meldepliktendring event`() {
         testRapid.sendTestMessage(meldepliktendring_event())
-        testRapid.inspektør
         verify(exactly = 1) { personstatusMediator.behandle(any<MeldepliktHendelse>()) }
     }
 
     @Test
     fun `kan motta meldepliktendring event med 'datoTil'`() {
-        println(meldepliktendring_event("2025-03-01 00:00:00"))
-        testRapid.sendTestMessage(meldepliktendring_event("2025-03-01 00:00:00"))
-
-        testRapid.inspektør
+        testRapid.sendTestMessage(meldepliktendring_event(datoTil = "2025-03-01 00:00:00"))
 
         verify(exactly = 1) { personstatusMediator.behandle(any<MeldepliktHendelse>()) }
     }
+
+    @Test
+    fun `kan motta fremtidig meldepliktendring event`() {
+        testRapid.sendTestMessage(
+            meldepliktendring_event(
+                datoFra =
+                    LocalDateTime.now().plusDays(1).format(
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                    ),
+            ),
+        )
+
+        verify(exactly = 1) { fremtidigHendelseMediator.behandle(any()) }
+    }
 }
 
-private fun meldepliktendring_event(datoTil: String? = null) =
-    //language=json
+private fun meldepliktendring_event(
+    datoFra: String = "2025-02-01 00:00:00",
+    datoTil: String? = null,
+) = //language=json
     """
     {
     "table": "ARENA_GOLDENGATE.MELDEPLIKT",
@@ -45,7 +61,7 @@ private fun meldepliktendring_event(datoTil: String? = null) =
     "after": {
         "MELDEPLIKT_ID": 30321659,
         "STATUS_MELDEPLIKT": "J",
-        "DATO_FRA": "2025-02-01 00:00:00",
+        "DATO_FRA": "$datoFra",
         "DATO_TIL": ${if (datoTil == null) null else "\"$datoTil\""},
         "HENDELSESDATO": "2025-02-08 14:00:25",
         "STATUS_AKTIV": "J",

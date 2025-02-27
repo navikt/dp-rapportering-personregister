@@ -86,6 +86,7 @@ internal class ApplicationBuilder(
         )
 
     val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
+    val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
     val aktiverHendelserJob = AktiverHendelserJob()
     private val rapidsConnection =
         RapidApplication
@@ -101,8 +102,8 @@ internal class ApplicationBuilder(
                 }
 
                 SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
-                MeldegruppeendringMottak(rapid, personstatusMediator)
-                MeldepliktendringMottak(rapid, personstatusMediator)
+                MeldegruppeendringMottak(rapid, personstatusMediator, fremtidigHendelseMediator)
+                MeldepliktendringMottak(rapid, personstatusMediator, fremtidigHendelseMediator)
             }
 
     init {
