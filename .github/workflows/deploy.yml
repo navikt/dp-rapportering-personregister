@@ -26,8 +26,6 @@ jobs:
           java-version: 21
       - uses: gradle/wrapper-validation-action@v3.5.0
       - uses: gradle/actions/setup-gradle@v4
-      - name: Build
-        run: ./gradlew --configuration-cache build installDist
         env:
           # Eksluder test dependencies
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
@@ -35,6 +33,8 @@ jobs:
           gradle-version: wrapper
           dependency-graph: generate-and-submit
           # arguments: --configuration-cache build installDist
+      - name: Build
+        run: ./gradlew --configuration-cache build installDist
 
       - name: docker-build-push
         uses: nais/docker-build-push@v0
