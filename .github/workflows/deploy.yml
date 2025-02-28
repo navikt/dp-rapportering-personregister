@@ -26,6 +26,7 @@ jobs:
           java-version: 21
       - uses: gradle/wrapper-validation-action@v3.5.0
       - uses: gradle/actions/setup-gradle@v4
+      - name: Build
         run: ./gradlew --configuration-cache build installDist
         env:
           # Eksluder test dependencies
