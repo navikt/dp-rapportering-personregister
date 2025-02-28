@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
+import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Disabled
@@ -143,6 +144,94 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentAnallPersoner() shouldBe 1
             personRepository.hentAntallHendelser() shouldBe 1
+        }
+    }
+
+    @Test
+    fun `kan lagre, hente og slette elementer i fremtidig_hendelse`() {
+        withMigratedDb {
+            val nå = LocalDateTime.now()
+            val person = Person(ident = ident)
+            val meldepliktHendelse =
+                MeldepliktHendelse(
+                    ident = ident,
+                    referanseId = "123",
+                    dato = nå.minusDays(2),
+                    startDato = nå,
+                    sluttDato = null,
+                    statusMeldeplikt = true,
+                )
+            val meldegruppeHendelse =
+                DagpengerMeldegruppeHendelse(
+                    ident = ident,
+                    referanseId = "321",
+                    dato = nå.minusDays(1),
+                    startDato = nå,
+                    sluttDato = null,
+                    meldegruppeKode = "DAGP",
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+            personRepository.lagreFremtidigHendelse(meldepliktHendelse)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 2
+                first().javaClass shouldBe MeldepliktHendelse::class.java
+                last().javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
+            }
+
+            personRepository.slettFremtidigHendelse(meldepliktHendelse.referanseId)
+            personRepository.slettFremtidigHendelse(meldegruppeHendelse.referanseId)
+
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `hendelser med samme referanse overskriver hverandre`() {
+        withMigratedDb {
+            val referanseId = "123"
+            val nå = LocalDateTime.now()
+            val person = Person(ident = ident)
+            val meldepliktHendelse =
+                MeldepliktHendelse(
+                    ident = ident,
+                    referanseId = referanseId,
+                    dato = nå.minusDays(2),
+                    startDato = nå,
+                    sluttDato = null,
+                    statusMeldeplikt = true,
+                )
+            val meldegruppeHendelse =
+                DagpengerMeldegruppeHendelse(
+                    ident = ident,
+                    referanseId = referanseId,
+                    dato = nå.minusDays(1),
+                    startDato = nå,
+                    sluttDato = null,
+                    meldegruppeKode = "DAGP",
+                )
+
+            personRepository.lagrePerson(person)
+
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 1
+                with(first()) {
+                    referanseId shouldBe referanseId
+                    javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
+                }
+            }
+
+            personRepository.lagreFremtidigHendelse(meldepliktHendelse)
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 1
+                with(first()) {
+                    referanseId shouldBe referanseId
+                    javaClass shouldBe MeldepliktHendelse::class.java
+                }
+            }
         }
     }
 }

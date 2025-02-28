@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
@@ -18,6 +19,7 @@ import java.time.format.DateTimeFormatter
 class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
     private val personstatusMediator: PersonstatusMediator,
+    private val fremtidigHendelseMediator: FremtidigHendelseMediator,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -39,8 +41,20 @@ class MeldegruppeendringMottak(
 
         try {
             when (val hendelse = packet.tilHendelse()) {
-                is DagpengerMeldegruppeHendelse -> personstatusMediator.behandle(hendelse)
-                is AnnenMeldegruppeHendelse -> personstatusMediator.behandle(hendelse)
+                is DagpengerMeldegruppeHendelse -> {
+                    if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                        fremtidigHendelseMediator.behandle(hendelse)
+                    } else {
+                        personstatusMediator.behandle(hendelse)
+                    }
+                }
+                is AnnenMeldegruppeHendelse -> {
+                    if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                        fremtidigHendelseMediator.behandle(hendelse)
+                    } else {
+                        personstatusMediator.behandle(hendelse)
+                    }
+                }
                 else -> logger.warn { "Ukjent hendelsetype mottatt: $hendelse" }
             }
         } catch (e: Exception) {

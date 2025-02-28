@@ -56,6 +56,7 @@ data class Person(
             is DagpengerMeldegruppeHendelse -> behandle(hendelse)
             is AnnenMeldegruppeHendelse -> behandle(hendelse)
             is MeldepliktHendelse -> behandle(hendelse)
+            is ArbeidssøkerperiodeHendelse -> behandle(hendelse)
             else -> throw IllegalArgumentException("Ukjent hendelse: ${hendelse::class.simpleName}")
         }
     }
