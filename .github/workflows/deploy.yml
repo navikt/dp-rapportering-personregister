@@ -25,7 +25,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/wrapper-validation-action@v3.5.0
-      - uses: gradle/gradle-build-action@v3.5.0
+      - uses: gradle/actions/setup-gradle@v4
         env:
           # Eksluder test dependencies
           DEPENDENCY_GRAPH_INCLUDE_CONFIGURATIONS: compileClasspath|runtimeClasspath
