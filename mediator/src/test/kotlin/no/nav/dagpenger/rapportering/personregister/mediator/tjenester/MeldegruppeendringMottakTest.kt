@@ -6,91 +6,157 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class MeldegruppeendringMottakTest {
     private val testRapid = TestRapid()
-    private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
+    private val personstatusMediator = mockk<PersonstatusMediator>()
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
         MeldegruppeendringMottak(testRapid, personstatusMediator, fremtidigHendelseMediator)
     }
 
-    @Test
-    fun `kan motta meldegruppendring event`() {
-        testRapid.sendTestMessage(meldegruppeendring_event)
+    private val ident = "123456478901"
+    private val hendelsesdato = LocalDateTime.now().format()
+    private val referanseId = "123"
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<AnnenMeldegruppeHendelse>()) }
+    @Test
+    fun `kan ta imot DAPG-meldegruppeendring`() {
+        val datoFra = LocalDateTime.now().format()
+        val datoTil = null
+        val meldegruppeKode = "DAGP"
+
+        testRapid.sendTestMessage(
+            lagMeldegruppeEndringEvent(
+                ident,
+                hendelsesdato,
+                datoFra,
+                datoTil,
+                meldegruppeKode,
+                referanseId,
+            ),
+        )
+        val forventetHendelse =
+            DagpengerMeldegruppeHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = null,
+                meldegruppeKode = meldegruppeKode,
+                referanseId = referanseId,
+            )
+
+        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
     }
 
     @Test
-    fun `kan motta meldegruppendring event uten 'tilOgMed' dato`() {
-        testRapid.sendTestMessage(meldegruppeendring_uten_tom_dato)
+    fun `kan ta imot annen meldegruppeendring enn DAGP`() {
+        val datoFra = "2021-05-17 00:00:00"
+        val datoTil = null
+        val meldegruppeKode = "ARBS"
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<AnnenMeldegruppeHendelse>()) }
+        testRapid.sendTestMessage(
+            lagMeldegruppeEndringEvent(
+                ident,
+                hendelsesdato,
+                datoFra,
+                datoTil,
+                meldegruppeKode,
+                referanseId,
+            ),
+        )
+
+        val forventetHendelse =
+            AnnenMeldegruppeHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = null,
+                meldegruppeKode = meldegruppeKode,
+                referanseId = referanseId,
+            )
+
+        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
+    }
+
+    @Test
+    fun `kan ta imot meldegruppeendring enn med sluttdato`() {
+        val datoFra = LocalDateTime.now().format()
+        val datoTil = LocalDateTime.now().plusDays(1).format()
+        val meldegruppeKode = "ARBS"
+
+        testRapid.sendTestMessage(
+            lagMeldegruppeEndringEvent(
+                ident,
+                hendelsesdato,
+                datoFra,
+                datoTil,
+                meldegruppeKode,
+                referanseId,
+            ),
+        )
+
+        val forventetHendelse =
+            AnnenMeldegruppeHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = datoTil.toLocalDateTime(),
+                meldegruppeKode = meldegruppeKode,
+                referanseId = referanseId,
+            )
+
+        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
     }
 
     @Test
     fun `kan motta fremtidig meldegruppendring event`() {
-        testRapid.sendTestMessage(fremtidig_meldegruppeendring_event)
+        val datoFra = LocalDateTime.now().plusDays(1).format()
+        val datoTil = "2021-06-08 14:05:10"
+        val meldegruppeKode = "DAGP"
 
-        println(fremtidig_meldegruppeendring_event)
+        testRapid.sendTestMessage(
+            lagMeldegruppeEndringEvent(
+                ident,
+                hendelsesdato,
+                datoFra,
+                datoTil,
+                meldegruppeKode,
+                referanseId,
+            ),
+        )
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(any()) }
     }
 }
 
-private val meldegruppeendring_event =
-    //language=json
+private fun lagMeldegruppeEndringEvent(
+    ident: String,
+    hendelsesdato: String,
+    datoFra: String,
+    datoTil: String? = null,
+    meldegruppeKode: String,
+    referenseId: String,
+) = //language=json
     """
     {
-       "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
-       "after": {
-           "MELDEGRUPPE_ID": 51685079,
-           "MELDEGRUPPEKODE": "ARBS",
-           "DATO_FRA": "2021-05-17 00:00:00",
-           "DATO_TIL": null,
-           "HENDELSESDATO": "2021-06-08 14:05:10",
-           "FODSELSNR": "##MASKERT##",
-           "HENDELSE_ID": 3773236
-       }
-       }
+    "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
+    "after": {
+        "FODSELSNR": "$ident",
+        "HENDELSE_ID": $referenseId,
+        "HENDELSESDATO": "$hendelsesdato",
+        "DATO_FRA": "$datoFra",
+        "DATO_TIL": ${datoTil?.let { "\"$it\"" } ?: null},
+        "MELDEGRUPPEKODE": "$meldegruppeKode"
+    }
+    }
+    
     """.trimIndent()
 
-private val meldegruppeendring_uten_tom_dato =
-    //language=json
-    """
-    {
-     "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
-       "after": {
-           "MELDEGRUPPE_ID": 51685079,
-           "MELDEGRUPPEKODE": "ARBS",
-           "DATO_FRA": "2021-05-17 00:00:00",
-           "DATO_TIL": "2024-10-03 00:00:00",
-           "HENDELSESDATO": "2021-06-08 14:05:10",
-           "FODSELSNR": "##MASKERT##",
-           "HENDELSE_ID": 3773236
-       }
-    }
-    """.trimIndent()
+private fun String.toLocalDateTime() = LocalDateTime.parse(this, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
 
-private val dagensDatoFormatert = LocalDateTime.now().plusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-private val fremtidig_meldegruppeendring_event =
-    //language=json
-    """
-    {
-       "table": "ARENA_GOLDENGATE.MELDEGRUPPE",
-       "after": {
-           "MELDEGRUPPE_ID": 51685079,
-           "MELDEGRUPPEKODE": "ARBS",
-           "DATO_FRA": "$dagensDatoFormatert",
-           "DATO_TIL": null,
-           "HENDELSESDATO": "2021-06-08 14:05:10",
-           "FODSELSNR": "##MASKERT##",
-           "HENDELSE_ID": 3773236
-       }
-    }
-    """.trimIndent()
+private fun LocalDateTime.format(): String = this.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
