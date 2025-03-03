@@ -26,7 +26,7 @@ class MeldepliktendringMottak(
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
                 validate { it.requireKey("after") }
                 validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
-                validate { it.interestedIn("after.DATO_TIL, after.HENDELSESDATO") }
+                validate { it.interestedIn("after.DATO_TIL") }
             }.register(this)
     }
 
