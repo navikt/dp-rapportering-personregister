@@ -5,171 +5,98 @@ import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
-import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import org.junit.jupiter.api.Disabled
+import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PostgresPersonRepositoryTest {
-    private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
-
+    private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val ident = "12345678901"
+    private val nå = LocalDateTime.now()
 
     @Test
-    @Disabled
-    fun `skal lagre og finne person`() {
+    fun `kan lagre og hente komplett person`() =
         withMigratedDb {
-            val referanseId = "123"
-            val dato = LocalDateTime.now()
-            val person = Person(ident = ident)
-            val hendelse =
-                SøknadHendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = dato,
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
                 )
-
-            person.behandle(hendelse)
             personRepository.lagrePerson(person)
 
             personRepository.hentPerson(ident)?.apply {
-                ident shouldBe ident
-                hendelse shouldBe hendelse
-                status shouldBe Dagpengerbruker
+                ident shouldBe person.ident
+                hendelser shouldBe person.hendelser
+                status shouldBe person.status
+                arbeidssøkerperioder shouldBe person.arbeidssøkerperioder
             }
         }
-    }
 
     @Test
-    @Disabled
-    fun `kan oppdatere person`() {
+    fun `kan oppdatere person`() =
         withMigratedDb {
-            val referanseId = "123"
-            val dato = LocalDateTime.now().minusDays(1)
-            val person = Person(ident = ident)
-            val søknadHendelse =
-                SøknadHendelse(
-                    ident = ident,
-                    dato = dato,
-                    referanseId = referanseId,
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
                 )
-
-            person.behandle(søknadHendelse)
             personRepository.lagrePerson(person)
 
-            val hendelse =
-                DagpengerMeldegruppeHendelse(
-                    ident = ident,
-                    referanseId = "456",
-                    dato = dato.plusDays(1),
-                    startDato = dato,
-                    sluttDato = null,
-                    meldegruppeKode = "DAGP",
-                )
-            person.behandle(hendelse)
+            val nyHendelse = dagpengerMeldegruppeHendelse()
+            person.hendelser.add(nyHendelse)
+            person.meldeplikt = true
             personRepository.oppdaterPerson(person)
 
             personRepository.hentPerson(ident)?.apply {
-//                hendelser.size shouldBe 2 // TODO Fix this
-                status shouldBe IkkeDagpengerbruker
+                hendelser shouldBe listOf(person.hendelser.first(), nyHendelse)
             }
         }
-    }
 
     @Test
-    fun `oppdatering av person som ikke finnes i databasen kaster IllegalStateException`() {
+    fun `oppdatering av ikke-eksisterende person kaster IllegalStateException`() =
         withMigratedDb {
-            val person = Person(ident = ident)
-            shouldThrow<IllegalStateException> {
-                personRepository.oppdaterPerson(person)
-            }
+            shouldThrow<IllegalStateException> { personRepository.oppdaterPerson(Person(ident)) }
         }
-    }
 
     @Test
-    fun `kan ikke hente person dersom person ikke finnes`() {
+    fun `kan ikke hente ikke-eksisterende person`() =
         withMigratedDb {
             personRepository.hentPerson(ident) shouldBe null
         }
-    }
 
     @Test
-    fun `kan sjekke om person finnes i databasen hvis personen finnes`() {
-        val referanseId = "123"
-        val dato = LocalDateTime.now()
+    fun `kan sjekke om person finnes`() =
         withMigratedDb {
-            val person = Person(ident = ident)
-            val hendelse =
-                SøknadHendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = dato,
-                )
-
-            person.behandle(hendelse)
+            val person = Person(ident)
+            personRepository.finnesPerson(ident) shouldBe false
             personRepository.lagrePerson(person)
-
             personRepository.finnesPerson(ident) shouldBe true
         }
-    }
 
     @Test
-    fun `kan sjekke om person finnes i databasen hvis personen ikke finnes`() {
+    fun `kan hente antall personer og hendelser`() =
         withMigratedDb {
-            personRepository.finnesPerson(ident) shouldBe false
-        }
-    }
-
-    @Test
-    fun `kan hente antall personsoner og hendelser i databasen`() {
-        withMigratedDb {
-            val ident = "12345678901"
-            val referanseId = "123"
-            val dato = LocalDateTime.now()
-            val person = Person(ident = ident)
-            val hendelse =
-                SøknadHendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = dato,
-                )
-
-            person.behandle(hendelse)
+            val person = testPerson(hendelser = mutableListOf(søknadHendelse()))
             personRepository.lagrePerson(person)
-
             personRepository.hentAnallPersoner() shouldBe 1
-            personRepository.hentAntallHendelser() shouldBe 1
+            personRepository.hentAntallHendelser() shouldBe person.hendelser.size
         }
-    }
 
     @Test
-    fun `kan lagre, hente og slette elementer i fremtidig_hendelse`() {
+    fun `kan lagre, hente og slette fremtidige hendeslser`() =
         withMigratedDb {
-            val nå = LocalDateTime.now()
             val person = Person(ident = ident)
-            val meldepliktHendelse =
-                MeldepliktHendelse(
-                    ident = ident,
-                    referanseId = "123",
-                    dato = nå.minusDays(2),
-                    startDato = nå,
-                    sluttDato = null,
-                    statusMeldeplikt = true,
-                )
-            val meldegruppeHendelse =
-                DagpengerMeldegruppeHendelse(
-                    ident = ident,
-                    referanseId = "321",
-                    dato = nå.minusDays(1),
-                    startDato = nå,
-                    sluttDato = null,
-                    meldegruppeKode = "DAGP",
-                )
+            val meldepliktHendelse = meldepliktHendelse()
+            val meldegruppeHendelse = dagpengerMeldegruppeHendelse()
 
             personRepository.lagrePerson(person)
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
@@ -186,52 +113,70 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
         }
-    }
 
     @Test
-    fun `hendelser med samme referanse overskriver hverandre`() {
+    fun `hendelser med samme referanse overskriver hverandre`() =
         withMigratedDb {
-            val referanseId = "123"
-            val nå = LocalDateTime.now()
-            val person = Person(ident = ident)
-            val meldepliktHendelse =
-                MeldepliktHendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = nå.minusDays(2),
-                    startDato = nå,
-                    sluttDato = null,
-                    statusMeldeplikt = true,
-                )
-            val meldegruppeHendelse =
-                DagpengerMeldegruppeHendelse(
-                    ident = ident,
-                    referanseId = referanseId,
-                    dato = nå.minusDays(1),
-                    startDato = nå,
-                    sluttDato = null,
-                    meldegruppeKode = "DAGP",
-                )
+            val person = Person(ident)
+            val referanseId = UUID.randomUUID().toString()
+            val førsteHendelse = dagpengerMeldegruppeHendelse(referanseId)
+            val nyHendelse = meldepliktHendelse(referanseId)
 
             personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(førsteHendelse)
+            personRepository.hentHendelserSomSkalAktiveres().first().javaClass shouldBe førsteHendelse.javaClass
 
-            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
-            with(personRepository.hentHendelserSomSkalAktiveres()) {
-                size shouldBe 1
-                with(first()) {
-                    referanseId shouldBe referanseId
-                    javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
-                }
-            }
-
-            personRepository.lagreFremtidigHendelse(meldepliktHendelse)
-            with(personRepository.hentHendelserSomSkalAktiveres()) {
-                size shouldBe 1
-                with(first()) {
-                    referanseId shouldBe referanseId
-                    javaClass shouldBe MeldepliktHendelse::class.java
-                }
-            }
+            personRepository.lagreFremtidigHendelse(nyHendelse)
+            personRepository.hentHendelserSomSkalAktiveres().first().javaClass shouldBe nyHendelse.javaClass
         }
-    }
+
+    private fun testPerson(
+        hendelser: MutableList<Hendelse> = mutableListOf(),
+        arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),
+    ) = Person(
+        ident = ident,
+        statusHistorikk = statusHistorikk(mapOf(nå to Dagpengerbruker)),
+        arbeidssøkerperioder = arbeidssøkerperiode,
+    ).apply { this.hendelser.addAll(hendelser) }
+
+    private fun søknadHendelse() =
+        SøknadHendelse(
+            ident = "12345678901",
+            referanseId = UUID.randomUUID().toString(),
+            dato = LocalDateTime.now(),
+        )
+
+    private fun arbeidssøkerperiode() =
+        Arbeidssøkerperiode(
+            ident = "12345678901",
+            periodeId = UUID.randomUUID(),
+            startet = LocalDateTime.now(),
+            avsluttet = null,
+            overtattBekreftelse = false,
+        )
+
+    private fun statusHistorikk(historikk: Map<LocalDateTime, Status>) =
+        TemporalCollection<Status>().apply {
+            historikk.forEach { (dato, status) -> put(dato, status) }
+        }
+
+    private fun dagpengerMeldegruppeHendelse(referanseId: String = UUID.randomUUID().toString()) =
+        DagpengerMeldegruppeHendelse(
+            ident = "12345678901",
+            referanseId = referanseId,
+            dato = LocalDateTime.now(),
+            startDato = LocalDateTime.now(),
+            sluttDato = null,
+            meldegruppeKode = "DAGP",
+        )
+
+    private fun meldepliktHendelse(referanseId: String = UUID.randomUUID().toString()) =
+        MeldepliktHendelse(
+            ident = "12345678901",
+            referanseId = referanseId,
+            dato = LocalDateTime.now(),
+            startDato = LocalDateTime.now(),
+            sluttDato = null,
+            statusMeldeplikt = true,
+        )
 }
