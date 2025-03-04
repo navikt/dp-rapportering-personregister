@@ -101,6 +101,9 @@ class ArbeidssøkerMediatorTest {
         )
 
         person.status shouldBe IkkeDagpengerbruker
+        person.arbeidssøkerperioder
+            .find { it.periodeId == periodeId }
+            ?.overtattBekreftelse shouldBe false
     }
 }
 
