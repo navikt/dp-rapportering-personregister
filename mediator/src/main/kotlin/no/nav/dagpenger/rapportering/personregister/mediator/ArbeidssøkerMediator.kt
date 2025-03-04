@@ -12,7 +12,9 @@ import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerp
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.ZoneId
+
+val ZONE_ID = ZoneId.of("Europe/Oslo")
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -71,8 +73,8 @@ class ArbeidssøkerMediator(
             Arbeidssøkerperiode(
                 ident = it.value().identitetsnummer,
                 periodeId = it.value().id,
-                startet = LocalDateTime.ofInstant(it.value().startet.tidspunkt, ZoneOffset.systemDefault()),
-                avsluttet = it.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZoneOffset.systemDefault()) },
+                startet = LocalDateTime.ofInstant(it.value().startet.tidspunkt, ZONE_ID),
+                avsluttet = it.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
                 overtattBekreftelse = null,
             ).also(::behandle)
         }
