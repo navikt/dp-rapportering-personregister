@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMet
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
@@ -77,12 +78,13 @@ internal class ApplicationBuilder(
 
     val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+    val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvProdusent,
             arbeidssøkerperioderKafkaConsumer,
             arbeidssøkerperioderTopic,
-            arbeidssøkerMediator,
+            arbeidssøkerMottak,
         )
 
     val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
@@ -125,5 +127,5 @@ data class KafkaContext(
     val bekreftelsePåVegneAvKafkaProdusent: Producer<Long, PaaVegneAv>,
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
-    val arbeidssøkerMediator: ArbeidssøkerMediator,
+    val arbeidssøkerMottak: ArbeidssøkerMottak,
 )
