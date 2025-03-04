@@ -37,7 +37,6 @@ class PersonstatusMediatorTest {
     private lateinit var personstatusMediator: PersonstatusMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
-    private val overtaBekreftelseTopic = "paa_vegne_av"
 
     private val personObserver = mockk<PersonObserver>(relaxed = true)
 
@@ -290,6 +289,49 @@ class PersonstatusMediatorTest {
         }
     }
 
+    @Nested
+    inner class Meldingsplikt {
+        @Test
+        fun `kan behandle meldingspliktendring for allerede dagpengerbruker som oppfyller kravet`() {
+            arbeidssøker {
+                meldegruppe = "DAGP"
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+
+                personstatusMediator.behandle(meldepliktHendelse())
+
+                meldeplikt shouldBe true
+                status shouldBe Dagpengerbruker
+                personObserver skalIkkeHaSendtOvertakelseFor this
+            }
+        }
+
+        @Test
+        fun `kan behandle meldingspliktendring for ikke dagpengerbruker som oppfyller kravet`() {
+            arbeidssøker {
+                meldegruppe = "DAGP"
+
+                personstatusMediator.behandle(meldepliktHendelse())
+
+                meldeplikt shouldBe true
+                status shouldBe Dagpengerbruker
+                personObserver skalHaSendtOvertakelseFor this
+            }
+        }
+
+        @Test
+        fun `kan behandle meldingspliktendring for dagpengerbruker som ikke lenger oppfyller kravet`() {
+            arbeidssøker(overtattBekreftelse = true) {
+                meldegruppe = "DAGP"
+                statusHistorikk.put(tidligere, Dagpengerbruker)
+
+                personstatusMediator.behandle(meldepliktHendelse(status = false))
+
+                status shouldBe IkkeDagpengerbruker
+                personObserver skalHaFrasagtAnsvaretFor this
+            }
+        }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -327,12 +369,13 @@ class PersonstatusMediatorTest {
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
+        status: Boolean = true,
     ) = MeldepliktHendelse(
         ident = ident,
         dato = dato,
         startDato = dato,
         sluttDato = null,
-        statusMeldeplikt = true,
+        statusMeldeplikt = status,
         referanseId = referanseId,
     )
 }

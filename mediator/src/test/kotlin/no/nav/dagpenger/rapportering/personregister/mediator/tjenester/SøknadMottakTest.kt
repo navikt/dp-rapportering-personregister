@@ -27,14 +27,14 @@ class SøknadMottakTest {
     fun `skal motta søknad innsendt event`() {
         val ident = "12345678903"
         val søknadId = "123e4567-e89b-12d3-a456-426614174000"
-        val dato = OffsetDateTime.parse("2024-10-03T16:14:40+02:00").toLocalDateTime()
+        val dato = "2024-10-03T16:14:40+02:00"
 
-        testRapid.sendTestMessage(lagSøknadInnsendtEvent())
+        testRapid.sendTestMessage(lagSøknadInnsendtEvent(ident, dato, søknadId))
 
         val søknadHendelse =
             SøknadHendelse(
                 ident,
-                dato,
+                dato.toLocalDateTime(),
                 søknadId,
             )
 
@@ -42,15 +42,21 @@ class SøknadMottakTest {
     }
 }
 
-private fun lagSøknadInnsendtEvent(): String {
+private fun lagSøknadInnsendtEvent(
+    ident: String,
+    dato: String,
+    søknadId: String,
+): String {
     //language=json
     return """
         {
           "@event_name": "søknad_innsendt_varsel",
-          "søknadId": "123e4567-e89b-12d3-a456-426614174000",
-          "ident": "12345678903",
-          "søknadstidspunkt": "2024-10-03T16:14:40+02:00" 
+          "ident": "$ident",
+          "søknadId": "$søknadId",
+          "søknadstidspunkt": "$dato" 
           
         }
         """.trimIndent()
 }
+
+private fun String.toLocalDateTime() = OffsetDateTime.parse(this).toLocalDateTime()

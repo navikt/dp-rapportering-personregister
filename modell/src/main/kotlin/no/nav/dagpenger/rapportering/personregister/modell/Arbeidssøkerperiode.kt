@@ -60,6 +60,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             .find { it.periodeId == periodeId }
             ?.let {
                 it.avsluttet = avsluttet
+                it.overtattBekreftelse = false
             }
             ?: person.arbeidssøkerperioder.add(Arbeidssøkerperiode(periodeId, ident, startet, avsluttet, overtattBekreftelse = false))
     }
