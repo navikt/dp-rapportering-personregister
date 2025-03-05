@@ -2,17 +2,19 @@
 Egenskap: Person
   Brukere som registrerer seg som arbeidssøker og søker dagpenger
 
-  Scenario: Person søker om dagpenger, får innvilget og eventuelt stanset
-    Gitt en person
-    Når personen registrerer seg som arbeidssøker og søker dagpenger
+  Scenario: Søknad, innvilgelse og stans av dagpenger.
+    Gitt en arbeidssøker
+    Når personen søker dagpenger
+    Så skal personen være "IKKE_DAGPENGERBRUKER"
+    Når personen får meldeplikt og DAGP-meldegruppe
     Så skal personen være "DAGPENGERBRUKER"
-    Og vi skal ha overtatt bekreftelse for personen
+    Og vi har overtatt bekreftelsen for personen
 
     Når personen senere får innvilget dagpenger
     Så skal personen være "DAGPENGERBRUKER"
-    Og vi skal fortsatt ha ansvaret for personen
+    Og vi beholder ansvaret for arbeidssøkerbekreftelse
 
     Når vedtaket til personen blir stanset
     Så skal personen være "IKKE_DAGPENGERBRUKER"
-    Og vi skal ikke lenger ha ansvaret for personen
+    Og vi frasier oss ansvaret for personen
 

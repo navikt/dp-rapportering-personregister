@@ -21,6 +21,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
@@ -93,12 +94,13 @@ open class ApiTestSetup {
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+            val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
             val kafkaContext =
                 KafkaContext(
                     overtaBekreftelseKafkaProdusent,
                     arbedssøkerperiodeKafkaConsumer,
                     "ARBEIDSSOKERPERIODER_TOPIC",
-                    arbeidssøkerMediator,
+                    arbeidssøkerMottak,
                 )
 
             val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
