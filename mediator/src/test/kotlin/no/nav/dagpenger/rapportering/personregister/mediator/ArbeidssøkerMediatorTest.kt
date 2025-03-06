@@ -7,10 +7,10 @@ import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
-import no.nav.dagpenger.rapportering.personregister.modell.IkkeDagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -51,7 +51,7 @@ class ArbeidssøkerMediatorTest {
             ),
         )
 
-        person.status shouldBe Dagpengerbruker
+        person.status shouldBe DAGPENGERBRUKER
         personObserver skalHaSendtOvertakelseFor person
     }
 
@@ -73,7 +73,7 @@ class ArbeidssøkerMediatorTest {
             ),
         )
 
-        person.status shouldBe IkkeDagpengerbruker
+        person.status shouldBe IKKE_DAGPENGERBRUKER
         personObserver skalIkkeHaSendtOvertakelseFor person
     }
 
@@ -92,7 +92,7 @@ class ArbeidssøkerMediatorTest {
 
         val person =
             testPerson(ident, "DAGP", meldeplikt = true).apply {
-                arbeidssøkerperioder.add(arbeidssøkerperiode)
+                statusHistorikk.put(LocalDateTime.now(), DAGPENGERBRUKER)
             }
 
         every { personRepository.hentPerson(ident) } returns person
@@ -101,7 +101,7 @@ class ArbeidssøkerMediatorTest {
             arbeidssøkerperiode.copy(avsluttet = LocalDateTime.now()),
         )
 
-        person.status shouldBe IkkeDagpengerbruker
+        person.status shouldBe IKKE_DAGPENGERBRUKER
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
             ?.overtattBekreftelse shouldBe false
@@ -125,7 +125,7 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(ident)
 
-        person.status shouldBe Dagpengerbruker
+        person.status shouldBe DAGPENGERBRUKER
         personObserver skalHaSendtOvertakelseFor person
     }
 
@@ -147,7 +147,7 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(ident)
 
-        person.status shouldBe IkkeDagpengerbruker
+        person.status shouldBe IKKE_DAGPENGERBRUKER
     }
 
     @Test
@@ -163,15 +163,16 @@ class ArbeidssøkerMediatorTest {
                 avsluttet = null,
                 overtattBekreftelse = true,
             )
-        val person = testPerson(ident, "DAGP", meldeplikt = true, mutableListOf(arbeidsøkerperioder))
-
+        val person =
+            testPerson(ident, "DAGP", meldeplikt = true, mutableListOf(arbeidsøkerperioder))
+                .apply { statusHistorikk.put(LocalDateTime.now(), DAGPENGERBRUKER) }
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode("12345678901") } returns
             arbeidsøkerperioder.copy(avsluttet = LocalDateTime.now())
         every { personRepository.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(ident)
 
-        person.status shouldBe IkkeDagpengerbruker
+        person.status shouldBe IKKE_DAGPENGERBRUKER
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
             ?.overtattBekreftelse shouldBe false
@@ -186,7 +187,7 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(ident)
 
-        personRepository.hentPerson(ident)?.status shouldBe IkkeDagpengerbruker
+        personRepository.hentPerson(ident)?.status shouldBe IKKE_DAGPENGERBRUKER
     }
 }
 

@@ -11,15 +11,16 @@ data class Arbeidssøkerperiode(
     var overtattBekreftelse: Boolean?,
 )
 
-sealed class ArbeidssøkerperiodeHendelse(
+abstract class ArbeidssøkerperiodeHendelse(
     open val periodeId: UUID,
-    ident: String,
-    dato: LocalDateTime,
-) : Hendelse(ident = ident, dato = dato) {
+    override val ident: String,
+    override val dato: LocalDateTime,
+) : Hendelse {
     override val referanseId by lazy { periodeId.toString() }
-    override val kilde: Kildesystem = Kildesystem.Arbeidssokerregisteret
 
-    abstract fun håndter(person: Person)
+    override fun behandle(person: Person) {}
+
+    override val kilde: Kildesystem = Kildesystem.Arbeidssokerregisteret
 }
 
 data class StartetArbeidssøkerperiodeHendelse(
@@ -27,23 +28,21 @@ data class StartetArbeidssøkerperiodeHendelse(
     override val ident: String,
     val startet: LocalDateTime,
 ) : ArbeidssøkerperiodeHendelse(periodeId, ident, startet) {
-    override fun håndter(person: Person) {
+    override fun behandle(person: Person) {
         person.arbeidssøkerperioder
-            .find { it.periodeId == periodeId }
+            .none { it.periodeId == periodeId }
+            .takeIf { it }
+            ?.let { person.leggTilNyArbeidssøkerperiode(this) }
+
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
             ?.let {
-                if (it.overtattBekreftelse != true) {
-                    it.overtattBekreftelse = true
-                }
-            }
-            ?: run {
-                Arbeidssøkerperiode(
-                    periodeId,
-                    ident,
-                    startet,
-                    avsluttet = null,
-                    overtattBekreftelse = false,
-                ).apply {
-                    person.arbeidssøkerperioder.add(this)
+                person.setStatus(it)
+                if (person.oppfyllerKrav) {
+                    person.overtaArbeidssøkerBekreftelse()
+                } else {
+                    person.frasiArbeidssøkerBekreftelse(periodeId)
                 }
             }
     }
@@ -55,14 +54,19 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     val startet: LocalDateTime,
     val avsluttet: LocalDateTime,
 ) : ArbeidssøkerperiodeHendelse(periodeId, ident, startet) {
-    override fun håndter(person: Person) {
+    override fun behandle(person: Person) {
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
+            ?.let { it.avsluttet = avsluttet }
+            ?: run { person.leggTilNyArbeidssøkerperiode(this) }
+
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
             ?.let {
-                it.avsluttet = avsluttet
-                it.overtattBekreftelse = false
+                person.setStatus(it)
+                person.frasiArbeidssøkerBekreftelse(periodeId)
             }
-            ?: person.arbeidssøkerperioder.add(Arbeidssøkerperiode(periodeId, ident, startet, avsluttet, overtattBekreftelse = false))
     }
 }
 
@@ -70,3 +74,27 @@ fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
 
 val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
     get() = this.firstOrNull { it.aktiv() }
+
+fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHendelse) {
+    arbeidssøkerperioder.add(
+        Arbeidssøkerperiode(
+            hendelse.periodeId,
+            ident,
+            hendelse.startet,
+            null,
+            overtattBekreftelse = false,
+        ),
+    )
+}
+
+fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiodeHendelse) {
+    arbeidssøkerperioder.add(
+        Arbeidssøkerperiode(
+            hendelse.periodeId,
+            ident,
+            hendelse.startet,
+            hendelse.avsluttet,
+            overtattBekreftelse = false,
+        ),
+    )
+}

@@ -8,8 +8,8 @@ import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -70,7 +70,7 @@ class PostgresPersonRepository(
                                 "INSERT INTO person (ident, status, meldeplikt, meldegruppe) VALUES (:ident, :status, :meldeplikt, :meldegruppe) RETURNING id",
                                 mapOf(
                                     "ident" to person.ident,
-                                    "status" to person.status.type.name,
+                                    "status" to person.status.name,
                                     "meldeplikt" to person.meldeplikt,
                                     "meldegruppe" to person.meldegruppe,
                                 ),
@@ -99,7 +99,7 @@ class PostgresPersonRepository(
                             "UPDATE person SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe WHERE id = :id",
                             mapOf(
                                 "id" to personId,
-                                "status" to person.status.type.name,
+                                "status" to person.status.name,
                                 "meldeplikt" to person.meldeplikt,
                                 "meldegruppe" to person.meldegruppe,
                             ),
@@ -261,7 +261,7 @@ class PostgresPersonRepository(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt),
                     )
 
-                is ArbeidssøkerHendelse -> null
+                is ArbeidssøkerperiodeHendelse -> null
                 is SøknadHendelse -> null
                 else -> null
             }
@@ -316,28 +316,28 @@ class PostgresPersonRepository(
                 DagpengerMeldegruppeHendelse(
                     ident,
                     dato,
+                    referanseId,
                     startDato!!,
                     sluttDato,
                     defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
-                    referanseId,
                 )
             "AnnenMeldegruppeHendelse" ->
                 AnnenMeldegruppeHendelse(
                     ident,
                     dato,
+                    referanseId,
                     startDato!!,
                     sluttDato,
                     defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
-                    referanseId,
                 )
             "MeldepliktHendelse" ->
                 MeldepliktHendelse(
                     ident,
                     dato,
+                    referanseId,
                     startDato!!,
                     sluttDato,
                     defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
-                    referanseId,
                 )
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
@@ -395,7 +395,7 @@ class PostgresPersonRepository(
                         mapOf("person_id" to personId),
                     ).map { row ->
                         val dato = row.localDateTime("dato")
-                        val status = Status.rehydrer(row.string("status")) // TOOD: fix
+                        val status = Status.valueOf(row.string("status"))
                         put(dato, status)
                     }.asList,
                 )
@@ -449,7 +449,7 @@ class PostgresPersonRepository(
                     tx.run(
                         queryOf(
                             "INSERT INTO status_historikk (person_id, dato, status) VALUES (:person_id, :dato, :status)",
-                            mapOf("person_id" to personId, "dato" to dato, "status" to status.type.name),
+                            mapOf("person_id" to personId, "dato" to dato, "status" to status.name),
                         ).asUpdate,
                     )
                 }.validateRowsAffected()

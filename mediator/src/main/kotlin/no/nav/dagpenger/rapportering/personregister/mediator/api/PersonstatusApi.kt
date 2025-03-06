@@ -42,10 +42,10 @@ internal fun Application.personstatusApi(
                         MeldepliktHendelse(
                             ident,
                             LocalDateTime.now(),
+                            UUID.randomUUID().toString(),
                             startDato = fraDato,
                             sluttDato = null,
                             true,
-                            UUID.randomUUID().toString(),
                         ),
                     )
 
@@ -53,10 +53,10 @@ internal fun Application.personstatusApi(
                         DagpengerMeldegruppeHendelse(
                             ident,
                             LocalDateTime.now(),
+                            UUID.randomUUID().toString(),
                             startDato = fraDato,
                             sluttDato = null,
                             "DAGP",
-                            UUID.randomUUID().toString(),
                         ),
                     )
 
@@ -75,7 +75,7 @@ internal fun Application.personstatusApi(
                                 HttpStatusCode.OK,
                                 PersonResponse(
                                     ident = it.ident,
-                                    status = StatusResponse.valueOf(it.status.type.name),
+                                    status = StatusResponse.valueOf(it.status.name),
                                 ),
                             )
                         }

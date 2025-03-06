@@ -74,7 +74,7 @@ class Steps : No {
         }
 
         Så("skal personen være {string}") { status: String ->
-            person.status.type shouldBe Status.Type.valueOf(status)
+            person.status shouldBe Status.valueOf(status)
         }
 
         Og("vi har overtatt bekreftelsen for personen") {
@@ -94,10 +94,10 @@ class Steps : No {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         meldegruppeKode: String = "DAGP",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, startDato = dato, sluttDato = null, meldegruppeKode, referanseId)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, meldegruppeKode)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, startDato = dato, sluttDato = null, "ARBS", referanseId)
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS")
 }

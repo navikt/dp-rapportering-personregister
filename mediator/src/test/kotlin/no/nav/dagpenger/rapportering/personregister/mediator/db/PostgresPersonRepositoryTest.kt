@@ -7,11 +7,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMig
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Dagpengerbruker
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import org.junit.jupiter.api.Disabled
@@ -138,7 +138,7 @@ class PostgresPersonRepositoryTest {
         arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),
     ) = Person(
         ident = ident,
-        statusHistorikk = statusHistorikk(mapOf(nå to Dagpengerbruker)),
+        statusHistorikk = statusHistorikk(mapOf(nå to DAGPENGERBRUKER)),
         arbeidssøkerperioder = arbeidssøkerperiode,
     ).apply { this.hendelser.addAll(hendelser) }
 

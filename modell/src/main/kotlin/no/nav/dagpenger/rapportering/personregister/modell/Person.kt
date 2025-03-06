@@ -1,6 +1,14 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
+import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import java.time.LocalDateTime
+import java.util.UUID
+
+enum class Status {
+    DAGPENGERBRUKER,
+    IKKE_DAGPENGERBRUKER,
+}
 
 data class Person(
     val ident: String,
@@ -18,58 +26,18 @@ data class Person(
         observers.add(observer)
     }
 
-    fun status(dato: LocalDateTime): Status = if (statusHistorikk.isEmpty()) IkkeDagpengerbruker else statusHistorikk.get(dato)
+    fun status(dato: LocalDateTime): Status = if (statusHistorikk.isEmpty()) IKKE_DAGPENGERBRUKER else statusHistorikk.get(dato)
 
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun behandle(hendelse: SøknadHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
-
-    fun behandle(hendelse: DagpengerMeldegruppeHendelse) = behandle(hendelse) { overtaArbeidssøkerBekreftelse() }
-
-    fun behandle(hendelse: AnnenMeldegruppeHendelse) =
-        behandle(hendelse) {
-            frasiArbeidssøkerBekreftelse()
-        }
-
-    fun behandle(hendelse: MeldepliktHendelse) =
-        behandle(hendelse) {
-            if (this.status == IkkeDagpengerbruker) {
-                frasiArbeidssøkerBekreftelse()
-            } else {
-                overtaArbeidssøkerBekreftelse()
-            }
-        }
-
-    fun behandle(hendelse: ArbeidssøkerperiodeHendelse) =
-        behandle(hendelse) {
-            if (this.status == Dagpengerbruker) {
-                overtaArbeidssøkerBekreftelse()
-            } else {
-                frasiArbeidssøkerBekreftelse()
-            }
-        }
-
-    fun behandle(hendelse: Hendelse) {
-        when (hendelse) {
-            is SøknadHendelse -> behandle(hendelse)
-            is DagpengerMeldegruppeHendelse -> behandle(hendelse)
-            is AnnenMeldegruppeHendelse -> behandle(hendelse)
-            is MeldepliktHendelse -> behandle(hendelse)
-            is ArbeidssøkerperiodeHendelse -> behandle(hendelse)
-            else -> throw IllegalArgumentException("Ukjent hendelse: ${hendelse::class.simpleName}")
-        }
+    fun setStatus(status: Status) {
+        statusHistorikk.put(LocalDateTime.now(), status)
     }
 
-    private fun behandle(
-        hendelse: Hendelse,
-        håndter: (Hendelse) -> Unit = {},
-    ) {
-        status
-            .håndter(hendelse, this) { nyStatus ->
-                statusHistorikk.put(hendelse.dato, nyStatus)
-                håndter(hendelse)
-            }.also { hendelser.add(hendelse) }
+    fun behandle(hendelse: Hendelse) {
+        hendelser.add(hendelse)
+        hendelse.behandle(this)
     }
 }
 
@@ -78,7 +46,6 @@ fun Person.overtaArbeidssøkerBekreftelse() {
         if (it.overtattBekreftelse != true) {
             try {
                 observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-                // TODO: Hva skjer hvis overtaArbeidssøkerBekreftelse feiler?
                 it.overtattBekreftelse = true
             } catch (e: Exception) {
                 it.overtattBekreftelse = false
@@ -87,16 +54,20 @@ fun Person.overtaArbeidssøkerBekreftelse() {
     }
 }
 
-fun Person.frasiArbeidssøkerBekreftelse() {
-    arbeidssøkerperioder.gjeldende?.let {
-        if (it.overtattBekreftelse == true) {
-            observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
-            it.overtattBekreftelse = false
+fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let {
+            if (it.overtattBekreftelse == true) {
+                observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                it.overtattBekreftelse = false
+            }
         }
-    }
 }
 
 val Person.erArbeidssøker: Boolean
     get() = arbeidssøkerperioder.gjeldende != null
+
+fun Person.vurderNyStatus() = if (this.oppfyllerKrav) DAGPENGERBRUKER else IKKE_DAGPENGERBRUKER
 
 val Person.oppfyllerKrav: Boolean get() = this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP"

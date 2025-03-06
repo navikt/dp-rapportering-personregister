@@ -66,5 +66,5 @@ private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val statusMeldeplikt = this["after"]["STATUS_MELDEPLIKT"].asText().let { it == "J" }
 
-    return MeldepliktHendelse(ident, dato, startDato, sluttDato, statusMeldeplikt, hendelseId)
+    return MeldepliktHendelse(ident, dato, hendelseId, startDato, sluttDato, statusMeldeplikt)
 }

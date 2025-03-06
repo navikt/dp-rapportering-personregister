@@ -1,101 +1,110 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 import java.time.LocalDateTime
-import java.util.UUID
 
-sealed class Hendelse(
-    open val ident: String,
-    val dato: LocalDateTime,
-) {
-    abstract val kilde: Kildesystem
-    abstract val referanseId: String
+interface Hendelse {
+    val ident: String
+    val dato: LocalDateTime
+    val kilde: Kildesystem
+    val referanseId: String
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is Hendelse) return false
-
-        if (ident != other.ident) return false
-        if (dato != other.dato) return false
-        if (kilde != other.kilde) return false
-        if (referanseId != other.referanseId) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = ident.hashCode()
-        result = 31 * result + dato.hashCode()
-        result = 31 * result + kilde.hashCode()
-        result = 31 * result + referanseId.hashCode()
-        return result
-    }
-
-    override fun toString(): String = "Hendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId')"
+    fun behandle(person: Person)
 }
 
-class SøknadHendelse(
-    ident: String,
-    dato: LocalDateTime,
+data class SøknadHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
     override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
-    override val kilde = Kildesystem.Søknad
+) : Hendelse {
+    override val kilde: Kildesystem = Kildesystem.Søknad
 
-    override fun toString(): String = "SøknadHendelse(ident='$ident', dato=$dato, kilde=$kilde, referanseId='$referanseId')"
+    override fun behandle(person: Person) {
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
+            .takeIf { person.oppfyllerKrav }
+            ?.let {
+                person.setStatus(it)
+                person.overtaArbeidssøkerBekreftelse()
+            }
+    }
 }
 
-class DagpengerMeldegruppeHendelse(
-    ident: String,
-    dato: LocalDateTime,
+data class DagpengerMeldegruppeHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
+    override val referanseId: String,
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
+) : Hendelse {
     override val kilde = Kildesystem.Arena
 
-    override fun toString(): String =
-        "DagpengerMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+    override fun behandle(person: Person) {
+        person.meldegruppe = meldegruppeKode
+
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
+            .takeIf { person.oppfyllerKrav }
+            ?.let {
+                person.setStatus(it)
+                person.overtaArbeidssøkerBekreftelse()
+            }
+    }
 }
 
-class AnnenMeldegruppeHendelse(
-    ident: String,
-    dato: LocalDateTime,
+data class AnnenMeldegruppeHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
+    override val referanseId: String,
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
+) : Hendelse {
     override val kilde = Kildesystem.Arena
 
-    override fun toString(): String =
-        "AnnenMeldegruppeHendelse(ident='$ident', dato=$dato, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId', meldegruppeKode='$meldegruppeKode')"
+    override fun behandle(person: Person) {
+        person.meldegruppe = meldegruppeKode
+
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
+            .takeIf { !person.oppfyllerKrav }
+            ?.let {
+                person.setStatus(it)
+                person.arbeidssøkerperioder.gjeldende
+                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId) }
+            }
+    }
 }
 
-class MeldepliktHendelse(
-    ident: String,
-    dato: LocalDateTime,
+data class MeldepliktHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
+    override val referanseId: String,
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
-    override val referanseId: String,
-) : Hendelse(ident = ident, dato = dato) {
+) : Hendelse {
     override val kilde = Kildesystem.Arena
 
-    override fun toString(): String =
-        "MeldepliktHendelse(ident='$ident', startDato=$startDato, sluttDato=$sluttDato, statusMeldeplikt=$statusMeldeplikt, kilde=$kilde, referanseId='$referanseId')"
-}
+    override fun behandle(person: Person) {
+        person.meldeplikt = statusMeldeplikt
 
-class ArbeidssøkerHendelse(
-    ident: String,
-    val periodeId: UUID,
-    val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime? = null,
-) : Hendelse(ident = ident, dato = startDato) {
-    override val kilde = Kildesystem.Arbeidssokerregisteret
-    override val referanseId = periodeId.toString()
-
-    override fun toString(): String =
-        "ArbeidssøkerHendelse(ident='$ident', periodeId=$periodeId, startDato=$startDato, sluttDato=$sluttDato, kilde=$kilde, referanseId='$referanseId')"
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
+            ?.let {
+                person.setStatus(it)
+                if (person.oppfyllerKrav) {
+                    person.overtaArbeidssøkerBekreftelse()
+                } else {
+                    person.arbeidssøkerperioder.gjeldende
+                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId) }
+                }
+            }
+    }
 }
 
 enum class Kildesystem {
