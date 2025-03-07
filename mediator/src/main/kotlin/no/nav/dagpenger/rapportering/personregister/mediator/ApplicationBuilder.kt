@@ -1,10 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
@@ -12,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializ
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.openTelemetry
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -76,9 +79,9 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvTopic,
         )
 
-    val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-    val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
-    val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
+    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
+    private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvProdusent,
@@ -87,14 +90,22 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak,
         )
 
-    val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
-    val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
-    val aktiverHendelserJob = AktiverHendelserJob()
+    private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
+    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
+    private val aktiverHendelserJob = AktiverHendelserJob()
     private val rapidsConnection =
         RapidApplication
             .create(
                 env = configuration,
-                builder = { this.withKtor(embeddedServer(CIOEngine, port = 8080, module = {})) },
+                builder = {
+                    this.withKtor(
+                        embeddedServer(CIOEngine, port = 8080, module = {
+                            install(KtorServerTelemetry) {
+                                setOpenTelemetry(openTelemetry)
+                            }
+                        }),
+                    )
+                },
             ) { engine, rapid ->
                 val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
                 with(engine.application) {

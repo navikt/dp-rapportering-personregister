@@ -18,7 +18,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
@@ -33,10 +32,6 @@ fun Application.pluginConfiguration(
 ) {
     install(Authentication) {
         auth()
-    }
-
-    install(KtorServerTelemetry) {
-        setOpenTelemetry(Configuration.openTelemetry)
     }
 
     install(ContentNegotiation) {
