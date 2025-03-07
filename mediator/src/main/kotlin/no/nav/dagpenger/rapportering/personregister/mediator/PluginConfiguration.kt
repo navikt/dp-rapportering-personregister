@@ -18,7 +18,6 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
@@ -37,7 +36,7 @@ fun Application.pluginConfiguration(
     }
 
     install(KtorServerTelemetry) {
-        setOpenTelemetry(GlobalOpenTelemetry.get())
+        setOpenTelemetry(Configuration.openTelemetry)
     }
 
     install(ContentNegotiation) {

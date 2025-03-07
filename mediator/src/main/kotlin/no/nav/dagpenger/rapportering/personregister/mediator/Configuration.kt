@@ -11,6 +11,7 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import io.opentelemetry.api.GlobalOpenTelemetry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
@@ -95,6 +96,8 @@ internal object Configuration {
             .registerModule(JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+    val openTelemetry = GlobalOpenTelemetry.get()
 }
 
 private fun String.formatUrl(): String = if (this.startsWith("http")) this else "https://$this"
