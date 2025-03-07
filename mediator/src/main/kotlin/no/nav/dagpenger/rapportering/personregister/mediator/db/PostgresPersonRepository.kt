@@ -317,7 +317,9 @@ class PostgresPersonRepository(
                     ident,
                     dato,
                     referanseId,
-                    startDato!!,
+                    startDato ?: throw IllegalStateException(
+                        "DagpengerMeldegruppeHendelse med referanseId $referanseId mangler startDato",
+                    ),
                     sluttDato,
                     defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
                 )
@@ -326,7 +328,9 @@ class PostgresPersonRepository(
                     ident,
                     dato,
                     referanseId,
-                    startDato!!,
+                    startDato ?: throw IllegalStateException(
+                        "AnnenMeldegruppeHendelse med referanseId $referanseId mangler startDato",
+                    ),
                     sluttDato,
                     defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
                 )
@@ -335,7 +339,9 @@ class PostgresPersonRepository(
                     ident,
                     dato,
                     referanseId,
-                    startDato!!,
+                    startDato ?: throw IllegalStateException(
+                        "MeldepliktHendelse med referanseId $referanseId mangler startDato",
+                    ),
                     sluttDato,
                     defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
                 )
@@ -343,14 +349,20 @@ class PostgresPersonRepository(
                 StartetArbeidssøkerperiodeHendelse(
                     UUID.fromString(referanseId),
                     ident,
-                    startDato!!,
+                    startDato ?: throw IllegalStateException(
+                        "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
+                    ),
                 )
             "AvsluttetArbeidssøkerperiodeHendelse" ->
                 AvsluttetArbeidssøkerperiodeHendelse(
                     UUID.fromString(referanseId),
                     ident,
-                    startDato!!,
-                    sluttDato!!,
+                    startDato ?: throw IllegalStateException(
+                        "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
+                    ),
+                    sluttDato ?: throw IllegalStateException(
+                        "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
+                    ),
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
