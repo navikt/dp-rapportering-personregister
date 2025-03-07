@@ -1,5 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.observers
 
+import io.opentelemetry.api.common.AttributeKey
+import io.opentelemetry.api.common.Attributes
+import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
@@ -30,6 +33,10 @@ class PersonObserverKafka(
                     val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
                     val record =
                         ProducerRecord(bekreftelsePåVegneAvTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
+                    Span.current().addEvent(
+                        "Frasier ansvar for arbeidssøkerbekreftelse",
+                        Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
+                    )
                     val metadata = producer.sendDeferred(record).await()
                     sikkerlogg.info {
                         "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
@@ -61,6 +68,10 @@ class PersonObserverKafka(
                         ),
                     )
 
+                Span.current().addEvent(
+                    "Overtar ansvar for arbeidssøkerbekreftelse",
+                    Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
+                )
                 val metadata = runBlocking { producer.sendDeferred(record).await() }
                 sikkerlogg.info {
                     "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +

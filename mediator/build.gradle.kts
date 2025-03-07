@@ -9,11 +9,6 @@ plugins {
 group = "no.nav"
 version = "unspecified"
 
-/*repositories {
-    mavenCentral()
-    maven { setUrl("https://github-package-registry-mirror.gc.nav.no/cached/maven-release") }
-}*/
-
 dependencies {
     implementation(project(":kafka"))
     implementation(project(":modell"))
@@ -30,6 +25,9 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:2.13.3-alpha")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.1.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.36.0")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)

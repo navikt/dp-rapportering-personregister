@@ -18,6 +18,8 @@ import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.opentelemetry.api.GlobalOpenTelemetry
+import io.opentelemetry.instrumentation.ktor.v3_0.KtorServerTelemetry
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
@@ -32,6 +34,10 @@ fun Application.pluginConfiguration(
 ) {
     install(Authentication) {
         auth()
+    }
+
+    install(KtorServerTelemetry) {
+        setOpenTelemetry(GlobalOpenTelemetry.get())
     }
 
     install(ContentNegotiation) {
@@ -67,6 +73,7 @@ fun Application.pluginConfiguration(
     install(KafkaProducerPlugin) {
         kafkaProducers = listOf(kafkaContext.bekreftelsePåVegneAvKafkaProdusent)
     }
+
     install(KafkaConsumerPlugin<Long, Periode>("Arbeidssøkerperioder")) {
         this.consumeFunction = kafkaContext.arbeidssøkerMottak::consume
         // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException

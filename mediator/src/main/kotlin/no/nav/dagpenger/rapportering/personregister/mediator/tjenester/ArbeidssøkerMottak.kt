@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -13,6 +14,7 @@ private val ZONE_ID = ZoneId.of("Europe/Oslo")
 class ArbeidssøkerMottak(
     private val ArbeidssøkerMediator: ArbeidssøkerMediator,
 ) {
+    @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach {
             sikkerlogg.info { "Behandler periode med key: ${it.key()} og value: ${it.value()}" }
