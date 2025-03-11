@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -10,7 +9,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -18,9 +16,11 @@ import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeH
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.Status.*
+import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -58,88 +58,30 @@ class PersonMediatorTest {
     @Nested
     inner class SøknadHendelser {
         @Test
-        fun `søknad for ny person som ikke er arbeidssøkerregistrert`() {
+        fun `søknad for ny person`() {
+            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
+            personMediator.behandle(søknadHendelse(ident))
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ident shouldBe ident
+                    status shouldBe IKKE_DAGPENGERBRUKER
+                }
+        }
+
+        @Test
+        fun `søknad for eksisterende person`() {
             testPerson {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
+                personMediator.behandle(søknadHendelse(ident))
 
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder shouldHaveSize 0
-            }
-        }
-
-        @Test
-        fun `søknad for ny person som er arbeidssøkerregistrert men ikke oppfyller kravet`() {
-            testPerson {
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
-
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.periodeId shouldBe periodeId
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
-            }
-        }
-
-        @Test
-        fun `søknad for ny person som er arbeidssøkerregistrert som oppfyller kravet`() {
-            testPerson {
-                meldeplikt = true
-                meldegruppe = "DAGP"
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
-
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.periodeId shouldBe periodeId
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-            }
-        }
-
-        @Test
-        fun `søknad for eksisterende person som ikke er arbeidssøkerregistrert`() {
-            testPerson {
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
-
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder shouldHaveSize 0
-            }
-        }
-
-        @Test
-        fun `søknad for eksisterende person som er arbeidssøkerregistrert`() {
-            testPerson {
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns
-                    listOf(
-                        arbeidssøkerResponse(periodeId),
-                    )
-
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder shouldHaveSize 1
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
-            }
-        }
-
-        @Test
-        fun `overtar arbeidssøkerbekreftelse for søker som er oppfyller kravet`() {
-            testPerson {
-                meldeplikt = true
-                meldegruppe = "DAGP"
-
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns
-                    listOf(arbeidssøkerResponse(periodeId))
-
-                personMediator.behandle(søknadHendelse())
-
-                status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder shouldHaveSize 1
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                personObserver skalHaSendtOvertakelseFor this
+                personRepository
+                    .hentPerson(ident)
+                    ?.apply {
+                        ident shouldBe ident
+                        status shouldBe IKKE_DAGPENGERBRUKER
+                    }
             }
         }
     }
@@ -147,98 +89,74 @@ class PersonMediatorTest {
     @Nested
     inner class Meldegruppeendring {
         @Test
-        fun `dagpengerhendelse for ny person som ikke oppfyller kravet`() {
-            arbeidssøker {
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
+        fun `meldegruppendring for ny person`() {
+            personMediator.behandle(dagpengerMeldegruppeHendelse())
+            personRepository.hentPerson(ident) shouldBe null
 
+            personMediator.behandle(annenMeldegruppeHendelse())
+            personRepository.hentPerson(ident) shouldBe null
+        }
+
+        @Test
+        fun `meldegruppendring for eksisterende person som ikke oppfyller krav`() {
+            testPerson {
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                status shouldBe IKKE_DAGPENGERBRUKER
+                personObserver skalIkkeHaSendtOvertakelseFor this
+
+                personMediator.behandle(annenMeldegruppeHendelse())
+                status shouldBe IKKE_DAGPENGERBRUKER
+            }
+        }
+
+        @Test
+        fun `meldegruppendring for eksisterende person som oppfyller krav`() {
+            arbeidssøker {
+                meldeplikt = true
+
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                status shouldBe DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                personObserver skalHaSendtOvertakelseFor this
+
+                personMediator.behandle(annenMeldegruppeHendelse())
+                status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                personObserver skalHaFrasagtAnsvaretFor this
+            }
+        }
+    }
+
+    @Nested
+    inner class Meldingsplikt {
+        @Test
+        fun `meldepliktendring for ny person`() {
+            personMediator.behandle(meldepliktHendelse())
+            personRepository.hentPerson(ident) shouldBe null
+        }
+
+        @Test
+        fun `meldepliktendring for eksisterende person som ikke oppfyller krav`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse(status = false))
                 status shouldBe IKKE_DAGPENGERBRUKER
                 personObserver skalIkkeHaSendtOvertakelseFor this
             }
         }
 
         @Test
-        fun `dagpengerhendelse for ny person som oppfyller kravet`() {
+        fun `meldepliktendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
-                meldeplikt = true
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `dagpengerhendelse for eksisterende person som ikke er dagpengerbruker`() {
-            arbeidssøker {
-                meldeplikt = true
-
-                statusHistorikk.put(nå.minusDays(1), IKKE_DAGPENGERBRUKER)
-                personRepository.oppdaterPerson(this)
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `dagpengerhendelse for eksisterende person som er dagpengerbruker`() {
-            arbeidssøker {
-                meldeplikt = true
                 meldegruppe = "DAGP"
-
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-                personRepository.oppdaterPerson(this)
-
+                personMediator.behandle(meldepliktHendelse(status = true))
                 status shouldBe DAGPENGERBRUKER
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-
-                status shouldBe DAGPENGERBRUKER
+                personObserver skalHaSendtOvertakelseFor this
             }
         }
+    }
 
-        @Test
-        fun `annenMeldegruppeHendelse for ny person`() {
-            testPerson {
-                personMediator.behandle(annenMeldegruppeHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-            }
-        }
-
-        @Test
-        fun `annenMeldegruppeHendelse for eksisterende person som er dagpengerbruker`() {
-            testPerson {
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-                personRepository.oppdaterPerson(this)
-
-                status shouldBe DAGPENGERBRUKER
-
-                personMediator.behandle(annenMeldegruppeHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-            }
-        }
-
-        @Test
-        fun `annenMeldegruppeHendelse for eksisterende person som ikke er dagpengerbruker`() {
-            testPerson {
-                statusHistorikk.put(tidligere, IKKE_DAGPENGERBRUKER)
-                personRepository.oppdaterPerson(this)
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-
-                personMediator.behandle(annenMeldegruppeHendelse())
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-            }
-        }
-
+    @Nested
+    inner class ArbeidssøkerBekreftelse {
         @Test
         fun `overtar arbeidssøker bekreftelse når man blir dagpengerbruker`() {
             arbeidssøker {
@@ -288,49 +206,6 @@ class PersonMediatorTest {
         }
     }
 
-    @Nested
-    inner class Meldingsplikt {
-        @Test
-        fun `kan behandle meldingspliktendring for allerede dagpengerbruker som oppfyller kravet`() {
-            arbeidssøker {
-                meldegruppe = "DAGP"
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-
-                personMediator.behandle(meldepliktHendelse())
-
-                meldeplikt shouldBe true
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalIkkeHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `kan behandle meldingspliktendring for ikke dagpengerbruker som oppfyller kravet`() {
-            arbeidssøker {
-                meldegruppe = "DAGP"
-
-                personMediator.behandle(meldepliktHendelse())
-
-                meldeplikt shouldBe true
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `kan behandle meldingspliktendring for dagpengerbruker som ikke lenger oppfyller kravet`() {
-            arbeidssøker(overtattBekreftelse = true) {
-                meldegruppe = "DAGP"
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-
-                personMediator.behandle(meldepliktHendelse(status = false))
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-                personObserver skalHaFrasagtAnsvaretFor this
-            }
-        }
-    }
-
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -344,13 +219,23 @@ class PersonMediatorTest {
         val person =
             Person(
                 ident = ident,
-                arbeidssøkerperioder = mutableListOf(Arbeidssøkerperiode(periodeId, ident, tidligere, null, overtattBekreftelse)),
+                arbeidssøkerperioder =
+                    mutableListOf(
+                        Arbeidssøkerperiode(
+                            periodeId,
+                            ident,
+                            tidligere,
+                            null,
+                            overtattBekreftelse,
+                        ),
+                    ),
             )
         personRepository.lagrePerson(person)
         person.apply(block)
     }
 
     private fun søknadHendelse(
+        ident: String = this.ident,
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = SøknadHendelse(ident, dato, referanseId)
@@ -377,6 +262,37 @@ class PersonMediatorTest {
         statusMeldeplikt = status,
         referanseId = referanseId,
     )
+
+    private fun lagPerson(
+        arbeidssøker: Boolean,
+        meldeplikt: Boolean,
+        meldegruppe: String,
+    ) = Person(
+        ident = ident,
+    ).apply {
+        if (arbeidssøker) {
+            arbeidssøkerperioder.add(
+                Arbeidssøkerperiode(
+                    periodeId,
+                    ident,
+                    tidligere,
+                    null,
+                    false,
+                ),
+            )
+        }
+        if (meldeplikt) {
+            this.meldeplikt = true
+        }
+
+        if (meldegruppe.isNotEmpty()) {
+            this.meldegruppe = meldegruppe
+        }
+
+        if (oppfyllerKrav) {
+            statusHistorikk.put(tidligere, DAGPENGERBRUKER)
+        }
+    }
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {

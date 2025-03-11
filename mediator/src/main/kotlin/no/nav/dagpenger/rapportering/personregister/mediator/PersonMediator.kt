@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
 class PersonMediator(
@@ -17,35 +18,51 @@ class PersonMediator(
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) {
         sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        behandle(søknadHendelse) { arbeidssøkerMediator.behandle(it.ident) }
+        hentEllerOpprettPerson(søknadHendelse.ident)
+            .also {
+                it.behandle(søknadHendelse)
+                personRepository.oppdaterPerson(it)
+                arbeidssøkerMediator.behandle(søknadHendelse.ident)
+            }
     }
 
     fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
-        behandle(hendelse) {}
+        behandleHendelse(hendelse)
     }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) {
         sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
-        behandle(hendelse) {}
+        behandleHendelse(hendelse)
     }
 
     fun behandle(hendelse: MeldepliktHendelse) {
         sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
-        behandle(hendelse) {}
+        behandleHendelse(hendelse)
     }
 
-    private fun behandle(
-        hendelse: Hendelse,
-        håndter: (Hendelse) -> Unit = {},
-    ) {
+    fun behandle(hendelse: PersonSynkroniseringHendelse) {
+        sikkerlogg.info { "Behandler PersonSynkroniseringHendelse: $hendelse" }
+        hentEllerOpprettPerson(hendelse.ident)
+            .also { person ->
+                person.behandle(hendelse)
+                personRepository.oppdaterPerson(person)
+                arbeidssøkerMediator.behandle(person.ident)
+            }
+    }
+
+    private fun behandleHendelse(hendelse: Hendelse) {
         try {
-            val person = hentEllerOpprettPerson(hendelse.ident)
-            personObservers.forEach { person.addObserver(it) }
-            person.behandle(hendelse)
-            personRepository.oppdaterPerson(person)
-            sikkerlogg.info { "Hendelse behandlet: $hendelse" }
-            håndter(hendelse)
+            personRepository
+                .hentPerson(hendelse.ident)
+                ?.let { person ->
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
+                    }
+                    person.behandle(hendelse)
+                    personRepository.oppdaterPerson(person)
+                    sikkerlogg.info { "Hendelse behandlet: $hendelse" }
+                }
         } catch (e: Exception) {
             sikkerlogg.info { "Feil ved behandling av hendelse: $hendelse" }
         }
@@ -54,8 +71,11 @@ class PersonMediator(
     private fun hentEllerOpprettPerson(ident: String): Person =
         personRepository
             .hentPerson(ident) ?: Person(ident)
-            .also {
-                personRepository.lagrePerson(it)
+            .also { person ->
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { observer -> person.addObserver(observer) }
+                }
+                personRepository.lagrePerson(person)
             }
 
     companion object {

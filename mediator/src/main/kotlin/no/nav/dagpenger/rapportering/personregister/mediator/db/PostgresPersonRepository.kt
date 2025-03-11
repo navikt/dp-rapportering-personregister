@@ -16,6 +16,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
@@ -373,6 +374,12 @@ class PostgresPersonRepository(
                         sluttDato ?: throw IllegalStateException(
                             "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
                         ),
+                )
+            "PersonSynkroniseringHendelse" ->
+                PersonSynkroniseringHendelse(
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }

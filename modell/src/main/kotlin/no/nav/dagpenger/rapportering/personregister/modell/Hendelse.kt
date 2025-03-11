@@ -106,6 +106,19 @@ data class MeldepliktHendelse(
     }
 }
 
+data class PersonSynkroniseringHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
+    override val referanseId: String,
+) : Hendelse {
+    override val kilde = Kildesystem.Dagpenger
+
+    override fun behandle(person: Person) {
+        person.meldeplikt = true
+        person.meldegruppe = "DAGP"
+    }
+}
+
 enum class Kildesystem {
     Søknad,
     Arena,

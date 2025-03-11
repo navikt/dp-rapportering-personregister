@@ -16,11 +16,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediat
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
-import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -40,30 +37,12 @@ internal fun Application.personstatusApi(
                     val fraDato = LocalDate.parse(call.receiveText()).atStartOfDay()
 
                     personMediator.behandle(
-                        MeldepliktHendelse(
+                        PersonSynkroniseringHendelse(
                             ident = ident,
-                            dato = LocalDateTime.now(),
+                            dato = fraDato,
                             referanseId = UUID.randomUUID().toString(),
-                            startDato = fraDato,
-                            sluttDato = null,
-                            statusMeldeplikt = true,
-                            kilde = Dagpenger,
                         ),
                     )
-
-                    personMediator.behandle(
-                        DagpengerMeldegruppeHendelse(
-                            ident,
-                            LocalDateTime.now(),
-                            UUID.randomUUID().toString(),
-                            startDato = fraDato,
-                            sluttDato = null,
-                            "DAGP",
-                            kilde = Dagpenger,
-                        ),
-                    )
-
-                    arbeidssøkerMediator.behandle(ident)
 
                     call.respond(HttpStatusCode.OK)
                 }
