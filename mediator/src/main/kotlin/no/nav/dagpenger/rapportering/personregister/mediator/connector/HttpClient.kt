@@ -10,8 +10,6 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.jackson.jackson
-import io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetry
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import java.time.Duration
 
 fun createHttpClient(engine: HttpClientEngine = CIO.create {}) =
@@ -22,10 +20,6 @@ fun createHttpClient(engine: HttpClientEngine = CIO.create {}) =
             connectTimeoutMillis = Duration.ofSeconds(60).toMillis()
             requestTimeoutMillis = Duration.ofSeconds(60).toMillis()
             socketTimeoutMillis = Duration.ofSeconds(60).toMillis()
-        }
-
-        install(KtorClientTelemetry) {
-            setOpenTelemetry(Configuration.openTelemetry)
         }
 
         install(ContentNegotiation) {

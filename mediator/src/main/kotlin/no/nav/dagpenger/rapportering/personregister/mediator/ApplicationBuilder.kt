@@ -96,11 +96,7 @@ internal class ApplicationBuilder(
                 env = configuration,
                 builder = {
                     this.withKtor(
-                        embeddedServer(CIOEngine, port = 8080, module = {
-                            /*install(KtorServerTelemetry) {
-                                setOpenTelemetry(openTelemetry)
-                            }*/
-                        }),
+                        embeddedServer(CIOEngine, port = 8080, module = {}),
                     )
                 },
             ) { engine, rapid ->
