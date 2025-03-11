@@ -28,12 +28,12 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
 
-class PersonstatusMediatorTest {
+class PersonMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
-    private lateinit var personstatusMediator: PersonstatusMediator
+    private lateinit var personMediator: PersonMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
 
@@ -47,7 +47,7 @@ class PersonstatusMediatorTest {
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
-        personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))
+        personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))
     }
 
     private val ident = "12345678910"
@@ -62,7 +62,7 @@ class PersonstatusMediatorTest {
             testPerson {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder shouldHaveSize 0
@@ -74,7 +74,7 @@ class PersonstatusMediatorTest {
             testPerson {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.periodeId shouldBe periodeId
@@ -89,7 +89,7 @@ class PersonstatusMediatorTest {
                 meldegruppe = "DAGP"
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns listOf(arbeidssøkerResponse(periodeId))
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.periodeId shouldBe periodeId
@@ -102,7 +102,7 @@ class PersonstatusMediatorTest {
             testPerson {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder shouldHaveSize 0
@@ -117,7 +117,7 @@ class PersonstatusMediatorTest {
                         arbeidssøkerResponse(periodeId),
                     )
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder shouldHaveSize 1
@@ -134,7 +134,7 @@ class PersonstatusMediatorTest {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns
                     listOf(arbeidssøkerResponse(periodeId))
 
-                personstatusMediator.behandle(søknadHendelse())
+                personMediator.behandle(søknadHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder shouldHaveSize 1
@@ -149,7 +149,7 @@ class PersonstatusMediatorTest {
         @Test
         fun `dagpengerhendelse for ny person som ikke oppfyller kravet`() {
             arbeidssøker {
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 personObserver skalIkkeHaSendtOvertakelseFor this
@@ -161,7 +161,7 @@ class PersonstatusMediatorTest {
             arbeidssøker {
                 meldeplikt = true
 
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalHaSendtOvertakelseFor this
@@ -178,7 +178,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe IKKE_DAGPENGERBRUKER
 
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalHaSendtOvertakelseFor this
@@ -196,7 +196,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe DAGPENGERBRUKER
 
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
             }
@@ -205,7 +205,7 @@ class PersonstatusMediatorTest {
         @Test
         fun `annenMeldegruppeHendelse for ny person`() {
             testPerson {
-                personstatusMediator.behandle(annenMeldegruppeHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
             }
@@ -219,7 +219,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe DAGPENGERBRUKER
 
-                personstatusMediator.behandle(annenMeldegruppeHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
             }
@@ -233,7 +233,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe IKKE_DAGPENGERBRUKER
 
-                personstatusMediator.behandle(annenMeldegruppeHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
             }
@@ -249,7 +249,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe IKKE_DAGPENGERBRUKER
 
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalHaSendtOvertakelseFor this
@@ -265,7 +265,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe IKKE_DAGPENGERBRUKER
 
-                personstatusMediator.behandle(dagpengerMeldegruppeHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalIkkeHaSendtOvertakelseFor this
@@ -280,7 +280,7 @@ class PersonstatusMediatorTest {
 
                 status shouldBe DAGPENGERBRUKER
 
-                personstatusMediator.behandle(annenMeldegruppeHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 personObserver skalHaFrasagtAnsvaretFor this
@@ -296,7 +296,7 @@ class PersonstatusMediatorTest {
                 meldegruppe = "DAGP"
                 statusHistorikk.put(tidligere, DAGPENGERBRUKER)
 
-                personstatusMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(meldepliktHendelse())
 
                 meldeplikt shouldBe true
                 status shouldBe DAGPENGERBRUKER
@@ -309,7 +309,7 @@ class PersonstatusMediatorTest {
             arbeidssøker {
                 meldegruppe = "DAGP"
 
-                personstatusMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(meldepliktHendelse())
 
                 meldeplikt shouldBe true
                 status shouldBe DAGPENGERBRUKER
@@ -323,7 +323,7 @@ class PersonstatusMediatorTest {
                 meldegruppe = "DAGP"
                 statusHistorikk.put(tidligere, DAGPENGERBRUKER)
 
-                personstatusMediator.behandle(meldepliktHendelse(status = false))
+                personMediator.behandle(meldepliktHendelse(status = false))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 personObserver skalHaFrasagtAnsvaretFor this

@@ -87,7 +87,7 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak,
         )
 
-    private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
+    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val rapidsConnection =
@@ -104,12 +104,12 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, arbeidssøkerMediator, personstatusMediator)
+                    personstatusApi(personRepository, arbeidssøkerMediator, personMediator)
                 }
 
-                SøknadMottak(rapid, personstatusMediator, soknadMetrikker)
-                MeldegruppeendringMottak(rapid, personstatusMediator, fremtidigHendelseMediator)
-                MeldepliktendringMottak(rapid, personstatusMediator, fremtidigHendelseMediator)
+                SøknadMottak(rapid, personMediator, soknadMetrikker)
+                MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator)
+                MeldepliktendringMottak(rapid, personMediator, fremtidigHendelseMediator)
             }
 
     init {
@@ -123,7 +123,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personstatusMediator)
+        aktiverHendelserJob.start(personRepository, personMediator)
     }
 }
 

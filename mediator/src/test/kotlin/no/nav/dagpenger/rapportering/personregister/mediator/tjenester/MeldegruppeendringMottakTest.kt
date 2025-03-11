@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import org.junit.jupiter.api.Test
@@ -13,11 +13,11 @@ import java.time.format.DateTimeFormatter
 
 class MeldegruppeendringMottakTest {
     private val testRapid = TestRapid()
-    private val personstatusMediator = mockk<PersonstatusMediator>()
+    private val personMediator = mockk<PersonMediator>()
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
-        MeldegruppeendringMottak(testRapid, personstatusMediator, fremtidigHendelseMediator)
+        MeldegruppeendringMottak(testRapid, personMediator, fremtidigHendelseMediator)
     }
 
     private val ident = "123456478901"
@@ -50,7 +50,7 @@ class MeldegruppeendringMottakTest {
                 referanseId = referanseId,
             )
 
-        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
+        verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
     }
 
     @Test
@@ -80,7 +80,7 @@ class MeldegruppeendringMottakTest {
                 referanseId = referanseId,
             )
 
-        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
+        verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
     }
 
     @Test
@@ -110,7 +110,7 @@ class MeldegruppeendringMottakTest {
                 referanseId = referanseId,
             )
 
-        verify(exactly = 1) { personstatusMediator.behandle(forventetHendelse) }
+        verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
     }
 
     @Test

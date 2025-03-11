@@ -10,7 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import java.time.LocalDateTime
 
@@ -18,7 +18,7 @@ val logger = KotlinLogging.logger {}
 
 class MeldepliktendringMottak(
     rapidsConnection: RapidsConnection,
-    private val personstatusMediator: PersonstatusMediator,
+    private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
 ) : River.PacketListener {
     init {
@@ -45,7 +45,7 @@ class MeldepliktendringMottak(
             if (hendelse.startDato.isAfter(LocalDateTime.now())) {
                 fremtidigHendelseMediator.behandle(hendelse)
             } else {
-                personstatusMediator.behandle(hendelse)
+                personMediator.behandle(hendelse)
             }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldepliktendring $e" }

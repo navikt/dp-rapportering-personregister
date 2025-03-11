@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -25,7 +25,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
-    private val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))
+    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver))
 
     private val ident = "12345678910"
 
@@ -73,7 +73,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 oppfyllerKrav shouldBe false
             }
 
-            val antallHendelserAktivert = aktiverHendelserJob.aktivererHendelser(personRepository, personstatusMediator)
+            val antallHendelserAktivert = aktiverHendelserJob.aktivererHendelser(personRepository, personMediator)
             antallHendelserAktivert shouldBe 2
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
             with(personRepository.hentPerson(ident)!!) {

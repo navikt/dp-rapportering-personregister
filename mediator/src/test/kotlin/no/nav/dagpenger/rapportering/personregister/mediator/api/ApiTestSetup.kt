@@ -13,7 +13,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
@@ -103,12 +103,12 @@ open class ApiTestSetup {
                     arbeidssøkerMottak,
                 )
 
-            val personstatusMediator = PersonstatusMediator(personRepository, arbeidssøkerMediator)
+            val personMediator = PersonMediator(personRepository, arbeidssøkerMediator)
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerMediator, personstatusMediator)
+                personstatusApi(personRepository, arbeidssøkerMediator, personMediator)
             }
 
             block()

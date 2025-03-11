@@ -8,14 +8,14 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.OffsetDateTime
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val personStatusMediator: PersonstatusMediator,
+    private val personStatusMediator: PersonMediator,
     private val soknadMetrikker: SoknadMetrikker,
 ) : River.PacketListener {
     init {

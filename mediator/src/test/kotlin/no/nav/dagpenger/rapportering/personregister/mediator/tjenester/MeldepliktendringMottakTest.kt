@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -12,24 +12,24 @@ import java.time.format.DateTimeFormatter
 
 class MeldepliktendringMottakTest {
     private val testRapid = TestRapid()
-    private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
+    private val personMediator = mockk<PersonMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
-        MeldepliktendringMottak(testRapid, personstatusMediator, fremtidigHendelseMediator)
+        MeldepliktendringMottak(testRapid, personMediator, fremtidigHendelseMediator)
     }
 
     @Test
     fun `kan motta meldepliktendring event`() {
         testRapid.sendTestMessage(meldepliktendring_event())
-        verify(exactly = 1) { personstatusMediator.behandle(any<MeldepliktHendelse>()) }
+        verify(exactly = 1) { personMediator.behandle(any<MeldepliktHendelse>()) }
     }
 
     @Test
     fun `kan motta meldepliktendring event med 'datoTil'`() {
         testRapid.sendTestMessage(meldepliktendring_event(datoTil = "2025-03-01 00:00:00"))
 
-        verify(exactly = 1) { personstatusMediator.behandle(any<MeldepliktHendelse>()) }
+        verify(exactly = 1) { personMediator.behandle(any<MeldepliktHendelse>()) }
     }
 
     @Test

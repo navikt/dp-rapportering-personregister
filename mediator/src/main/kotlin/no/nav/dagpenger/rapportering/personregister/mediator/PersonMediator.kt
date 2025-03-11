@@ -10,7 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 
-class PersonstatusMediator(
+class PersonMediator(
     private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val personObservers: List<PersonObserver> = emptyList(),

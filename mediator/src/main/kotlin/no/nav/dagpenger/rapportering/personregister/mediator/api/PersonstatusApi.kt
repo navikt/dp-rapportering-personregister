@@ -13,7 +13,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
@@ -28,7 +28,7 @@ private val logger = KotlinLogging.logger {}
 internal fun Application.personstatusApi(
     personRepository: PersonRepository,
     arbeidssøkerMediator: ArbeidssøkerMediator,
-    personstatusMediator: PersonstatusMediator,
+    personMediator: PersonMediator,
 ) {
     routing {
         authenticate("tokenX") {
@@ -39,7 +39,7 @@ internal fun Application.personstatusApi(
 
                     val fraDato = LocalDate.parse(call.receiveText()).atStartOfDay()
 
-                    personstatusMediator.behandle(
+                    personMediator.behandle(
                         MeldepliktHendelse(
                             ident = ident,
                             dato = LocalDateTime.now(),
@@ -51,7 +51,7 @@ internal fun Application.personstatusApi(
                         ),
                     )
 
-                    personstatusMediator.behandle(
+                    personMediator.behandle(
                         DagpengerMeldegruppeHendelse(
                             ident,
                             LocalDateTime.now(),

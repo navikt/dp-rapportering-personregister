@@ -6,7 +6,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
@@ -33,7 +33,7 @@ internal class AktiverHendelserJob(
 
     internal fun start(
         personRepository: PersonRepository,
-        personstatusMediator: PersonstatusMediator,
+        personMediator: PersonMediator,
     ) {
         logger.info { "Tidspunkt for neste kjøring: $tidspunktForNesteKjoring" }
         fixedRateTimer(
@@ -48,7 +48,7 @@ internal class AktiverHendelserJob(
                         var antallHendelser: Int
                         val tidBrukt =
                             measureTime {
-                                antallHendelser = aktivererHendelser(personRepository, personstatusMediator)
+                                antallHendelser = aktivererHendelser(personRepository, personMediator)
                             }
                         logger.info {
                             "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
@@ -66,14 +66,14 @@ internal class AktiverHendelserJob(
 
     fun aktivererHendelser(
         personRepository: PersonRepository,
-        personstatusMediator: PersonstatusMediator,
+        personMediator: PersonMediator,
     ): Int {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
         hendelser.forEach {
             when (it) {
-                is DagpengerMeldegruppeHendelse -> personstatusMediator.behandle(it)
-                is AnnenMeldegruppeHendelse -> personstatusMediator.behandle(it)
-                is MeldepliktHendelse -> personstatusMediator.behandle(it)
+                is DagpengerMeldegruppeHendelse -> personMediator.behandle(it)
+                is AnnenMeldegruppeHendelse -> personMediator.behandle(it)
+                is MeldepliktHendelse -> personMediator.behandle(it)
                 else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
             }
             personRepository.slettFremtidigHendelse(it.referanseId)

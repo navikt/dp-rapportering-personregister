@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
@@ -12,10 +12,10 @@ import java.time.OffsetDateTime
 
 class SøknadMottakTest {
     private val testRapid = TestRapid()
-    private val personstatusMediator = mockk<PersonstatusMediator>(relaxed = true)
+    private val personMediator = mockk<PersonMediator>(relaxed = true)
 
     init {
-        SøknadMottak(testRapid, personstatusMediator, soknadMetrikker)
+        SøknadMottak(testRapid, personMediator, soknadMetrikker)
     }
 
     @BeforeEach
@@ -38,7 +38,7 @@ class SøknadMottakTest {
                 søknadId,
             )
 
-        verify(exactly = 1) { personstatusMediator.behandle(søknadHendelse) }
+        verify(exactly = 1) { personMediator.behandle(søknadHendelse) }
     }
 }
 
