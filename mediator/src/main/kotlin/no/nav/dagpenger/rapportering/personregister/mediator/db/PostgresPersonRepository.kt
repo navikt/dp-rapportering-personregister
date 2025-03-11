@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeH
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
@@ -309,60 +310,69 @@ class PostgresPersonRepository(
         val sluttDato = row.localDateTimeOrNull("slutt_dato")
         val referanseId = row.string("referanse_id")
         val extra = row.stringOrNull("extra")
+        val kilde = row.string("kilde")
 
         return when (type) {
             "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
             "DagpengerMeldegruppeHendelse" ->
                 DagpengerMeldegruppeHendelse(
-                    ident,
-                    dato,
-                    referanseId,
-                    startDato ?: throw IllegalStateException(
-                        "DagpengerMeldegruppeHendelse med referanseId $referanseId mangler startDato",
-                    ),
-                    sluttDato,
-                    defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    startDato =
+                        startDato ?: throw IllegalStateException(
+                            "DagpengerMeldegruppeHendelse med referanseId $referanseId mangler startDato",
+                        ),
+                    sluttDato = sluttDato,
+                    meldegruppeKode = defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
+                    kilde = Kildesystem.valueOf(kilde),
                 )
             "AnnenMeldegruppeHendelse" ->
                 AnnenMeldegruppeHendelse(
-                    ident,
-                    dato,
-                    referanseId,
-                    startDato ?: throw IllegalStateException(
-                        "AnnenMeldegruppeHendelse med referanseId $referanseId mangler startDato",
-                    ),
-                    sluttDato,
-                    defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    startDato =
+                        startDato ?: throw IllegalStateException(
+                            "AnnenMeldegruppeHendelse med referanseId $referanseId mangler startDato",
+                        ),
+                    sluttDato = sluttDato,
+                    meldegruppeKode = defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
                 )
             "MeldepliktHendelse" ->
                 MeldepliktHendelse(
-                    ident,
-                    dato,
-                    referanseId,
-                    startDato ?: throw IllegalStateException(
-                        "MeldepliktHendelse med referanseId $referanseId mangler startDato",
-                    ),
-                    sluttDato,
-                    defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    startDato =
+                        startDato ?: throw IllegalStateException(
+                            "MeldepliktHendelse med referanseId $referanseId mangler startDato",
+                        ),
+                    sluttDato = sluttDato,
+                    statusMeldeplikt = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
+                    kilde = Kildesystem.valueOf(kilde),
                 )
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
-                    UUID.fromString(referanseId),
-                    ident,
-                    startDato ?: throw IllegalStateException(
-                        "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
-                    ),
+                    periodeId = UUID.fromString(referanseId),
+                    ident = ident,
+                    startet =
+                        startDato ?: throw IllegalStateException(
+                            "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
+                        ),
                 )
             "AvsluttetArbeidssøkerperiodeHendelse" ->
                 AvsluttetArbeidssøkerperiodeHendelse(
-                    UUID.fromString(referanseId),
-                    ident,
-                    startDato ?: throw IllegalStateException(
-                        "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
-                    ),
-                    sluttDato ?: throw IllegalStateException(
-                        "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
-                    ),
+                    periodeId = UUID.fromString(referanseId),
+                    ident = ident,
+                    startet =
+                        startDato ?: throw IllegalStateException(
+                            "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
+                        ),
+                    avsluttet =
+                        sluttDato ?: throw IllegalStateException(
+                            "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
+                        ),
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }

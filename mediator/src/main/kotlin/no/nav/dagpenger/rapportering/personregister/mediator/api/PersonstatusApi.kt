@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediato
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,12 +41,13 @@ internal fun Application.personstatusApi(
 
                     personstatusMediator.behandle(
                         MeldepliktHendelse(
-                            ident,
-                            LocalDateTime.now(),
-                            UUID.randomUUID().toString(),
+                            ident = ident,
+                            dato = LocalDateTime.now(),
+                            referanseId = UUID.randomUUID().toString(),
                             startDato = fraDato,
                             sluttDato = null,
-                            true,
+                            statusMeldeplikt = true,
+                            kilde = Dagpenger,
                         ),
                     )
 
@@ -57,6 +59,7 @@ internal fun Application.personstatusApi(
                             startDato = fraDato,
                             sluttDato = null,
                             "DAGP",
+                            kilde = Dagpenger,
                         ),
                     )
 
