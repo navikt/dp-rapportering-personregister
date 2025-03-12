@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
+import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
@@ -16,8 +17,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataR
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -102,7 +106,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `Get personstatus gir personen hvis den finnes`() =
+    fun `Get personstatus gir personen med riktig status hvis den finnes`() =
         setUpTestApplication {
             val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
 
@@ -118,7 +122,38 @@ class PersonstatusApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
+                val obj = defaultObjectMapper.readTree(bodyAsText())
+                obj["ident"].asText() shouldBe ident
+                obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
+                obj["overtattBekreftelse"].asBoolean() shouldBe false
+            }
+
+            personRepository.oppdaterPerson(
+                Person(
+                    ident,
+                    TemporalCollection<Status>().also { it.put(LocalDateTime.now(), Status.DAGPENGERBRUKER) },
+                    mutableListOf(
+                        Arbeidssøkerperiode(
+                            UUID.randomUUID(),
+                            ident,
+                            LocalDateTime.now(),
+                            null,
+                            true,
+                        ),
+                    ),
+                ),
+            )
+
+            with(
+                client.get("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+                val obj = defaultObjectMapper.readTree(bodyAsText())
+                obj["ident"].asText() shouldBe ident
+                obj["status"].asText() shouldBe StatusResponse.DAGPENGERBRUKER.value
+                obj["overtattBekreftelse"].asBoolean() shouldBe true
             }
         }
 }
