@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
@@ -12,7 +13,7 @@ import java.time.LocalDateTime
 
 class FremtidigHendelseMediatorTest {
     private val personRepository = mockk<PersonRepository>(relaxed = true)
-    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
+    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val ident = "12345678910"
 
     @Test

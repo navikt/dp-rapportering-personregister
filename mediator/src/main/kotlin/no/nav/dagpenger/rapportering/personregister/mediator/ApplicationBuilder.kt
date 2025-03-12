@@ -77,7 +77,7 @@ internal class ApplicationBuilder(
         )
 
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-    private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+    private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
     private val kafkaContext =
         KafkaContext(
@@ -87,8 +87,8 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak,
         )
 
-    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka))
-    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository)
+    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka), actionTimer)
+    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val rapidsConnection =
         RapidApplication
@@ -100,7 +100,8 @@ internal class ApplicationBuilder(
                     )
                 },
             ) { engine, rapid ->
-                val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka))
+                val arbeidssøkerMediator =
+                    ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Arena
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import java.time.LocalDateTime
 
 interface Hendelse {
@@ -62,7 +63,7 @@ data class AnnenMeldegruppeHendelse(
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
 ) : Hendelse {
-    override val kilde = Kildesystem.Arena
+    override val kilde: Kildesystem = Arena
 
     override fun behandle(person: Person) {
         person.meldegruppe = meldegruppeKode
@@ -111,7 +112,7 @@ data class PersonSynkroniseringHendelse(
     override val dato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
-    override val kilde = Kildesystem.Dagpenger
+    override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {
         person.meldeplikt = true

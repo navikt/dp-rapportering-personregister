@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
@@ -91,9 +92,10 @@ open class ApiTestSetup {
             val testKafkaContainer = TestKafkaContainer()
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
+            val personObserver = mockk<PersonObserver>(relaxed = true)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository)
+            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
             val kafkaContext =
                 KafkaContext(
@@ -103,7 +105,7 @@ open class ApiTestSetup {
                     arbeidssøkerMottak,
                 )
 
-            val personMediator = PersonMediator(personRepository, arbeidssøkerMediator)
+            val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)

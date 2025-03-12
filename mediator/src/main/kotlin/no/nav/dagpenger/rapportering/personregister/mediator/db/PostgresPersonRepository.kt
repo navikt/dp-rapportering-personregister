@@ -140,10 +140,11 @@ class PostgresPersonRepository(
             }
         }
 
-    override fun lagreFremtidigHendelse(hendelse: Hendelse) {
-        val personId = hentPersonId(hendelse.ident) ?: throw IllegalStateException("Person finnes ikke")
-        lagreHendelse(personId, hendelse, "fremtidig_hendelse")
-    }
+    override fun lagreFremtidigHendelse(hendelse: Hendelse) =
+        actionTimer.timedAction("db-lagreFremtidigHendelse") {
+            val personId = hentPersonId(hendelse.ident) ?: throw IllegalStateException("Person finnes ikke")
+            lagreHendelse(personId, hendelse, "fremtidig_hendelse")
+        }
 
     override fun hentHendelserSomSkalAktiveres(): List<Hendelse> =
         actionTimer.timedAction("db-hentHendelserSomSkalAktiveres") {
@@ -191,7 +192,7 @@ class PostgresPersonRepository(
         personId: Long,
         hendelse: Hendelse,
         hendelseTabell: String = "hendelse",
-    ) {
+    ) = actionTimer.timedAction("db-lagreHendelse") {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(

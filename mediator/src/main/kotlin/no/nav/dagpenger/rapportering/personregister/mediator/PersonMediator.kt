@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -14,42 +15,48 @@ import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 class PersonMediator(
     private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
-    private val personObservers: List<PersonObserver> = emptyList(),
+    private val personObservers: List<PersonObserver>,
+    private val actionTimer: ActionTimer,
 ) {
-    fun behandle(søknadHendelse: SøknadHendelse) {
-        sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
-        hentEllerOpprettPerson(søknadHendelse.ident)
-            .also {
-                it.behandle(søknadHendelse)
-                personRepository.oppdaterPerson(it)
-                arbeidssøkerMediator.behandle(søknadHendelse.ident)
-            }
-    }
+    fun behandle(søknadHendelse: SøknadHendelse) =
+        actionTimer.timedAction("behandle_SoknadHendelse") {
+            sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
+            hentEllerOpprettPerson(søknadHendelse.ident)
+                .also {
+                    it.behandle(søknadHendelse)
+                    personRepository.oppdaterPerson(it)
+                    arbeidssøkerMediator.behandle(søknadHendelse.ident)
+                }
+        }
 
-    fun behandle(hendelse: DagpengerMeldegruppeHendelse) {
-        sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
-        behandleHendelse(hendelse)
-    }
+    fun behandle(hendelse: DagpengerMeldegruppeHendelse) =
+        actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
+            sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
+            behandleHendelse(hendelse)
+        }
 
-    fun behandle(hendelse: AnnenMeldegruppeHendelse) {
-        sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
-        behandleHendelse(hendelse)
-    }
+    fun behandle(hendelse: AnnenMeldegruppeHendelse) =
+        actionTimer.timedAction("behandle_AnnenMeldegruppeHendelse") {
+            sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
+            behandleHendelse(hendelse)
+        }
 
-    fun behandle(hendelse: MeldepliktHendelse) {
-        sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
-        behandleHendelse(hendelse)
-    }
+    fun behandle(hendelse: MeldepliktHendelse) =
+        actionTimer.timedAction("behandle_MeldepliktHendelse") {
+            sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
+            behandleHendelse(hendelse)
+        }
 
-    fun behandle(hendelse: PersonSynkroniseringHendelse) {
-        sikkerlogg.info { "Behandler PersonSynkroniseringHendelse: $hendelse" }
-        hentEllerOpprettPerson(hendelse.ident)
-            .also { person ->
-                person.behandle(hendelse)
-                personRepository.oppdaterPerson(person)
-                arbeidssøkerMediator.behandle(person.ident)
-            }
-    }
+    fun behandle(hendelse: PersonSynkroniseringHendelse) =
+        actionTimer.timedAction("behandle_PersonSynkroniseringHendelse") {
+            sikkerlogg.info { "Behandler PersonSynkroniseringHendelse: $hendelse" }
+            hentEllerOpprettPerson(hendelse.ident)
+                .also { person ->
+                    person.behandle(hendelse)
+                    personRepository.oppdaterPerson(person)
+                    arbeidssøkerMediator.behandle(person.ident)
+                }
+        }
 
     private fun behandleHendelse(hendelse: Hendelse) {
         try {
