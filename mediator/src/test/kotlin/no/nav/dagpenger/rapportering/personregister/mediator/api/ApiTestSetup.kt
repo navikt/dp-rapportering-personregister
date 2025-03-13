@@ -24,6 +24,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -111,7 +112,7 @@ open class ApiTestSetup {
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerMediator, personMediator)
+                personstatusApi(personRepository, arbeidssøkerMediator, personMediator, synkroniserPersonMetrikker)
             }
 
             block()
