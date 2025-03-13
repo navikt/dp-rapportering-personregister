@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import org.junit.jupiter.api.Test
@@ -17,7 +18,7 @@ class MeldegruppeendringMottakTest {
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
-        MeldegruppeendringMottak(testRapid, personMediator, fremtidigHendelseMediator)
+        MeldegruppeendringMottak(testRapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
     }
 
     private val ident = "123456478901"

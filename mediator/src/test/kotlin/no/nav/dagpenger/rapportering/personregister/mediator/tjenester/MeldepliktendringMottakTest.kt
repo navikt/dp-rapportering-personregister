@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -16,7 +17,7 @@ class MeldepliktendringMottakTest {
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
-        MeldepliktendringMottak(testRapid, personMediator, fremtidigHendelseMediator)
+        MeldepliktendringMottak(testRapid, personMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
     }
 
     @Test

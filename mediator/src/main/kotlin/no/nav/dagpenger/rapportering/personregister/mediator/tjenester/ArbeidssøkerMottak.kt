@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
@@ -13,11 +14,13 @@ private val ZONE_ID = ZoneId.of("Europe/Oslo")
 
 class ArbeidssøkerMottak(
     private val ArbeidssøkerMediator: ArbeidssøkerMediator,
+    private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
 ) {
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach {
             sikkerlogg.info { "Behandler periode med key: ${it.key()} og value: ${it.value()}" }
+            arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
             Arbeidssøkerperiode(
                 ident = it.value().identitetsnummer,
                 periodeId = it.value().id,

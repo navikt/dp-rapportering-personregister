@@ -29,9 +29,53 @@ class SoknadMetrikker(
             .register(meterRegistry)
 }
 
-class VedtakMetrikker(
+class MeldegruppeendringMetrikker(
     private val meterRegistry: MeterRegistry,
-)
+) {
+    val dagpengerMeldegruppeMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldegruppeendring_dagpenger_mottatt_total")
+            .description("Indikerer antall mottatte dagpengermeldegruppeendringer")
+            .register(meterRegistry)
+
+    val annenMeldegruppeMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldegruppeendring_annet_mottatt_total")
+            .description("Indikerer antall mottatte annenmeldegruppeendringer")
+            .register(meterRegistry)
+
+    val fremtidigMeldegruppeMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldegruppeendring_fremtidig_total")
+            .description("Indikerer antall mottatte meldegruppeendringer med fremtidig dato")
+            .register(meterRegistry)
+}
+
+class MeldepliktendringMetrikker(
+    private val meterRegistry: MeterRegistry,
+) {
+    val meldepliktendringMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldepliktendring_mottatt_total")
+            .description("Indikerer antall mottatte meldepliktendringer")
+            .register(meterRegistry)
+
+    val fremtidigMeldepliktendringMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldepliktendring_fremtidig_total")
+            .description("Indikerer antall mottatte meldepliktendringer med fremtidig dato")
+            .register(meterRegistry)
+}
+
+class ArbeidssøkerperiodeMetrikker(
+    private val meterRegistry: MeterRegistry,
+) {
+    val arbeidssøkerperiodeMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerperiode_mottatt_total")
+            .description("Indikerer antall mottatte arbeidssøkerperioder")
+            .register(meterRegistry)
+}
 
 class DatabaseMetrikker(
     meterRegistry: MeterRegistry,

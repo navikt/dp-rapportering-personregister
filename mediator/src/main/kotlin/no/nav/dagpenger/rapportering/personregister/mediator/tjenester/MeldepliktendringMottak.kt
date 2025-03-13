@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import java.time.LocalDateTime
 
@@ -20,6 +21,7 @@ class MeldepliktendringMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
+    private val meldepliktendringMetrikker: MeldepliktendringMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -43,8 +45,10 @@ class MeldepliktendringMottak(
         try {
             val hendelse = packet.tilHendelse()
             if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                meldepliktendringMetrikker.fremtidigMeldepliktendringMottatt.increment()
                 fremtidigHendelseMediator.behandle(hendelse)
             } else {
+                meldepliktendringMetrikker.meldepliktendringMottatt.increment()
                 personMediator.behandle(hendelse)
             }
         } catch (e: Exception) {

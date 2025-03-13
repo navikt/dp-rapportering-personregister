@@ -20,9 +20,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
@@ -44,7 +46,9 @@ internal class ApplicationBuilder(
     private val meterRegistry =
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
-    private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
+    private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
+    private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
+    private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
 
@@ -78,7 +82,7 @@ internal class ApplicationBuilder(
 
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
-    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator)
+    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvProdusent,
@@ -109,8 +113,8 @@ internal class ApplicationBuilder(
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)
-                MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator)
-                MeldepliktendringMottak(rapid, personMediator, fremtidigHendelseMediator)
+                MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
+                MeldepliktendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
             }
 
     init {

@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -21,6 +22,7 @@ class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
+    private val meldegruppeendringMetrikker: MeldegruppeendringMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -45,15 +47,19 @@ class MeldegruppeendringMottak(
             when (val hendelse = packet.tilHendelse()) {
                 is DagpengerMeldegruppeHendelse -> {
                     if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                        meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(hendelse)
                     } else {
+                        meldegruppeendringMetrikker.dagpengerMeldegruppeMottatt.increment()
                         personMediator.behandle(hendelse)
                     }
                 }
                 is AnnenMeldegruppeHendelse -> {
                     if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                        meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(hendelse)
                     } else {
+                        meldegruppeendringMetrikker.annenMeldegruppeMottatt.increment()
                         personMediator.behandle(hendelse)
                     }
                 }
