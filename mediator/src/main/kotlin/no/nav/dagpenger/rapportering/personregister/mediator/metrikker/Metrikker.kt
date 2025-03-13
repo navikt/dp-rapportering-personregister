@@ -77,6 +77,16 @@ class ArbeidssøkerperiodeMetrikker(
             .register(meterRegistry)
 }
 
+class SynkroniserPersonMetrikker(
+    private val meterRegistry: MeterRegistry,
+) {
+    val personSynkronisert: Counter =
+        Counter
+            .builder("${NAMESPACE}_person_synkronisert_total")
+            .description("Indikerer antall synkroniserte personer via POST endepunkt")
+            .register(meterRegistry)
+}
+
 class DatabaseMetrikker(
     meterRegistry: MeterRegistry,
 ) {

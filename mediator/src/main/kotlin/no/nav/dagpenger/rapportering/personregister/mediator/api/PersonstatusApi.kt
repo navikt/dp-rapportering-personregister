@@ -16,6 +16,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediat
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import java.time.LocalDate
 import java.util.UUID
@@ -26,6 +27,7 @@ internal fun Application.personstatusApi(
     personRepository: PersonRepository,
     arbeidssøkerMediator: ArbeidssøkerMediator,
     personMediator: PersonMediator,
+    synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
 ) {
     routing {
         authenticate("tokenX") {
@@ -43,6 +45,8 @@ internal fun Application.personstatusApi(
                             referanseId = UUID.randomUUID().toString(),
                         ),
                     )
+
+                    synkroniserPersonMetrikker.personSynkronisert.increment()
 
                     call.respond(HttpStatusCode.OK)
                 }
