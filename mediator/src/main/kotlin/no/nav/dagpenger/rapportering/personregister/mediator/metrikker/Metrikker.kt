@@ -1,5 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.metrikker
 
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
@@ -7,6 +9,7 @@ import io.micrometer.core.instrument.Timer
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 import kotlin.random.Random
@@ -93,4 +96,18 @@ class ActionTimer(
 
         return blockResult
     }
+
+    fun httpTimer(
+        navn: String,
+        statusCode: HttpStatusCode,
+        method: HttpMethod,
+        durationSeconds: Number,
+    ) = Timer
+        .builder("${NAMESPACE}_http_timer")
+        .tag("navn", navn)
+        .tag("status", statusCode.value.toString())
+        .tag("method", method.value)
+        .description("Indikerer hvor lang tid en funksjon brukte")
+        .register(meterRegistry)
+        .record(durationSeconds.toLong(), SECONDS)
 }

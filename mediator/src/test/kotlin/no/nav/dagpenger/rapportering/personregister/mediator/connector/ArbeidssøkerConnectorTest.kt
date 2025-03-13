@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -31,6 +32,7 @@ class ArbeidssøkerConnectorTest {
         arbeidssokerregisterRecordKeyUrl,
         testTokenProvider,
         createMockClient(statusCode, responseBody),
+        actionTimer,
     )
 
     @Test

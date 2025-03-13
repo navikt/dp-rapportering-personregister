@@ -49,7 +49,7 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val arbeidssøkerConnector = ArbeidssøkerConnector()
+    private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
