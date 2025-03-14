@@ -25,7 +25,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.13.3")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.14.0")
     implementation("io.opentelemetry:opentelemetry-api:1.48.0")
 
     testImplementation(kotlin("test"))
