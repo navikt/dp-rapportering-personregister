@@ -36,7 +36,9 @@ internal fun Application.personstatusApi(
                     logger.info { "POST /personstatus" }
                     val ident = call.ident()
 
-                    val fraDato = LocalDate.parse(call.receiveText()).atStartOfDay()
+                    val rawText = call.receiveText()
+                    val dateText = rawText.trim('"')
+                    val fraDato = LocalDate.parse(dateText).atStartOfDay()
 
                     personMediator.behandle(
                         PersonSynkroniseringHendelse(
