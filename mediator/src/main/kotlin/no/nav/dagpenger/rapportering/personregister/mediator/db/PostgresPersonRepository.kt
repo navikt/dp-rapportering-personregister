@@ -38,16 +38,12 @@ class PostgresPersonRepository(
             val meldeplikt = hentMeldeplikt(ident)
             val meldegruppe = hentMeldegruppe(ident)
 
-            if (hendelser.isNotEmpty()) {
-                Person(ident).apply {
-                    this.meldeplikt = meldeplikt
-                    this.meldegruppe = meldegruppe
-                    arbeidssøkerperioder.forEach { this.arbeidssøkerperioder.add(it) }
-                    hendelser.forEach { this.hendelser.add(it) }
-                    statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
-                }
-            } else {
-                null
+            Person(ident).apply {
+                this.meldeplikt = meldeplikt
+                this.meldegruppe = meldegruppe
+                arbeidssøkerperioder.forEach { this.arbeidssøkerperioder.add(it) }
+                hendelser.forEach { this.hendelser.add(it) }
+                statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
             }
         }
 
