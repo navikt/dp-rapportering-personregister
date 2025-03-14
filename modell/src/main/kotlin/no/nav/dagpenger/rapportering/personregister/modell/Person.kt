@@ -26,7 +26,12 @@ data class Person(
         observers.add(observer)
     }
 
-    fun status(dato: LocalDateTime): Status = if (statusHistorikk.isEmpty()) IKKE_DAGPENGERBRUKER else statusHistorikk.get(dato)
+    fun status(dato: LocalDateTime): Status {
+        if (statusHistorikk.isEmpty()) {
+            statusHistorikk.put(dato, IKKE_DAGPENGERBRUKER)
+        }
+        return statusHistorikk.get(dato)
+    }
 
     val status: Status
         get() = status(LocalDateTime.now())
