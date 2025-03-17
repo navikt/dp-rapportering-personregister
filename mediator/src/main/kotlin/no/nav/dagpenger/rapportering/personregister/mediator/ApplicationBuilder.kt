@@ -128,12 +128,11 @@ internal class ApplicationBuilder(
     }
 
     internal fun start() {
-        logger.info { "Starter rapid" }
-        logger.info { "Connfiguration: $config" }
         rapidsConnection.start()
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
+        logger.info { "Starter rapid with config: $config" }
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator)
