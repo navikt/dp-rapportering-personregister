@@ -18,6 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDate
 import java.util.UUID
 
@@ -64,6 +65,7 @@ internal fun Application.personstatusApi(
                                 PersonResponse(
                                     ident = it.ident,
                                     status = StatusResponse.valueOf(it.status.name),
+                                    overtattBekreftelse = it.overtattBekreftelse,
                                 ),
                             )
                         }

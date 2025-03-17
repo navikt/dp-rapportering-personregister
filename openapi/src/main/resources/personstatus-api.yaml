@@ -34,12 +34,15 @@ components:
       required:
         - ident
         - status
+        - overtattBekreftelse
       type: object
       properties:
         ident:
           type: string
         status:
           $ref: '#/components/schemas/Status'
+        overtattBekreftelse:
+          type: boolean
     Status:
       type: string
       enum:

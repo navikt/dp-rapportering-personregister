@@ -73,6 +73,9 @@ fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
 val Person.erArbeidssøker: Boolean
     get() = arbeidssøkerperioder.gjeldende != null
 
+val Person.overtattBekreftelse: Boolean
+    get() = arbeidssøkerperioder.gjeldende?.overtattBekreftelse ?: false
+
 fun Person.vurderNyStatus() = if (this.oppfyllerKrav) DAGPENGERBRUKER else IKKE_DAGPENGERBRUKER
 
 val Person.oppfyllerKrav: Boolean get() = this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP"
