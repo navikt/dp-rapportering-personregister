@@ -1,6 +1,11 @@
 kafka:
   pool: nav-dev
 
+ingresses:
+  - https://dp-rapportering-personregister.intern.dev.nav.no
+
+cluster: dev-gcp
+
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag.paw
 ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default
 ARBEIDSSOKERREGISTER_RECORD_KEY_HOST: http://paw-kafka-key-generator.paw

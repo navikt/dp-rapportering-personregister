@@ -33,8 +33,12 @@ spec:
       enabled: true
   kafka:
     pool: {{ kafka.pool }}
+  {{#if ingresses}}
   ingresses:
-    - https://dp-rapportering-personregister.intern.dev.nav.no
+    {{#each ingresses as |url|}}
+     - {{url}}
+    {{/each}}
+  {{/if}}
   leaderElection: true
   observability:
     logging:
@@ -64,10 +68,10 @@ spec:
       rules:
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
-          cluster: dev-gcp
+          cluster: {{ cluster }}
         - application: paw-kafka-key-generator
           namespace: paw
-          cluster: dev-gcp
+          cluster: {{ cluster }}
   env:
     - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
       value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}
