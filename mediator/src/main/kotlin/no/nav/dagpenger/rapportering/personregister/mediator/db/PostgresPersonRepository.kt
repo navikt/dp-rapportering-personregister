@@ -227,6 +227,7 @@ class PostgresPersonRepository(
             is MeldepliktHendelse -> this.startDato
             is StartetArbeidssøkerperiodeHendelse -> this.startet
             is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
+            is PersonSynkroniseringHendelse -> this.startDato
             is SøknadHendelse -> null
             else -> null
         }
@@ -377,6 +378,7 @@ class PostgresPersonRepository(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
+                    startDato = startDato ?: throw IllegalStateException("PersonSynkroniseringHendelse mangler startDato"),
                 )
             else -> throw IllegalArgumentException("Unknown type: $type")
         }

@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
@@ -43,7 +44,8 @@ internal fun Application.personstatusApi(
                     personMediator.behandle(
                         PersonSynkroniseringHendelse(
                             ident = ident,
-                            dato = fraDato,
+                            dato = LocalDateTime.now(),
+                            startDato = fraDato,
                             referanseId = UUID.randomUUID().toString(),
                         ),
                     )

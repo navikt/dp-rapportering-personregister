@@ -111,6 +111,7 @@ data class PersonSynkroniseringHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
     override val referanseId: String,
+    val startDato: LocalDateTime,
 ) : Hendelse {
     override val kilde: Kildesystem = Dagpenger
 
