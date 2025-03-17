@@ -6,10 +6,12 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
+import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
@@ -40,6 +42,8 @@ import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
 import io.ktor.server.cio.CIO as CIOEngine
+
+private val logger = KotlinLogging.logger {}
 
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
@@ -124,6 +128,8 @@ internal class ApplicationBuilder(
     }
 
     internal fun start() {
+        logger.info { "Starter rapid" }
+        logger.info { "Connfiguration: $config" }
         rapidsConnection.start()
     }
 
