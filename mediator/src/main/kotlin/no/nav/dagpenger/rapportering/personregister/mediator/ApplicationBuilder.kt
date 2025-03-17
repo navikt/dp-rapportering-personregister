@@ -110,6 +110,9 @@ internal class ApplicationBuilder(
                     )
                 },
             ) { engine, rapid ->
+                logger.info { "Starter rapid with" }
+                logger.info { "config: $config" }
+
                 val arbeidssøkerMediator =
                     ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
                 with(engine.application) {
@@ -132,7 +135,6 @@ internal class ApplicationBuilder(
     }
 
     override fun onStartup(rapidsConnection: RapidsConnection) {
-        logger.info { "Starter rapid with config: $config" }
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator)
