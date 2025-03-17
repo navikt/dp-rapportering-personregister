@@ -57,19 +57,7 @@ class Steps : No {
             person.behandle(annenMeldegruppeHendelse())
         }
 
-        Når("personen klager på vedtaket") {
-            person.behandle(dagpengerMeldegruppeHendelse())
-        }
-
         Når("personen får avslag") {
-            person.behandle(annenMeldegruppeHendelse())
-        }
-
-        Når("personen får medhold i klagen") {
-            person.behandle(dagpengerMeldegruppeHendelse())
-        }
-
-        Når("personen får avslag på klagen") {
             person.behandle(annenMeldegruppeHendelse())
         }
 
