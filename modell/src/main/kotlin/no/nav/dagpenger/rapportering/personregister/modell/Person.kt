@@ -37,8 +37,10 @@ data class Person(
     val status: Status
         get() = status(LocalDateTime.now())
 
-    fun setStatus(status: Status) {
-        statusHistorikk.put(LocalDateTime.now(), status)
+    fun setStatus(nyStatus: Status) {
+        if (nyStatus !== status) {
+            statusHistorikk.put(LocalDateTime.now(), nyStatus)
+        }
     }
 
     fun behandle(hendelse: Hendelse) {

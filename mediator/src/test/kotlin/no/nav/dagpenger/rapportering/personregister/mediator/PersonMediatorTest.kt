@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -150,6 +151,21 @@ class PersonMediatorTest {
                 personMediator.behandle(meldepliktHendelse(status = true))
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalHaSendtOvertakelseFor this
+            }
+        }
+
+        @Test
+        fun `oppdaterer ikke statushistorikk dersom bruker får samme status`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse())
+                statusHistorikk.getAll() shouldHaveSize 1
+
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                statusHistorikk.getAll() shouldHaveSize 2
+
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                status shouldBe DAGPENGERBRUKER
+                statusHistorikk.getAll() shouldHaveSize 2
             }
         }
     }

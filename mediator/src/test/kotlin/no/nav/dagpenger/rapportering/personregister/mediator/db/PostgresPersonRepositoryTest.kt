@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
@@ -12,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import org.junit.jupiter.api.Disabled
@@ -133,12 +135,48 @@ class PostgresPersonRepositoryTest {
             personRepository.hentHendelserSomSkalAktiveres().first().javaClass shouldBe nyHendelse.javaClass
         }
 
+    @Test
+    fun `lagrer ikke ny status dersom den er samme som nåværende status`() {
+        withMigratedDb {
+            val person = testPerson(status = IKKE_DAGPENGERBRUKER)
+            personRepository.lagrePerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    status shouldBe IKKE_DAGPENGERBRUKER
+                    statusHistorikk.getAll() shouldHaveSize 1
+                }
+
+            person.setStatus(DAGPENGERBRUKER)
+            personRepository.oppdaterPerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    status shouldBe DAGPENGERBRUKER
+                    statusHistorikk.getAll() shouldHaveSize 2
+                }
+
+            person.setStatus(DAGPENGERBRUKER)
+            personRepository.oppdaterPerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    status shouldBe DAGPENGERBRUKER
+                    statusHistorikk.getAll() shouldHaveSize 2
+                }
+        }
+    }
+
     private fun testPerson(
         hendelser: MutableList<Hendelse> = mutableListOf(),
         arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),
+        status: Status = IKKE_DAGPENGERBRUKER,
     ) = Person(
         ident = ident,
-        statusHistorikk = statusHistorikk(mapOf(nå to DAGPENGERBRUKER)),
+        statusHistorikk = statusHistorikk(mapOf(nå to status)),
         arbeidssøkerperioder = arbeidssøkerperiode,
     ).apply { this.hendelser.addAll(hendelser) }
 
