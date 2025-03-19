@@ -21,7 +21,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKE
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
-import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -113,8 +112,7 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
-                meldeplikt = true
-
+                personMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -148,7 +146,7 @@ class PersonMediatorTest {
         @Test
         fun `meldepliktendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
-                meldegruppe = "DAGP"
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
                 personMediator.behandle(meldepliktHendelse(status = true))
                 status shouldBe DAGPENGERBRUKER
                 personObserver skalHaSendtOvertakelseFor this
@@ -161,7 +159,8 @@ class PersonMediatorTest {
         @Test
         fun `overtar arbeidssøker bekreftelse når man blir dagpengerbruker`() {
             arbeidssøker {
-                meldeplikt = true
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
 
                 statusHistorikk.put(tidligere, IKKE_DAGPENGERBRUKER)
                 personRepository.oppdaterPerson(this)
@@ -178,8 +177,8 @@ class PersonMediatorTest {
         @Test
         fun `sender ikke overtakelsesmelding dersom vi allerede har overtatt arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
-                meldeplikt = true
-                statusHistorikk.put(tidligere, IKKE_DAGPENGERBRUKER)
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(annenMeldegruppeHendelse())
                 personRepository.oppdaterPerson(this)
 
                 status shouldBe IKKE_DAGPENGERBRUKER
@@ -263,37 +262,6 @@ class PersonMediatorTest {
         statusMeldeplikt = status,
         referanseId = referanseId,
     )
-
-    private fun lagPerson(
-        arbeidssøker: Boolean,
-        meldeplikt: Boolean,
-        meldegruppe: String,
-    ) = Person(
-        ident = ident,
-    ).apply {
-        if (arbeidssøker) {
-            arbeidssøkerperioder.add(
-                Arbeidssøkerperiode(
-                    periodeId,
-                    ident,
-                    tidligere,
-                    null,
-                    false,
-                ),
-            )
-        }
-        if (meldeplikt) {
-            this.meldeplikt = true
-        }
-
-        if (meldegruppe.isNotEmpty()) {
-            this.meldegruppe = meldegruppe
-        }
-
-        if (oppfyllerKrav) {
-            statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-        }
-    }
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
