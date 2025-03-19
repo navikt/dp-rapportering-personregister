@@ -138,8 +138,35 @@ class PostgresPersonRepository(
 
     override fun lagreFremtidigHendelse(hendelse: Hendelse) =
         actionTimer.timedAction("db-lagreFremtidigHendelse") {
-            val personId = hentPersonId(hendelse.ident) ?: throw IllegalStateException("Person finnes ikke")
-            lagreHendelse(personId, hendelse, "fremtidig_hendelse")
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            """
+                INSERT INTO fremtidig_hendelse (ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                ON CONFLICT (referanse_id) 
+                DO UPDATE SET 
+                    ident = EXCLUDED.ident,
+                    dato = EXCLUDED.dato,
+                    start_dato = EXCLUDED.start_dato,
+                    slutt_dato = EXCLUDED.slutt_dato,
+                    kilde = EXCLUDED.kilde,
+                    type = EXCLUDED.type,
+                    extra = EXCLUDED.extra
+                """,
+                            hendelse.ident,
+                            hendelse.dato,
+                            hendelse.hentStartDato(),
+                            hendelse.hentSluttDato(),
+                            hendelse.kilde.name,
+                            hendelse.referanseId,
+                            hendelse::class.simpleName,
+                            hendelse.hentEkstrafelter(),
+                        ).asUpdate,
+                    )
+                }
+            }.validateRowsAffected()
         }
 
     override fun hentHendelserSomSkalAktiveres(): List<Hendelse> =
@@ -148,10 +175,9 @@ class PostgresPersonRepository(
                 session.run(
                     queryOf(
                         """
-                        SELECT fh.*, p.ident 
-                        FROM fremtidig_hendelse fh 
-                        INNER JOIN person p ON fh.person_id = p.id 
-                        WHERE DATE(fh.start_dato) <= current_date
+                        SELECT *
+                        FROM fremtidig_hendelse
+                        WHERE DATE(start_dato) <= current_date
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
                         .asList,
@@ -187,14 +213,13 @@ class PostgresPersonRepository(
     private fun lagreHendelse(
         personId: Long,
         hendelse: Hendelse,
-        hendelseTabell: String = "hendelse",
     ) = actionTimer.timedAction("db-lagreHendelse") {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
                         """
-                INSERT INTO $hendelseTabell (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
