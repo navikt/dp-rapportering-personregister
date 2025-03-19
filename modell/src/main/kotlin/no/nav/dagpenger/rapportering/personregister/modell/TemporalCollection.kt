@@ -34,5 +34,5 @@ class TemporalCollection<R> {
 
     fun isEmpty() = contents.isEmpty()
 
-    fun allItems(): List<Pair<LocalDateTime, R>> = contents.toList()
+    fun getAll(): List<Pair<LocalDateTime, R>> = contents.toList()
 }

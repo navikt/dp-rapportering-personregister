@@ -34,7 +34,7 @@ class PostgresPersonRepository(
             val personId = hentPersonId(ident) ?: return@timedAction null
             val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident)
             val hendelser = hentHendelser(personId, ident)
-            val statusHistorikk = hentStatusHistorikk(personId).allItems()
+            val statusHistorikk = hentStatusHistorikk(personId).getAll()
             val meldeplikt = hentMeldeplikt(ident)
             val meldegruppe = hentMeldegruppe(ident)
 
@@ -81,7 +81,7 @@ class PostgresPersonRepository(
             person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
             person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
-                .allItems()
+                .getAll()
                 .forEach { (dato, status) ->
                     lagreStatusHistorikk(personId, dato, status)
                 }
@@ -108,7 +108,7 @@ class PostgresPersonRepository(
             person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
             person.hendelser.forEach { lagreHendelse(personId, it) }
             person.statusHistorikk
-                .allItems()
+                .getAll()
                 .forEach { (dato, status) ->
                     lagreStatusHistorikk(personId, dato, status)
                 }
