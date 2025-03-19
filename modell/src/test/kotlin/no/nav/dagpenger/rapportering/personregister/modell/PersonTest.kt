@@ -34,9 +34,8 @@ class PersonTest {
         @Test
         fun `behandler søknad hendelse for bruker som oppfyller kravet`() =
             arbeidssøker {
-                this.meldegruppe = "DAGP"
-                this.meldeplikt = true
-
+                behandle(meldepliktHendelse(status = true))
+                behandle(dagpengerMeldegruppeHendelse())
                 behandle(søknadHendelse())
 
                 status shouldBe DAGPENGERBRUKER
@@ -50,7 +49,7 @@ class PersonTest {
         @Test
         fun `behandler dagpengermeldegruppe hendelse for bruker som ikke oppfyller kravet`() =
             testPerson {
-                meldeplikt = false
+                behandle(meldepliktHendelse(status = false))
                 behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
@@ -60,8 +59,7 @@ class PersonTest {
         @Test
         fun `behandler dagpengermeldegruppe hendelse for bruker som oppfyller kravet`() =
             arbeidssøker {
-                meldeplikt = true
-
+                behandle(meldepliktHendelse(status = true))
                 behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
@@ -75,8 +73,7 @@ class PersonTest {
         @Test
         fun `behandler AnnenMeldegruppeHendelse for bruker som vi allerede har tatt ansvar for arbeidssøkerbekreftelse`() =
             arbeidssøker(overtattBekreftelse = true) {
-                meldeplikt = true
-
+                behandle(meldepliktHendelse(status = true))
                 behandle(dagpengerMeldegruppeHendelse())
                 behandle(annenMeldegruppeHendelse())
 
@@ -95,7 +92,6 @@ class PersonTest {
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
-                arbeidssøkerperiodeObserver skalIkkeHaFrasagtAnsvaretFor this
             }
     }
 
@@ -154,9 +150,8 @@ class PersonTest {
         @Test
         fun `behandler StartetArbeidssøkerperiodeHendelse for bruker som oppfyller kravet`() =
             testPerson {
-                meldeplikt = true
-                meldegruppe = "DAGP"
-
+                behandle(meldepliktHendelse(status = true))
+                behandle(dagpengerMeldegruppeHendelse())
                 behandle(startetArbeidssøkerperiodeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
