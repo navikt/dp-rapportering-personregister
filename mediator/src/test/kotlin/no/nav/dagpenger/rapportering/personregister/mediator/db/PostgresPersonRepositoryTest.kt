@@ -107,8 +107,8 @@ class PostgresPersonRepositoryTest {
 
             with(personRepository.hentHendelserSomSkalAktiveres()) {
                 size shouldBe 2
-                first().javaClass shouldBe MeldepliktHendelse::class.java
-                last().javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
+                any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
+                any { it.javaClass == DagpengerMeldegruppeHendelse::class.java } shouldBe true
             }
 
             personRepository.slettFremtidigHendelse(meldepliktHendelse.referanseId)
