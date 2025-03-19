@@ -123,10 +123,11 @@ class PersonTest {
 
         @Test
         fun `behandler MeldepliktHendelse for Dagpengerbruker som ikke lenger oppfyller kravet `() =
-            arbeidssøker(overtattBekreftelse = true) {
-                meldegruppe = "ARBS"
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
+            arbeidssøker {
+                behandle(meldepliktHendelse(status = true))
+                behandle(dagpengerMeldegruppeHendelse())
 
+                behandle(annenMeldegruppeHendelse())
                 behandle(meldepliktHendelse(status = true))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
@@ -161,9 +162,9 @@ class PersonTest {
 
         @Test
         fun `behandler avsluttet arbeidssøker hendelser for Dagpengerbruker`() =
-            arbeidssøker(overtattBekreftelse = true) {
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
-
+            arbeidssøker {
+                behandle(meldepliktHendelse(status = true))
+                behandle(dagpengerMeldegruppeHendelse())
                 behandle(avsluttetArbeidssøkerperiodeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER

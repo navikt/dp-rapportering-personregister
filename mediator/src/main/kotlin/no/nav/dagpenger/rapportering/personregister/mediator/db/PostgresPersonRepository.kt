@@ -34,16 +34,18 @@ class PostgresPersonRepository(
             val personId = hentPersonId(ident) ?: return@timedAction null
             val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident)
             val hendelser = hentHendelser(personId, ident)
-            val statusHistorikk = hentStatusHistorikk(personId).getAll()
+            val statusHistorikk = hentStatusHistorikk(personId)
             val meldeplikt = hentMeldeplikt(ident)
             val meldegruppe = hentMeldegruppe(ident)
 
-            Person(ident).apply {
+            Person(
+                ident = ident,
+                statusHistorikk = statusHistorikk,
+                arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
+            ).apply {
                 this.meldeplikt = meldeplikt
                 this.meldegruppe = meldegruppe
-                arbeidssøkerperioder.forEach { this.arbeidssøkerperioder.add(it) }
                 hendelser.forEach { this.hendelser.add(it) }
-                statusHistorikk.forEach { (dato, status) -> this.statusHistorikk.put(dato, status) }
             }
         }
 

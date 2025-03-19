@@ -193,7 +193,9 @@ class PersonMediatorTest {
         @Test
         fun `frasier arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
-                statusHistorikk.put(tidligere, DAGPENGERBRUKER)
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+
                 personRepository.oppdaterPerson(this)
 
                 status shouldBe DAGPENGERBRUKER
