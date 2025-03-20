@@ -11,7 +11,7 @@ ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregistere
 ARBEIDSSOKERREGISTER_RECORD_KEY_HOST: http://paw-kafka-key-generator.paw
 ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE: api://dev-gcp.paw.paw-kafka-key-generator/.default
 ARBEIDSSOKERPERIODER_TOPIC: paw.arbeidssokerperioder-v1
-BEKREFTELSE_PAA_VEGNE_AV_TOPIC: paw.arbeidssoker-bekreftelse-paavegneav-teamdagpenger-v2
+BEKREFTELSE_PAA_VEGNE_AV_TOPIC: paw.arbeidssoker-bekreftelse-paavegneav-teamdagpenger-v1
 
 KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-q1,teamarenanais.aapen-arena-meldepliktendret-v1-q1
 
