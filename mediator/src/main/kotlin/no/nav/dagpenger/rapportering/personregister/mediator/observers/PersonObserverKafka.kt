@@ -52,7 +52,11 @@ class PersonObserverKafka(
                 }
         }
 
-    override fun skalSendeMelding(): Boolean = unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
+    override fun skalSendeMelding(): Boolean {
+        val toggle = unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
+        logger.info { "Toggle er: $toggle" }
+        return toggle
+    }
 
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
         person
