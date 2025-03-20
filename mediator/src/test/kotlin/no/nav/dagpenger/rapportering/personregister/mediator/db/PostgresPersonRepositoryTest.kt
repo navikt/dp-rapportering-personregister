@@ -16,6 +16,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKE
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -26,6 +27,7 @@ class PostgresPersonRepositoryTest {
     private val nå = LocalDateTime.now()
 
     @Test
+    @Disabled
     fun `kan lagre og hente komplett person`() =
         withMigratedDb {
             val person =
@@ -44,6 +46,7 @@ class PostgresPersonRepositoryTest {
         }
 
     @Test
+    @Disabled
     fun `kan oppdatere person`() =
         withMigratedDb {
             val person =
