@@ -16,13 +16,8 @@ spec:
   readiness:
     path: /isReady
   replicas:
-<<<<<<< Updated upstream
-    min: 6
-    max: 10
-=======
     min: 2
     max: 4
->>>>>>> Stashed changes
   resources:
     limits:
       memory: 2048Mi
