@@ -138,6 +138,28 @@ class PostgresPersonRepository(
             }
         }
 
+    override fun hentAntallFremtidigeHendelser(): Int =
+        actionTimer.timedAction("db-hentAntallFremtidigeHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM fremtidig_hendelse")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            }
+        }
+
+    override fun hentAntallDagpengebrukere(): Int =
+        actionTimer.timedAction("db-hentAntallDagpengebrukere") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM person WHERE status = 'DAGPENGERBRUKER'")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            }
+        }
+
     override fun lagreFremtidigHendelse(hendelse: Hendelse) =
         actionTimer.timedAction("db-lagreFremtidigHendelse") {
             using(sessionOf(dataSource)) { session ->

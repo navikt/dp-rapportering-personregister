@@ -92,6 +92,8 @@ class DatabaseMetrikker(
 ) {
     private val lagredePersoner: AtomicInteger = AtomicInteger(0)
     private val lagredeHendelser: AtomicInteger = AtomicInteger(0)
+    private val lagredeFremtidigeHendelser: AtomicInteger = AtomicInteger(0)
+    private val antallDagpengebrukere: AtomicInteger = AtomicInteger(0)
 
     init {
         Gauge
@@ -101,6 +103,14 @@ class DatabaseMetrikker(
         Gauge
             .builder("${NAMESPACE}_lagrede_hendelser_total", lagredeHendelser) { it.get().toDouble() }
             .description("Antall lagrede hendelser i databasen")
+            .register(meterRegistry)
+        Gauge
+            .builder("${NAMESPACE}_lagrede_fremtidige_hendelser_total", lagredeFremtidigeHendelser) { it.get().toDouble() }
+            .description("Antall lagrede fremtidige hendelser i databasen")
+            .register(meterRegistry)
+        Gauge
+            .builder("${NAMESPACE}_antall_dagpengebrukere_total", antallDagpengebrukere) { it.get().toDouble() }
+            .description("Antall dagpengebrukere i databasen")
             .register(meterRegistry)
     }
 
@@ -113,12 +123,15 @@ class DatabaseMetrikker(
             action = {
                 try {
                     logger.info { "Oppdaterer metrikker for lagrede elementer i databasen" }
-                    val antallLagredePersoner = personRepository.hentAnallPersoner()
-                    val antallLagredeHendelser = personRepository.hentAntallHendelser()
-                    lagredePersoner.set(antallLagredePersoner)
-                    lagredeHendelser.set(antallLagredeHendelser)
+                    lagredePersoner.set(personRepository.hentAnallPersoner())
+                    lagredeHendelser.set(personRepository.hentAntallHendelser())
+                    lagredeFremtidigeHendelser.set(personRepository.hentAntallFremtidigeHendelser())
+                    antallDagpengebrukere.set(personRepository.hentAntallDagpengebrukere())
 
-                    logger.info { "Oppdaterte metrikker med lagrede personer $lagredePersoner, lagrede hendelser $lagredeHendelser" }
+                    logger.info {
+                        "Oppdaterte metrikker med lagrede personer $lagredePersoner, lagrede hendelser $lagredeHendelser, " +
+                            "lagrede fremtidige hendelser $lagredeFremtidigeHendelser og antall dagpengebrukere $antallDagpengebrukere"
+                    }
                 } catch (e: Exception) {
                     logger.warn(e) { "Uthenting av metrikker for lagrede elementer i databasen feilet" }
                     lagredePersoner.set(-1)
