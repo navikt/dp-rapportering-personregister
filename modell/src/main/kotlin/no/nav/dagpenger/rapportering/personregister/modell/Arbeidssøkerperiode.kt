@@ -41,9 +41,10 @@ data class StartetArbeidssøkerperiodeHendelse(
                 person.setStatus(it)
                 if (person.oppfyllerKrav) {
                     person.overtaArbeidssøkerBekreftelse()
-                } else {
-                    person.frasiArbeidssøkerBekreftelse(periodeId)
                 }
+                /* else {
+                    person.frasiArbeidssøkerBekreftelse(periodeId)
+                } */
             }
     }
 }
