@@ -232,7 +232,7 @@ class PostgresPersonRepository(
                     """
                     SELECT ident FROM person p 
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
-                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse = false
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse = false and arbs.avsluttet is null
                     """.trimIndent(),
                 ).map { it.string("ident") }
                     .asList,

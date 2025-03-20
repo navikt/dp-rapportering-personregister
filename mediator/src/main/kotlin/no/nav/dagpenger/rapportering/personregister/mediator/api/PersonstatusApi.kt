@@ -80,15 +80,8 @@ internal fun Application.personstatusApi(
                 logger.info { "GET /sync-personer" }
                 val identer = personRepository.hentPersonerMedDagpenger()
                 logger.info { "oppretter sync-hendelse for ${identer.size} personer" }
-                identer.forEach { ident ->
-                    personMediator.behandle(
-                        PersonSynkroniseringHendelse(
-                            ident = ident,
-                            dato = LocalDateTime.now(),
-                            startDato = LocalDateTime.now(),
-                            referanseId = UUID.randomUUID().toString(),
-                        ),
-                    )
+                identer.forEach {
+                    personMediator.overtaBekreftelse(it)
                 }
                 call.respond(HttpStatusCode.OK, "OK")
             }

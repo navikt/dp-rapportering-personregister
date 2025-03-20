@@ -19,7 +19,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
@@ -190,8 +189,9 @@ class PersonstatusApiTest : ApiTestSetup() {
                 this?.status shouldBe Status.DAGPENGERBRUKER
                 this?.meldeplikt shouldBe true
                 this?.meldegruppe shouldBe "DAGP"
-                this?.hendelser?.size shouldBe 1
-                this?.hendelser?.first()?.javaClass shouldBe PersonSynkroniseringHendelse::class.java
+                this?.arbeidssøkerperioder?.first()?.overtattBekreftelse shouldBe true
+                // this?.hendelser?.size shouldBe 1
+                // this?.hendelser?.first()?.javaClass shouldBe PersonSynkroniseringHendelse::class.java
             }
         }
 }

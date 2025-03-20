@@ -50,18 +50,18 @@ data class Person(
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {
-    if (observers.first().skalSendeMelding()) {
-        arbeidssøkerperioder.gjeldende?.let {
-            if (it.overtattBekreftelse != true) {
-                try {
-                    observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-                    it.overtattBekreftelse = true
-                } catch (e: Exception) {
-                    it.overtattBekreftelse = false
-                }
+    // if (observers.first().skalSendeMelding()) {
+    arbeidssøkerperioder.gjeldende?.let {
+        if (it.overtattBekreftelse != true) {
+            try {
+                observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+                it.overtattBekreftelse = true
+            } catch (e: Exception) {
+                it.overtattBekreftelse = false
             }
         }
     }
+    // }
 }
 
 fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {

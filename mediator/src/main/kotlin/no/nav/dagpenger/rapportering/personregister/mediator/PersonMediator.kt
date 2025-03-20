@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.overtaArbeidssøkerBekreftelse
 
 class PersonMediator(
     private val personRepository: PersonRepository,
@@ -73,6 +74,18 @@ class PersonMediator(
         } catch (e: Exception) {
             logger.info { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
         }
+    }
+
+    fun overtaBekreftelse(ident: String) {
+        personRepository
+            .hentPerson(ident)
+            ?.also { person ->
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { person.addObserver(it) }
+                }
+                person.overtaArbeidssøkerBekreftelse()
+                personRepository.oppdaterPerson(person)
+            }
     }
 
     private fun hentEllerOpprettPerson(ident: String): Person =
