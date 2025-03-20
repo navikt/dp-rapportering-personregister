@@ -228,8 +228,13 @@ class PostgresPersonRepository(
     override fun hentPersonerMedDagpenger(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
-                queryOf("SELECT ident FROM person WHERE status = 'DAGPENGERBRUKER'")
-                    .map { it.string("ident") }
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse = false
+                    """.trimIndent(),
+                ).map { it.string("ident") }
                     .asList,
             )
         }

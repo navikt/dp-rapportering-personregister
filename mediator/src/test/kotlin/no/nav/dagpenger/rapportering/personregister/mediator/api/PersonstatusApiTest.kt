@@ -168,6 +168,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                     setStatus(Status.DAGPENGERBRUKER)
                     meldeplikt = true
                     meldegruppe = "DAGP"
+                    arbeidssøkerperioder.add(Arbeidssøkerperiode(UUID.randomUUID(), ident, LocalDateTime.now(), null, false))
                 }.also {
                     personRepository.lagrePerson(it)
                 }
