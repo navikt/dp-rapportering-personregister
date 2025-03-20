@@ -17,7 +17,7 @@ spec:
     path: /isReady
   replicas:
     min: 2
-    max: 3
+    max: 10
   resources:
     limits:
       memory: 2048Mi
