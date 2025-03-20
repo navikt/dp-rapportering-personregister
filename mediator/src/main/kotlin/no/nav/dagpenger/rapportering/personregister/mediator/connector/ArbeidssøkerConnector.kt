@@ -47,7 +47,7 @@ class ArbeidssøkerConnector(
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
                 logger.warn {
-                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident. Response: $body"
+                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident."
                 }
                 throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode")
             }
@@ -71,7 +71,7 @@ class ArbeidssøkerConnector(
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
                 logger.warn {
-                    "Uforventet status ${result.status.value} ved henting av record key for ident. Response: $body"
+                    "Uforventet status ${result.status.value} ved henting av record key for ident."
                 }
                 throw RuntimeException("Uforventet status ${result.status.value} ved henting av record key")
             }
