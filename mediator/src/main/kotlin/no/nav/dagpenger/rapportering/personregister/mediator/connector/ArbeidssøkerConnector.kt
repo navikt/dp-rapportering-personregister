@@ -39,15 +39,15 @@ class ArbeidssøkerConnector(
                     body = ArbeidssøkerperiodeRequestBody(ident),
                     parameters = mapOf("siste" to true),
                 ).also {
-                    sikkerlogg.info {
-                        "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for $ident ga status ${it.status}"
+                    logger.info {
+                        "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for ident ga status ${it.status}"
                     }
                 }
 
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
-                sikkerlogg.warn {
-                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for $ident. Response: $body"
+                logger.warn {
+                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident. Response: $body"
                 }
                 throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode")
             }
@@ -63,15 +63,15 @@ class ArbeidssøkerConnector(
                     metrikkNavn = "arbeidssokerregister_hentRecordKey",
                     body = RecordKeyRequestBody(ident),
                 ).also {
-                    sikkerlogg.info {
-                        "Kall til arbeidssøkerregister for å hente record key for $ident ga status ${it.status}"
+                    logger.info {
+                        "Kall til arbeidssøkerregister for å hente record key for ident ga status ${it.status}"
                     }
                 }
 
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
-                sikkerlogg.warn {
-                    "Uforventet status ${result.status.value} ved henting av record key for $ident. Response: $body"
+                logger.warn {
+                    "Uforventet status ${result.status.value} ved henting av record key for ident. Response: $body"
                 }
                 throw RuntimeException("Uforventet status ${result.status.value} ved henting av record key")
             }
@@ -101,6 +101,6 @@ class ArbeidssøkerConnector(
     }
 
     companion object {
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall.HentRapporteringperioder")
+        private val logger = KotlinLogging.logger {}
     }
 }

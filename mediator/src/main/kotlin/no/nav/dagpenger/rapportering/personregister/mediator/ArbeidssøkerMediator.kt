@@ -46,15 +46,15 @@ class ArbeidssøkerMediator(
                 if (arbeidssøkerperiode != null) {
                     behandle(arbeidssøkerperiode)
                 } else {
-                    sikkerlogg.info { "Personen er ikke arbeidssøker" }
+                    logger.info { "Personen er ikke arbeidssøker" }
                 }
             } catch (e: Exception) {
-                sikkerlogg.error(e) { "Feil ved behandling av arbeidssøkerperiode for ident $ident" }
+                logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
             }
         }
 
     private fun behandle(arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse) {
-        sikkerlogg.info { "Behandler arbeidssøkerhendelse: $arbeidssøkerHendelse" }
+        logger.info { "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}" }
 
         personRepository
             .hentPerson(arbeidssøkerHendelse.ident)
@@ -62,10 +62,10 @@ class ArbeidssøkerMediator(
                 personObservers.forEach { person.addObserver(it) }
                 person.behandle(arbeidssøkerHendelse)
                 personRepository.oppdaterPerson(person)
-            } ?: sikkerlogg.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
+            } ?: logger.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
     }
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
     }
 }

@@ -11,11 +11,11 @@ class FremtidigHendelseMediator(
 ) {
     fun behandle(hendelse: Hendelse) =
         actionTimer.timedAction("behandle_FremtidigHendelse") {
-            sikkerlogg.info { "Mottok fremtidig hendelse: $hendelse" }
+            logger.info { "Mottok fremtidig hendelse: ${hendelse.referanseId}" }
             personRepository.lagreFremtidigHendelse(hendelse)
         }
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
     }
 }

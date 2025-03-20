@@ -38,7 +38,7 @@ class PersonObserverKafka(
                         Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
                     )
                     val metadata = producer.sendDeferred(record).await()
-                    sikkerlogg.info {
+                    logger.info {
                         "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
                             " $periodeId til arbeidssøkerregisteret. " +
                             "Metadata: topic=${metadata.topic()} " +
@@ -73,15 +73,15 @@ class PersonObserverKafka(
                     Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
                 )
                 val metadata = runBlocking { producer.sendDeferred(record).await() }
-                sikkerlogg.info {
+                logger.info {
                     "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
                         "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
                 }
             }
-            ?: run { sikkerlogg.info { "Fant ingen aktiv arbeidssøkerperiode for person ${person.ident}" } }
+            ?: run { logger.info { "Fant ingen aktiv arbeidssøkerperiode for person" } }
     }
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall.PersonObserver")
+        private val logger = KotlinLogging.logger {}
     }
 }

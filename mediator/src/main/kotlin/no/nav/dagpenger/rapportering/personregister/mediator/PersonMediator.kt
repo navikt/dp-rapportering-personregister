@@ -20,7 +20,7 @@ class PersonMediator(
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) =
         actionTimer.timedAction("behandle_SoknadHendelse") {
-            sikkerlogg.info { "Behandler søknadshendelse: $søknadHendelse" }
+            logger.info { "Behandler søknadshendelse: ${søknadHendelse.referanseId}" }
             hentEllerOpprettPerson(søknadHendelse.ident)
                 .also {
                     it.behandle(søknadHendelse)
@@ -31,25 +31,25 @@ class PersonMediator(
 
     fun behandle(hendelse: DagpengerMeldegruppeHendelse) =
         actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
-            sikkerlogg.info { "Behandler dagpenger meldegruppe hendelse: $hendelse" }
+            logger.info { "Behandler dagpenger meldegruppe hendelse: ${hendelse.referanseId}" }
             behandleHendelse(hendelse)
         }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) =
         actionTimer.timedAction("behandle_AnnenMeldegruppeHendelse") {
-            sikkerlogg.info { "Behandler annen meldegruppe hendelse: $hendelse" }
+            logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
             behandleHendelse(hendelse)
         }
 
     fun behandle(hendelse: MeldepliktHendelse) =
         actionTimer.timedAction("behandle_MeldepliktHendelse") {
-            sikkerlogg.info { "Behandler meldeplikthendelse: $hendelse" }
+            logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId}" }
             behandleHendelse(hendelse)
         }
 
     fun behandle(hendelse: PersonSynkroniseringHendelse) =
         actionTimer.timedAction("behandle_PersonSynkroniseringHendelse") {
-            sikkerlogg.info { "Behandler PersonSynkroniseringHendelse: $hendelse" }
+            logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
             hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
                     person.behandle(hendelse)
@@ -68,10 +68,10 @@ class PersonMediator(
                     }
                     person.behandle(hendelse)
                     personRepository.oppdaterPerson(person)
-                    sikkerlogg.info { "Hendelse behandlet: $hendelse" }
+                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
-            sikkerlogg.info { "Feil ved behandling av hendelse: $hendelse" }
+            logger.info { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
         }
     }
 
@@ -86,6 +86,6 @@ class PersonMediator(
             }
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
     }
 }

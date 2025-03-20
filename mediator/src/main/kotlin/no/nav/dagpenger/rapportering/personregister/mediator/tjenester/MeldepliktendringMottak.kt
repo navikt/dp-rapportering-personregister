@@ -15,7 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import java.time.LocalDateTime
 
-val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 class MeldepliktendringMottak(
     rapidsConnection: RapidsConnection,

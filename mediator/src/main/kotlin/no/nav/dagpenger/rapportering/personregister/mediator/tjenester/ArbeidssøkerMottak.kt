@@ -19,7 +19,7 @@ class ArbeidssøkerMottak(
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach {
-            sikkerlogg.info { "Behandler periode med key: ${it.key()} og value: ${it.value()}" }
+            logger.info { "Behandler periode med key: ${it.key()}" }
             arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
             Arbeidssøkerperiode(
                 ident = it.value().identitetsnummer,
@@ -31,6 +31,6 @@ class ArbeidssøkerMottak(
         }
 
     companion object {
-        val sikkerlogg = KotlinLogging.logger("tjenestekall")
+        private val logger = KotlinLogging.logger {}
     }
 }
