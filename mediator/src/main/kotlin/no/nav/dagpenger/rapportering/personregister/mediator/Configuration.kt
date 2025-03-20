@@ -11,11 +11,14 @@ import com.natpryce.konfig.EnvironmentVariables
 import com.natpryce.konfig.Key
 import com.natpryce.konfig.overriding
 import com.natpryce.konfig.stringType
+import io.getunleash.DefaultUnleash
+import io.getunleash.util.UnleashConfig
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon
+import java.util.UUID
 
 internal object Configuration {
     const val APP_NAME = "dp-rapportering-personregister"
@@ -94,6 +97,22 @@ internal object Configuration {
             .registerModule(JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+
+    private val unleashConfig by lazy {
+        UnleashConfig
+            .builder()
+            .fetchTogglesInterval(5)
+            .appName(properties.getOrElse(Key("NAIS_APP_NAME", stringType), UUID.randomUUID().toString()))
+            .instanceId(properties.getOrElse(Key("NAIS_CLIENT_ID", stringType), UUID.randomUUID().toString()))
+            .unleashAPI(properties[Key("UNLEASH_SERVER_API_URL", stringType)] + "/api")
+            .apiKey(properties[Key("UNLEASH_SERVER_API_TOKEN", stringType)])
+            .environment(properties[Key("UNLEASH_SERVER_API_ENV", stringType)])
+            .build()
+    }
+
+    val unleash by lazy {
+        DefaultUnleash(unleashConfig)
+    }
 }
 
 private fun String.formatUrl(): String = if (this.startsWith("http")) this else "https://$this"

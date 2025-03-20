@@ -6,6 +6,7 @@ import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -32,7 +33,11 @@ class PersonObserverKafka(
                 ?.let { periodeId ->
                     val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
                     val record =
-                        ProducerRecord(bekreftelsePåVegneAvTopic, recordKey.key, PaaVegneAv(periodeId, DAGPENGER, Stopp()))
+                        ProducerRecord(
+                            bekreftelsePåVegneAvTopic,
+                            recordKey.key,
+                            PaaVegneAv(periodeId, DAGPENGER, Stopp()),
+                        )
                     Span.current().addEvent(
                         "Frasier ansvar for arbeidssøkerbekreftelse",
                         Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
@@ -46,6 +51,8 @@ class PersonObserverKafka(
                     }
                 }
         }
+
+    override fun skalSendeMelding(): Boolean = unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
 
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
         person
