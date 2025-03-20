@@ -51,26 +51,26 @@ data class Person(
 
 fun Person.overtaArbeidssøkerBekreftelse() {
     arbeidssøkerperioder.gjeldende?.let {
-        if (it.overtattBekreftelse != true) {
+        /*if (it.overtattBekreftelse != true) {
             try {
                 observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
                 it.overtattBekreftelse = true
             } catch (e: Exception) {
                 it.overtattBekreftelse = false
             }
-        }
+        }*/
     }
 }
 
 fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
-    arbeidssøkerperioder
+    /*arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let {
             if (it.overtattBekreftelse == true) {
                 observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
                 it.overtattBekreftelse = false
             }
-        }
+        }*/
 }
 
 val Person.erArbeidssøker: Boolean

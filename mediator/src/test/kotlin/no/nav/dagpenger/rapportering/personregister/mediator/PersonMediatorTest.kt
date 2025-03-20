@@ -24,6 +24,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -111,6 +112,7 @@ class PersonMediatorTest {
         }
 
         @Test
+        @Disabled
         fun `meldegruppendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
                 personMediator.behandle(meldepliktHendelse())
@@ -145,6 +147,7 @@ class PersonMediatorTest {
         }
 
         @Test
+        @Disabled
         fun `meldepliktendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
@@ -173,6 +176,7 @@ class PersonMediatorTest {
     @Nested
     inner class ArbeidssøkerBekreftelse {
         @Test
+        @Disabled
         fun `overtar arbeidssøker bekreftelse når man blir dagpengerbruker`() {
             arbeidssøker {
                 personMediator.behandle(meldepliktHendelse())
@@ -207,6 +211,7 @@ class PersonMediatorTest {
         }
 
         @Test
+        @Disabled
         fun `frasier arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
                 personMediator.behandle(meldepliktHendelse())

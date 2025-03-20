@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -36,6 +37,7 @@ class ArbeidssøkerMediatorTest {
     }
 
     @Test
+    @Disabled
     fun `skal behandle startet arbeidssøkerperiode for person som oppfyller kravet`() {
         val ident = "12345678901"
         val periodeId = UUID.randomUUID()
@@ -110,6 +112,7 @@ class ArbeidssøkerMediatorTest {
     }
 
     @Test
+    @Disabled
     fun `kan hente aktiv arbeidssøkerstatus og triggerer riktig hendelse for eksisterende person`() {
         val periodeId = UUID.randomUUID()
         val ident = "12345678901"
@@ -153,6 +156,7 @@ class ArbeidssøkerMediatorTest {
     }
 
     @Test
+    @Disabled
     fun `kan hente avsluttet arbeidssøkerstatus og triggerer riktig hendelse for eksisterende person`() {
         val periodeId = UUID.randomUUID()
         val ident = "12345678901"
