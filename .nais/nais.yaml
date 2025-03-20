@@ -71,6 +71,8 @@ spec:
           namespace: {{namespace}}
         {{/each}}
     outbound:
+      external:
+        - host: dagpenger-unleash-api.nav.cloud.nais.io
       rules:
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
@@ -78,6 +80,8 @@ spec:
         - application: paw-kafka-key-generator
           namespace: paw
           cluster: {{ cluster }}
+  envFrom:
+    - secret: dp-rapportering-personregister-unleash-api-token
   env:
     - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
       value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}

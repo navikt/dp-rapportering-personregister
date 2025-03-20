@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
@@ -154,6 +155,42 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["ident"].asText() shouldBe ident
                 obj["status"].asText() shouldBe StatusResponse.DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe true
+            }
+        }
+
+    @Test
+    fun `Get sync-person`() =
+        setUpTestApplication {
+            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            Person(ident)
+                .apply {
+                    setStatus(Status.DAGPENGERBRUKER)
+                    meldeplikt = true
+                    meldegruppe = "DAGP"
+                }.also {
+                    personRepository.lagrePerson(it)
+                }
+
+            with(personRepository.hentPerson(ident)) {
+                this?.status shouldBe Status.DAGPENGERBRUKER
+                this?.meldeplikt shouldBe true
+                this?.meldegruppe shouldBe "DAGP"
+                this?.hendelser?.size shouldBe 0
+            }
+
+            with(
+                client.get("/sync-personer"),
+            ) {
+                status shouldBe HttpStatusCode.OK
+            }
+
+            with(personRepository.hentPerson(ident)) {
+                this?.status shouldBe Status.DAGPENGERBRUKER
+                this?.meldeplikt shouldBe true
+                this?.meldegruppe shouldBe "DAGP"
+                this?.hendelser?.size shouldBe 1
+                this?.hendelser?.first()?.javaClass shouldBe PersonSynkroniseringHendelse::class.java
             }
         }
 }

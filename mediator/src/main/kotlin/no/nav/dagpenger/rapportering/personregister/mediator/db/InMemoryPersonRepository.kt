@@ -52,4 +52,7 @@ class InMemoryPersonRepository : PersonRepository {
             fremtidigeHendelser.remove(it)
         }
     }
+
+    override fun hentPersonerMedDagpenger(): List<String> =
+        personList.values.filter { it.status == Status.DAGPENGERBRUKER }.map { it.ident }
 }

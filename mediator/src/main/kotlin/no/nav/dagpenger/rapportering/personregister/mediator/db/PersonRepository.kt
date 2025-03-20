@@ -25,4 +25,6 @@ interface PersonRepository {
     fun hentHendelserSomSkalAktiveres(): List<Hendelse>
 
     fun slettFremtidigHendelse(referanseId: String)
+
+    fun hentPersonerMedDagpenger(): List<String>
 }
