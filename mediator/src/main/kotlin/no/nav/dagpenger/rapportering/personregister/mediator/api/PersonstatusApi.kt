@@ -74,14 +74,23 @@ internal fun Application.personstatusApi(
                         ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
                 }
             }
-            route("/test") {
-                // TODO: Fjerne når arb.søk-flyt er på plass
-                get {
-                    logger.info { "GET /test" }
-                    val ident = call.ident()
-                    arbeidssøkerMediator.behandle(ident)
-                    call.respond(HttpStatusCode.OK, "Hello, world!")
+        }
+        route("/sync-personer") {
+            get {
+                logger.info { "GET /sync-personer" }
+                val identer = personRepository.hentPersonerMedDagpenger()
+                logger.info { "oppretter sync-hendelse for ${identer.size} personer" }
+                identer.forEach { ident ->
+                    personMediator.behandle(
+                        PersonSynkroniseringHendelse(
+                            ident = ident,
+                            dato = LocalDateTime.now(),
+                            startDato = LocalDateTime.now(),
+                            referanseId = UUID.randomUUID().toString(),
+                        ),
+                    )
                 }
+                call.respond(HttpStatusCode.OK, "OK")
             }
         }
     }

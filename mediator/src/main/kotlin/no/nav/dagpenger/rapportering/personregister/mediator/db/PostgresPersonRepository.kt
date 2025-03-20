@@ -225,6 +225,15 @@ class PostgresPersonRepository(
             }.validateRowsAffected()
         }
 
+    override fun hentPersonerMedDagpenger(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT ident FROM person WHERE status = 'DAGPENGERBRUKER'")
+                    .map { it.string("ident") }
+                    .asList,
+            )
+        }
+
     private fun hentPersonId(ident: String): Long? =
         using(sessionOf(dataSource)) { session ->
             session.run(
