@@ -53,7 +53,14 @@ class PersonObserverKafka(
         }
 
     override fun skalSendeMelding(): Boolean {
-        val toggle = unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
+        logger.info("Skal sende melding?")
+        val toggle =
+            try {
+                unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
+            } catch (e: Exception) {
+                logger.error(e) { "Klarte ikke å hente toggle" }
+                false
+            }
         logger.info { "Toggle er: $toggle" }
         return toggle
     }
