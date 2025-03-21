@@ -160,6 +160,18 @@ class PostgresPersonRepository(
             }
         }
 
+    override fun hentAntallOvetagelser(): Int {
+        actionTimer.timedAction("db-hentAntallOvertagelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM arbeidssoker WHERE overtatt_bekreftelse = true")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            }
+        }
+    }
+
     override fun lagreFremtidigHendelse(hendelse: Hendelse) =
         actionTimer.timedAction("db-lagreFremtidigHendelse") {
             using(sessionOf(dataSource)) { session ->

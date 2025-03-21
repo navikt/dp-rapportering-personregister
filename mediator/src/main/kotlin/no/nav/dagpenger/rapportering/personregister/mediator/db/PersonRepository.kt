@@ -20,6 +20,8 @@ interface PersonRepository {
 
     fun hentAntallDagpengebrukere(): Int
 
+    fun hentAntallOvetagelser(): Int
+
     fun lagreFremtidigHendelse(hendelse: Hendelse)
 
     fun hentHendelserSomSkalAktiveres(): List<Hendelse>

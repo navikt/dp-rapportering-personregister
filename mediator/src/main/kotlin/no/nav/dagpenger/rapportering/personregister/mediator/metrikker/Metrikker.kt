@@ -94,6 +94,7 @@ class DatabaseMetrikker(
     private val lagredeHendelser: AtomicInteger = AtomicInteger(0)
     private val lagredeFremtidigeHendelser: AtomicInteger = AtomicInteger(0)
     private val antallDagpengebrukere: AtomicInteger = AtomicInteger(0)
+    private val antallOvertagelser: AtomicInteger = AtomicInteger(0)
 
     init {
         Gauge
@@ -112,6 +113,10 @@ class DatabaseMetrikker(
             .builder("${NAMESPACE}_antall_dagpengebrukere_total", antallDagpengebrukere) { it.get().toDouble() }
             .description("Antall dagpengebrukere i databasen")
             .register(meterRegistry)
+        Gauge
+            .builder("${NAMESPACE}_antall_overtagelser_total", antallOvertagelser) { it.get().toDouble() }
+            .description("Antall arbeidssøkere vi har overtatt bekreftelsen for i databasen")
+            .register(meterRegistry)
     }
 
     internal fun startRapporteringJobb(personRepository: PersonRepository) {
@@ -127,6 +132,7 @@ class DatabaseMetrikker(
                     lagredeHendelser.set(personRepository.hentAntallHendelser())
                     lagredeFremtidigeHendelser.set(personRepository.hentAntallFremtidigeHendelser())
                     antallDagpengebrukere.set(personRepository.hentAntallDagpengebrukere())
+                    antallOvertagelser.set(personRepository.hentAntallOvetagelser())
 
                     logger.info {
                         "Oppdaterte metrikker med lagrede personer $lagredePersoner, lagrede hendelser $lagredeHendelser, " +
