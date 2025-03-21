@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 
 class InMemoryPersonRepository : PersonRepository {
@@ -31,6 +32,8 @@ class InMemoryPersonRepository : PersonRepository {
     override fun hentAntallFremtidigeHendelser(): Int = fremtidigeHendelser.size
 
     override fun hentAntallDagpengebrukere(): Int = personList.values.filter { it.status == Status.DAGPENGERBRUKER }.size
+
+    override fun hentAntallOvetagelser(): Int = personList.values.filter { it.overtattBekreftelse }.size
 
     override fun lagreFremtidigHendelse(hendelse: Hendelse) {
         fremtidigeHendelser.add(hendelse)

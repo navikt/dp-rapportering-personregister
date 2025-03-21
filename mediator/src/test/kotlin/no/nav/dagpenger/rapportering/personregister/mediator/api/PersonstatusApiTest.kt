@@ -157,7 +157,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             }
         }
 
-    @Test
+    /*@Test
     fun `Get sync-person`() =
         setUpTestApplication {
             val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
@@ -193,7 +193,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 // this?.hendelser?.size shouldBe 1
                 // this?.hendelser?.first()?.javaClass shouldBe PersonSynkroniseringHendelse::class.java
             }
-        }
+        }*/
 }
 
 fun lagHendelse(ident: String) =

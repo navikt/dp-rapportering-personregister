@@ -160,7 +160,7 @@ class PostgresPersonRepository(
             }
         }
 
-    override fun hentAntallOvetagelser(): Int {
+    override fun hentAntallOvetagelser(): Int =
         actionTimer.timedAction("db-hentAntallOvertagelser") {
             using(sessionOf(dataSource)) { session ->
                 session.run(
@@ -170,7 +170,6 @@ class PostgresPersonRepository(
                 ) ?: 0
             }
         }
-    }
 
     override fun lagreFremtidigHendelse(hendelse: Hendelse) =
         actionTimer.timedAction("db-lagreFremtidigHendelse") {
