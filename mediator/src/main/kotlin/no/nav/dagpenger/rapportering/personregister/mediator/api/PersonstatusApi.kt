@@ -75,7 +75,7 @@ internal fun Application.personstatusApi(
                 }
             }
         }
-        /* route("/sync-personer") {
+        route("/sync-personer") {
             get {
                 logger.info { "GET /sync-personer" }
                 val identer = personRepository.hentPersonerMedDagpenger()
@@ -85,6 +85,6 @@ internal fun Application.personstatusApi(
                 }
                 call.respond(HttpStatusCode.OK, "OK")
             }
-        } */
+        }
     }
 }

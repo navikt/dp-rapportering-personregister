@@ -151,7 +151,7 @@ class PersonTest {
                 behandle(startetArbeidssøkerperiodeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe null
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 

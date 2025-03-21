@@ -83,7 +83,7 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHe
             ident,
             hendelse.startet,
             null,
-            overtattBekreftelse = false,
+            overtattBekreftelse = null,
         ),
     )
 }

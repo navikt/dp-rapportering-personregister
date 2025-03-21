@@ -156,44 +156,6 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["overtattBekreftelse"].asBoolean() shouldBe true
             }
         }
-
-    /*@Test
-    fun `Get sync-person`() =
-        setUpTestApplication {
-            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
-
-            Person(ident)
-                .apply {
-                    setStatus(Status.DAGPENGERBRUKER)
-                    meldeplikt = true
-                    meldegruppe = "DAGP"
-                    arbeidssøkerperioder.add(Arbeidssøkerperiode(UUID.randomUUID(), ident, LocalDateTime.now(), null, false))
-                }.also {
-                    personRepository.lagrePerson(it)
-                }
-
-            with(personRepository.hentPerson(ident)) {
-                this?.status shouldBe Status.DAGPENGERBRUKER
-                this?.meldeplikt shouldBe true
-                this?.meldegruppe shouldBe "DAGP"
-                this?.hendelser?.size shouldBe 0
-            }
-
-            with(
-                client.get("/sync-personer"),
-            ) {
-                status shouldBe HttpStatusCode.OK
-            }
-
-            with(personRepository.hentPerson(ident)) {
-                this?.status shouldBe Status.DAGPENGERBRUKER
-                this?.meldeplikt shouldBe true
-                this?.meldegruppe shouldBe "DAGP"
-                this?.arbeidssøkerperioder?.first()?.overtattBekreftelse shouldBe true
-                // this?.hendelser?.size shouldBe 1
-                // this?.hendelser?.first()?.javaClass shouldBe PersonSynkroniseringHendelse::class.java
-            }
-        }*/
 }
 
 fun lagHendelse(ident: String) =
