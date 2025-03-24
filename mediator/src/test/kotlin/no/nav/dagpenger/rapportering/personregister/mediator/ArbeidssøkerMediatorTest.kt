@@ -26,7 +26,6 @@ class ArbeidssøkerMediatorTest {
 
     @BeforeEach
     fun setup() {
-        every { personObserver.skalSendeMelding() } returns true
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService = arbeidssøkerService,

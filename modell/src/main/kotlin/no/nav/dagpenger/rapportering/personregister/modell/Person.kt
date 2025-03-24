@@ -50,7 +50,6 @@ data class Person(
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {
-    // if (observers.first().skalSendeMelding()) {
     arbeidssøkerperioder.gjeldende?.let {
         if (it.overtattBekreftelse != true) {
             try {
@@ -58,23 +57,21 @@ fun Person.overtaArbeidssøkerBekreftelse() {
                 it.overtattBekreftelse = true
             } catch (e: Exception) {
                 it.overtattBekreftelse = false
+                throw e
             }
         }
     }
-    // }
 }
 
 fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
-    if (observers.first().skalSendeMelding()) {
-        arbeidssøkerperioder
-            .find { it.periodeId == periodeId }
-            ?.let {
-                if (it.overtattBekreftelse == true) {
-                    observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
-                    it.overtattBekreftelse = false
-                }
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let {
+            if (it.overtattBekreftelse == true) {
+                observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                it.overtattBekreftelse = false
             }
-    }
+        }
 }
 
 val Person.erArbeidssøker: Boolean

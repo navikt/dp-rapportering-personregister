@@ -1,12 +1,10 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
 import io.kotest.matchers.shouldBe
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -19,11 +17,6 @@ class PersonTest {
     private val periodeId = UUID.randomUUID()
 
     private val arbeidssøkerperiodeObserver = mockk<PersonObserver>(relaxed = true)
-
-    @BeforeEach
-    fun setUp() {
-        every { arbeidssøkerperiodeObserver.skalSendeMelding() } returns true
-    }
 
     @Nested
     inner class SøknadHendelser {

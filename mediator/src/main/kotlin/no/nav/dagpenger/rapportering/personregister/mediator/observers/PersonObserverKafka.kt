@@ -6,7 +6,6 @@ import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -24,14 +23,14 @@ class PersonObserverKafka(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val bekreftelsePåVegneAvTopic: String,
 ) : PersonObserver {
-    override fun frasiArbeidssøkerBekreftelse(person: Person): Unit =
-        runBlocking {
+    override fun frasiArbeidssøkerBekreftelse(person: Person) {
+        try {
             person
                 .arbeidssøkerperioder
                 .gjeldende
                 ?.periodeId
                 ?.let { periodeId ->
-                    val recordKey = arbeidssøkerConnector.hentRecordKey(person.ident)
+                    val recordKey = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
                     val record =
                         ProducerRecord(
                             bekreftelsePåVegneAvTopic,
@@ -42,7 +41,7 @@ class PersonObserverKafka(
                         "Frasier ansvar for arbeidssøkerbekreftelse",
                         Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
                     )
-                    val metadata = producer.sendDeferred(record).await()
+                    val metadata = runBlocking { producer.sendDeferred(record).await() }
                     logger.info {
                         "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
                             " $periodeId til arbeidssøkerregisteret. " +
@@ -50,53 +49,47 @@ class PersonObserverKafka(
                             "(partition=${metadata.partition()}, offset=${metadata.offset()})"
                     }
                 }
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved frasigelse av bekreftelse" }
         }
-
-    override fun skalSendeMelding(): Boolean {
-        logger.info("Skal sende melding?")
-        val toggle =
-            try {
-                unleash.isEnabled("dp-rapportering-personregister-send-overtakelse")
-            } catch (e: Exception) {
-                logger.error(e) { "Klarte ikke å hente toggle" }
-                false
-            }
-        logger.info { "Toggle er: $toggle" }
-        return toggle
     }
 
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
-        person
-            .arbeidssøkerperioder
-            .gjeldende
-            ?.periodeId
-            ?.let { periodeId ->
-                val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
-                val record =
-                    ProducerRecord(
-                        bekreftelsePåVegneAvTopic,
-                        recordKeyResponse.key,
-                        PaaVegneAv(
-                            periodeId,
-                            DAGPENGER,
-                            Start(
-                                DAYS.toMillis(14),
-                                DAYS.toMillis(8),
+        try {
+            person
+                .arbeidssøkerperioder
+                .gjeldende
+                ?.periodeId
+                ?.let { periodeId ->
+                    val recordKeyResponse = runBlocking { arbeidssøkerConnector.hentRecordKey(person.ident) }
+                    val record =
+                        ProducerRecord(
+                            bekreftelsePåVegneAvTopic,
+                            recordKeyResponse.key,
+                            PaaVegneAv(
+                                periodeId,
+                                DAGPENGER,
+                                Start(
+                                    DAYS.toMillis(14),
+                                    DAYS.toMillis(8),
+                                ),
                             ),
-                        ),
-                    )
+                        )
 
-                Span.current().addEvent(
-                    "Overtar ansvar for arbeidssøkerbekreftelse",
-                    Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
-                )
-                val metadata = runBlocking { producer.sendDeferred(record).await() }
-                logger.info {
-                    "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
-                        "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                    Span.current().addEvent(
+                        "Overtar ansvar for arbeidssøkerbekreftelse",
+                        Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
+                    )
+                    val metadata = runBlocking { producer.sendDeferred(record).await() }
+                    logger.info {
+                        "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
+                            "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                    }
                 }
-            }
-            ?: run { logger.info { "Fant ingen aktiv arbeidssøkerperiode for person" } }
+                ?: run { logger.info { "Fant ingen aktiv arbeidssøkerperiode for person" } }
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved overtagelse av bekreftelse" }
+        }
     }
 
     companion object {

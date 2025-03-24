@@ -4,7 +4,6 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -43,7 +42,6 @@ class PersonMediatorTest {
 
     @BeforeEach
     fun setup() {
-        every { personObserver.skalSendeMelding() } returns true
         rapidsConnection = TestRapid()
         personRepository = InMemoryPersonRepository()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
