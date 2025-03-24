@@ -51,6 +51,7 @@ class PersonObserverKafka(
                 }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved frasigelse av bekreftelse" }
+            throw e
         }
     }
 
@@ -89,6 +90,7 @@ class PersonObserverKafka(
                 ?: run { logger.info { "Fant ingen aktiv arbeidssøkerperiode for person" } }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved overtagelse av bekreftelse" }
+            throw e
         }
     }
 

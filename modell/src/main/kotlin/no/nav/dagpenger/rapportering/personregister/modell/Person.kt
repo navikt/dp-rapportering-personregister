@@ -68,8 +68,13 @@ fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
         .find { it.periodeId == periodeId }
         ?.let {
             if (it.overtattBekreftelse == true) {
-                observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
-                it.overtattBekreftelse = false
+                try {
+                    observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                    it.overtattBekreftelse = false
+                } catch (e: Exception) {
+                    it.overtattBekreftelse = true
+                    throw e
+                }
             }
         }
 }
