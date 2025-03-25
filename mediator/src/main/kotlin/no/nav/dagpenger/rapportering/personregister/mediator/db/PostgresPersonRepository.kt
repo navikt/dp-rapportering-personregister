@@ -558,7 +558,7 @@ class PostgresPersonRepository(
                             mapOf("person_id" to personId, "dato" to dato, "status" to status.name),
                         ).asUpdate,
                     )
-                }.validateRowsAffected()
+                }
         }
     }
 }
