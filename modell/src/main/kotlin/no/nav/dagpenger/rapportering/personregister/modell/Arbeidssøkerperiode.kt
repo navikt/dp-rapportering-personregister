@@ -21,6 +21,8 @@ abstract class ArbeidssøkerperiodeHendelse(
     override fun behandle(person: Person) {}
 
     override val kilde: Kildesystem = Kildesystem.Arbeidssokerregisteret
+
+    override val arenaId: String? = null
 }
 
 data class StartetArbeidssøkerperiodeHendelse(

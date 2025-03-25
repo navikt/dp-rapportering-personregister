@@ -89,6 +89,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
     val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
+    val arenaId = this["after"]["MELDEGRUPPE_ID"].asText()
 
     if (meldegruppeKode == "DAGP") {
         return DagpengerMeldegruppeHendelse(
@@ -98,6 +99,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
             sluttDato = sluttDato,
             referanseId = hendelseId,
             meldegruppeKode = meldegruppeKode,
+            arenaId = arenaId,
         )
     }
 
@@ -108,6 +110,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         sluttDato = sluttDato,
         referanseId = hendelseId,
         meldegruppeKode = meldegruppeKode,
+        arenaId = arenaId,
     )
 }
 

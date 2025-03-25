@@ -1,7 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Arena
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import java.time.LocalDateTime
 
 interface Hendelse {
@@ -9,6 +7,7 @@ interface Hendelse {
     val dato: LocalDateTime
     val kilde: Kildesystem
     val referanseId: String
+    val arenaId: String?
 
     fun behandle(person: Person)
 }
@@ -18,6 +17,7 @@ data class SøknadHendelse(
     override val dato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
+    override val arenaId: String? = null
     override val kilde: Kildesystem = Kildesystem.Søknad
 
     override fun behandle(person: Person) {
@@ -39,7 +39,8 @@ data class DagpengerMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    override val kilde: Kildesystem = Arena,
+    override val arenaId: String? = null,
+    override val kilde: Kildesystem = Kildesystem.Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
         person.meldegruppe = meldegruppeKode
@@ -62,8 +63,9 @@ data class AnnenMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
+    override val arenaId: String? = null,
 ) : Hendelse {
-    override val kilde: Kildesystem = Arena
+    override val kilde: Kildesystem = Kildesystem.Arena
 
     override fun behandle(person: Person) {
         person.meldegruppe = meldegruppeKode
@@ -87,7 +89,8 @@ data class MeldepliktHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
-    override val kilde: Kildesystem = Arena,
+    override val arenaId: String? = null,
+    override val kilde: Kildesystem = Kildesystem.Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
         person.meldeplikt = statusMeldeplikt
@@ -113,7 +116,8 @@ data class PersonSynkroniseringHendelse(
     override val referanseId: String,
     val startDato: LocalDateTime,
 ) : Hendelse {
-    override val kilde: Kildesystem = Dagpenger
+    override val arenaId: String? = null
+    override val kilde: Kildesystem = Kildesystem.Dagpenger
 
     override fun behandle(person: Person) {
         person.meldeplikt = true
