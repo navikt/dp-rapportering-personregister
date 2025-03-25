@@ -176,7 +176,7 @@ private fun lagMeldegruppeEndringEvent(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${datoTil?.let { "\"$it\"" } ?: null},
         "MELDEGRUPPEKODE": "$meldegruppeKode",
-        "STATUS_AKTIV": $statusAktiv
+        "STATUS_AKTIV": "$statusAktiv"
     }
     }
     
