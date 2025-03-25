@@ -77,7 +77,7 @@ private fun meldepliktendring_event(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${if (datoTil == null) null else "\"$datoTil\""},
         "HENDELSESDATO": "2025-02-08 14:00:25",
-        "STATUS_AKTIV": $statusAktiv,
+        "STATUS_AKTIV": "$statusAktiv",
         "BEGRUNNELSE": "QWt0aUYIUuuiiuU6ffVuIHl0ZWxzZXI=",
         "PERSON_ID": 4812036,
         "FODSELSNR": "12345678910",
