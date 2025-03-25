@@ -133,6 +133,28 @@ class MeldegruppeendringMottakTest {
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(any()) }
     }
+
+    @Test
+    fun `skal ikke motta meldegruppendring som ikke er aktiv`() {
+        val datoFra = LocalDateTime.now().plusDays(1).format()
+        val datoTil = "2021-06-08 14:05:10"
+        val meldegruppeKode = "DAGP"
+        val statusAktiv = "N"
+
+        testRapid.sendTestMessage(
+            lagMeldegruppeEndringEvent(
+                ident,
+                hendelsesdato,
+                datoFra,
+                datoTil,
+                meldegruppeKode,
+                referanseId,
+                statusAktiv = statusAktiv,
+            ),
+        )
+
+        verify(exactly = 0) { fremtidigHendelseMediator.behandle(any()) }
+    }
 }
 
 private fun lagMeldegruppeEndringEvent(
@@ -142,6 +164,7 @@ private fun lagMeldegruppeEndringEvent(
     datoTil: String? = null,
     meldegruppeKode: String,
     referenseId: String,
+    statusAktiv: String = "J",
 ) = //language=json
     """
     {
@@ -152,7 +175,8 @@ private fun lagMeldegruppeEndringEvent(
         "HENDELSESDATO": "$hendelsesdato",
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${datoTil?.let { "\"$it\"" } ?: null},
-        "MELDEGRUPPEKODE": "$meldegruppeKode"
+        "MELDEGRUPPEKODE": "$meldegruppeKode",
+        "STATUS_AKTIV": $statusAktiv
     }
     }
     

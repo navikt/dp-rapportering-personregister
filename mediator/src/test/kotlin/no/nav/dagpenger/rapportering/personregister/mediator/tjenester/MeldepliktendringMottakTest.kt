@@ -46,11 +46,23 @@ class MeldepliktendringMottakTest {
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(any()) }
     }
+
+    @Test
+    fun `skal ikke motta meldepliktendring som ikke er aktiv`() {
+        testRapid.sendTestMessage(
+            meldepliktendring_event(
+                statusAktiv = "N",
+            ),
+        )
+
+        verify(exactly = 0) { fremtidigHendelseMediator.behandle(any()) }
+    }
 }
 
 private fun meldepliktendring_event(
     datoFra: String = "2025-02-01 00:00:00",
     datoTil: String? = null,
+    statusAktiv: String = "J",
 ) = //language=json
     """
     {
@@ -65,7 +77,7 @@ private fun meldepliktendring_event(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${if (datoTil == null) null else "\"$datoTil\""},
         "HENDELSESDATO": "2025-02-08 14:00:25",
-        "STATUS_AKTIV": "J",
+        "STATUS_AKTIV": $statusAktiv,
         "BEGRUNNELSE": "QWt0aUYIUuuiiuU6ffVuIHl0ZWxzZXI=",
         "PERSON_ID": 4812036,
         "FODSELSNR": "12345678910",

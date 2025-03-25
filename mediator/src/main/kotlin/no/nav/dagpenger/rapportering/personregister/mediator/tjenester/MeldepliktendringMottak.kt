@@ -27,9 +27,10 @@ class MeldepliktendringMottak(
         River(rapidsConnection)
             .apply {
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
-                validate { it.requireKey("after") }
+                validate { it.requireKey("after", "after.STATUS_AKTIV") }
                 validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
                 validate { it.interestedIn("after.DATO_TIL") }
+                validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
     }
 
