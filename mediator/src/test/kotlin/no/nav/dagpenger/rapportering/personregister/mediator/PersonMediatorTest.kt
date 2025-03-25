@@ -125,6 +125,27 @@ class PersonMediatorTest {
                 personObserver skalHaFrasagtAnsvaretFor this
             }
         }
+
+        @Test
+        fun `meldegruppendring for tidligere periode tas ikke høyde for`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                status shouldBe DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                personObserver skalHaSendtOvertakelseFor this
+                hendelser.size shouldBe 2
+
+                personMediator.behandle(annenMeldegruppeHendelse(sluttDato = LocalDateTime.now().minusDays(1)))
+                status shouldBe DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                hendelser.size shouldBe 2
+
+                personMediator.behandle(dagpengerMeldegruppeHendelse(sluttDato = LocalDateTime.now().minusDays(1)))
+                status shouldBe DAGPENGERBRUKER
+                hendelser.size shouldBe 2
+            }
+        }
     }
 
     @Nested
@@ -166,6 +187,23 @@ class PersonMediatorTest {
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
                 status shouldBe DAGPENGERBRUKER
                 statusHistorikk.getAll() shouldHaveSize 2
+            }
+        }
+
+        @Test
+        fun `meldeplikthendelse for tidligere periode tas ikke høyde for`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                status shouldBe DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                personObserver skalHaSendtOvertakelseFor this
+                hendelser.size shouldBe 2
+
+                personMediator.behandle(meldepliktHendelse(sluttDato = LocalDateTime.now().minusDays(1), status = false))
+                status shouldBe DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                hendelser.size shouldBe 2
             }
         }
     }
@@ -260,23 +298,26 @@ class PersonMediatorTest {
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
+        sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "DAGP")
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "DAGP")
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
+        sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS")
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "ARBS")
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
+        sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
     ) = MeldepliktHendelse(
         ident = ident,
         dato = dato,
         startDato = dato,
-        sluttDato = null,
+        sluttDato = sluttDato,
         statusMeldeplikt = status,
         referanseId = referanseId,
     )

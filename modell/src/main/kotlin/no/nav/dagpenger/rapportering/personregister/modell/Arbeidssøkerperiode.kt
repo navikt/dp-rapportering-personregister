@@ -66,7 +66,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             .takeIf { it != person.status }
             ?.let {
                 person.setStatus(it)
-                person.frasiArbeidssøkerBekreftelse(periodeId)
+                person.frasiArbeidssøkerBekreftelse(periodeId, periodeAvsluttet = true)
             }
     }
 }

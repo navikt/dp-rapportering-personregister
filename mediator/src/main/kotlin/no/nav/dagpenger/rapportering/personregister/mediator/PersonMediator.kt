@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtaArbeidssøkerBekreftelse
+import java.time.LocalDateTime
 
 class PersonMediator(
     private val personRepository: PersonRepository,
@@ -33,19 +34,31 @@ class PersonMediator(
     fun behandle(hendelse: DagpengerMeldegruppeHendelse) =
         actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
             logger.info { "Behandler dagpenger meldegruppe hendelse: ${hendelse.referanseId}" }
-            behandleHendelse(hendelse)
+            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+                logger.info("DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+            } else {
+                behandleHendelse(hendelse)
+            }
         }
 
     fun behandle(hendelse: AnnenMeldegruppeHendelse) =
         actionTimer.timedAction("behandle_AnnenMeldegruppeHendelse") {
             logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
-            behandleHendelse(hendelse)
+            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+                logger.info("AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+            } else {
+                behandleHendelse(hendelse)
+            }
         }
 
     fun behandle(hendelse: MeldepliktHendelse) =
         actionTimer.timedAction("behandle_MeldepliktHendelse") {
             logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId}" }
-            behandleHendelse(hendelse)
+            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+                logger.info("MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+            } else {
+                behandleHendelse(hendelse)
+            }
         }
 
     fun behandle(hendelse: PersonSynkroniseringHendelse) =

@@ -63,13 +63,18 @@ fun Person.overtaArbeidssøkerBekreftelse() {
     }
 }
 
-fun Person.frasiArbeidssøkerBekreftelse(periodeId: UUID) {
+fun Person.frasiArbeidssøkerBekreftelse(
+    periodeId: UUID,
+    periodeAvsluttet: Boolean = false,
+) {
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let {
             if (it.overtattBekreftelse == true) {
                 try {
-                    observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                    if (!periodeAvsluttet) {
+                        observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                    }
                     it.overtattBekreftelse = false
                 } catch (e: Exception) {
                     it.overtattBekreftelse = true

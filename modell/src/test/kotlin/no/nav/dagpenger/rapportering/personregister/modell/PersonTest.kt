@@ -162,14 +162,13 @@ class PersonTest {
 
         @Test
         fun `behandler avsluttet arbeidssøker hendelser for Dagpengerbruker`() =
-            arbeidssøker {
+            arbeidssøker(overtattBekreftelse = true) {
                 behandle(meldepliktHendelse(status = true))
                 behandle(dagpengerMeldegruppeHendelse())
                 behandle(avsluttetArbeidssøkerperiodeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.find { it.periodeId == periodeId }?.overtattBekreftelse shouldBe false
-                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
 
