@@ -28,9 +28,10 @@ class MeldegruppeendringMottak(
         River(rapidsConnection)
             .apply {
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEGRUPPE") }
-                validate { it.requireKey("after") }
+                validate { it.requireKey("after", "after.STATUS_AKTIV") }
                 validate { it.requireKey("after.FODSELSNR", "after.MELDEGRUPPEKODE", "after.DATO_FRA", "after.HENDELSE_ID") }
                 validate { it.interestedIn("after.DATO_TIL") }
+                validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
     }
 

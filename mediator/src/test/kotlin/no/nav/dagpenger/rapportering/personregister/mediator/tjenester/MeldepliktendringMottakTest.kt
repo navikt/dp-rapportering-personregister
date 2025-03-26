@@ -110,6 +110,35 @@ class MeldepliktendringMottakTest {
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
     }
+
+    @Test
+    fun `skal ikke motta meldepliktendring som ikke er aktiv`() {
+        val datoFra = LocalDateTime.now().plusDays(1).format()
+
+        testRapid.sendTestMessage(
+            meldepliktendring_event(
+                ident = ident,
+                hendelseId = hendelseId,
+                hendelsesdato = hendelsesdato,
+                meldepliktId = meldepliktId,
+                datoFra = datoFra.format(),
+                statusAktiv = "N",
+            ),
+        )
+
+        val forventetHendelse =
+            MeldepliktHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                referanseId = hendelseId,
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = null,
+                statusMeldeplikt = false,
+                arenaId = meldepliktId,
+            )
+
+        verify(exactly = 0) { fremtidigHendelseMediator.behandle(forventetHendelse) }
+    }
 }
 
 private fun meldepliktendring_event(
@@ -119,6 +148,7 @@ private fun meldepliktendring_event(
     meldepliktId: Int,
     datoFra: String = "2025-02-01 00:00:00",
     datoTil: String? = null,
+    statusAktiv: String = "J",
 ) = //language=json
     """
     {
@@ -133,7 +163,7 @@ private fun meldepliktendring_event(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${if (datoTil == null) null else "\"$datoTil\""},
         "HENDELSESDATO": "$hendelsesdato",
-        "STATUS_AKTIV": "J",
+        "STATUS_AKTIV": "$statusAktiv",
         "BEGRUNNELSE": "QWt0aUYIUuuiiuU6ffVuIHl0ZWxzZXI=",
         "PERSON_ID": 4812036,
         "FODSELSNR": "$ident",
