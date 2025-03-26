@@ -388,7 +388,7 @@ class PostgresPersonRepository(
         val referanseId = row.string("referanse_id")
         val extra = row.stringOrNull("extra")
         val kilde = row.string("kilde")
-        val arenaId = row.stringOrNull("arena_id")
+        val arenaId = row.intOrNull("arena_id")
 
         return when (type) {
             "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)

@@ -7,7 +7,7 @@ interface Hendelse {
     val dato: LocalDateTime
     val kilde: Kildesystem
     val referanseId: String
-    val arenaId: String?
+    val arenaId: Int?
 
     fun behandle(person: Person)
 }
@@ -17,7 +17,7 @@ data class SøknadHendelse(
     override val dato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
-    override val arenaId: String? = null
+    override val arenaId: Int? = null
     override val kilde: Kildesystem = Kildesystem.Søknad
 
     override fun behandle(person: Person) {
@@ -39,7 +39,7 @@ data class DagpengerMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    override val arenaId: String? = null,
+    override val arenaId: Int? = null,
     override val kilde: Kildesystem = Kildesystem.Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
@@ -63,7 +63,7 @@ data class AnnenMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    override val arenaId: String? = null,
+    override val arenaId: Int? = null,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.Arena
 
@@ -89,7 +89,7 @@ data class MeldepliktHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
-    override val arenaId: String? = null,
+    override val arenaId: Int? = null,
     override val kilde: Kildesystem = Kildesystem.Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
@@ -116,7 +116,7 @@ data class PersonSynkroniseringHendelse(
     override val referanseId: String,
     val startDato: LocalDateTime,
 ) : Hendelse {
-    override val arenaId: String? = null
+    override val arenaId: Int? = null
     override val kilde: Kildesystem = Kildesystem.Dagpenger
 
     override fun behandle(person: Person) {

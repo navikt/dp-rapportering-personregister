@@ -24,7 +24,7 @@ class MeldegruppeendringMottakTest {
     private val ident = "123456478901"
     private val hendelsesdato = LocalDateTime.now().format()
     private val referanseId = "123"
-    private val meldegruppeId = "1234567890"
+    private val meldegruppeId = 1234567890
 
     @Test
     fun `kan ta imot DAPG-meldegruppeendring`() {
@@ -161,7 +161,7 @@ private fun lagMeldegruppeEndringEvent(
     datoTil: String? = null,
     meldegruppeKode: String,
     referenseId: String,
-    meldegruppeId: String,
+    meldegruppeId: Int,
 ) = //language=json
     """
     {

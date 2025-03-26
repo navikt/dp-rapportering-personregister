@@ -22,7 +22,7 @@ abstract class ArbeidssøkerperiodeHendelse(
 
     override val kilde: Kildesystem = Kildesystem.Arbeidssokerregisteret
 
-    override val arenaId: String? = null
+    override val arenaId: Int? = null
 }
 
 data class StartetArbeidssøkerperiodeHendelse(

@@ -19,7 +19,7 @@ class MeldepliktendringMottakTest {
     private val ident = "123456478901"
     private val hendelsesdato = LocalDateTime.now().format()
     private val hendelseId = "123"
-    private val meldepliktId = "1234567890"
+    private val meldepliktId = 1234567890
 
     init {
         MeldepliktendringMottak(testRapid, personMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
@@ -116,7 +116,7 @@ private fun meldepliktendring_event(
     ident: String,
     hendelseId: String,
     hendelsesdato: String,
-    meldepliktId: String,
+    meldepliktId: Int,
     datoFra: String = "2025-02-01 00:00:00",
     datoTil: String? = null,
 ) = //language=json
