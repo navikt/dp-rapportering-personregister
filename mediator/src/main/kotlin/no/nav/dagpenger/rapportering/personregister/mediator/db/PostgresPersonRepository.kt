@@ -558,11 +558,15 @@ class PostgresPersonRepository(
                 .transaction { tx ->
                     tx.run(
                         queryOf(
-                            "INSERT INTO status_historikk (person_id, dato, status) VALUES (:person_id, :dato, :status)",
+                            """
+                            INSERT INTO status_historikk (person_id, dato, status)
+                            VALUES (:person_id, :dato, :status)
+                            ON CONFLICT (person_id, dato) DO NOTHING
+                            """.trimIndent(),
                             mapOf("person_id" to personId, "dato" to dato, "status" to status.name),
                         ).asUpdate,
                     )
-                }.validateRowsAffected()
+                }
         }
     }
 }
