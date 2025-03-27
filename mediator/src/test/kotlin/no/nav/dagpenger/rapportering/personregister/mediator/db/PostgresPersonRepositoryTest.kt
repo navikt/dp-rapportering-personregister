@@ -152,8 +152,8 @@ class PostgresPersonRepositoryTest {
 
             with(personRepository.hentPerson(ident)!!) {
                 hendelser.size shouldBe 2
-                (hendelser.first() as DagpengerMeldegruppeHendelse).fristBrutt shouldBe false
-                (hendelser.last() as AnnenMeldegruppeHendelse).fristBrutt shouldBe true
+                (hendelser.first() as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
+                (hendelser.last() as AnnenMeldegruppeHendelse).harMeldtSeg shouldBe true
             }
         }
     }
@@ -199,7 +199,7 @@ class PostgresPersonRepositoryTest {
             with(personMedHendelse!!) {
                 hendelser.size shouldBe 1
                 hendelser.first().javaClass shouldBe AnnenMeldegruppeHendelse::class.java
-                (hendelser.first() as AnnenMeldegruppeHendelse).fristBrutt shouldBe false
+                (hendelser.first() as AnnenMeldegruppeHendelse).harMeldtSeg shouldBe true
             }
         }
 
@@ -281,7 +281,7 @@ class PostgresPersonRepositoryTest {
             startDato = LocalDateTime.now(),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
-            fristBrutt = fristBrutt,
+            harMeldtSeg = fristBrutt,
         )
     } else {
         AnnenMeldegruppeHendelse(
@@ -291,7 +291,7 @@ class PostgresPersonRepositoryTest {
             startDato = LocalDateTime.now(),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
-            fristBrutt = fristBrutt,
+            harMeldtSeg = fristBrutt,
         )
     }
 

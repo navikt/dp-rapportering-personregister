@@ -300,13 +300,13 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "DAGP", fristBrutt = false)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "DAGP", harMeldtSeg = true)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "ARBS", fristBrutt = false)
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "ARBS", harMeldtSeg = true)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
@@ -332,5 +332,5 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person, false) }
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
 }

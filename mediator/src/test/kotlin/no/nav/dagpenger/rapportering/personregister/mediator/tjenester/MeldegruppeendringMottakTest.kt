@@ -51,7 +51,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
-                fristBrutt = false,
+                harMeldtSeg = true,
                 arenaId = meldegruppeId,
             )
 
@@ -84,7 +84,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
-                fristBrutt = false,
+                harMeldtSeg = true,
                 arenaId = meldegruppeId,
             )
 
@@ -117,7 +117,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = datoTil.toLocalDateTime(),
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
-                fristBrutt = false,
+                harMeldtSeg = true,
                 arenaId = meldegruppeId,
             )
 
@@ -151,7 +151,7 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 arenaId = meldegruppeId,
-                fristBrutt = false,
+                harMeldtSeg = true,
             )
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }

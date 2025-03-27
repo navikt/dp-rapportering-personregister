@@ -41,7 +41,7 @@ data class DagpengerMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    val fristBrutt: Boolean,
+    val harMeldtSeg: Boolean,
     override val arenaId: Int? = null,
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
@@ -66,7 +66,7 @@ data class AnnenMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
-    val fristBrutt: Boolean,
+    val harMeldtSeg: Boolean,
     override val arenaId: Int? = null,
 ) : Hendelse {
     override val kilde: Kildesystem = Arena
@@ -81,7 +81,7 @@ data class AnnenMeldegruppeHendelse(
             ?.let {
                 person.setStatus(it)
                 person.arbeidssøkerperioder.gjeldende
-                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, fristBrutt) }
+                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, !harMeldtSeg) }
             }
     }
 }

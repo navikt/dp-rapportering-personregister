@@ -326,12 +326,12 @@ class PostgresPersonRepository(
             when (this) {
                 is DagpengerMeldegruppeHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, fristBrutt = this.fristBrutt),
+                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
                     )
 
                 is AnnenMeldegruppeHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, fristBrutt = this.fristBrutt),
+                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
                     )
 
                 is MeldepliktHendelse ->
@@ -404,7 +404,7 @@ class PostgresPersonRepository(
                         ),
                     sluttDato = sluttDato,
                     meldegruppeKode = meldegruppeExtra.meldegruppeKode,
-                    fristBrutt = meldegruppeExtra.fristBrutt ?: false,
+                    harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                     kilde = Kildesystem.valueOf(kilde),
                     arenaId = arenaId,
                 )
@@ -421,7 +421,7 @@ class PostgresPersonRepository(
                         ),
                     sluttDato = sluttDato,
                     meldegruppeKode = meldegruppeExtra.meldegruppeKode,
-                    fristBrutt = meldegruppeExtra.fristBrutt ?: false,
+                    harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                     arenaId = arenaId,
                 )
             }
@@ -585,7 +585,7 @@ private fun String?.toBooleanOrNull(): Boolean? = this?.let { this == "t" }
 
 data class MeldegruppeExtra(
     val meldegruppeKode: String,
-    val fristBrutt: Boolean? = null,
+    val harMeldtSeg: Boolean? = null,
 )
 
 data class MeldepliktExtra(

@@ -109,7 +109,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
             sluttDato = sluttDato,
             referanseId = hendelseId,
             meldegruppeKode = meldegruppeKode,
-            fristBrutt = !harMeldtSeg,
+            harMeldtSeg = harMeldtSeg,
             arenaId = arenaId,
         )
     }
@@ -121,7 +121,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         sluttDato = sluttDato,
         referanseId = hendelseId,
         meldegruppeKode = meldegruppeKode,
-        fristBrutt = !harMeldtSeg,
+        harMeldtSeg = harMeldtSeg,
         arenaId = arenaId,
     )
 }

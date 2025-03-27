@@ -5,6 +5,6 @@ interface PersonObserver {
 
     fun frasiArbeidssøkerBekreftelse(
         person: Person,
-        fristBrutt: Boolean,
+        fristBrutt: Boolean = false,
     )
 }
