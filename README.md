@@ -30,7 +30,7 @@ Scenerior:
    1.1 Sjekker arbeidssøkerregister
    - Hvis bruker er registrert som arbeidssøker, får man status 'ARBS' og overta bekreftelse av periode
    - Hvis bruker ikke er registrert som arbeidssøker, Settes det ingen status
-    1.2 Settes status 'Søkt'
+   1.2 Settes status 'Søkt'
 
 2. Lytter på Arbeidssøkerperiodehendelse:
    2.1 case registrert:
@@ -41,7 +41,7 @@ Scenerior:
 3. Lytter på vedtak:
    3.1 case innvilget:
    - Sett status 'Innvilget'
-      3.2 case avslått:
+   3.2 case avslått:
    - Sett status 'Avslått'
-      3.3 case stanset:
+   3.3 case stanset:
    - Sett status 'Stanset'
