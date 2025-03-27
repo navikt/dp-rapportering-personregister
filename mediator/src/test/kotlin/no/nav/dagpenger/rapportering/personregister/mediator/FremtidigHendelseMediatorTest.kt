@@ -31,12 +31,12 @@ class FremtidigHendelseMediatorTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "DAGP")
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "DAGP", fristBrutt = false)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS")
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS", fristBrutt = false)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = LocalDateTime.now(),

@@ -39,6 +39,7 @@ data class DagpengerMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
+    val fristBrutt: Boolean,
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
@@ -62,6 +63,7 @@ data class AnnenMeldegruppeHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
+    val fristBrutt: Boolean,
 ) : Hendelse {
     override val kilde: Kildesystem = Arena
 
@@ -75,7 +77,7 @@ data class AnnenMeldegruppeHendelse(
             ?.let {
                 person.setStatus(it)
                 person.arbeidssøkerperioder.gjeldende
-                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId) }
+                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, fristBrutt) }
             }
     }
 }
@@ -101,7 +103,7 @@ data class MeldepliktHendelse(
                     person.overtaArbeidssøkerBekreftelse()
                 } else {
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId) }
+                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, fristBrutt = false) }
                 }
             }
     }

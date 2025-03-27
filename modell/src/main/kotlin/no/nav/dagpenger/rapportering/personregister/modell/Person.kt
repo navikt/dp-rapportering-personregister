@@ -65,6 +65,7 @@ fun Person.overtaArbeidssøkerBekreftelse() {
 
 fun Person.frasiArbeidssøkerBekreftelse(
     periodeId: UUID,
+    fristBrutt: Boolean,
     periodeAvsluttet: Boolean = false,
 ) {
     arbeidssøkerperioder
@@ -73,7 +74,7 @@ fun Person.frasiArbeidssøkerBekreftelse(
             if (it.overtattBekreftelse == true) {
                 try {
                     if (!periodeAvsluttet) {
-                        observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this) }
+                        observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this, fristBrutt) }
                     }
                     it.overtattBekreftelse = false
                 } catch (e: Exception) {

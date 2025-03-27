@@ -205,12 +205,12 @@ class PersonTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "DAGP")
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "DAGP", false)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS")
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS", false)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
@@ -231,9 +231,9 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
+    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person, false) }
 }
 
 infix fun PersonObserver.skalIkkeHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 0) { frasiArbeidssøkerBekreftelse(person) }
+    verify(exactly = 0) { frasiArbeidssøkerBekreftelse(person, false) }
 }

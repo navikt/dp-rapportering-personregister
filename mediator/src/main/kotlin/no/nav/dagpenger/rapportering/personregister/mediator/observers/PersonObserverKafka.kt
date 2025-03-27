@@ -23,7 +23,10 @@ class PersonObserverKafka(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val bekreftelsePåVegneAvTopic: String,
 ) : PersonObserver {
-    override fun frasiArbeidssøkerBekreftelse(person: Person) {
+    override fun frasiArbeidssøkerBekreftelse(
+        person: Person,
+        fristBrutt: Boolean,
+    ) {
         try {
             person
                 .arbeidssøkerperioder
@@ -35,7 +38,7 @@ class PersonObserverKafka(
                         ProducerRecord(
                             bekreftelsePåVegneAvTopic,
                             recordKey.key,
-                            PaaVegneAv(periodeId, DAGPENGER, Stopp()),
+                            PaaVegneAv(periodeId, DAGPENGER, Stopp(fristBrutt)),
                         )
                     Span.current().addEvent(
                         "Frasier ansvar for arbeidssøkerbekreftelse",

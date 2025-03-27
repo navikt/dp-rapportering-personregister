@@ -322,12 +322,12 @@ class PostgresPersonRepository(
             when (this) {
                 is DagpengerMeldegruppeHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
+                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, fristBrutt = this.fristBrutt),
                     )
 
                 is AnnenMeldegruppeHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldegruppeKodeExtra(meldegruppeKode = this.meldegruppeKode),
+                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, fristBrutt = this.fristBrutt),
                     )
 
                 is MeldepliktHendelse ->
@@ -387,7 +387,8 @@ class PostgresPersonRepository(
 
         return when (type) {
             "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
-            "DagpengerMeldegruppeHendelse" ->
+            "DagpengerMeldegruppeHendelse" -> {
+                val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 DagpengerMeldegruppeHendelse(
                     ident = ident,
                     dato = dato,
@@ -397,10 +398,13 @@ class PostgresPersonRepository(
                             "DagpengerMeldegruppeHendelse med referanseId $referanseId mangler startDato",
                         ),
                     sluttDato = sluttDato,
-                    meldegruppeKode = defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
+                    meldegruppeKode = meldegruppeExtra.meldegruppeKode,
+                    fristBrutt = meldegruppeExtra.fristBrutt ?: false,
                     kilde = Kildesystem.valueOf(kilde),
                 )
-            "AnnenMeldegruppeHendelse" ->
+            }
+            "AnnenMeldegruppeHendelse" -> {
+                val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 AnnenMeldegruppeHendelse(
                     ident = ident,
                     dato = dato,
@@ -410,8 +414,10 @@ class PostgresPersonRepository(
                             "AnnenMeldegruppeHendelse med referanseId $referanseId mangler startDato",
                         ),
                     sluttDato = sluttDato,
-                    meldegruppeKode = defaultObjectMapper.readValue<MeldegruppeKodeExtra>(extra!!).meldegruppeKode,
+                    meldegruppeKode = meldegruppeExtra.meldegruppeKode,
+                    fristBrutt = meldegruppeExtra.fristBrutt ?: false,
                 )
+            }
             "MeldepliktHendelse" ->
                 MeldepliktHendelse(
                     ident = ident,
@@ -565,8 +571,9 @@ private fun Int.validateRowsAffected(excepted: Int = 1) {
 
 private fun String?.toBooleanOrNull(): Boolean? = this?.let { this == "t" }
 
-data class MeldegruppeKodeExtra(
+data class MeldegruppeExtra(
     val meldegruppeKode: String,
+    val fristBrutt: Boolean? = null,
 )
 
 data class MeldepliktExtra(

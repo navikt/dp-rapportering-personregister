@@ -49,6 +49,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
+                fristBrutt = false,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -79,6 +80,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
+                fristBrutt = false,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -109,6 +111,7 @@ class MeldegruppeendringMottakTest {
                 sluttDato = datoTil.toLocalDateTime(),
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
+                fristBrutt = false,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -165,6 +168,7 @@ private fun lagMeldegruppeEndringEvent(
     meldegruppeKode: String,
     referenseId: String,
     statusAktiv: String = "J",
+    harMeldtSeg: String = "J",
 ) = //language=json
     """
     {
@@ -176,7 +180,8 @@ private fun lagMeldegruppeEndringEvent(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${datoTil?.let { "\"$it\"" } ?: null},
         "MELDEGRUPPEKODE": "$meldegruppeKode",
-        "STATUS_AKTIV": "$statusAktiv"
+        "STATUS_AKTIV": "$statusAktiv",
+        "HAR_MELDT_SEG": "$harMeldtSeg"
     }
     }
     
