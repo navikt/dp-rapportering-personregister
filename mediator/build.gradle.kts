@@ -27,7 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.14.0")
     implementation("io.opentelemetry:opentelemetry-api:1.48.0")
-    implementation("io.getunleash:unleash-client-java:10.2.1")
+    implementation("io.getunleash:unleash-client-java:10.2.2")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
