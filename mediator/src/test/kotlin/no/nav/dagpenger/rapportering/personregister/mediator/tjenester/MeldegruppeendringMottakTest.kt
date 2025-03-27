@@ -24,6 +24,7 @@ class MeldegruppeendringMottakTest {
     private val ident = "123456478901"
     private val hendelsesdato = LocalDateTime.now().format()
     private val referanseId = "123"
+    private val meldegruppeId = 1234567890
 
     @Test
     fun `kan ta imot DAPG-meldegruppeendring`() {
@@ -39,6 +40,7 @@ class MeldegruppeendringMottakTest {
                 datoTil,
                 meldegruppeKode,
                 referanseId,
+                meldegruppeId,
             ),
         )
         val forventetHendelse =
@@ -50,6 +52,7 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 fristBrutt = false,
+                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -69,6 +72,7 @@ class MeldegruppeendringMottakTest {
                 datoTil,
                 meldegruppeKode,
                 referanseId,
+                meldegruppeId,
             ),
         )
 
@@ -81,6 +85,7 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 fristBrutt = false,
+                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -100,6 +105,7 @@ class MeldegruppeendringMottakTest {
                 datoTil,
                 meldegruppeKode,
                 referanseId,
+                meldegruppeId,
             ),
         )
 
@@ -112,6 +118,7 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 fristBrutt = false,
+                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -131,10 +138,23 @@ class MeldegruppeendringMottakTest {
                 datoTil,
                 meldegruppeKode,
                 referanseId,
+                meldegruppeId,
             ),
         )
 
-        verify(exactly = 1) { fremtidigHendelseMediator.behandle(any()) }
+        val forventetHendelse =
+            DagpengerMeldegruppeHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = datoTil.toLocalDateTime(),
+                meldegruppeKode = meldegruppeKode,
+                referanseId = referanseId,
+                arenaId = meldegruppeId,
+                fristBrutt = false
+            )
+
+        verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
     }
 
     @Test
@@ -152,7 +172,8 @@ class MeldegruppeendringMottakTest {
                 datoTil,
                 meldegruppeKode,
                 referanseId,
-                statusAktiv = statusAktiv,
+                meldegruppeId,
+                statusAktiv,
             ),
         )
 
@@ -167,6 +188,7 @@ private fun lagMeldegruppeEndringEvent(
     datoTil: String? = null,
     meldegruppeKode: String,
     referenseId: String,
+    meldegruppeId: Int,
     statusAktiv: String = "J",
     harMeldtSeg: String = "J",
 ) = //language=json
@@ -180,6 +202,7 @@ private fun lagMeldegruppeEndringEvent(
         "DATO_FRA": "$datoFra",
         "DATO_TIL": ${datoTil?.let { "\"$it\"" } ?: null},
         "MELDEGRUPPEKODE": "$meldegruppeKode",
+        "MELDEGRUPPE_ID": $meldegruppeId,
         "STATUS_AKTIV": "$statusAktiv",
         "HAR_MELDT_SEG": "$harMeldtSeg"
     }
