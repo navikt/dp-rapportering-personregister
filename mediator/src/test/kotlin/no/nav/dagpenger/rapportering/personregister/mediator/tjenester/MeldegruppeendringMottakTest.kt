@@ -151,7 +151,7 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 arenaId = meldegruppeId,
-                fristBrutt = false
+                fristBrutt = false,
             )
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
