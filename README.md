@@ -28,20 +28,20 @@ Interne henvendelser kan sendes via Slack i kanalen #dagpenger.
 Scenerior:
 1. Lytter på søknad:
    1.1 Sjekker arbeidssøkerregister
-    - Hvis bruker er registrert som arbeidssøker, får man status 'ARBS' og overta bekreftelse av periode
-    - Hvis bruker ikke er registrert som arbeidssøker, Settes det ingen status
-      1.2 Settes status 'Søkt'
+   - Hvis bruker er registrert som arbeidssøker, får man status 'ARBS' og overta bekreftelse av periode
+   - Hvis bruker ikke er registrert som arbeidssøker, Settes det ingen status
+    1.2 Settes status 'Søkt'
 
 2. Lytter på Arbeidssøkerperiodehendelse:
    2.1 case registrert:
-    - Sjekker om brukeren finnes i registeret.
-    - Hvis bruker finnes i registeret, settes status 'ARBS' og overta bekreftelse av perioden.
+   - Sjekker om brukeren finnes i registeret.
+   - Hvis bruker finnes i registeret, settes status 'ARBS' og overta bekreftelse av perioden.
 
 
 3. Lytter på vedtak:
    3.1 case innvilget:
-    - Sett status 'Innvilget'
+   - Sett status 'Innvilget'
       3.2 case avslått:
-    - Sett status 'Avslått'
+   - Sett status 'Avslått'
       3.3 case stanset:
-    - Sett status 'Stanset'
+   - Sett status 'Stanset'
