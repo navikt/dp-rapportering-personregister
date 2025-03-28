@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeH
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.text.get
 
 class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
@@ -37,7 +38,7 @@ class MeldegruppeendringMottak(
                         "after.HENDELSE_ID",
                     )
                 }
-                validate { it.interestedIn("after.DATO_TIL") }
+                validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }
                 validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
     }
@@ -97,7 +98,12 @@ private fun JsonMessage.tilHendelse(): Hendelse {
     val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
-    val harMeldtSeg = this["after"]["HAR_MELDT_SEG"].asText().let { it == "J" }
+    val harMeldtSeg =
+        if (this["after"]["HAR_MELDT_SEG"]?.isMissingOrNull() != false) {
+            true
+        } else {
+            this["after"]["HAR_MELDT_SEG"].asText() == "J"
+        }
     val arenaId = this["after"]["MELDEGRUPPE_ID"].asInt()
 
     if (meldegruppeKode == "DAGP") {
