@@ -3,9 +3,14 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotliquery.queryOf
+import kotliquery.sessionOf
+import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -56,7 +61,7 @@ class PostgresPersonRepositoryTest {
                 )
             personRepository.lagrePerson(person)
 
-            val nyHendelse = dagpengerMeldegruppeHendelse()
+            val nyHendelse = meldegruppeHendelse()
             person.hendelser.add(nyHendelse)
             person.meldeplikt = true
             personRepository.oppdaterPerson(person)
@@ -101,7 +106,7 @@ class PostgresPersonRepositoryTest {
         withMigratedDb {
             val person = Person(ident = ident)
             val meldepliktHendelse = meldepliktHendelse()
-            val meldegruppeHendelse = dagpengerMeldegruppeHendelse()
+            val meldegruppeHendelse = meldegruppeHendelse()
 
             personRepository.lagrePerson(person)
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
@@ -124,7 +129,7 @@ class PostgresPersonRepositoryTest {
         withMigratedDb {
             val person = Person(ident)
             val referanseId = UUID.randomUUID().toString()
-            val førsteHendelse = dagpengerMeldegruppeHendelse(referanseId)
+            val førsteHendelse = meldegruppeHendelse(referanseId)
             val nyHendelse = meldepliktHendelse(referanseId)
 
             personRepository.lagrePerson(person)
@@ -133,6 +138,69 @@ class PostgresPersonRepositoryTest {
 
             personRepository.lagreFremtidigHendelse(nyHendelse)
             personRepository.hentHendelserSomSkalAktiveres().first().javaClass shouldBe nyHendelse.javaClass
+        }
+
+    @Test
+    fun `hendelser henter ut riktig fristBrutt-verdi`() {
+        withMigratedDb {
+            val person =
+                Person(ident).apply {
+                    this.hendelser.add(meldegruppeHendelse(fristBrutt = false))
+                    this.hendelser.add(meldegruppeHendelse(meldegruppeKode = "ARBS", fristBrutt = true))
+                }
+            personRepository.lagrePerson(person)
+
+            with(personRepository.hentPerson(ident)!!) {
+                hendelser.size shouldBe 2
+                (hendelser.first() as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
+                (hendelser.last() as AnnenMeldegruppeHendelse).harMeldtSeg shouldBe true
+            }
+        }
+    }
+
+    @Test
+    fun `kan håndtere lagrede hendelser uten fristBrutt`() =
+        withMigratedDb {
+            val person = Person(ident)
+            personRepository.lagrePerson(person)
+            val hendelse = meldegruppeHendelse(meldegruppeKode = "ARBS")
+
+            using(sessionOf(dataSource)) { session ->
+                val personId =
+                    session.run(
+                        queryOf("select id from person where ident = ?", ident).map { it.int("id") }.asSingle,
+                    )
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            """
+                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                """,
+                            personId,
+                            hendelse.dato,
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                            hendelse.kilde.name,
+                            hendelse.referanseId,
+                            hendelse::class.simpleName,
+                            defaultObjectMapper.writeValueAsString(
+                                MeldegruppeExtra(
+                                    meldegruppeKode = "ARBS",
+                                ),
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
+
+            val personMedHendelse = personRepository.hentPerson(ident)
+
+            with(personMedHendelse!!) {
+                hendelser.size shouldBe 1
+                hendelser.first().javaClass shouldBe AnnenMeldegruppeHendelse::class.java
+                (hendelser.first() as AnnenMeldegruppeHendelse).harMeldtSeg shouldBe true
+            }
         }
 
     @Test
@@ -201,15 +269,31 @@ class PostgresPersonRepositoryTest {
             historikk.forEach { (dato, status) -> put(dato, status) }
         }
 
-    private fun dagpengerMeldegruppeHendelse(referanseId: String = UUID.randomUUID().toString()) =
+    private fun meldegruppeHendelse(
+        referanseId: String = UUID.randomUUID().toString(),
+        meldegruppeKode: String = "DAGP",
+        fristBrutt: Boolean = false,
+    ) = if (meldegruppeKode == "DAGP") {
         DagpengerMeldegruppeHendelse(
             ident = "12345678901",
             referanseId = referanseId,
             dato = LocalDateTime.now(),
             startDato = LocalDateTime.now(),
             sluttDato = null,
-            meldegruppeKode = "DAGP",
+            meldegruppeKode = meldegruppeKode,
+            harMeldtSeg = fristBrutt,
         )
+    } else {
+        AnnenMeldegruppeHendelse(
+            ident = "12345678901",
+            referanseId = referanseId,
+            dato = LocalDateTime.now(),
+            startDato = LocalDateTime.now(),
+            sluttDato = null,
+            meldegruppeKode = meldegruppeKode,
+            harMeldtSeg = fristBrutt,
+        )
+    }
 
     private fun meldepliktHendelse(referanseId: String = UUID.randomUUID().toString()) =
         MeldepliktHendelse(

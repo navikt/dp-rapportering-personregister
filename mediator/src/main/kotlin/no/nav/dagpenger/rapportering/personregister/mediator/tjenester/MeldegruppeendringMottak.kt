@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeH
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.text.get
 
 class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
@@ -29,8 +30,15 @@ class MeldegruppeendringMottak(
             .apply {
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEGRUPPE") }
                 validate { it.requireKey("after", "after.STATUS_AKTIV") }
-                validate { it.requireKey("after.FODSELSNR", "after.MELDEGRUPPEKODE", "after.DATO_FRA", "after.HENDELSE_ID") }
-                validate { it.interestedIn("after.DATO_TIL") }
+                validate {
+                    it.requireKey(
+                        "after.FODSELSNR",
+                        "after.MELDEGRUPPEKODE",
+                        "after.DATO_FRA",
+                        "after.HENDELSE_ID",
+                    )
+                }
+                validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }
                 validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
     }
@@ -90,6 +98,12 @@ private fun JsonMessage.tilHendelse(): Hendelse {
     val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val hendelseId = this["after"]["HENDELSE_ID"].asText()
+    val harMeldtSeg =
+        if (this["after"]["HAR_MELDT_SEG"]?.isMissingOrNull() != false) {
+            true
+        } else {
+            this["after"]["HAR_MELDT_SEG"].asText() == "J"
+        }
     val arenaId = this["after"]["MELDEGRUPPE_ID"].asInt()
 
     if (meldegruppeKode == "DAGP") {
@@ -100,6 +114,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
             sluttDato = sluttDato,
             referanseId = hendelseId,
             meldegruppeKode = meldegruppeKode,
+            harMeldtSeg = harMeldtSeg,
             arenaId = arenaId,
         )
     }
@@ -111,6 +126,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         sluttDato = sluttDato,
         referanseId = hendelseId,
         meldegruppeKode = meldegruppeKode,
+        harMeldtSeg = harMeldtSeg,
         arenaId = arenaId,
     )
 }

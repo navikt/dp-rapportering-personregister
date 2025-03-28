@@ -45,5 +45,3 @@ Scenerior:
    - Sett status 'Avslått'
    3.3 case stanset:
    - Sett status 'Stanset'
-
-

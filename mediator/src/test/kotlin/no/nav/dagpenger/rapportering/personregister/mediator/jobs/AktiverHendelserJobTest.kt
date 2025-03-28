@@ -61,6 +61,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     startDato = nå,
                     sluttDato = null,
                     meldegruppeKode = "DAGP",
+                    harMeldtSeg = false,
                 )
 
             personRepository.lagrePerson(person)
