@@ -85,6 +85,19 @@ internal fun Application.personstatusApi(
                 }
                 call.respond(HttpStatusCode.OK, "OK")
             }
+            post {
+                val rawText = call.receiveText()
+                if (rawText.length == 11) {
+                    personMediator.behandle(
+                        PersonSynkroniseringHendelse(
+                            ident = rawText,
+                            dato = LocalDateTime.now(),
+                            startDato = LocalDateTime.now(),
+                            referanseId = UUID.randomUUID().toString(),
+                        ),
+                    )
+                }
+            }
         }
     }
 }
