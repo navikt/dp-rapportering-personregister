@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.date.after
 import io.kotest.matchers.shouldBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -21,10 +22,12 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKE
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.run
 
 class PostgresPersonRepositoryTest {
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -235,6 +238,58 @@ class PostgresPersonRepositoryTest {
                     status shouldBe DAGPENGERBRUKER
                     statusHistorikk.getAll() shouldHaveSize 2
                 }
+        }
+    }
+
+    @Test
+    fun `lagre arbeidssøkerperiode og oppdatere person oppdaterer ikke sist_endret timestamp`() {
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val originalTimestamp =
+                using(sessionOf(dataSource)) { session ->
+                    session.run(
+                        queryOf(
+                            "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
+                            person.arbeidssøkerperioder.first().periodeId,
+                        ).map { it.localDateTime("sist_endret") }.asSingle,
+                    )
+                }
+
+            val nyHendelse = meldegruppeHendelse()
+            person.hendelser.add(nyHendelse)
+            personRepository.oppdaterPerson(person)
+
+            val oppdatertTimestamp =
+                using(sessionOf(dataSource)) { session ->
+                    session.run(
+                        queryOf(
+                            "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
+                            person.arbeidssøkerperioder.first().periodeId,
+                        ).map { it.localDateTime("sist_endret") }.asSingle,
+                    )
+                }
+
+            originalTimestamp shouldBe oppdatertTimestamp
+
+            person.arbeidssøkerperioder.add(person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå))
+            personRepository.oppdaterPerson(person)
+
+            val avsluttetTimestamp =
+                using(sessionOf(dataSource)) { session ->
+                    session.run(
+                        queryOf(
+                            "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
+                            person.arbeidssøkerperioder.first().periodeId,
+                        ).map { it.localDateTime("sist_endret") }.asSingle,
+                    )
+                }
+            avsluttetTimestamp shouldBe after(originalTimestamp!!)
         }
     }
 

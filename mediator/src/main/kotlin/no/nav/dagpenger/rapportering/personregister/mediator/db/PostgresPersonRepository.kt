@@ -533,12 +533,18 @@ class PostgresPersonRepository(
                                 VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
                                 ON CONFLICT (periode_id) 
                                 DO UPDATE SET 
-                                periode_id = EXCLUDED.periode_id,
-                                person_id = EXCLUDED.person_id,
-                                startet = EXCLUDED.startet,
-                                avsluttet = EXCLUDED.avsluttet,
-                                overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
-                                sist_endret = EXCLUDED.sist_endret
+                                    person_id = EXCLUDED.person_id,
+                                    startet = EXCLUDED.startet,
+                                    avsluttet = EXCLUDED.avsluttet,
+                                    overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
+                                    sist_endret = CASE 
+                                        WHEN EXCLUDED.person_id IS DISTINCT FROM arbeidssoker.person_id
+                                            OR EXCLUDED.startet IS DISTINCT FROM arbeidssoker.startet
+                                            OR EXCLUDED.avsluttet IS DISTINCT FROM arbeidssoker.avsluttet
+                                            OR EXCLUDED.overtatt_bekreftelse IS DISTINCT FROM arbeidssoker.overtatt_bekreftelse
+                                        THEN EXCLUDED.sist_endret
+                                        ELSE arbeidssoker.sist_endret
+                                    END
                                 """.trimIndent(),
                                 mapOf(
                                     "periode_id" to arbeidssøkerperiode.periodeId,
