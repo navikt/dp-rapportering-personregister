@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.run
 
 class PostgresPersonRepositoryTest {
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -100,7 +99,7 @@ class PostgresPersonRepositoryTest {
         withMigratedDb {
             val person = testPerson(hendelser = mutableListOf(søknadHendelse()))
             personRepository.lagrePerson(person)
-            personRepository.hentAnallPersoner() shouldBe 1
+            personRepository.hentAntallPersoner() shouldBe 1
             personRepository.hentAntallHendelser() shouldBe person.hendelser.size
         }
 
