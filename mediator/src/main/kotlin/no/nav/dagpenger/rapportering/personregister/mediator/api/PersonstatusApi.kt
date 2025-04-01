@@ -75,29 +75,5 @@ internal fun Application.personstatusApi(
                 }
             }
         }
-        route("/sync-personer") {
-            get {
-                logger.info { "GET /sync-personer" }
-                val identer = personRepository.hentPersonerMedDagpenger()
-                logger.info { "oppretter sync-hendelse for ${identer.size} personer" }
-                identer.forEach {
-                    personMediator.overtaBekreftelse(it)
-                }
-                call.respond(HttpStatusCode.OK, "OK")
-            }
-            post {
-                val rawText = call.receiveText()
-                if (rawText.length == 11) {
-                    personMediator.behandle(
-                        PersonSynkroniseringHendelse(
-                            ident = rawText,
-                            dato = LocalDateTime.now(),
-                            startDato = LocalDateTime.now(),
-                            referanseId = UUID.randomUUID().toString(),
-                        ),
-                    )
-                }
-            }
-        }
     }
 }
