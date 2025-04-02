@@ -76,4 +76,3 @@ internal class AktiverHendelserJob(
         return hendelser.size
     }
 }
-

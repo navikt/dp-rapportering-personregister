@@ -8,7 +8,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KLogger
 import java.net.InetAddress
 
-
 data class Leader(
     val name: String,
     @JsonProperty("last_update")

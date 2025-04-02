@@ -62,10 +62,8 @@ class InMemoryPersonRepository : PersonRepository {
     override fun hentPersonerSomKanSlettes(): List<String> =
         personList.values
             .filter { person ->
-                person.status == Status.IKKE_DAGPENGERBRUKER
-                    && fremtidigeHendelser.find { it.ident == person.ident } == null
-            }
-            .map { it.ident }
+                person.status == Status.IKKE_DAGPENGERBRUKER && fremtidigeHendelser.find { it.ident == person.ident } == null
+            }.map { it.ident }
 
     override fun slettPerson(ident: String) {
         personList.remove(ident)

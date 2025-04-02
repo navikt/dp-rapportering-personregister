@@ -22,9 +22,7 @@ internal class SlettPersonerJob(
         tidspunktForNesteKjoring.toInstant().toEpochMilli() -
             nå.toInstant().toEpochMilli() // differansen i millisekunder mellom de to tidspunktene
 
-    internal fun start(
-        personRepository: PersonRepository,
-    ) {
+    internal fun start(personRepository: PersonRepository) {
         logger.info { "Tidspunkt for neste kjøring SlettPersonerJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
             name = "Slett personer",
@@ -54,9 +52,7 @@ internal class SlettPersonerJob(
         )
     }
 
-    fun slettPersoner(
-        personRepository: PersonRepository,
-    ): Int {
+    fun slettPersoner(personRepository: PersonRepository): Int {
         val personer = personRepository.hentPersonerSomKanSlettes()
         personer.forEach {
             personRepository.slettPerson(it)
