@@ -104,7 +104,6 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         } else {
             this["after"]["HAR_MELDT_SEG"].asText() == "J"
         }
-    val arenaId = this["after"]["MELDEGRUPPE_ID"].asInt()
 
     if (meldegruppeKode == "DAGP") {
         return DagpengerMeldegruppeHendelse(
@@ -115,7 +114,6 @@ private fun JsonMessage.tilHendelse(): Hendelse {
             referanseId = hendelseId,
             meldegruppeKode = meldegruppeKode,
             harMeldtSeg = harMeldtSeg,
-            arenaId = arenaId,
         )
     }
 
@@ -127,7 +125,6 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         referanseId = hendelseId,
         meldegruppeKode = meldegruppeKode,
         harMeldtSeg = harMeldtSeg,
-        arenaId = arenaId,
     )
 }
 
