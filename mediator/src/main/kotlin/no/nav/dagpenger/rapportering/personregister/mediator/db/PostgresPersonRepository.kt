@@ -259,8 +259,14 @@ class PostgresPersonRepository(
                     """
                     SELECT ident FROM person p 
                     WHERE p.status = 'IKKE_DAGPENGERBRUKER'
-                    and (SELECT count(*) FROM hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
-                    and (SELECT count(*) FROM fremtidig_hendelse fh WHERE fh.ident = p.ident) = 0
+                    AND (SELECT count(*) FROM hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
+                    AND (
+                        SELECT count(*)
+                        FROM fremtidig_hendelse fh
+                        WHERE fh.ident = p.ident
+                            AND NOT (fh.extra @> '{"statusMeldeplikt": false}'::jsonb)
+                            AND NOT (fh.extra @> '{"meldegruppeKode": "ARBS"}'::jsonb)
+                    ) = 0
                     """.trimIndent(),
                 ).map { it.string("ident") }
                     .asList,
