@@ -52,7 +52,6 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 harMeldtSeg = true,
-                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -85,7 +84,6 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 harMeldtSeg = true,
-                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -118,7 +116,6 @@ class MeldegruppeendringMottakTest {
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
                 harMeldtSeg = true,
-                arenaId = meldegruppeId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -150,7 +147,6 @@ class MeldegruppeendringMottakTest {
                 sluttDato = datoTil.toLocalDateTime(),
                 meldegruppeKode = meldegruppeKode,
                 referanseId = referanseId,
-                arenaId = meldegruppeId,
                 harMeldtSeg = true,
             )
 

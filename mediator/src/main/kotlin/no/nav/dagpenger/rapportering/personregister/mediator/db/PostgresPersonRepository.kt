@@ -178,8 +178,8 @@ class PostgresPersonRepository(
                     tx.run(
                         queryOf(
                             """
-                INSERT INTO fremtidig_hendelse (ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra, arena_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?)
+                INSERT INTO fremtidig_hendelse (ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
                     ident = EXCLUDED.ident,
@@ -188,8 +188,7 @@ class PostgresPersonRepository(
                     slutt_dato = EXCLUDED.slutt_dato,
                     kilde = EXCLUDED.kilde,
                     type = EXCLUDED.type,
-                    extra = EXCLUDED.extra,
-                    arena_id = EXCLUDED.arena_id
+                    extra = EXCLUDED.extra
                 """,
                             hendelse.ident,
                             hendelse.dato,
@@ -199,7 +198,6 @@ class PostgresPersonRepository(
                             hendelse.referanseId,
                             hendelse::class.simpleName,
                             hendelse.hentEkstrafelter(),
-                            hendelse.arenaId,
                         ).asUpdate,
                     )
                 }
@@ -333,8 +331,8 @@ class PostgresPersonRepository(
                 tx.run(
                     queryOf(
                         """
-                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra, arena_id) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?)
+                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
                     person_id = EXCLUDED.person_id,
@@ -343,8 +341,7 @@ class PostgresPersonRepository(
                     slutt_dato = EXCLUDED.slutt_dato,
                     kilde = EXCLUDED.kilde,
                     type = EXCLUDED.type,
-                    extra = EXCLUDED.extra,
-                    arena_id = EXCLUDED.arena_id
+                    extra = EXCLUDED.extra
                 """,
                         personId,
                         hendelse.dato,
@@ -354,7 +351,6 @@ class PostgresPersonRepository(
                         hendelse.referanseId,
                         hendelse::class.simpleName,
                         hendelse.hentEkstrafelter(),
-                        hendelse.arenaId,
                     ).asUpdate,
                 )
             }
@@ -451,7 +447,6 @@ class PostgresPersonRepository(
         val referanseId = row.string("referanse_id")
         val extra = row.stringOrNull("extra")
         val kilde = row.string("kilde")
-        val arenaId = row.intOrNull("arena_id")
 
         return when (type) {
             "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
@@ -469,7 +464,6 @@ class PostgresPersonRepository(
                     meldegruppeKode = meldegruppeExtra.meldegruppeKode,
                     harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                     kilde = Kildesystem.valueOf(kilde),
-                    arenaId = arenaId,
                 )
             }
             "AnnenMeldegruppeHendelse" -> {
@@ -485,7 +479,6 @@ class PostgresPersonRepository(
                     sluttDato = sluttDato,
                     meldegruppeKode = meldegruppeExtra.meldegruppeKode,
                     harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
-                    arenaId = arenaId,
                 )
             }
             "MeldepliktHendelse" ->
@@ -500,7 +493,6 @@ class PostgresPersonRepository(
                     sluttDato = sluttDato,
                     statusMeldeplikt = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
                     kilde = Kildesystem.valueOf(kilde),
-                    arenaId = arenaId,
                 )
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(

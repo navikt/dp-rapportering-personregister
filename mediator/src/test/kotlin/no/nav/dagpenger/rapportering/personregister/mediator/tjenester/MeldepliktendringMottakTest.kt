@@ -47,7 +47,6 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
-                arenaId = meldepliktId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -77,7 +76,6 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = datoTil.toLocalDateTime(),
                 statusMeldeplikt = true,
-                arenaId = meldepliktId,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -105,7 +103,6 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
-                arenaId = meldepliktId,
             )
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
@@ -134,7 +131,6 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = false,
-                arenaId = meldepliktId,
             )
 
         verify(exactly = 0) { fremtidigHendelseMediator.behandle(forventetHendelse) }
