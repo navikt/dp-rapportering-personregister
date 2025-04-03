@@ -128,7 +128,7 @@ class DatabaseMetrikker(
             action = {
                 try {
                     logger.info { "Oppdaterer metrikker for lagrede elementer i databasen" }
-                    lagredePersoner.set(personRepository.hentAnallPersoner())
+                    lagredePersoner.set(personRepository.hentAntallPersoner())
                     lagredeHendelser.set(personRepository.hentAntallHendelser())
                     lagredeFremtidigeHendelser.set(personRepository.hentAntallFremtidigeHendelser())
                     antallDagpengebrukere.set(personRepository.hentAntallDagpengebrukere())

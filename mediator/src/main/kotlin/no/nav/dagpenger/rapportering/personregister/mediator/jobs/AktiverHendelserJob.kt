@@ -1,10 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.request.get
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
@@ -12,7 +8,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
-import java.net.InetAddress
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
@@ -35,7 +30,7 @@ internal class AktiverHendelserJob(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
     ) {
-        logger.info { "Tidspunkt for neste kjøring: $tidspunktForNesteKjoring" }
+        logger.info { "Tidspunkt for neste kjøring AktiverHendelserJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
             name = "Aktiver hendelser med dato fram i tid",
             daemon = true,
@@ -43,7 +38,7 @@ internal class AktiverHendelserJob(
             period = 1.days.inWholeMilliseconds,
             action = {
                 try {
-                    if (isLeader()) {
+                    if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å aktivere hendelser vi mottok med dato fram i tid" }
                         var antallHendelser: Int
                         val tidBrukt =
@@ -80,28 +75,4 @@ internal class AktiverHendelserJob(
         }
         return hendelser.size
     }
-
-    private fun isLeader(): Boolean {
-        var leader = ""
-        val hostname = InetAddress.getLocalHost().hostName
-
-        try {
-            val electorUrl = System.getenv("ELECTOR_GET_URL")
-            runBlocking {
-                val leaderJson: Leader = httpClient.get(electorUrl).body()
-                leader = leaderJson.name
-            }
-        } catch (e: Exception) {
-            logger.error(e) { "Kunne ikke sjekke leader" }
-            return true // Det er bedre å få flere pod'er til å starte jobben enn ingen
-        }
-
-        return hostname == leader
-    }
 }
-
-data class Leader(
-    val name: String,
-    @JsonProperty("last_update")
-    val lastUpdate: String,
-)

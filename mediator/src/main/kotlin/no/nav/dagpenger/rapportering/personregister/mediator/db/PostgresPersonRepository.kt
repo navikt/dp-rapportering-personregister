@@ -116,8 +116,8 @@ class PostgresPersonRepository(
                 }
         }
 
-    override fun hentAnallPersoner(): Int =
-        actionTimer.timedAction("db-hentAnallPersoner") {
+    override fun hentAntallPersoner(): Int =
+        actionTimer.timedAction("db-hentAntallPersoner") {
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM person")
@@ -248,6 +248,69 @@ class PostgresPersonRepository(
                 ).map { it.string("ident") }
                     .asList,
             )
+        }
+
+    override fun hentPersonerSomKanSlettes(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    WHERE p.status = 'IKKE_DAGPENGERBRUKER'
+                    AND (SELECT count(*) FROM hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
+                    AND (
+                        SELECT count(*)
+                        FROM fremtidig_hendelse fh
+                        WHERE fh.ident = p.ident
+                            AND NOT (fh.extra @> '{"statusMeldeplikt": false}'::jsonb)
+                            AND NOT (fh.extra @> '{"meldegruppeKode": "ARBS"}'::jsonb)
+                    ) = 0
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
+    override fun slettPerson(ident: String) =
+        actionTimer.timedAction("db-slettPerson") {
+            val personId = hentPersonId(ident)
+
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM status_historikk WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM hendelse WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM arbeidssoker WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM person WHERE ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }.validateRowsAffected()
         }
 
     private fun hentPersonId(ident: String): Long? =
