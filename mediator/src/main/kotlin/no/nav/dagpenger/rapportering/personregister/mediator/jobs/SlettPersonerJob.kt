@@ -15,7 +15,7 @@ private val logger = KotlinLogging.logger {}
 internal class SlettPersonerJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.of(0, 1)
+    private val tidspunktForKjoring = LocalTime.of(1, 0)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring).plusDays(1)
     private val millisekunderTilNesteKjoring =
