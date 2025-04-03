@@ -117,7 +117,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentAntallPersoner(): Int =
-        actionTimer.timedAction("db-hentAnallPersoner") {
+        actionTimer.timedAction("db-hentAntallPersoner") {
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM person")
