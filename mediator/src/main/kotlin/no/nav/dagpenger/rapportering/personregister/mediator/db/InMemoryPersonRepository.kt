@@ -25,7 +25,7 @@ class InMemoryPersonRepository : PersonRepository {
         personList[person.ident] = person
     }
 
-    override fun hentAnallPersoner(): Int = personList.size
+    override fun hentAntallPersoner(): Int = personList.size
 
     override fun hentAntallHendelser(): Int = personList.values.sumOf { it.hendelser.size }
 
@@ -58,4 +58,14 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun hentPersonerMedDagpenger(): List<String> =
         personList.values.filter { it.status == Status.DAGPENGERBRUKER }.map { it.ident }
+
+    override fun hentPersonerSomKanSlettes(): List<String> =
+        personList.values
+            .filter { person ->
+                person.status == Status.IKKE_DAGPENGERBRUKER && fremtidigeHendelser.find { it.ident == person.ident } == null
+            }.map { it.ident }
+
+    override fun slettPerson(ident: String) {
+        personList.remove(ident)
+    }
 }

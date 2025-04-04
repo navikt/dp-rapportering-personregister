@@ -12,7 +12,7 @@ interface PersonRepository {
 
     fun oppdaterPerson(person: Person)
 
-    fun hentAnallPersoner(): Int
+    fun hentAntallPersoner(): Int
 
     fun hentAntallHendelser(): Int
 
@@ -29,4 +29,8 @@ interface PersonRepository {
     fun slettFremtidigHendelse(referanseId: String)
 
     fun hentPersonerMedDagpenger(): List<String>
+
+    fun hentPersonerSomKanSlettes(): List<String>
+
+    fun slettPerson(ident: String)
 }
