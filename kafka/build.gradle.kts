@@ -21,6 +21,9 @@ dependencies {
     api("io.confluent:kafka-schema-registry:7.9.0")
     api("io.confluent:kafka-streams-avro-serde:7.9.0")
     api("org.apache.avro:avro:1.12.0")
+    api("org.apache.kafka:kafka-streams:3.6.1")
+
+    implementation(project(":modell"))
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
@@ -29,6 +32,13 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.12.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.platform:junit-platform-engine:1.10.1")
+    testImplementation("org.junit.platform:junit-platform-launcher:1.10.1")
+
+    // Testing libraries
+    testImplementation("io.kotest:kotest-assertions-core:5.8.0")
+    testImplementation("io.mockk:mockk:1.13.9")
+    testImplementation("org.apache.kafka:kafka-streams-test-utils:3.6.1")
 }
 
 tasks.test {

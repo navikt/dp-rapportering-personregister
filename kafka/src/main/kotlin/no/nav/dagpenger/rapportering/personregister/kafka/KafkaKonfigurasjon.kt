@@ -6,8 +6,10 @@ import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
 import io.confluent.kafka.serializers.subject.TopicNameStrategy
 import org.apache.kafka.clients.CommonClientConfigs
 import org.apache.kafka.common.config.SslConfigs
+import org.apache.kafka.streams.StreamsConfig
 
 data class KafkaKonfigurasjon(
+    val applikasjonId: String,
     val serverKonfigurasjon: KafkaServerKonfigurasjon,
     val schemaRegistryKonfigurasjon: KafkaSchemaRegistryConfig,
 ) {
@@ -17,6 +19,7 @@ data class KafkaKonfigurasjon(
             kafkaSecutiryProperties,
             schemaRegCredentialsProperties,
             schemaRegistryConfig,
+            streamsConfig,
         ).reduce { acc, map -> acc + map }
 
     private val baseProperties: Map<String, Any?> get() =
@@ -65,6 +68,14 @@ data class KafkaKonfigurasjon(
                     "${schemaRegistryKonfigurasjon.username}:${schemaRegistryKonfigurasjon.password}"
             }
         }
+
+    private val streamsConfig: Map<String, Any> get() =
+        mapOf(
+            StreamsConfig.APPLICATION_ID_CONFIG to applikasjonId,
+            StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to serverKonfigurasjon.kafkaBrokers,
+            StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to "org.apache.kafka.common.serialization.Serdes\$StringSerde",
+            StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to "org.apache.kafka.common.serialization.Serdes\$StringSerde",
+        )
 }
 
 data class KafkaServerKonfigurasjon(

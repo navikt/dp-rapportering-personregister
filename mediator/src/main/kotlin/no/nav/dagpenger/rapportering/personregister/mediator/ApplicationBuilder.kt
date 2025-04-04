@@ -11,6 +11,8 @@ import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
+import no.nav.dagpenger.rapportering.personregister.kafka.streams.KafkaStreamsTopology
+import no.nav.dagpenger.rapportering.personregister.kafka.streams.StreamHandlers
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
@@ -33,6 +35,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.StreamsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -41,6 +44,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
+import org.apache.kafka.streams.KafkaStreams
+import java.util.Properties
 import io.ktor.server.cio.CIO as CIOEngine
 
 private val logger = KotlinLogging.logger {}
@@ -63,7 +68,8 @@ internal class ApplicationBuilder(
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
-    private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
+    private val kafkaKonfigurasjon =
+        KafkaKonfigurasjon("dp-rapportering-personregster", kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
     private val bekreftelsePåVegneAvProdusent =
         kafkaFactory.createProducer<Long, PaaVegneAv>(
@@ -79,6 +85,21 @@ internal class ApplicationBuilder(
             valueDeserializer = PeriodeAvroDeserializer::class,
         )
 
+    private val streamsMottak = StreamsMottak()
+    val topology =
+        KafkaStreamsTopology(
+            streamHandlers =
+                StreamHandlers(
+                    meldepliktHandler = streamsMottak::consume,
+                    dagpengerMeldegruppeHandler = streamsMottak::consume,
+                    annenMeldegruppeHandler = streamsMottak::consume,
+                    kombinertHandler = streamsMottak::consume,
+                ),
+            meldepliktTopic = TODO(),
+            meldegruppeTopic = TODO(),
+        ).build()
+    val streams = KafkaStreams(topology, Properties().apply { putAll(kafkaKonfigurasjon.properties) })
+
     private val personObserverKafka =
         PersonObserverKafka(
             bekreftelsePåVegneAvProdusent,
@@ -89,12 +110,14 @@ internal class ApplicationBuilder(
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvProdusent,
             arbeidssøkerperioderKafkaConsumer,
             arbeidssøkerperioderTopic,
             arbeidssøkerMottak,
+            streams,
         )
 
     private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka), actionTimer)
@@ -146,4 +169,5 @@ data class KafkaContext(
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
     val arbeidssøkerMottak: ArbeidssøkerMottak,
+    val streams: KafkaStreams,
 )

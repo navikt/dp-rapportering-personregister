@@ -31,6 +31,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
+import org.apache.kafka.streams.KafkaStreams
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
@@ -99,12 +100,14 @@ open class ApiTestSetup {
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+            val streams = mockk<KafkaStreams>(relaxed = true)
             val kafkaContext =
                 KafkaContext(
-                    overtaBekreftelseKafkaProdusent,
-                    arbedssøkerperiodeKafkaConsumer,
-                    "ARBEIDSSOKERPERIODER_TOPIC",
-                    arbeidssøkerMottak,
+                    bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,
+                    arbeidssøkerperioderKafkaConsumer = arbedssøkerperiodeKafkaConsumer,
+                    arbeidssøkerperioderTopic = "ARBEIDSSOKERPERIODER_TOPIC",
+                    arbeidssøkerMottak = arbeidssøkerMottak,
+                    streams = streams,
                 )
 
             val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)

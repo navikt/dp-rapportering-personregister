@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.KombinertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -71,6 +72,9 @@ class PersonMediator(
                     arbeidssøkerMediator.behandle(person.ident)
                 }
         }
+
+    fun behandle(hendelse: KombinertHendelse) {
+    }
 
     private fun behandleHendelse(hendelse: Hendelse) {
         try {

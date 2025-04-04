@@ -56,6 +56,10 @@ class MeldepliktendringMottak(
             logger.error(e) { "Feil ved behandling av meldepliktendring $e" }
         }
     }
+
+    fun consume(meldepliktHendelse: MeldepliktHendelse) {
+        // TODO()
+    }
 }
 
 private fun JsonMessage.tilHendelse(): MeldepliktHendelse {

@@ -20,6 +20,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
+import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaStreamsPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 
@@ -73,5 +74,9 @@ fun Application.pluginConfiguration(
         // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
         this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
         this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
+    }
+
+    install(KafkaStreamsPlugin("meldeplikt-meldegruppe")) {
+        this.streams = kafkaContext.streams
     }
 }
