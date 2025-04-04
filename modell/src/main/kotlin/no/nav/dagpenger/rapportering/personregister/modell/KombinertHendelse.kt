@@ -12,13 +12,12 @@ data class KombinertHendelse(
     override val referanseId: String,
     val meldepliktHendelser: List<MeldepliktHendelse>,
     val meldegruppeHendelser: List<Hendelse>, // Can contain DagpengerMeldegruppeHendelse or AnnenMeldegruppeHendelse
-    override val arenaId: Int? = null,
-    override val kilde: Kildesystem = Kildesystem.Dagpenger
+    override val kilde: Kildesystem = Kildesystem.Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
         // Process all meldepliktHendelser
         meldepliktHendelser.forEach { it.behandle(person) }
-        
+
         // Process all meldegruppeHendelser
         meldegruppeHendelser.forEach { it.behandle(person) }
     }

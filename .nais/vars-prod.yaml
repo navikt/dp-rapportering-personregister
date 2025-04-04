@@ -14,6 +14,8 @@ ARBEIDSSOKERPERIODER_TOPIC: paw.arbeidssokerperioder-v1
 BEKREFTELSE_PAA_VEGNE_AV_TOPIC: paw.arbeidssoker-bekreftelse-paavegneav-teamdagpenger-v2
 
 KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-p,teamarenanais.aapen-arena-meldepliktendret-v1-p
+MELDEGRUPPE_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-p
+MELDEPLIKT_TOPIC: teamarenanais.aapen-arena-meldepliktendret-v1-p
 
 additionalInbounds:
   - application: meldekort-api

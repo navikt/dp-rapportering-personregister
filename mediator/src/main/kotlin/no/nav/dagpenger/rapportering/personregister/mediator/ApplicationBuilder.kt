@@ -96,8 +96,8 @@ internal class ApplicationBuilder(
                     annenMeldegruppeHandler = streamsMottak::consume,
                     kombinertHandler = streamsMottak::consume,
                 ),
-            meldepliktTopic = TODO(),
-            meldegruppeTopic = TODO(),
+            meldepliktTopic = configuration.getValue("MELDEPLIKT_TOPIC"),
+            meldegruppeTopic = configuration.getValue("MELDEGRUPPE_TOPIC"),
         ).build()
     val streams = KafkaStreams(topology, Properties().apply { putAll(kafkaKonfigurasjon.properties) })
 

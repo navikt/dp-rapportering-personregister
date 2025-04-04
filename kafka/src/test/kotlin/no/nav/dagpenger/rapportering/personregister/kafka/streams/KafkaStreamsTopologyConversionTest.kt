@@ -46,7 +46,6 @@ class KafkaStreamsTopologyConversionTest : KafkaStreamsTopologyBaseTest() {
         meldepliktHendelse.ident shouldBe fodselsnr
         meldepliktHendelse.referanseId shouldBe "meldeplikt-123"
         meldepliktHendelse.statusMeldeplikt shouldBe true
-        meldepliktHendelse.arenaId shouldBe 12345
         meldepliktHendelse.startDato shouldBe "2023-01-01 00:00:00".arenaDato()
         meldepliktHendelse.sluttDato shouldBe "2023-12-31 23:59:59".arenaDato()
     }
@@ -67,7 +66,6 @@ class KafkaStreamsTopologyConversionTest : KafkaStreamsTopologyBaseTest() {
         meldegruppeHendelse.referanseId shouldBe "meldegruppe-456"
         (meldegruppeHendelse as DagpengerMeldegruppeHendelse).meldegruppeKode shouldBe "DAGP"
         meldegruppeHendelse.harMeldtSeg shouldBe true
-        meldegruppeHendelse.arenaId shouldBe 67890
         meldegruppeHendelse.startDato shouldBe "2023-01-01 00:00:00".arenaDato()
         meldegruppeHendelse.sluttDato shouldBe "2023-12-31 23:59:59".arenaDato()
     }
@@ -88,7 +86,6 @@ class KafkaStreamsTopologyConversionTest : KafkaStreamsTopologyBaseTest() {
         meldegruppeHendelse.referanseId shouldBe "meldegruppe-456"
         (meldegruppeHendelse as AnnenMeldegruppeHendelse).meldegruppeKode shouldBe "ANNEN"
         meldegruppeHendelse.harMeldtSeg shouldBe true
-        meldegruppeHendelse.arenaId shouldBe 67890
         meldegruppeHendelse.startDato shouldBe "2023-01-01 00:00:00".arenaDato()
         meldegruppeHendelse.sluttDato shouldBe "2023-12-31 23:59:59".arenaDato()
     }

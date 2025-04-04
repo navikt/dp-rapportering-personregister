@@ -82,14 +82,6 @@ class MeldegruppeendringMottak(
     companion object {
         private val logger = KotlinLogging.logger {}
     }
-
-    fun consume(annenMeldegruppeHendelse: AnnenMeldegruppeHendelse) {
-        TODO()
-    }
-
-    fun consume(dagpengerMeldegruppeHendelse: DagpengerMeldegruppeHendelse) {
-        TODO()
-    }
 }
 
 private fun JsonMessage.tilHendelse(): Hendelse {

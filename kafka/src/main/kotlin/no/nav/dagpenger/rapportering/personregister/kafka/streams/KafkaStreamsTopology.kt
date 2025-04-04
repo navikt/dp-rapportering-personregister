@@ -238,9 +238,8 @@ class KafkaStreamsTopology(
                 afterNode.path("DATO_TIL").asText().arenaDato()
             }
         val statusMeldeplikt = afterNode.path("STATUS_MELDEPLIKT").asText() == "J"
-        val arenaId = afterNode.path("MELDEPLIKT_ID").asInt()
 
-        return MeldepliktHendelse(ident, dato, hendelseId, startDato, sluttDato, statusMeldeplikt, arenaId)
+        return MeldepliktHendelse(ident, dato, hendelseId, startDato, sluttDato, statusMeldeplikt)
     }
 
     /**
@@ -283,7 +282,6 @@ class KafkaStreamsTopology(
             } else {
                 afterNode.path("HAR_MELDT_SEG").asText() == "J"
             }
-        val arenaId = afterNode.path("MELDEGRUPPE_ID").asInt()
 
         return if (meldegruppeKode == "DAGP") {
             DagpengerMeldegruppeHendelse(
@@ -294,7 +292,6 @@ class KafkaStreamsTopology(
                 referanseId = hendelseId,
                 meldegruppeKode = meldegruppeKode,
                 harMeldtSeg = harMeldtSeg,
-                arenaId = arenaId,
             )
         } else {
             AnnenMeldegruppeHendelse(
@@ -305,7 +302,6 @@ class KafkaStreamsTopology(
                 referanseId = hendelseId,
                 meldegruppeKode = meldegruppeKode,
                 harMeldtSeg = harMeldtSeg,
-                arenaId = arenaId,
             )
         }
     }

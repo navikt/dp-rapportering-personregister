@@ -97,3 +97,7 @@ spec:
       value: {{ BEKREFTELSE_PAA_VEGNE_AV_TOPIC }}
     - name: KAFKA_EXTRA_TOPIC
       value: {{ KAFKA_EXTRA_TOPIC }}
+    - name: MELDEGRUPPE_TOPIC
+      value: {{ MELDEGRUPPE_TOPIC }}
+    - name: MELDEPLIKT_TOPIC
+      value: {{ MELDEPLIKT_TOPIC }}
