@@ -49,7 +49,7 @@ class KombinertHendelseTest {
         kombinertHendelse.referanseId shouldBe referanseId
         kombinertHendelse.meldepliktHendelser shouldBe listOf(meldepliktHendelse)
         kombinertHendelse.meldegruppeHendelser shouldBe listOf(meldegruppeHendelse)
-        kombinertHendelse.kilde shouldBe Kildesystem.Dagpenger
+        kombinertHendelse.kilde shouldBe Kildesystem.Arena
     }
 
     @Test
