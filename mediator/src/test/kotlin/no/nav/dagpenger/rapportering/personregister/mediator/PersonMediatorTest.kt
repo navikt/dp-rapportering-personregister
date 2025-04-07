@@ -7,13 +7,13 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
@@ -298,7 +298,7 @@ class PersonMediatorTest {
                 beslutningRepository.hentBeslutning(ident)?.apply {
                     handling shouldBe Handling.OVERTATT
                 }
-//
+
                 personMediator.behandle(annenMeldegruppeHendelse())
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 2
             }
@@ -382,17 +382,22 @@ class BeslutningObserver(
     private val beslutningRepository: ArbeidssøkerBeslutningRepository,
 ) : PersonObserver {
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
-        val periodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
-        val beslutning =
-            ArbeidssøkerBeslutning(
-                person.ident,
-                periodeId!!,
-                Handling.OVERTATT,
-                referanseId = "123",
-                begrunnelse = "Overtar bekreftelse",
-            )
+        person.arbeidssøkerperioder.gjeldende
+            ?.let { periode ->
+                val beslutning =
+                    ArbeidssøkerBeslutning(
+                        person.ident,
+                        periode.periodeId,
+                        Handling.OVERTATT,
+                        referanseId = periode.periodeId.toString(),
+                        begrunnelse =
+                            "Oppfyller krav: arbedissøker, " +
+                                "meldeplikt=${person.meldeplikt} " +
+                                "og gruppe=${person.meldegruppe}",
+                    )
 
-        beslutningRepository.lagreBeslutning(beslutning)
+                beslutningRepository.lagreBeslutning(beslutning)
+            }
     }
 
     override fun frasiArbeidssøkerBekreftelse(
@@ -406,7 +411,7 @@ class BeslutningObserver(
                 periodeId!!,
                 Handling.FRASAGT,
                 referanseId = "123",
-                begrunnelse = "Frasier bekreftelse",
+                begrunnelse = "Ikke opppfyller krav",
             )
 
         beslutningRepository.lagreBeslutning(beslutning)

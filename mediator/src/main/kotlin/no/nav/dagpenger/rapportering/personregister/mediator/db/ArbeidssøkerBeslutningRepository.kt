@@ -1,16 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import java.util.UUID
-
-enum class Handling { OVERTATT, FRASAGT }
-
-data class ArbeidssøkerBeslutning(
-    val ident: String,
-    val periodeId: UUID,
-    val handling: Handling,
-    val referanseId: String,
-    val begrunnelse: String,
-)
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 
 interface ArbeidssøkerBeslutningRepository {
     fun hentBeslutning(periodeId: String): ArbeidssøkerBeslutning?
