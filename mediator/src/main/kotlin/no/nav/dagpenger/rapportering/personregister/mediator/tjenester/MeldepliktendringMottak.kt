@@ -29,7 +29,7 @@ class MeldepliktendringMottak(
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
                 validate { it.requireKey("after", "after.STATUS_AKTIV") }
                 validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
-                validate { it.interestedIn("after.DATO_TIL") }
+                validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }
                 validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
     }
@@ -72,6 +72,20 @@ private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
     val statusMeldeplikt = this["after"]["STATUS_MELDEPLIKT"].asText().let { it == "J" }
+    val harMeldtSeg =
+        if (this["after"]["HAR_MELDT_SEG"]?.isMissingOrNull() != false) {
+            true
+        } else {
+            this["after"]["HAR_MELDT_SEG"].asText() == "J"
+        }
 
-    return MeldepliktHendelse(ident, dato, hendelseId, startDato, sluttDato, statusMeldeplikt)
+    return MeldepliktHendelse(
+        ident = ident,
+        dato = dato,
+        referanseId = hendelseId,
+        startDato = startDato,
+        sluttDato = sluttDato,
+        statusMeldeplikt = statusMeldeplikt,
+        harMeldtSeg = harMeldtSeg,
+    )
 }

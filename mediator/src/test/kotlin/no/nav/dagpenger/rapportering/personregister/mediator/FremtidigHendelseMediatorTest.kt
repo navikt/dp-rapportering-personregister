@@ -48,5 +48,6 @@ class FremtidigHendelseMediatorTest {
         sluttDato = null,
         statusMeldeplikt = true,
         referanseId = referanseId,
+        harMeldtSeg = false,
     )
 }

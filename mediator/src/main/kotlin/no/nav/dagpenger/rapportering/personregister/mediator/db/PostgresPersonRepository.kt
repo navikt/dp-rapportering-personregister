@@ -395,7 +395,7 @@ class PostgresPersonRepository(
 
                 is MeldepliktHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt),
+                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
                 is ArbeidssøkerperiodeHendelse -> null
@@ -481,7 +481,8 @@ class PostgresPersonRepository(
                     harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                 )
             }
-            "MeldepliktHendelse" ->
+            "MeldepliktHendelse" -> {
+                val meldepliktExtra = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!)
                 MeldepliktHendelse(
                     ident = ident,
                     dato = dato,
@@ -491,9 +492,11 @@ class PostgresPersonRepository(
                             "MeldepliktHendelse med referanseId $referanseId mangler startDato",
                         ),
                     sluttDato = sluttDato,
-                    statusMeldeplikt = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
+                    statusMeldeplikt = meldepliktExtra.statusMeldeplikt,
                     kilde = Kildesystem.valueOf(kilde),
+                    harMeldtSeg = meldepliktExtra.harMeldtSeg ?: true,
                 )
+            }
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
                     periodeId = UUID.fromString(referanseId),
@@ -651,4 +654,5 @@ data class MeldegruppeExtra(
 
 data class MeldepliktExtra(
     val statusMeldeplikt: Boolean,
+    val harMeldtSeg: Boolean? = null,
 )

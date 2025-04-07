@@ -215,7 +215,7 @@ class PersonTest {
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
-    ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status)
+    ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status, true)
 
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 

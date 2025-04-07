@@ -320,6 +320,7 @@ class PersonMediatorTest {
         sluttDato = sluttDato,
         statusMeldeplikt = status,
         referanseId = referanseId,
+        harMeldtSeg = true,
     )
 }
 
