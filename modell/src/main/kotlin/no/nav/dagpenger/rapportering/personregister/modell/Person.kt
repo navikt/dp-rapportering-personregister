@@ -85,6 +85,30 @@ fun Person.frasiArbeidssøkerBekreftelse(
         }
 }
 
+fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHendelse) {
+    arbeidssøkerperioder.add(
+        Arbeidssøkerperiode(
+            hendelse.periodeId,
+            ident,
+            hendelse.startet,
+            null,
+            overtattBekreftelse = null,
+        ),
+    )
+}
+
+fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiodeHendelse) {
+    arbeidssøkerperioder.add(
+        Arbeidssøkerperiode(
+            hendelse.periodeId,
+            ident,
+            hendelse.startet,
+            hendelse.avsluttet,
+            overtattBekreftelse = false,
+        ),
+    )
+}
+
 val Person.erArbeidssøker: Boolean
     get() = arbeidssøkerperioder.gjeldende != null
 
