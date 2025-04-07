@@ -47,6 +47,7 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
+                harMeldtSeg = true,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -76,6 +77,7 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = datoTil.toLocalDateTime(),
                 statusMeldeplikt = true,
+                harMeldtSeg = true,
             )
 
         verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
@@ -103,6 +105,7 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
+                harMeldtSeg = true,
             )
 
         verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
@@ -131,9 +134,40 @@ class MeldepliktendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = false,
+                harMeldtSeg = true,
             )
 
         verify(exactly = 0) { fremtidigHendelseMediator.behandle(forventetHendelse) }
+    }
+
+    @Test
+    fun `kan motta meldepliktendring med meldt seg lik nei`() {
+        val datoFra = LocalDateTime.now().plusDays(1).format()
+
+        testRapid.sendTestMessage(
+            meldepliktendring_event(
+                ident = ident,
+                hendelseId = hendelseId,
+                hendelsesdato = hendelsesdato,
+                meldepliktId = meldepliktId,
+                datoFra = datoFra.format(),
+                statusAktiv = "J",
+                harMeldtSeg = "N",
+            ),
+        )
+
+        val forventetHendelse =
+            MeldepliktHendelse(
+                ident = ident,
+                dato = hendelsesdato.toLocalDateTime(),
+                referanseId = hendelseId,
+                startDato = datoFra.toLocalDateTime(),
+                sluttDato = null,
+                statusMeldeplikt = true,
+                harMeldtSeg = false,
+            )
+
+        verify(exactly = 1) { fremtidigHendelseMediator.behandle(forventetHendelse) }
     }
 }
 
@@ -145,6 +179,7 @@ private fun meldepliktendring_event(
     datoFra: String = "2025-02-01 00:00:00",
     datoTil: String? = null,
     statusAktiv: String = "J",
+    harMeldtSeg: String = "J",
 ) = //language=json
     """
     {
@@ -167,7 +202,8 @@ private fun meldepliktendring_event(
         "OPPRETTET_DATO": "2025-02-08 14:00:25",
         "OPPRETTET_AV": "HBB4405",
         "ENDRET_DATO": "2025-02-08 14:00:25",
-        "ENDRET_AV": "HBB4405"
+        "ENDRET_AV": "HBB4405",
+        "HAR_MELDT_SEG": "$harMeldtSeg"
     }
 }
     """.trimIndent()

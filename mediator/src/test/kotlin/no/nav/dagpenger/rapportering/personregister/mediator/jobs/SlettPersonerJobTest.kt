@@ -52,6 +52,7 @@ class SlettPersonerJobTest : ApiTestSetup() {
                     startDato = nå.plusDays(1),
                     sluttDato = null,
                     statusMeldeplikt = true,
+                    harMeldtSeg = true,
                 )
 
             // Disse skal slettes:
@@ -80,6 +81,7 @@ class SlettPersonerJobTest : ApiTestSetup() {
                     startDato = nå.plusDays(2),
                     sluttDato = null,
                     statusMeldeplikt = false,
+                    harMeldtSeg = true,
                 )
 
             // Har en fremtidig hendelse med meldegruppeKode = ARBS

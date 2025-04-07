@@ -52,6 +52,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     startDato = nå,
                     sluttDato = null,
                     statusMeldeplikt = true,
+                    harMeldtSeg = true,
                 )
             val meldegruppeHendelse =
                 DagpengerMeldegruppeHendelse(
