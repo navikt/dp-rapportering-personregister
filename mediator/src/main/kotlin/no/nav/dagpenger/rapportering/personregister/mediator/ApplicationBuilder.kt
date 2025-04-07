@@ -70,7 +70,7 @@ internal class ApplicationBuilder(
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
     private val kafkaKonfigurasjon =
-        KafkaKonfigurasjon("dp-rapportering-personregster", kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
+        KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
     private val bekreftelsePåVegneAvProdusent =
         kafkaFactory.createProducer<Long, PaaVegneAv>(

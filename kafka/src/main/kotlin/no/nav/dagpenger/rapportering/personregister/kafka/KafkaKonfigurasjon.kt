@@ -9,7 +9,6 @@ import org.apache.kafka.common.config.SslConfigs
 import org.apache.kafka.streams.StreamsConfig
 
 data class KafkaKonfigurasjon(
-    val applikasjonId: String,
     val serverKonfigurasjon: KafkaServerKonfigurasjon,
     val schemaRegistryKonfigurasjon: KafkaSchemaRegistryConfig,
 ) {
@@ -71,7 +70,7 @@ data class KafkaKonfigurasjon(
 
     private val streamsConfig: Map<String, Any> get() =
         mapOf(
-            StreamsConfig.APPLICATION_ID_CONFIG to applikasjonId,
+            StreamsConfig.APPLICATION_ID_CONFIG to serverKonfigurasjon.applicationId,
             StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to serverKonfigurasjon.kafkaBrokers,
             StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to "org.apache.kafka.common.serialization.Serdes\$StringSerde",
             StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to "org.apache.kafka.common.serialization.Serdes\$StringSerde",
@@ -79,6 +78,7 @@ data class KafkaKonfigurasjon(
 }
 
 data class KafkaServerKonfigurasjon(
+    val applicationId: String,
     val autentisering: String,
     val kafkaBrokers: String,
     val keystorePath: String?,

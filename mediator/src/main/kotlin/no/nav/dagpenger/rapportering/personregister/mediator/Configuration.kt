@@ -84,6 +84,7 @@ internal object Configuration {
 
     val kafkaServerKonfigurasjon =
         KafkaServerKonfigurasjon(
+            applicationId = properties[Key("KAFKA_STREAMS_APPLICATION_ID", stringType)],
             autentisering = "SSL",
             kafkaBrokers = properties[Key("KAFKA_BROKERS", stringType)],
             keystorePath = properties.getOrNull(Key("KAFKA_KEYSTORE_PATH", stringType)),

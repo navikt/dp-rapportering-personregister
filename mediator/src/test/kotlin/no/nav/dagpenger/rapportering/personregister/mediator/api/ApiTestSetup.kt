@@ -134,6 +134,7 @@ open class ApiTestSetup {
         System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
         System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
         System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+        System.setProperty("KAFKA_STREAMS_APPLICATION_ID", "dp-rapportering-personregister")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =
