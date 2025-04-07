@@ -34,6 +34,13 @@ spec:
   kafka:
     pool: {{ kafka.pool }}
     streams: true
+    topics:
+      - name: combined-topic
+        access: readwrite
+      - name: unmatched-meldeplikt-topic
+        access: readwrite
+      - name: unmatched-meldegruppe-topic
+        access: readwrite
   {{#if ingresses}}
   ingresses:
     {{#each ingresses as |url|}}
