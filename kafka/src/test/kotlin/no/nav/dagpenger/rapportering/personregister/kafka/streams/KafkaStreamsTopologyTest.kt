@@ -4,12 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.kotest.matchers.shouldBe
 import io.mockk.slot
 import io.mockk.verify
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.KombinertHendelse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.Duration
 
 /**
  * Tests for the basic join functionality of the KafkaStreamsTopology.
