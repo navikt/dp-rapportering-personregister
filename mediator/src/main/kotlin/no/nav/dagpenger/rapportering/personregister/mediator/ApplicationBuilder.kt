@@ -98,7 +98,13 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak,
         )
 
-    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserverKafka), actionTimer)
+    private val personMediator =
+        PersonMediator(
+            personRepository,
+            arbeidssøkerMediator,
+            listOf(personObserverKafka),
+            actionTimer,
+        )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()

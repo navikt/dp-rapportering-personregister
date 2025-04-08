@@ -7,9 +7,13 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
@@ -32,6 +36,7 @@ import java.util.UUID
 class PersonMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
+    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personMediator: PersonMediator
@@ -39,6 +44,7 @@ class PersonMediatorTest {
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
 
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private lateinit var beslutningObserver: BeslutningObserver
 
     @BeforeEach
     fun setup() {
@@ -48,7 +54,9 @@ class PersonMediatorTest {
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
-        personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)
+        beslutningRepository = InMemoryArbeidssøkerBeslutningRepository()
+        beslutningObserver = BeslutningObserver(beslutningRepository)
+        personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver, beslutningObserver), actionTimer)
     }
 
     private val ident = "12345678910"
@@ -262,6 +270,41 @@ class PersonMediatorTest {
         }
     }
 
+    @Nested
+    inner class ArbeidssøkerBeslutning {
+        @Test
+        fun `lagrer beslutning ved overtakelse av arbeidssøkerbekreftelse`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
+                beslutningRepository.hentBeslutning(ident)?.apply {
+                    ident shouldBe ident
+                    periodeId shouldBe periodeId
+                    handling shouldBe Handling.OVERTATT
+                    begrunnelse shouldBe "Overtar bekreftelse"
+                }
+            }
+        }
+
+        @Test
+        fun `lagrer beslutning ved frasigelse av arbeidssøkerbekreftelse`() {
+            arbeidssøker {
+                personMediator.behandle(meldepliktHendelse())
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+
+                beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
+                beslutningRepository.hentBeslutning(ident)?.apply {
+                    handling shouldBe Handling.OVERTATT
+                }
+
+                personMediator.behandle(annenMeldegruppeHendelse())
+                beslutningRepository.hentBeslutninger(ident) shouldHaveSize 2
+            }
+        }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -334,4 +377,42 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
+}
+
+class BeslutningObserver(
+    private val beslutningRepository: ArbeidssøkerBeslutningRepository,
+) : PersonObserver {
+    override fun overtaArbeidssøkerBekreftelse(person: Person) {
+        person.arbeidssøkerperioder.gjeldende
+            ?.let { periode ->
+                val beslutning =
+                    ArbeidssøkerBeslutning(
+                        person.ident,
+                        periode.periodeId,
+                        Handling.OVERTATT,
+                        begrunnelse =
+                            "Oppfyller krav: arbedissøker, " +
+                                "meldeplikt=${person.meldeplikt} " +
+                                "og gruppe=${person.meldegruppe}",
+                    )
+
+                beslutningRepository.lagreBeslutning(beslutning)
+            }
+    }
+
+    override fun frasiArbeidssøkerBekreftelse(
+        person: Person,
+        fristBrutt: Boolean,
+    ) {
+        val periodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
+        val beslutning =
+            ArbeidssøkerBeslutning(
+                person.ident,
+                periodeId!!,
+                Handling.FRASAGT,
+                begrunnelse = "Ikke opppfyller krav",
+            )
+
+        beslutningRepository.lagreBeslutning(beslutning)
+    }
 }
