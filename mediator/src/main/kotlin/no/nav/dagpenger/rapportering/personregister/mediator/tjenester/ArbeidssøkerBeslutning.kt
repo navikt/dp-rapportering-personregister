@@ -8,6 +8,5 @@ data class ArbeidssøkerBeslutning(
     val ident: String,
     val periodeId: UUID,
     val handling: Handling,
-    val referanseId: String,
     val begrunnelse: String,
 )

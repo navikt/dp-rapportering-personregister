@@ -389,7 +389,6 @@ class BeslutningObserver(
                         person.ident,
                         periode.periodeId,
                         Handling.OVERTATT,
-                        referanseId = periode.periodeId.toString(),
                         begrunnelse =
                             "Oppfyller krav: arbedissøker, " +
                                 "meldeplikt=${person.meldeplikt} " +
@@ -410,7 +409,6 @@ class BeslutningObserver(
                 person.ident,
                 periodeId!!,
                 Handling.FRASAGT,
-                referanseId = "123",
                 begrunnelse = "Ikke opppfyller krav",
             )
 

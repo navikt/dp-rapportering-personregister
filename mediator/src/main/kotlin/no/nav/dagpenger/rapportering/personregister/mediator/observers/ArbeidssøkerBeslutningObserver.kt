@@ -19,7 +19,6 @@ class ArbeidssøkerBeslutningObserver(
                         person.ident,
                         periode.periodeId,
                         Handling.OVERTATT,
-                        referanseId = "123",
                         begrunnelse =
                             "Oppfyller krav: arbedissøker, " +
                                 "meldeplikt=${person.meldeplikt} " +
@@ -34,20 +33,21 @@ class ArbeidssøkerBeslutningObserver(
         person: Person,
         fristBrutt: Boolean,
     ) {
-        val periodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
-        val beslutning =
-            ArbeidssøkerBeslutning(
-                person.ident,
-                periodeId!!,
-                Handling.FRASAGT,
-                referanseId = "123",
-                begrunnelse =
-                    "Ikke oppfyller krav: " +
-                        "arbedissøker: ${person.erArbeidssøker}," +
-                        " meldeplikt=${person.meldeplikt} " +
-                        "eller gruppe=${person.meldegruppe}",
-            )
+        person.arbeidssøkerperioder.gjeldende
+            ?.let { periode ->
+                val beslutning =
+                    ArbeidssøkerBeslutning(
+                        person.ident,
+                        periode.periodeId,
+                        Handling.FRASAGT,
+                        begrunnelse =
+                            "Oppfyller ikke krav: " +
+                                "arbedissøker: ${person.erArbeidssøker}," +
+                                "meldeplikt=${person.meldeplikt} " +
+                                "og gruppe=${person.meldegruppe}",
+                    )
 
-        beslutningRepository.lagreBeslutning(beslutning)
+                beslutningRepository.lagreBeslutning(beslutning)
+            }
     }
 }
