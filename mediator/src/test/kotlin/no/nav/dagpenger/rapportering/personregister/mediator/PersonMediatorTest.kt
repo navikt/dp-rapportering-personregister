@@ -8,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -54,7 +53,7 @@ class PersonMediatorTest {
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
-        beslutningRepository = InMemoryArbeidssøkerBeslutningRepository()
+        beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
         beslutningObserver = BeslutningObserver(beslutningRepository)
         personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver, beslutningObserver), actionTimer)
     }
@@ -414,4 +413,16 @@ class BeslutningObserver(
 
         beslutningRepository.lagreBeslutning(beslutning)
     }
+}
+
+class ArbeidssøkerBeslutningRepositoryFaker : ArbeidssøkerBeslutningRepository {
+    private val beslutninger = mutableListOf<ArbeidssøkerBeslutning>()
+
+    override fun hentBeslutning(periodeId: String) = beslutninger.lastOrNull { it.periodeId.toString() == periodeId }
+
+    override fun lagreBeslutning(beslutning: ArbeidssøkerBeslutning) {
+        beslutninger.add(beslutning)
+    }
+
+    override fun hentBeslutninger(ident: String) = beslutninger.filter { it.ident == ident }
 }

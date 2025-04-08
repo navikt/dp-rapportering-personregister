@@ -147,7 +147,7 @@ open class ApiTestSetup {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
-                    "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse",
+                    "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",
                 ).asExecute,
             )
         }

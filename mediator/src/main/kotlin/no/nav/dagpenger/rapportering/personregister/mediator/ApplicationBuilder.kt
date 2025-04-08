@@ -20,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -28,6 +29,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldegrup
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
@@ -59,6 +61,7 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
@@ -86,8 +89,19 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvTopic,
         )
 
+    private val arbeidssøkerBeslutningObserver =
+        ArbeidssøkerBeslutningObserver(
+            arbeidssøkerBeslutningRepository,
+        )
+
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-    private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
+    private val arbeidssøkerMediator =
+        ArbeidssøkerMediator(
+            arbeidssøkerService,
+            personRepository,
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            actionTimer,
+        )
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val kafkaContext =
         KafkaContext(

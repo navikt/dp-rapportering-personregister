@@ -9,7 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 
 class ArbeidssøkerBeslutningObserver(
-    private val beslutningRepository: ArbeidssøkerBeslutningRepository,
+    private val arbeidssøkerBeslutningRepository: ArbeidssøkerBeslutningRepository,
 ) : PersonObserver {
     override fun overtaArbeidssøkerBekreftelse(person: Person) {
         person.arbeidssøkerperioder.gjeldende
@@ -25,7 +25,7 @@ class ArbeidssøkerBeslutningObserver(
                                 "og gruppe=${person.meldegruppe}",
                     )
 
-                beslutningRepository.lagreBeslutning(beslutning)
+                arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
             }
     }
 
@@ -47,7 +47,7 @@ class ArbeidssøkerBeslutningObserver(
                                 "og gruppe=${person.meldegruppe}",
                     )
 
-                beslutningRepository.lagreBeslutning(beslutning)
+                arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
             }
     }
 }
