@@ -115,7 +115,7 @@ internal class ApplicationBuilder(
         PersonMediator(
             personRepository,
             arbeidssøkerMediator,
-            listOf(personObserverKafka),
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             actionTimer,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
@@ -133,8 +133,6 @@ internal class ApplicationBuilder(
                 logger.info { "Starter rapid with" }
                 logger.info { "config: $config" }
 
-                val arbeidssøkerMediator =
-                    ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
