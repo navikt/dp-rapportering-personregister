@@ -75,27 +75,3 @@ fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
 
 val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
     get() = this.firstOrNull { it.aktiv() }
-
-fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHendelse) {
-    arbeidssøkerperioder.add(
-        Arbeidssøkerperiode(
-            hendelse.periodeId,
-            ident,
-            hendelse.startet,
-            null,
-            overtattBekreftelse = null,
-        ),
-    )
-}
-
-fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiodeHendelse) {
-    arbeidssøkerperioder.add(
-        Arbeidssøkerperiode(
-            hendelse.periodeId,
-            ident,
-            hendelse.startet,
-            hendelse.avsluttet,
-            overtattBekreftelse = false,
-        ),
-    )
-}

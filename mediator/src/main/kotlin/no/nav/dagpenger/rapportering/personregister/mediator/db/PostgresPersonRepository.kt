@@ -116,8 +116,8 @@ class PostgresPersonRepository(
                 }
         }
 
-    override fun hentAnallPersoner(): Int =
-        actionTimer.timedAction("db-hentAnallPersoner") {
+    override fun hentAntallPersoner(): Int =
+        actionTimer.timedAction("db-hentAntallPersoner") {
             using(sessionOf(dataSource)) { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM person")
@@ -250,6 +250,69 @@ class PostgresPersonRepository(
             )
         }
 
+    override fun hentPersonerSomKanSlettes(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    WHERE p.status = 'IKKE_DAGPENGERBRUKER'
+                    AND (SELECT count(*) FROM hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
+                    AND (
+                        SELECT count(*)
+                        FROM fremtidig_hendelse fh
+                        WHERE fh.ident = p.ident
+                            AND NOT (fh.extra @> '{"statusMeldeplikt": false}'::jsonb)
+                            AND NOT (fh.extra @> '{"meldegruppeKode": "ARBS"}'::jsonb)
+                    ) = 0
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
+    override fun slettPerson(ident: String) =
+        actionTimer.timedAction("db-slettPerson") {
+            val personId = hentPersonId(ident)
+
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM status_historikk WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM hendelse WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM arbeidssoker WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM person WHERE ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }.validateRowsAffected()
+        }
+
     private fun hentPersonId(ident: String): Long? =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -332,7 +395,7 @@ class PostgresPersonRepository(
 
                 is MeldepliktHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt),
+                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
                 is ArbeidssøkerperiodeHendelse -> null
@@ -418,7 +481,8 @@ class PostgresPersonRepository(
                     harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                 )
             }
-            "MeldepliktHendelse" ->
+            "MeldepliktHendelse" -> {
+                val meldepliktExtra = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!)
                 MeldepliktHendelse(
                     ident = ident,
                     dato = dato,
@@ -428,9 +492,11 @@ class PostgresPersonRepository(
                             "MeldepliktHendelse med referanseId $referanseId mangler startDato",
                         ),
                     sluttDato = sluttDato,
-                    statusMeldeplikt = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!).statusMeldeplikt,
+                    statusMeldeplikt = meldepliktExtra.statusMeldeplikt,
                     kilde = Kildesystem.valueOf(kilde),
+                    harMeldtSeg = meldepliktExtra.harMeldtSeg ?: true,
                 )
+            }
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
                     periodeId = UUID.fromString(referanseId),
@@ -588,4 +654,5 @@ data class MeldegruppeExtra(
 
 data class MeldepliktExtra(
     val statusMeldeplikt: Boolean,
+    val harMeldtSeg: Boolean? = null,
 )

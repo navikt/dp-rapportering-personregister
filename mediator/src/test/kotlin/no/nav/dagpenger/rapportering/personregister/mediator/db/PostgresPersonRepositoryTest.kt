@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
-import kotlin.run
 
 class PostgresPersonRepositoryTest {
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -100,7 +99,7 @@ class PostgresPersonRepositoryTest {
         withMigratedDb {
             val person = testPerson(hendelser = mutableListOf(søknadHendelse()))
             personRepository.lagrePerson(person)
-            personRepository.hentAnallPersoner() shouldBe 1
+            personRepository.hentAntallPersoner() shouldBe 1
             personRepository.hentAntallHendelser() shouldBe person.hendelser.size
         }
 
@@ -148,8 +147,8 @@ class PostgresPersonRepositoryTest {
         withMigratedDb {
             val person =
                 Person(ident).apply {
-                    this.hendelser.add(meldegruppeHendelse(fristBrutt = false))
-                    this.hendelser.add(meldegruppeHendelse(meldegruppeKode = "ARBS", fristBrutt = true))
+                    this.hendelser.add(meldegruppeHendelse(harMeldtSeg = false))
+                    this.hendelser.add(meldegruppeHendelse(meldegruppeKode = "ARBS", harMeldtSeg = true))
                 }
             personRepository.lagrePerson(person)
 
@@ -327,7 +326,7 @@ class PostgresPersonRepositoryTest {
     private fun meldegruppeHendelse(
         referanseId: String = UUID.randomUUID().toString(),
         meldegruppeKode: String = "DAGP",
-        fristBrutt: Boolean = false,
+        harMeldtSeg: Boolean = false,
     ) = if (meldegruppeKode == "DAGP") {
         DagpengerMeldegruppeHendelse(
             ident = "12345678901",
@@ -336,7 +335,7 @@ class PostgresPersonRepositoryTest {
             startDato = LocalDateTime.now(),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
-            harMeldtSeg = fristBrutt,
+            harMeldtSeg = harMeldtSeg,
         )
     } else {
         AnnenMeldegruppeHendelse(
@@ -346,17 +345,20 @@ class PostgresPersonRepositoryTest {
             startDato = LocalDateTime.now(),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
-            harMeldtSeg = fristBrutt,
+            harMeldtSeg = harMeldtSeg,
         )
     }
 
-    private fun meldepliktHendelse(referanseId: String = UUID.randomUUID().toString()) =
-        MeldepliktHendelse(
-            ident = "12345678901",
-            referanseId = referanseId,
-            dato = LocalDateTime.now(),
-            startDato = LocalDateTime.now(),
-            sluttDato = null,
-            statusMeldeplikt = true,
-        )
+    private fun meldepliktHendelse(
+        referanseId: String = UUID.randomUUID().toString(),
+        harMeldtSeg: Boolean = false,
+    ) = MeldepliktHendelse(
+        ident = "12345678901",
+        referanseId = referanseId,
+        dato = LocalDateTime.now(),
+        startDato = LocalDateTime.now(),
+        sluttDato = null,
+        statusMeldeplikt = true,
+        harMeldtSeg = harMeldtSeg,
+    )
 }

@@ -45,7 +45,6 @@ class ArbeidssøkerConnector(
                 }
 
             if (result.status != HttpStatusCode.OK) {
-                val body = result.bodyAsText()
                 logger.warn {
                     "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident."
                 }

@@ -97,3 +97,5 @@ spec:
       value: {{ BEKREFTELSE_PAA_VEGNE_AV_TOPIC }}
     - name: KAFKA_EXTRA_TOPIC
       value: {{ KAFKA_EXTRA_TOPIC }}
+    - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner
+      value: -XX:+UseParallelGC -XX:ActiveProcessorCount=4

@@ -35,13 +35,13 @@ import java.util.UUID
 class PersonMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
-    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personMediator: PersonMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
 
+    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private lateinit var beslutningObserver: BeslutningObserver
 
@@ -362,6 +362,7 @@ class PersonMediatorTest {
         sluttDato = sluttDato,
         statusMeldeplikt = status,
         referanseId = referanseId,
+        harMeldtSeg = true,
     )
 }
 

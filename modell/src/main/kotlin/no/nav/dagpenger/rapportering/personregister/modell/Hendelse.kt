@@ -89,6 +89,7 @@ data class MeldepliktHendelse(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
+    val harMeldtSeg: Boolean,
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
@@ -103,7 +104,7 @@ data class MeldepliktHendelse(
                     person.overtaArbeidssøkerBekreftelse()
                 } else {
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, fristBrutt = false) }
+                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, !harMeldtSeg) }
                 }
             }
     }
