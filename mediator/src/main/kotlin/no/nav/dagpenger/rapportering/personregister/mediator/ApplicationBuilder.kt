@@ -17,7 +17,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafka
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -29,14 +28,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldegrup
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
-import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -62,7 +59,6 @@ internal class ApplicationBuilder(
     private val actionTimer = ActionTimer(meterRegistry)
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val beslutningRepository = InMemoryArbeidssøkerBeslutningRepository()
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
@@ -90,11 +86,6 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvTopic,
         )
 
-    private val arbeissøkerBeslutningObserver: PersonObserver =
-        ArbeidssøkerBeslutningObserver(
-            beslutningRepository = beslutningRepository,
-        )
-
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserverKafka), actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
@@ -110,7 +101,7 @@ internal class ApplicationBuilder(
         PersonMediator(
             personRepository,
             arbeidssøkerMediator,
-            listOf(personObserverKafka, arbeissøkerBeslutningObserver),
+            listOf(personObserverKafka),
             actionTimer,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
