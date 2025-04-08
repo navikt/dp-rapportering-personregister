@@ -8,7 +8,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -36,13 +35,13 @@ import java.util.UUID
 class PersonMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
-    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personMediator: PersonMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
 
+    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private lateinit var beslutningObserver: BeslutningObserver
 
@@ -54,7 +53,7 @@ class PersonMediatorTest {
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
-        beslutningRepository = InMemoryArbeidssøkerBeslutningRepository()
+        beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
         beslutningObserver = BeslutningObserver(beslutningRepository)
         personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver, beslutningObserver), actionTimer)
     }
@@ -415,4 +414,16 @@ class BeslutningObserver(
 
         beslutningRepository.lagreBeslutning(beslutning)
     }
+}
+
+class ArbeidssøkerBeslutningRepositoryFaker : ArbeidssøkerBeslutningRepository {
+    private val beslutninger = mutableListOf<ArbeidssøkerBeslutning>()
+
+    override fun hentBeslutning(periodeId: String) = beslutninger.lastOrNull { it.periodeId.toString() == periodeId }
+
+    override fun lagreBeslutning(beslutning: ArbeidssøkerBeslutning) {
+        beslutninger.add(beslutning)
+    }
+
+    override fun hentBeslutninger(ident: String) = beslutninger.filter { it.ident == ident }
 }
