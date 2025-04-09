@@ -36,6 +36,7 @@ class MeldegruppeendringMottak(
                         "after.MELDEGRUPPEKODE",
                         "after.DATO_FRA",
                         "after.HENDELSE_ID",
+                        "after.MELDEGRUPPE_ID",
                     )
                 }
                 validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }

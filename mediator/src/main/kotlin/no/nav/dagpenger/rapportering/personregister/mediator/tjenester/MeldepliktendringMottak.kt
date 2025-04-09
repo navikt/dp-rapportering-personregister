@@ -28,7 +28,15 @@ class MeldepliktendringMottak(
             .apply {
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
                 validate { it.requireKey("after", "after.STATUS_AKTIV") }
-                validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
+                validate {
+                    it.requireKey(
+                        "after.FODSELSNR",
+                        "after.STATUS_MELDEPLIKT",
+                        "after.DATO_FRA",
+                        "after.HENDELSE_ID",
+                        "after.MELDEPLIKT_ID",
+                    )
+                }
                 validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }
                 validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
