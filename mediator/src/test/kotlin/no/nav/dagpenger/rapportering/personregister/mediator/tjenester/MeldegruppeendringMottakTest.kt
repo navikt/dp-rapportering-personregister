@@ -23,7 +23,7 @@ class MeldegruppeendringMottakTest {
 
     private val ident = "123456478901"
     private val hendelsesdato = LocalDateTime.now().format()
-    private val referanseId = "123"
+    private val hendelseId = "123"
     private val meldegruppeId = 1234567890
 
     @Test
@@ -39,7 +39,7 @@ class MeldegruppeendringMottakTest {
                 datoFra,
                 datoTil,
                 meldegruppeKode,
-                referanseId,
+                hendelseId,
                 meldegruppeId,
             ),
         )
@@ -50,7 +50,7 @@ class MeldegruppeendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
-                referanseId = referanseId,
+                referanseId = "MG$meldegruppeId",
                 harMeldtSeg = true,
             )
 
@@ -70,7 +70,7 @@ class MeldegruppeendringMottakTest {
                 datoFra,
                 datoTil,
                 meldegruppeKode,
-                referanseId,
+                hendelseId,
                 meldegruppeId,
             ),
         )
@@ -82,7 +82,7 @@ class MeldegruppeendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 meldegruppeKode = meldegruppeKode,
-                referanseId = referanseId,
+                referanseId = "MG$meldegruppeId",
                 harMeldtSeg = true,
             )
 
@@ -102,7 +102,7 @@ class MeldegruppeendringMottakTest {
                 datoFra,
                 datoTil,
                 meldegruppeKode,
-                referanseId,
+                hendelseId,
                 meldegruppeId,
             ),
         )
@@ -114,7 +114,7 @@ class MeldegruppeendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = datoTil.toLocalDateTime(),
                 meldegruppeKode = meldegruppeKode,
-                referanseId = referanseId,
+                referanseId = "MG$meldegruppeId",
                 harMeldtSeg = true,
             )
 
@@ -134,7 +134,7 @@ class MeldegruppeendringMottakTest {
                 datoFra,
                 datoTil,
                 meldegruppeKode,
-                referanseId,
+                hendelseId,
                 meldegruppeId,
             ),
         )
@@ -146,7 +146,7 @@ class MeldegruppeendringMottakTest {
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = datoTil.toLocalDateTime(),
                 meldegruppeKode = meldegruppeKode,
-                referanseId = referanseId,
+                referanseId = "MG$meldegruppeId",
                 harMeldtSeg = true,
             )
 
@@ -167,7 +167,7 @@ class MeldegruppeendringMottakTest {
                 datoFra,
                 datoTil,
                 meldegruppeKode,
-                referanseId,
+                hendelseId,
                 meldegruppeId,
                 statusAktiv,
             ),

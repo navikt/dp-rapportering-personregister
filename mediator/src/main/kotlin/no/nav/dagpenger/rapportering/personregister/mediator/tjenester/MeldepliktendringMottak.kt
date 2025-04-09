@@ -28,7 +28,15 @@ class MeldepliktendringMottak(
             .apply {
                 validate { it.requireValue("table", "ARENA_GOLDENGATE.MELDEPLIKT") }
                 validate { it.requireKey("after", "after.STATUS_AKTIV") }
-                validate { it.requireKey("after.FODSELSNR", "after.HENDELSE_ID", "after.DATO_FRA", "after.STATUS_MELDEPLIKT") }
+                validate {
+                    it.requireKey(
+                        "after.FODSELSNR",
+                        "after.STATUS_MELDEPLIKT",
+                        "after.DATO_FRA",
+                        "after.HENDELSE_ID",
+                        "after.MELDEPLIKT_ID",
+                    )
+                }
                 validate { it.interestedIn("after.DATO_TIL", "after.HAR_MELDT_SEG") }
                 validate { it.forbidValue("after.STATUS_AKTIV", "N") }
             }.register(this)
@@ -60,7 +68,7 @@ class MeldepliktendringMottak(
 
 private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     val ident: String = this["after"]["FODSELSNR"].asText()
-    val hendelseId = this["after"]["HENDELSE_ID"].asText()
+    val meldepliktId = "MP" + this["after"]["MELDEPLIKT_ID"].asText()
     val dato =
         if (this["after"]["HENDELSESDATO"].isMissingOrNull()) {
             LocalDateTime.now()
@@ -82,7 +90,7 @@ private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     return MeldepliktHendelse(
         ident = ident,
         dato = dato,
-        referanseId = hendelseId,
+        referanseId = meldepliktId,
         startDato = startDato,
         sluttDato = sluttDato,
         statusMeldeplikt = statusMeldeplikt,
