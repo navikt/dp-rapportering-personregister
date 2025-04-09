@@ -43,7 +43,7 @@ class MeldepliktendringMottakTest {
             MeldepliktHendelse(
                 ident = ident,
                 dato = hendelsesdato.toLocalDateTime(),
-                referanseId = hendelseId,
+                referanseId = "MP$meldepliktId",
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
@@ -73,7 +73,7 @@ class MeldepliktendringMottakTest {
             MeldepliktHendelse(
                 ident = ident,
                 dato = hendelsesdato.toLocalDateTime(),
-                referanseId = hendelseId,
+                referanseId = "MP$meldepliktId",
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = datoTil.toLocalDateTime(),
                 statusMeldeplikt = true,
@@ -101,7 +101,7 @@ class MeldepliktendringMottakTest {
             MeldepliktHendelse(
                 ident = ident,
                 dato = hendelsesdato.toLocalDateTime(),
-                referanseId = hendelseId,
+                referanseId = "MP$meldepliktId",
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,
@@ -130,7 +130,7 @@ class MeldepliktendringMottakTest {
             MeldepliktHendelse(
                 ident = ident,
                 dato = hendelsesdato.toLocalDateTime(),
-                referanseId = hendelseId,
+                referanseId = "MP$meldepliktId",
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = false,
@@ -160,7 +160,7 @@ class MeldepliktendringMottakTest {
             MeldepliktHendelse(
                 ident = ident,
                 dato = hendelsesdato.toLocalDateTime(),
-                referanseId = hendelseId,
+                referanseId = "MP$meldepliktId",
                 startDato = datoFra.toLocalDateTime(),
                 sluttDato = null,
                 statusMeldeplikt = true,

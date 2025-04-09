@@ -60,7 +60,7 @@ class MeldepliktendringMottak(
 
 private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     val ident: String = this["after"]["FODSELSNR"].asText()
-    val hendelseId = this["after"]["HENDELSE_ID"].asText()
+    val meldepliktId = "MP" + this["after"]["MELDEPLIKT_ID"].asText()
     val dato =
         if (this["after"]["HENDELSESDATO"].isMissingOrNull()) {
             LocalDateTime.now()
@@ -82,7 +82,7 @@ private fun JsonMessage.tilHendelse(): MeldepliktHendelse {
     return MeldepliktHendelse(
         ident = ident,
         dato = dato,
-        referanseId = hendelseId,
+        referanseId = meldepliktId,
         startDato = startDato,
         sluttDato = sluttDato,
         statusMeldeplikt = statusMeldeplikt,

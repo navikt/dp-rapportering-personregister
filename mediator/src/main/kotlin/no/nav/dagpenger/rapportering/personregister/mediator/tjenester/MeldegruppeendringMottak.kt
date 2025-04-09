@@ -97,7 +97,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         }
     val startDato = this["after"]["DATO_FRA"].asText().arenaDato()
     val sluttDato = if (this["after"]["DATO_TIL"].isMissingOrNull()) null else this["after"]["DATO_TIL"].asText().arenaDato()
-    val hendelseId = this["after"]["HENDELSE_ID"].asText()
+    val meldegruppeId = "MG" + this["after"]["MELDEGRUPPE_ID"].asText()
     val harMeldtSeg =
         if (this["after"]["HAR_MELDT_SEG"]?.isMissingOrNull() != false) {
             true
@@ -111,7 +111,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
             dato = dato,
             startDato = startDato,
             sluttDato = sluttDato,
-            referanseId = hendelseId,
+            referanseId = meldegruppeId,
             meldegruppeKode = meldegruppeKode,
             harMeldtSeg = harMeldtSeg,
         )
@@ -122,7 +122,7 @@ private fun JsonMessage.tilHendelse(): Hendelse {
         dato = dato,
         startDato = startDato,
         sluttDato = sluttDato,
-        referanseId = hendelseId,
+        referanseId = meldegruppeId,
         meldegruppeKode = meldegruppeKode,
         harMeldtSeg = harMeldtSeg,
     )
