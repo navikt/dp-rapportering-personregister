@@ -42,9 +42,6 @@ data class StartetArbeidssøkerperiodeHendelse(
                 if (person.oppfyllerKrav) {
                     person.overtaArbeidssøkerBekreftelse()
                 }
-                /* else {
-                    person.frasiArbeidssøkerBekreftelse(periodeId)
-                } */
             }
     }
 }
