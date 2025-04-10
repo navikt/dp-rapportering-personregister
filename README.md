@@ -77,7 +77,7 @@ Appen bruker OpenAPI for å definere og dokumentere API-et. OpenAPI-spesifikasjo
 
 ### Person
 
-Person-klassen representerer en bruker i DP-systemet og har ansvaret for å holde oversikt over dagpengerbrukernes status basert på innsendte søknader, arbeidssøkerstatus og vedtak i Arena.\
+Person-klassen representerer en bruker i DP-systemet og har ansvaret for å holde oversikt over dagpengerbrukernes status basert på innsendte søknader, arbeidssøkerstatus og vedtak i Arena.
 Klassen inneholder:
 - **ident:** personens fødselsnummer.
 - **statushistorikk:** en tidslinje med statusendringer (DAGPENGERBRUKER eller IKKE_DAGPENGERBRUKER).
@@ -91,7 +91,7 @@ Klassen inneholder:
 
 ### Arbeidssøkerperiode
 
-Arbeidssøkerperiode-klassen representerer en periode der en person er registrert som arbeidssøker.\
+Arbeidssøkerperiode-klassen representerer en periode der en person er registrert som arbeidssøker.
 Klassen inneholder:
 - **periodeId:** et unikt ID (UUID)
 - **ident:** personens fødselsnummer
@@ -101,10 +101,10 @@ Klassen inneholder:
 - **Metoder:** inkluderer funksjoner for å sjekke at en periode er aktiv (dvs. ikke avsluttet) og finne første aktiv periode
 
 Det finnes også to tilknyttede hendelsesklasser:
-- **StartetArbeidssøkerperiodeHendelse:** registrerer starten på en periode, oppdaterer personens status og overtar arbeidssøker bekreftelse.\
+- **StartetArbeidssøkerperiodeHendelse:** registrerer starten på en periode, oppdaterer personens status og overtar arbeidssøker bekreftelse.
 - **AvsluttetArbeidssøkerperiodeHendelse:** registrerer slutten på en periode, oppdaterer personens status og frasier seg arbeidssøker bekreftelse.
 
-Disse klassene utvider ArbeidssøkerperiodeHendelse-abstraktklassen som i sin tur implementerer Hendelse-grensesnitt.\
+Disse klassene utvider ArbeidssøkerperiodeHendelse-abstraktklassen som i sin tur implementerer Hendelse-grensesnitt.
 I tillegg til alle feltene i Hendelse-grensesnittet inneholder ArbeidssøkerperiodeHendelser:
 - **periodeId:** et unikt ID (UUID)
 - **startet:** starttidspunkt for perioden
@@ -112,7 +112,7 @@ I tillegg til alle feltene i Hendelse-grensesnittet inneholder Arbeidssøkerperi
 
 ### Hendelse
 
-Hendelse er et grensesnitt som definerer en felles kontrakt for ulike hendelsestyper knyttet til en person i systemet.\
+Hendelse er et grensesnitt som definerer en felles kontrakt for ulike hendelsestyper knyttet til en person i systemet.
 Den inneholder:
 - **ident:** hvilken person hendelsen gjelder (fødselsnummer)
 - **dato:** når hendelsen skjedde
