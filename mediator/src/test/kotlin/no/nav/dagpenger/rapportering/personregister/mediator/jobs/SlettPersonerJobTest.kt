@@ -71,7 +71,7 @@ class SlettPersonerJobTest : ApiTestSetup() {
                             sluttDato = nå.minusDays(61),
                             statusMeldeplikt = true,
                             harMeldtSeg = true,
-                        )
+                        ),
                     )
                 }
 
