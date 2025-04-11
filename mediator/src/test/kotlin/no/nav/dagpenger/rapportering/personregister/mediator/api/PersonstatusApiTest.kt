@@ -25,6 +25,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
@@ -47,7 +49,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                     ArbeidssøkerperiodeResponse(
                         UUID.randomUUID(),
                         MetadataResponse(
-                            LocalDateTime.now(),
+                            OffsetDateTime.now(ZoneOffset.UTC),
                             BrukerResponse("", ""),
                             "Arena",
                             "Årsak",

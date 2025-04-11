@@ -7,7 +7,8 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import kotlin.random.Random
 
@@ -134,7 +135,7 @@ fun arbeidssøkerResponse(
                 periodeId = periodeId,
                 startet =
                     MetadataResponse(
-                        tidspunkt = LocalDateTime.now().minusWeeks(3),
+                        tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3),
                         utfoertAv =
                             BrukerResponse(
                                 type = "SLUTTBRUKER",
@@ -147,7 +148,7 @@ fun arbeidssøkerResponse(
                 avsluttet =
                     if (inkluderAvsluttet) {
                         MetadataResponse(
-                            tidspunkt = LocalDateTime.now().minusDays(2),
+                            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(2),
                             utfoertAv =
                                 BrukerResponse(
                                     type = "SYSTEM",

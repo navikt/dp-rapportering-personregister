@@ -3,7 +3,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator.utils
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 fun arbeidssøkerResponse(
@@ -13,7 +14,7 @@ fun arbeidssøkerResponse(
     periodeId = periodeId,
     startet =
         MetadataResponse(
-            tidspunkt = LocalDateTime.now().minusWeeks(3),
+            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3),
             utfoertAv =
                 BrukerResponse(
                     type = "SLUTTBRUKER",
@@ -26,7 +27,7 @@ fun arbeidssøkerResponse(
     avsluttet =
         if (inkluderAvsluttet) {
             MetadataResponse(
-                tidspunkt = LocalDateTime.now().minusDays(2),
+                tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(2),
                 utfoertAv =
                     BrukerResponse(
                         type = "SYSTEM",
