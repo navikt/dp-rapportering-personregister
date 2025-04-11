@@ -18,7 +18,10 @@ import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon
+import java.time.ZoneId
 import java.util.UUID
+
+val ZONE_ID: ZoneId = ZoneId.of("Europe/Oslo")
 
 internal object Configuration {
     const val APP_NAME = "dp-rapportering-personregister"

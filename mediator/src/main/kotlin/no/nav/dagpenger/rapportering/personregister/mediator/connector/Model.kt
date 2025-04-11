@@ -1,6 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class ArbeidssøkerperiodeRequestBody(
@@ -22,7 +22,7 @@ data class ArbeidssøkerperiodeResponse(
 )
 
 data class MetadataResponse(
-    val tidspunkt: LocalDateTime,
+    val tidspunkt: OffsetDateTime,
     val utfoertAv: BrukerResponse,
     val kilde: String,
     val aarsak: String,
@@ -35,6 +35,6 @@ data class BrukerResponse(
 )
 
 data class TidspunktFraKildeResponse(
-    val tidspunkt: LocalDateTime,
+    val tidspunkt: OffsetDateTime,
     val avviksType: String,
 )
