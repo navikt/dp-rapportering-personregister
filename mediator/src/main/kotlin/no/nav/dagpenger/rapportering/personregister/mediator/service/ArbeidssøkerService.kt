@@ -11,8 +11,16 @@ class ArbeidssøkerService(
         arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
             Arbeidssøkerperiode(
                 periodeId = it.periodeId,
-                startet = it.startet.tidspunkt.atZoneSameInstant(ZONE_ID).toLocalDateTime(),
-                avsluttet = it.avsluttet?.tidspunkt?.atZoneSameInstant(ZONE_ID)?.toLocalDateTime(),
+                startet =
+                    it.startet
+                        .tidspunkt
+                        .atZoneSameInstant(ZONE_ID)
+                        .toLocalDateTime(),
+                avsluttet =
+                    it.avsluttet
+                        ?.tidspunkt
+                        ?.atZoneSameInstant(ZONE_ID)
+                        ?.toLocalDateTime(),
                 ident = ident,
                 overtattBekreftelse = null,
             )

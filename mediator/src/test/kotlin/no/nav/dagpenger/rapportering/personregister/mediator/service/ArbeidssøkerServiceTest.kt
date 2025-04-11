@@ -24,7 +24,12 @@ class ArbeidssøkerServiceTest {
 
         val periode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
 
-        val startetUTC = periode?.startet?.atZone(ZONE_ID)?.withZoneSameInstant(ZoneId.of("UTC"))?.toOffsetDateTime()
+        val startetUTC =
+            periode
+                ?.startet
+                ?.atZone(ZONE_ID)
+                ?.withZoneSameInstant(ZoneId.of("UTC"))
+                ?.toOffsetDateTime()
 
         response.periodeId shouldBe periode?.periodeId
         response.startet.tidspunkt shouldBe startetUTC
