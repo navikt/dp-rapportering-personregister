@@ -63,11 +63,15 @@ class SlettPersonerJobTest : ApiTestSetup() {
             val person4 =
                 Person(ident = ident4).apply {
                     behandle(
-                        StartetArbeidssøkerperiodeHendelse(
-                            periodeId = UUID.randomUUID(),
-                            ident = ident4,
-                            startet = nå.minusDays(61),
-                        ),
+                        MeldepliktHendelse(
+                            ident = ident2,
+                            referanseId = "222",
+                            dato = nå.minusDays(61),
+                            startDato = nå.minusDays(61),
+                            sluttDato = nå.minusDays(61),
+                            statusMeldeplikt = true,
+                            harMeldtSeg = true,
+                        )
                     )
                 }
 
