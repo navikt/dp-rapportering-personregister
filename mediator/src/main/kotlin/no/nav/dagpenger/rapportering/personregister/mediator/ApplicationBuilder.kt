@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafka
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -64,6 +65,7 @@ internal class ApplicationBuilder(
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
+    private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
@@ -117,6 +119,7 @@ internal class ApplicationBuilder(
             personRepository,
             arbeidssøkerMediator,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            meldepliktConnector,
             actionTimer,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)

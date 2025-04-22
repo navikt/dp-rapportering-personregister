@@ -15,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediat
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+    val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -107,7 +109,8 @@ open class ApiTestSetup {
                     arbeidssøkerMottak,
                 )
 
-            val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)
+            val personMediator =
+                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktConnector, actionTimer)
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)

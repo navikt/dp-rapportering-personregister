@@ -50,6 +50,10 @@ internal object Configuration {
         properties[Key("ARBEIDSSOKERREGISTER_RECORD_KEY_HOST", stringType)].formatUrl()
     }
 
+    val meldepliktAdatperUrl by lazy {
+        properties[Key("MELDEPLIKT_ADAPTER_HOST", stringType)].formatUrl()
+    }
+
     private val azureAdConfig by lazy { AzureAd(properties) }
     private val azureAdClient by lazy {
         CachedOauth2Client(
@@ -71,6 +75,15 @@ internal object Configuration {
             runBlocking {
                 azureAdClient
                     .clientCredentials(properties[Key("ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE", stringType)])
+                    .access_token ?: throw RuntimeException("Failed to get token")
+            }
+        }
+    }
+    val meldepliktAdapterTokenProvider: () -> String by lazy {
+        {
+            runBlocking {
+                azureAdClient
+                    .clientCredentials(properties[Key("MELDEPLIKT_ADAPTER_SCOPE", stringType)])
                     .access_token ?: throw RuntimeException("Failed to get token")
             }
         }

@@ -74,6 +74,7 @@ spec:
       external:
         - host: dagpenger-unleash-api.nav.cloud.nais.io
       rules:
+        - application: dp-arena-meldeplikt-adapter
         - application: paw-arbeidssoekerregisteret-api-oppslag
           namespace: paw
           cluster: {{ cluster }}
@@ -95,6 +96,10 @@ spec:
       value: {{ ARBEIDSSOKERPERIODER_TOPIC }}
     - name: BEKREFTELSE_PAA_VEGNE_AV_TOPIC
       value: {{ BEKREFTELSE_PAA_VEGNE_AV_TOPIC }}
+    - name: MELDEPLIKT_ADAPTER_HOST
+      value: {{ MELDEPLIKT_ADAPTER_HOST }}
+    - name: MELDEPLIKT_ADAPTER_SCOPE
+      value: {{ MELDEPLIKT_ADAPTER_SCOPE }}
     - name: KAFKA_EXTRA_TOPIC
       value: {{ KAFKA_EXTRA_TOPIC }}
     - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner

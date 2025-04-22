@@ -3,10 +3,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
@@ -40,6 +43,7 @@ class PersonMediatorTest {
     private lateinit var personMediator: PersonMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
+    private lateinit var meldepliktConnector: MeldepliktConnector
 
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
@@ -50,12 +54,20 @@ class PersonMediatorTest {
         rapidsConnection = TestRapid()
         personRepository = InMemoryPersonRepository()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+        meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
         beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
         beslutningObserver = BeslutningObserver(beslutningRepository)
-        personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver, beslutningObserver), actionTimer)
+        personMediator =
+            PersonMediator(
+                personRepository,
+                arbeidssøkerMediator,
+                listOf(personObserver, beslutningObserver),
+                meldepliktConnector,
+                actionTimer,
+            )
     }
 
     private val ident = "12345678910"
@@ -98,11 +110,11 @@ class PersonMediatorTest {
     inner class Meldegruppeendring {
         @Test
         fun `meldegruppendring for ny person`() {
-            personMediator.behandle(dagpengerMeldegruppeHendelse())
-            personRepository.hentPerson(ident) shouldBe null
-
             personMediator.behandle(annenMeldegruppeHendelse())
             personRepository.hentPerson(ident) shouldBe null
+
+            personMediator.behandle(dagpengerMeldegruppeHendelse())
+            personRepository.hentPerson(ident) shouldNotBe null
         }
 
         @Test
@@ -151,6 +163,21 @@ class PersonMediatorTest {
                 personMediator.behandle(dagpengerMeldegruppeHendelse(sluttDato = LocalDateTime.now().minusDays(1)))
                 status shouldBe DAGPENGERBRUKER
                 hendelser.size shouldBe 2
+            }
+        }
+
+        @Test
+        fun `dagpengerMeldegruppeHendelse for person som ikke eksisterer oppretter person og henter meldeplikt`() {
+            testPerson {
+                coEvery { meldepliktConnector.hentMeldeplikt(ident) } returns true
+                personMediator.behandle(dagpengerMeldegruppeHendelse())
+                with(personRepository.hentPerson(ident)) {
+                    this shouldNotBe null
+                    this?.meldegruppe shouldBe "DAGP"
+                    this?.meldeplikt shouldBe true
+                }
+
+                coVerify(exactly = 1) { meldepliktConnector.hentMeldeplikt(ident) }
             }
         }
     }

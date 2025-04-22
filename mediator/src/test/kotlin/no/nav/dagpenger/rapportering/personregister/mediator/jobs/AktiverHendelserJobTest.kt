@@ -25,7 +25,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
-    private val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)
+    private val personMediator =
+        PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktConnector, actionTimer)
 
     private val ident = "12345678910"
 
