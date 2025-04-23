@@ -12,9 +12,9 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
@@ -27,9 +27,9 @@ private val logger = KotlinLogging.logger {}
 
 internal fun Application.personstatusApi(
     personRepository: PersonRepository,
-    arbeidssøkerMediator: ArbeidssøkerMediator,
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
+    meldepliktConnector: MeldepliktConnector,
 ) {
     routing {
         authenticate("tokenX") {
@@ -74,6 +74,11 @@ internal fun Application.personstatusApi(
                         ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
                 }
             }
+        }
+        post {
+            val rawText = call.receiveText()
+
+            meldepliktConnector.hentMeldeplikt(rawText)
         }
     }
 }

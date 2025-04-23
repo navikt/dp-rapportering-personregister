@@ -141,7 +141,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, arbeidssøkerMediator, personMediator, synkroniserPersonMetrikker)
+                    personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)

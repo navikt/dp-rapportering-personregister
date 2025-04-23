@@ -108,6 +108,7 @@ open class ApiTestSetup {
                     "ARBEIDSSOKERPERIODER_TOPIC",
                     arbeidssøkerMottak,
                 )
+            val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
             val personMediator =
                 PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktConnector, actionTimer)
@@ -115,7 +116,7 @@ open class ApiTestSetup {
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerMediator, personMediator, synkroniserPersonMetrikker)
+                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
             }
 
             block()
