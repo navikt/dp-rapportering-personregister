@@ -14,3 +14,5 @@ Content-Type: application/json
 
 ### Personstatus
 GET https://dp-rapportering-personregister.intern.dev.nav.no/isAlive
+
+POST https://dp-rapportering-personregister.intern.dev.nav.no/

@@ -10,6 +10,8 @@ import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -65,5 +67,29 @@ suspend fun sendPostRequest(
                 }
         }
     actionTimer.httpTimer(metrikkNavn, response.status, HttpMethod.Post, tidBrukt.inWholeSeconds)
+    return response
+}
+
+suspend fun sendGetRequest(
+    httpClient: HttpClient,
+    endpointUrl: String,
+    token: String,
+    metrikkNavn: String,
+    parameters: Map<String, Any> = emptyMap(),
+    headers: Map<String, Any> = emptyMap(),
+    actionTimer: ActionTimer,
+): HttpResponse {
+    val response: HttpResponse
+    val tidBrukt =
+        measureTime {
+            response =
+                httpClient.get(URI(endpointUrl).toURL()) {
+                    bearerAuth(token)
+                    contentType(Application.Json)
+                    parameters.forEach { (key, value) -> parameter(key, value) }
+                    headers.forEach { (key, value) -> header(key, value) }
+                }
+        }
+    actionTimer.httpTimer(metrikkNavn, response.status, HttpMethod.Get, tidBrukt.inWholeSeconds)
     return response
 }

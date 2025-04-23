@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.headers
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
@@ -18,12 +19,12 @@ class MeldepliktConnector(
     suspend fun hentMeldeplikt(ident: String): Boolean =
         withContext(Dispatchers.IO) {
             val result =
-                sendPostRequest(
+                sendGetRequest(
                     httpClient = httpClient,
                     endpointUrl = "$meldepliktAdapterUrl/hardpmeldeplikt",
                     token = meldepliktAdapterTokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "meldepliktadapter_hentMeldeplikt",
-                    body = MeldepliktRequestBody(ident),
+                    headers = mapOf("ident" to ident),
                     actionTimer = actionTimer,
                 ).also {
                     logger.info { "Kall til adapter for å hente meldeplikt ga status ${it.status}" }
