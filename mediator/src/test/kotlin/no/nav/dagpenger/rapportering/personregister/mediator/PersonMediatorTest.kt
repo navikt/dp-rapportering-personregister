@@ -43,6 +43,7 @@ class PersonMediatorTest {
     private lateinit var personMediator: PersonMediator
     private lateinit var arbeidssøkerService: ArbeidssøkerService
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
+    private lateinit var meldepliktMediator: MeldepliktMediator
     private lateinit var meldepliktConnector: MeldepliktConnector
 
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
@@ -54,18 +55,25 @@ class PersonMediatorTest {
         rapidsConnection = TestRapid()
         personRepository = InMemoryPersonRepository()
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
-        meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
         arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
         beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
         beslutningObserver = BeslutningObserver(beslutningRepository)
+        meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+        meldepliktMediator =
+            MeldepliktMediator(
+                personRepository,
+                listOf(personObserver, beslutningObserver),
+                meldepliktConnector,
+                actionTimer,
+            )
         personMediator =
             PersonMediator(
                 personRepository,
                 arbeidssøkerMediator,
                 listOf(personObserver, beslutningObserver),
-                meldepliktConnector,
+                meldepliktMediator,
                 actionTimer,
             )
     }
@@ -132,7 +140,7 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -148,7 +156,7 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppendring for tidligere periode tas ikke høyde for`() {
             arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -183,71 +191,11 @@ class PersonMediatorTest {
     }
 
     @Nested
-    inner class Meldingsplikt {
-        @Test
-        fun `meldepliktendring for ny person`() {
-            personMediator.behandle(meldepliktHendelse())
-            personRepository.hentPerson(ident) shouldBe null
-        }
-
-        @Test
-        fun `meldepliktendring for eksisterende person som ikke oppfyller krav`() {
-            arbeidssøker {
-                personMediator.behandle(meldepliktHendelse(status = false))
-                status shouldBe IKKE_DAGPENGERBRUKER
-                personObserver skalIkkeHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `meldepliktendring for eksisterende person som oppfyller krav`() {
-            arbeidssøker {
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-                personMediator.behandle(meldepliktHendelse(status = true))
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
-        fun `oppdaterer ikke statushistorikk dersom bruker får samme status`() {
-            arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
-                statusHistorikk.getAll() shouldHaveSize 1
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-                statusHistorikk.getAll() shouldHaveSize 2
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-                status shouldBe DAGPENGERBRUKER
-                statusHistorikk.getAll() shouldHaveSize 2
-            }
-        }
-
-        @Test
-        fun `meldeplikthendelse for tidligere periode tas ikke høyde for`() {
-            arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-                status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                personObserver skalHaSendtOvertakelseFor this
-                hendelser.size shouldBe 2
-
-                personMediator.behandle(meldepliktHendelse(sluttDato = LocalDateTime.now().minusDays(1), status = false))
-                status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-                hendelser.size shouldBe 2
-            }
-        }
-    }
-
-    @Nested
     inner class ArbeidssøkerBekreftelse {
         @Test
         fun `overtar arbeidssøker bekreftelse når man blir dagpengerbruker`() {
             arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(annenMeldegruppeHendelse())
 
                 statusHistorikk.put(tidligere, IKKE_DAGPENGERBRUKER)
@@ -265,7 +213,7 @@ class PersonMediatorTest {
         @Test
         fun `sender ikke overtakelsesmelding dersom vi allerede har overtatt arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(annenMeldegruppeHendelse())
                 personRepository.oppdaterPerson(this)
 
@@ -281,7 +229,7 @@ class PersonMediatorTest {
         @Test
         fun `frasier arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 personRepository.oppdaterPerson(this)
@@ -301,7 +249,7 @@ class PersonMediatorTest {
         @Test
         fun `lagrer beslutning ved overtakelse av arbeidssøkerbekreftelse`() {
             arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
@@ -317,7 +265,7 @@ class PersonMediatorTest {
         @Test
         fun `lagrer beslutning ved frasigelse av arbeidssøkerbekreftelse`() {
             arbeidssøker {
-                personMediator.behandle(meldepliktHendelse())
+                meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1

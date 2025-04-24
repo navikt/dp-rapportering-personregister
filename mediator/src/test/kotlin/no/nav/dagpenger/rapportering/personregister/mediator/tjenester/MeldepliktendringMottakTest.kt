@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import org.junit.jupiter.api.Test
@@ -13,7 +13,7 @@ import java.time.format.DateTimeFormatter
 
 class MeldepliktendringMottakTest {
     private val testRapid = TestRapid()
-    private val personMediator = mockk<PersonMediator>(relaxed = true)
+    private val meldepliktMediator = mockk<MeldepliktMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     private val ident = "123456478901"
@@ -22,7 +22,7 @@ class MeldepliktendringMottakTest {
     private val meldepliktId = 1234567890
 
     init {
-        MeldepliktendringMottak(testRapid, personMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
+        MeldepliktendringMottak(testRapid, meldepliktMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
     }
 
     @Test
@@ -50,7 +50,7 @@ class MeldepliktendringMottakTest {
                 harMeldtSeg = true,
             )
 
-        verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
+        verify(exactly = 1) { meldepliktMediator.behandle(forventetHendelse) }
     }
 
     @Test
@@ -80,7 +80,7 @@ class MeldepliktendringMottakTest {
                 harMeldtSeg = true,
             )
 
-        verify(exactly = 1) { personMediator.behandle(forventetHendelse) }
+        verify(exactly = 1) { meldepliktMediator.behandle(forventetHendelse) }
     }
 
     @Test

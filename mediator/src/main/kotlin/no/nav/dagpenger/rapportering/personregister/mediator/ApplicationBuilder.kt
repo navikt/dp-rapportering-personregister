@@ -105,7 +105,25 @@ internal class ApplicationBuilder(
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             actionTimer,
         )
+    private val meldepliktMediator =
+        MeldepliktMediator(
+            personRepository,
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            meldepliktConnector,
+            actionTimer,
+        )
+    private val personMediator =
+        PersonMediator(
+            personRepository,
+            arbeidssøkerMediator,
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            meldepliktMediator,
+            actionTimer,
+        )
+    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+    private val aktiverHendelserJob = AktiverHendelserJob()
+    private val slettPersonerJob = SlettPersonerJob()
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvProdusent,
@@ -113,18 +131,6 @@ internal class ApplicationBuilder(
             arbeidssøkerperioderTopic,
             arbeidssøkerMottak,
         )
-
-    private val personMediator =
-        PersonMediator(
-            personRepository,
-            arbeidssøkerMediator,
-            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
-            meldepliktConnector,
-            actionTimer,
-        )
-    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
-    private val aktiverHendelserJob = AktiverHendelserJob()
-    private val slettPersonerJob = SlettPersonerJob()
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -146,7 +152,7 @@ internal class ApplicationBuilder(
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)
                 MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
-                MeldepliktendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
+                MeldepliktendringMottak(rapid, meldepliktMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
             }
 
     init {
@@ -160,7 +166,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator)
+        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
     }
 }

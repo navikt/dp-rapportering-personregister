@@ -13,6 +13,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -97,6 +98,7 @@ open class ApiTestSetup {
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
             val personObserver = mockk<PersonObserver>(relaxed = true)
+            val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
@@ -111,7 +113,7 @@ open class ApiTestSetup {
             val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
             val personMediator =
-                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktConnector, actionTimer)
+                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)

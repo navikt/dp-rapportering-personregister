@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.ktor.client.HttpClient
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
@@ -29,6 +30,7 @@ internal class AktiverHendelserJob(
     internal fun start(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
+        meldepliktMediator: MeldepliktMediator,
     ) {
         logger.info { "Tidspunkt for neste kjøring AktiverHendelserJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
@@ -43,7 +45,7 @@ internal class AktiverHendelserJob(
                         var antallHendelser: Int
                         val tidBrukt =
                             measureTime {
-                                antallHendelser = aktivererHendelser(personRepository, personMediator)
+                                antallHendelser = aktivererHendelser(personRepository, personMediator, meldepliktMediator)
                             }
                         logger.info {
                             "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
@@ -62,13 +64,14 @@ internal class AktiverHendelserJob(
     fun aktivererHendelser(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
+        meldepliktMediator: MeldepliktMediator,
     ): Int {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
         hendelser.forEach {
             when (it) {
                 is DagpengerMeldegruppeHendelse -> personMediator.behandle(it)
                 is AnnenMeldegruppeHendelse -> personMediator.behandle(it)
-                is MeldepliktHendelse -> personMediator.behandle(it)
+                is MeldepliktHendelse -> meldepliktMediator.behandle(it)
                 else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
             }
             personRepository.slettFremtidigHendelse(it.referanseId)

@@ -1,27 +1,23 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtaArbeidssøkerBekreftelse
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PersonMediator(
     private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val personObservers: List<PersonObserver>,
-    private val meldepliktConnector: MeldepliktConnector,
+    private val meldepliktMediator: MeldepliktMediator,
     private val actionTimer: ActionTimer,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) =
@@ -41,8 +37,12 @@ class PersonMediator(
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info("DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
             } else {
-                behandleHendelse(hendelse)
-                hentMeldeplikt(hendelse.ident)
+                hentEllerOpprettPerson(hendelse.ident)
+                    .also { person ->
+                        person.behandle(hendelse)
+                        personRepository.oppdaterPerson(person)
+                        meldepliktMediator.behandle(hendelse.ident)
+                    }
             }
         }
 
@@ -51,16 +51,6 @@ class PersonMediator(
             logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info("AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
-            } else {
-                behandleHendelse(hendelse)
-            }
-        }
-
-    fun behandle(hendelse: MeldepliktHendelse) =
-        actionTimer.timedAction("behandle_MeldepliktHendelse") {
-            logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId}" }
-            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
-                logger.info("MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
             } else {
                 behandleHendelse(hendelse)
             }
@@ -79,20 +69,16 @@ class PersonMediator(
 
     private fun behandleHendelse(hendelse: Hendelse) {
         try {
-            if (hendelse is DagpengerMeldegruppeHendelse) {
-                // Om hendelsen gjelder meldegruppe opprettes personen om den ikke finnes
-                hentEllerOpprettPerson(hendelse.ident)
-            } else {
-                personRepository
-                    .hentPerson(hendelse.ident)
-            }?.let { person ->
-                if (person.observers.isEmpty()) {
-                    personObservers.forEach { person.addObserver(it) }
+            personRepository
+                .hentPerson(hendelse.ident)
+                ?.let { person ->
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
+                    }
+                    person.behandle(hendelse)
+                    personRepository.oppdaterPerson(person)
+                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
-                person.behandle(hendelse)
-                personRepository.oppdaterPerson(person)
-                logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
-            }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
         }
@@ -107,29 +93,6 @@ class PersonMediator(
                 }
                 person.overtaArbeidssøkerBekreftelse()
                 personRepository.oppdaterPerson(person)
-            }
-    }
-
-    private fun hentMeldeplikt(ident: String) {
-        personRepository
-            .hentPerson(ident)
-            ?.let { person ->
-                if (person.meldeplikt == false) {
-                    val meldeplikt = runBlocking { meldepliktConnector.hentMeldeplikt(ident) }
-                    if (person.meldeplikt != meldeplikt) {
-                        MeldepliktHendelse(
-                            ident = ident,
-                            referanseId = UUID.randomUUID().toString(),
-                            dato = LocalDateTime.now(),
-                            startDato = LocalDateTime.now(),
-                            sluttDato = null,
-                            statusMeldeplikt = meldeplikt,
-                            harMeldtSeg = true,
-                        ).also { hendelse ->
-                            behandleHendelse(hendelse)
-                        }
-                    }
-                }
             }
     }
 
