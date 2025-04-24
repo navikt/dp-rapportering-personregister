@@ -241,6 +241,26 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
+    fun `kan oppdatere arbeidssøkerperiode med avsluttet-dato`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val nyPeriode = person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå)
+            person.arbeidssøkerperioder.add(nyPeriode)
+            personRepository.oppdaterPerson(person)
+
+            personRepository.hentPerson(ident)?.apply {
+                arbeidssøkerperioder shouldHaveSize 1
+                arbeidssøkerperioder.first().avsluttet shouldBe nå
+            }
+        }
+
+    @Test
     fun `lagre arbeidssøkerperiode og oppdatere person oppdaterer ikke sist_endret timestamp`() {
         withMigratedDb {
             val person =
