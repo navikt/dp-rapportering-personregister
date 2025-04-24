@@ -75,10 +75,13 @@ internal fun Application.personstatusApi(
                 }
             }
         }
-        post {
-            val rawText = call.receiveText()
+        // Test-endepunkt. Fjernes før merge
+        route("/hentMeldeplikt") {
+            post {
+                val rawText = call.receiveText()
 
-            meldepliktConnector.hentMeldeplikt(rawText)
+                meldepliktConnector.hentMeldeplikt(rawText)
+            }
         }
     }
 }
