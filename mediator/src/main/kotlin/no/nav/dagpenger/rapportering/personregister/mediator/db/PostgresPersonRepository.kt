@@ -250,7 +250,7 @@ class PostgresPersonRepository(
             )
         }
 
-    override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> {
+    override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -264,7 +264,6 @@ class PostgresPersonRepository(
                     .asList,
             )
         }
-    }
 
     override fun hentPersonerSomKanSlettes(): List<String> =
         using(sessionOf(dataSource)) { session ->
