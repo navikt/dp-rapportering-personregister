@@ -75,13 +75,5 @@ internal fun Application.personstatusApi(
                 }
             }
         }
-        route("/sync") {
-            post {
-                logger.info { "POST /sync" }
-                personRepository
-                    .hentPersonerMedDagpenger()
-                    .forEach { ident -> personMediator.overtaBekreftelse(ident) }
-            }
-        }
     }
 }
