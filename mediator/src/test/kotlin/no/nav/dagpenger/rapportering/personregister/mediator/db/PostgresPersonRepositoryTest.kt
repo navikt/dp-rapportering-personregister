@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.date.after
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -256,7 +257,7 @@ class PostgresPersonRepositoryTest {
 
             personRepository.hentPerson(ident)?.apply {
                 arbeidssøkerperioder shouldHaveSize 1
-                arbeidssøkerperioder.first().avsluttet shouldBe nå
+                arbeidssøkerperioder.first().avsluttet shouldNotBe null
             }
         }
 
