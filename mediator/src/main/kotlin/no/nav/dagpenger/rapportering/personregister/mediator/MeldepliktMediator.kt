@@ -52,7 +52,7 @@ class MeldepliktMediator(
                         }
                     }
             } catch (e: Exception) {
-                logger.error(e) { "Feil ved henting av meldeplikt for ident: $ident" }
+                logger.error(e) { "Feil ved henting av meldeplikt for ident" }
             }
         }
     }
