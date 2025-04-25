@@ -75,5 +75,20 @@ internal fun Application.personstatusApi(
                 }
             }
         }
+        route("/sync") {
+            post {
+                logger.info { "POST /personstatus" }
+                val personerUtenArbeidssøkerperiode = personRepository.hentPersonerMedDagpengerUtenArbeidssokerperiode()
+                personerUtenArbeidssøkerperiode.forEach { ident -> arbeidssøkerMediator.behandle(ident) }
+
+                val personerSomIkkeErOvertatt = personRepository.hentPersonerMedDagpenger()
+                personerSomIkkeErOvertatt.forEach { ident -> personMediator.overtaBekreftelse(ident) }
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    """{"personerUtenArbeidssøkerperiode": $personerUtenArbeidssøkerperiode, "personerSomIkkeErOvertatt": $personerSomIkkeErOvertatt}""",
+                )
+            }
+        }
     }
 }
