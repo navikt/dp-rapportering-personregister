@@ -6,7 +6,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
@@ -18,6 +17,7 @@ class PersonMediator(
     private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val personObservers: List<PersonObserver>,
+    private val meldepliktMediator: MeldepliktMediator,
     private val actionTimer: ActionTimer,
 ) {
     fun behandle(søknadHendelse: SøknadHendelse) =
@@ -37,7 +37,12 @@ class PersonMediator(
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info("DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
             } else {
-                behandleHendelse(hendelse)
+                hentEllerOpprettPerson(hendelse.ident)
+                    .also { person ->
+                        person.behandle(hendelse)
+                        personRepository.oppdaterPerson(person)
+                        meldepliktMediator.behandle(hendelse.ident)
+                    }
             }
         }
 
@@ -46,16 +51,6 @@ class PersonMediator(
             logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info("AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
-            } else {
-                behandleHendelse(hendelse)
-            }
-        }
-
-    fun behandle(hendelse: MeldepliktHendelse) =
-        actionTimer.timedAction("behandle_MeldepliktHendelse") {
-            logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId}" }
-            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
-                logger.info("MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
             } else {
                 behandleHendelse(hendelse)
             }

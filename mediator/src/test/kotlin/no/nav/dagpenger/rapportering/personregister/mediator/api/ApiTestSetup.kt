@@ -13,8 +13,10 @@ import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -36,6 +38,7 @@ import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+    val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -95,6 +98,7 @@ open class ApiTestSetup {
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
             val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
             val personObserver = mockk<PersonObserver>(relaxed = true)
+            val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
@@ -106,13 +110,15 @@ open class ApiTestSetup {
                     "ARBEIDSSOKERPERIODER_TOPIC",
                     arbeidssøkerMottak,
                 )
+            val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
-            val personMediator = PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), actionTimer)
+            val personMediator =
+                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, arbeidssøkerMediator, personMediator, synkroniserPersonMetrikker)
+                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
             }
 
             block()

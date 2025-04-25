@@ -2,24 +2,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType.Application
-import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
-import java.net.URI
-import kotlin.time.measureTime
 
 class ArbeidssøkerConnector(
     private val arbeidssøkerregisterOppslagUrl: String = Configuration.arbeidssokerregisterOppslagUrl,
@@ -38,6 +27,8 @@ class ArbeidssøkerConnector(
                     metrikkNavn = "arbeidssokerregister_hentSisteArbeidssokerperiode",
                     body = ArbeidssøkerperiodeRequestBody(ident),
                     parameters = mapOf("siste" to true),
+                    httpClient = httpClient,
+                    actionTimer = actionTimer,
                 ).also {
                     logger.info {
                         "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for ident ga status ${it.status}"
@@ -61,6 +52,8 @@ class ArbeidssøkerConnector(
                     token = recordKeyTokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "arbeidssokerregister_hentRecordKey",
                     body = RecordKeyRequestBody(ident),
+                    httpClient = httpClient,
+                    actionTimer = actionTimer,
                 ).also {
                     logger.info {
                         "Kall til arbeidssøkerregister for å hente record key for ident ga status ${it.status}"
@@ -76,28 +69,6 @@ class ArbeidssøkerConnector(
             }
             result.body()
         }
-
-    private suspend fun sendPostRequest(
-        endpointUrl: String,
-        token: String,
-        metrikkNavn: String,
-        body: Any?,
-        parameters: Map<String, Any> = emptyMap(),
-    ): HttpResponse {
-        val response: HttpResponse
-        val tidBrukt =
-            measureTime {
-                response =
-                    httpClient.post(URI(endpointUrl).toURL()) {
-                        bearerAuth(token)
-                        contentType(Application.Json)
-                        setBody(defaultObjectMapper.writeValueAsString(body))
-                        parameters.forEach { (key, value) -> parameter(key, value) }
-                    }
-            }
-        actionTimer.httpTimer(metrikkNavn, response.status, HttpMethod.Post, tidBrukt.inWholeSeconds)
-        return response
-    }
 
     companion object {
         private val logger = KotlinLogging.logger {}
