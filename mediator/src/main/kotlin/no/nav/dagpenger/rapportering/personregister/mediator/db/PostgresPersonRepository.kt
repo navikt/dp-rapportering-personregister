@@ -243,7 +243,22 @@ class PostgresPersonRepository(
                     """
                     SELECT ident FROM person p 
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
-                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse = false and arbs.avsluttet is null
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse IS NOT true AND arbs.avsluttet IS null
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
+    override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT p.ident
+                    FROM person p
+                    LEFT JOIN arbeidssoker arbs ON p.id = arbs.person_id
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.person_id IS NULL;
                     """.trimIndent(),
                 ).map { it.string("ident") }
                     .asList,

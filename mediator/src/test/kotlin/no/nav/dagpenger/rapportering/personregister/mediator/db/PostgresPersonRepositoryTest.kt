@@ -4,6 +4,7 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.date.after
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -239,6 +240,26 @@ class PostgresPersonRepositoryTest {
                 }
         }
     }
+
+    @Test
+    fun `kan oppdatere arbeidssøkerperiode med avsluttet-dato`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val nyPeriode = person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå)
+            person.arbeidssøkerperioder.add(nyPeriode)
+            personRepository.oppdaterPerson(person)
+
+            personRepository.hentPerson(ident)?.apply {
+                arbeidssøkerperioder shouldHaveSize 1
+                arbeidssøkerperioder.first().avsluttet shouldNotBe null
+            }
+        }
 
     @Test
     fun `lagre arbeidssøkerperiode og oppdatere person oppdaterer ikke sist_endret timestamp`() {

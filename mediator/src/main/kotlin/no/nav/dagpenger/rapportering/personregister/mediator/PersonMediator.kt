@@ -85,6 +85,7 @@ class PersonMediator(
     }
 
     fun overtaBekreftelse(ident: String) {
+        logger.info { "Overta bekreftelse for ident" }
         personRepository
             .hentPerson(ident)
             ?.also { person ->
@@ -93,6 +94,7 @@ class PersonMediator(
                 }
                 person.overtaArbeidssøkerBekreftelse()
                 personRepository.oppdaterPerson(person)
+                logger.info { "Overtok bekreftelse" }
             }
     }
 
