@@ -86,7 +86,7 @@ internal fun Application.personstatusApi(
 
                 call.respond(
                     HttpStatusCode.OK,
-                    """{"personerUtenArbeidssøkerperiode": $personerUtenArbeidssøkerperiode, "personerSomIkkeErOvertatt": $personerSomIkkeErOvertatt}""",
+                    """{"personerUtenArbeidssøkerperiode": ${personerUtenArbeidssøkerperiode.size}, "personerSomIkkeErOvertatt": ${personerSomIkkeErOvertatt.size}}""",
                 )
             }
         }
