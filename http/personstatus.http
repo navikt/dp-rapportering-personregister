@@ -16,4 +16,4 @@ Content-Type: application/json
 GET https://dp-rapportering-personregister.intern.dev.nav.no/isAlive
 
 ### Sync
-POST dp-rapportering-personregister.intern.nav.no/sync
+POST https://dp-rapportering-personregister.intern.dev.nav.no/sync

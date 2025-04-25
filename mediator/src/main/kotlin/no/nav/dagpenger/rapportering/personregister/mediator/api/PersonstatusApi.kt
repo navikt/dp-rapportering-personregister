@@ -79,8 +79,8 @@ internal fun Application.personstatusApi(
             post {
                 logger.info { "POST /sync" }
                 personRepository
-                    .hentPersonerMedDagpenger()
-                    .forEach { ident -> personMediator.overtaBekreftelse(ident) }
+                    .hentPersonerMedDagpengerUtenArbeidssokerperiode()
+                    .forEach { ident -> arbeidssøkerMediator.behandle(ident) }
             }
         }
     }

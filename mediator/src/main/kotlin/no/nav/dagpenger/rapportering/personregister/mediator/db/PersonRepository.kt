@@ -30,6 +30,8 @@ interface PersonRepository {
 
     fun hentPersonerMedDagpenger(): List<String>
 
+    fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
+
     fun hentPersonerSomKanSlettes(): List<String>
 
     fun slettPerson(ident: String)

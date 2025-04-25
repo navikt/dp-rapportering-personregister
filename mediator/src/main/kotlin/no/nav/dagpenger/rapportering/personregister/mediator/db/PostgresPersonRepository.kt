@@ -250,6 +250,22 @@ class PostgresPersonRepository(
             )
         }
 
+    override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> {
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT p.ident
+                    FROM person p
+                    LEFT JOIN arbeidssoker arbs ON p.id = arbs.person_id
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.person_id IS NULL;
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+    }
+
     override fun hentPersonerSomKanSlettes(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
