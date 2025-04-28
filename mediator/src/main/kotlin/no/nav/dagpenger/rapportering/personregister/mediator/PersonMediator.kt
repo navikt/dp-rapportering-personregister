@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
@@ -41,7 +42,7 @@ class PersonMediator(
                     .also { person ->
                         person.behandle(hendelse)
                         personRepository.oppdaterPerson(person)
-                        meldepliktMediator.behandle(hendelse.ident)
+                        runBlocking { meldepliktMediator.behandle(hendelse.ident) }
                     }
             }
         }
@@ -56,8 +57,8 @@ class PersonMediator(
             }
         }
 
-    fun behandle(hendelse: PersonSynkroniseringHendelse) =
-        actionTimer.timedAction("behandle_PersonSynkroniseringHendelse") {
+    suspend fun behandle(hendelse: PersonSynkroniseringHendelse) =
+        actionTimer.coTimedAction("behandle_PersonSynkroniseringHendelse") {
             logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
             hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->

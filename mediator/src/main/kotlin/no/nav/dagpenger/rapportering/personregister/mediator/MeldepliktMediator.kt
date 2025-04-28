@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -27,7 +28,14 @@ class MeldepliktMediator(
             }
         }
 
-    fun behandle(ident: String) {
+    suspend fun behandle(
+        ident: String,
+        withDelay: Boolean = true,
+    ) {
+        // Delay for å la eventuell melding om meldeplikt fra Arena bli behandlet først
+        if (withDelay) {
+            delay(1000)
+        }
         actionTimer.timedAction("behandle_hentMeldeplikt") {
             logger.info { "Henter meldeplikt for ident" }
             try {

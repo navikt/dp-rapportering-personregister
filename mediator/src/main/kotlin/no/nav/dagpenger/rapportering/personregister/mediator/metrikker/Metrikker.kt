@@ -170,6 +170,25 @@ class ActionTimer(
         return blockResult
     }
 
+    suspend fun <T> coTimedAction(
+        navn: String,
+        block: suspend () -> T,
+    ): T {
+        val blockResult: T
+        val tidBrukt =
+            measureTime {
+                blockResult = block()
+            }
+        Timer
+            .builder("${NAMESPACE}_timer")
+            .tag("navn", navn)
+            .description("Indikerer hvor lang tid en funksjon brukte")
+            .register(meterRegistry)
+            .record(tidBrukt.inWholeMilliseconds, MILLISECONDS)
+
+        return blockResult
+    }
+
     fun httpTimer(
         navn: String,
         statusCode: HttpStatusCode,
