@@ -17,15 +17,14 @@ internal class PdlConnector(
         subjectToken: String,
     ): Person {
         val pdlPerson =
-            personOppslag
-                .hentPerson(
-                    ident,
-                    mapOf(
-                        HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke(subjectToken, pdlAudience)}",
-                        // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
-                        "behandlingsnummer" to "B286",
-                    ),
-                )
+            personOppslag.hentPerson(
+                ident,
+                mapOf(
+                    HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke(subjectToken, pdlAudience)}",
+                    // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
+                    "behandlingsnummer" to "B286",
+                ),
+            )
 
         return Person(
             forNavn = pdlPerson.fornavn,

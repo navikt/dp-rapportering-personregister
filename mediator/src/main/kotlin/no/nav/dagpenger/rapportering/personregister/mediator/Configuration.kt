@@ -89,6 +89,30 @@ internal object Configuration {
             }
         }
     }
+    val pdlApiTokenProvider: () -> String by lazy {
+        {
+            runBlocking {
+                azureAdClient
+                    .clientCredentials(properties[Key("PDL_API_SCOPE", stringType)])
+                    .access_token ?: throw RuntimeException("Failed to get token")
+            }
+        }
+    }
+
+    val pdlUrl by lazy {
+        properties[Key("PDL_API_HOST", stringType)].let {
+            "https://$it/graphql"
+        }
+    }
+    val pdlAudience by lazy { properties[Key("PDL_AUDIENCE", stringType)] }
+
+    val tokenXClient by lazy {
+        val tokenX = OAuth2Config.TokenX(properties)
+        CachedOauth2Client(
+            tokenEndpointUrl = tokenX.tokenEndpointUrl,
+            authType = tokenX.privateKey(),
+        )
+    }
 
     val kafkaSchemaRegistryConfig =
         KafkaSchemaRegistryConfig(
@@ -107,21 +131,6 @@ internal object Configuration {
             credstorePassword = properties.getOrNull(Key("KAFKA_CREDSTORE_PASSWORD", stringType)),
             truststorePath = properties.getOrNull(Key("KAFKA_TRUSTSTORE_PATH", stringType)),
         )
-
-    val pdlUrl by lazy {
-        properties[Key("PDL_API_HOST", stringType)].let {
-            "https://$it/graphql"
-        }
-    }
-    val pdlAudience by lazy { properties[Key("PDL_AUDIENCE", stringType)] }
-
-    val tokenXClient by lazy {
-        val tokenX = OAuth2Config.TokenX(properties)
-        CachedOauth2Client(
-            tokenEndpointUrl = tokenX.tokenEndpointUrl,
-            authType = tokenX.privateKey(),
-        )
-    }
 
     val defaultObjectMapper: ObjectMapper =
         ObjectMapper()
