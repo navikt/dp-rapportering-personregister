@@ -6,8 +6,8 @@ import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
-import no.nav.dagpenger.pdl.createPersonOppslag
 import mu.KotlinLogging
+import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
@@ -18,8 +18,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafka
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -150,8 +150,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, pdlConnector)
-                    personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                    personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)

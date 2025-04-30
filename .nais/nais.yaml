@@ -78,9 +78,6 @@ spec:
     inbound:
       rules:
         - application: dp-rapportering
-        - application: tokenx-token-generator
-          namespace: aura
-          cluster: {{ cluster }}
         {{#each additionalInbounds}}
         - application: {{application}}
           namespace: {{namespace}}

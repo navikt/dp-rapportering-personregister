@@ -15,6 +15,7 @@ import io.getunleash.DefaultUnleash
 import io.getunleash.util.UnleashConfig
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.oauth2.CachedOauth2Client
+import no.nav.dagpenger.oauth2.OAuth2Config
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon

@@ -8,7 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 internal class PdlConnector(
     private val personOppslag: PersonOppslag,
     private val tokenProvider: (token: String, audience: String) -> String = { s: String, a: String ->
-        Configuration.tokenXClient.tokenExchange(s, a).accessToken ?: throw RuntimeException("Fant ikke token")
+        Configuration.tokenXClient.tokenExchange(s, a).access_token ?: throw RuntimeException("Fant ikke token")
     },
     private val pdlAudience: String = Configuration.pdlAudience,
 ) {
@@ -39,8 +39,8 @@ internal class PdlConnector(
     fun hentIdenter(
         ident: String,
         subjectToken: String,
-    ): PDLIdentliste {
-        return personOppslag
+    ): PDLIdentliste =
+        personOppslag
             .hentIdenter(
                 ident,
                 listOf("NPID", "AKTORID", "FOLKEREGISTERIDENT"),
@@ -51,5 +51,4 @@ internal class PdlConnector(
                     "behandlingsnummer" to "B286",
                 ),
             )
-    }
 }

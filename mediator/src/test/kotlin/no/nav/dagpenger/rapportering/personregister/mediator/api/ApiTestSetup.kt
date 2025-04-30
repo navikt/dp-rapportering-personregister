@@ -11,13 +11,13 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.pdl.PersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
-import no.nav.dagpenger.pdl.PersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
@@ -122,8 +122,7 @@ open class ApiTestSetup {
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, pdlConnector)
-                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
             }
 
             block()
