@@ -1,10 +1,9 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-
 plugins {
-    id("application")
+    application
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    kotlin("jvm")
+    kotlin
 }
 
 group = "no.nav"
@@ -16,6 +15,7 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":kafka"))
     implementation(project(":modell"))
     implementation(project(":openapi"))
 
@@ -26,11 +26,14 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
-    implementation("no.nav.dagpenger:oauth2-klient:2024.10.31-15.02.1d4f08a38d24")
+    implementation("no.nav.dagpenger:pdl-klient:2024.12.10-14.29.b14a663ac6da")
+    implementation("no.nav.dagpenger:oauth2-klient:2025.04.26-14.51.bbf9ece5f5ec")
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("no.nav.dagpenger:pdl-klient:2024.12.10-14.29.b14a663ac6da")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.15.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.49.0")
+    implementation("io.getunleash:unleash-client-java:10.2.2")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
@@ -38,10 +41,10 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.ktor.client.mock)
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.2")
     testImplementation("io.ktor:ktor-server-test-host-jvm:${libs.versions.ktor.get()}")
     testImplementation(libs.rapids.and.rivers.test)
-    testImplementation("org.testcontainers:kafka:1.19.0")
+    testImplementation("org.testcontainers:kafka:1.21.0")
 }
 
 tasks.test {
@@ -50,6 +53,10 @@ tasks.test {
 kotlin {
     jvmToolchain(21)
 }
+
+/*tasks.named("build") {
+    dependsOn(":kafka:build")
+}*/
 
 application {
     mainClass.set("no.nav.dagpenger.rapportering.personregister.mediator.ApplicationKt")

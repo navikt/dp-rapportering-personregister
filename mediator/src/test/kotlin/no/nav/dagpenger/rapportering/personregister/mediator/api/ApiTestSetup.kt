@@ -11,23 +11,39 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.pdl.PersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
+    val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
+    val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
-
-        // const val AZURE_ISSUER_ID = "azure"
         const val REQUIRED_AUDIENCE = "tokenx"
         val TEST_PRIVATE_JWK =
             """
@@ -80,13 +96,34 @@ open class ApiTestSetup {
             }
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+            val testKafkaContainer = TestKafkaContainer()
+            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
+            val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
+            val personObserver = mockk<PersonObserver>(relaxed = true)
+            val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
+
+            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
+            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
+            val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+            val kafkaContext =
+                KafkaContext(
+                    overtaBekreftelseKafkaProdusent,
+                    arbedssøkerperiodeKafkaConsumer,
+                    "ARBEIDSSOKERPERIODER_TOPIC",
+                    arbeidssøkerMottak,
+                )
+            val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+
+            val personMediator =
+                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
             val personOppslag = mockk<PersonOppslag>()
             val pdlConnector = PdlConnector(personOppslag)
 
             application {
-                konfigurasjon(meterRegistry)
+                pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
                 personstatusApi(personRepository, pdlConnector)
+                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
             }
 
             block()
@@ -101,8 +138,10 @@ open class ApiTestSetup {
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty("GITHUB_SHA", "some_sha")
-        System.setProperty("ARBEIDSSOKERREGISTER_HOST", "http://arbeidssokerregister")
-        System.setProperty("ARBEIDSSOKERREGISTER_SCOPE", "api://arbeidssokerregister/.default")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
         System.setProperty("PDL_API_HOST", "pdl-api.test.nais.io")
         System.setProperty("PDL_AUDIENCE", "test:pdl:pdl-api")
     }
@@ -121,7 +160,7 @@ open class ApiTestSetup {
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
-                    "TRUNCATE TABLE person, hendelse, status_historikk",
+                    "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",
                 ).asExecute,
             )
         }

@@ -1,15 +1,18 @@
 rootProject.name = "dp-rapportering-personregister"
 
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 dependencyResolutionManagement {
     repositories {
+        mavenCentral()
+        gradlePluginPortal()
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
+        maven("https://packages.confluent.io/maven/")
     }
     versionCatalogs {
         create("libs") {
-            from("no.nav.dagpenger:dp-version-catalog:20241204.110.0da3e7")
+            from("no.nav.dagpenger:dp-version-catalog:20250410.157.5bb96d")
         }
     }
 }
@@ -17,3 +20,4 @@ dependencyResolutionManagement {
 include("mediator")
 include("modell")
 include("openapi")
+include("kafka")

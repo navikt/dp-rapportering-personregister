@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 
 interface PersonRepository {
@@ -11,7 +12,27 @@ interface PersonRepository {
 
     fun oppdaterPerson(person: Person)
 
-    fun hentAnallPersoner(): Int
+    fun hentAntallPersoner(): Int
 
     fun hentAntallHendelser(): Int
+
+    fun hentAntallFremtidigeHendelser(): Int
+
+    fun hentAntallDagpengebrukere(): Int
+
+    fun hentAntallOvetagelser(): Int
+
+    fun lagreFremtidigHendelse(hendelse: Hendelse)
+
+    fun hentHendelserSomSkalAktiveres(): List<Hendelse>
+
+    fun slettFremtidigHendelse(referanseId: String)
+
+    fun hentPersonerMedDagpenger(): List<String>
+
+    fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
+
+    fun hentPersonerSomKanSlettes(): List<String>
+
+    fun slettPerson(ident: String)
 }

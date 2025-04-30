@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm")
-    id("org.openapi.generator") version "7.10.0"
+    id("org.openapi.generator") version "7.13.0"
     id("org.jlleitschuh.gradle.ktlint")
 }
 
@@ -19,9 +19,9 @@ tasks.named("runKtlintFormatOverMainSourceSet").configure {
     dependsOn("openApiGenerate")
 }
 
-repositories {
+/*repositories {
     mavenCentral()
-}
+}*/
 
 dependencies {
     implementation(libs.jackson.annotation)
@@ -41,12 +41,12 @@ sourceSets {
 
 configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
     filter {
-        exclude { element -> element.file.path.contains("generated/") }
+        exclude { element -> element.file.path.contains("generated") }
     }
 }
 
 openApiGenerate {
-    generatorName.set("kotlin-server")
+    generatorName.set("kotlin")
     inputSpec.set("$projectDir/src/main/resources/personstatus-api.yaml")
     outputDir.set("${layout.buildDirectory.get()}/generated/")
     packageName.set("no.nav.dagpenger.rapportering.personregister.api")

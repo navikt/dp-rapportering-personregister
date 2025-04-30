@@ -1,7 +1,28 @@
 kafka:
   pool: nav-dev
 
-ARBEIDSSOKERREGISTER_HOST: oppslag-arbeidssoekerregisteret.intern.dev.nav.no
-ARBEIDSSOKERREGISTER_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default
+ingresses:
+  - https://dp-rapportering-personregister.intern.dev.nav.no
+
+cluster: dev-gcp
+
+ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag.paw
+ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag/.default
+ARBEIDSSOKERREGISTER_RECORD_KEY_HOST: http://paw-kafka-key-generator.paw
+ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE: api://dev-gcp.paw.paw-kafka-key-generator/.default
+ARBEIDSSOKERPERIODER_TOPIC: paw.arbeidssokerperioder-v1
+BEKREFTELSE_PAA_VEGNE_AV_TOPIC: paw.arbeidssoker-bekreftelse-paavegneav-teamdagpenger-v1
+MELDEPLIKT_ADAPTER_HOST: http://dp-arena-meldeplikt-adapter.teamdagpenger
+MELDEPLIKT_ADAPTER_SCOPE: api://dev-gcp.teamdagpenger.dp-arena-meldeplikt-adapter/.default
 PDL_API_HOST: pdl-api.dev-fss-pub.nais.io
 PDL_AUDIENCE: dev-fss:pdl:pdl-api
+
+KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-q1,teamarenanais.aapen-arena-meldepliktendret-v1-q1
+
+additionalInbounds:
+  - application: meldekort-api-q1
+    namespace: meldekort
+  - application: meldekort-api-q2
+    namespace: meldekort
+  - application: tokenx-token-generator
+    namespace: aura

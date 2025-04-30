@@ -17,10 +17,10 @@ spec:
     path: /isReady
   replicas:
     min: 2
-    max: 3
+    max: 4
   resources:
     limits:
-      memory: 512Mi
+      memory: 1024Mi
     requests:
       cpu: 200m
       memory: 256Mi
@@ -33,39 +33,82 @@ spec:
       enabled: true
   kafka:
     pool: {{ kafka.pool }}
+  {{#if ingresses}}
   ingresses:
-    - https://dp-rapportering-personregister.intern.dev.nav.no
+    {{#each ingresses as |url|}}
+     - {{url}}
+    {{/each}}
+  {{/if}}
+  leaderElection: true
   observability:
     logging:
       destinations:
         - id: elastic
-  env:
-    - name: ARBEIDSSOKERREGISTER_HOST
-      value: {{ ARBEIDSSOKERREGISTER_HOST }}
-    - name: ARBEIDSSOKERREGISTER_SCOPE
-      value: {{ ARBEIDSSOKERREGISTER_SCOPE }}
-    - name: PDL_API_HOST
-      value: {{ PDL_API_HOST }}
-    - name: PDL_AUDIENCE
-      value: {{ PDL_AUDIENCE }}
+    autoInstrumentation:
+      enabled: true
+      runtime: java
   gcp:
     sqlInstances:
       - type: POSTGRES_15
         highAvailability: true
         diskAutoresize: true
+        tier: db-custom-1-3840
+        pointInTimeRecovery: true
         databases:
           - name: dp-rapportering-personregister
             envVarPrefix: DB
-        tier: db-custom-1-3840
+        flags:
+            - name: cloudsql.enable_pgaudit
+              value: "on"
+            - name: pgaudit.log
+              value: 'write'
   accessPolicy:
     outbound:
-      rules:
-        - application: paw-arbeidssoekerregisteret-api-oppslag
       external:
+        - host: dagpenger-unleash-api.nav.cloud.nais.io
         - host: {{ PDL_API_HOST }}
+      rules:
+        - application: dp-arena-meldeplikt-adapter
+        - application: paw-arbeidssoekerregisteret-api-oppslag
+          namespace: paw
+          cluster: {{ cluster }}
+        - application: paw-kafka-key-generator
+          namespace: paw
+          cluster: {{ cluster }}
     inbound:
       rules:
         - application: dp-rapportering
         - application: tokenx-token-generator
           namespace: aura
-          cluster: dev-gcp
+          cluster: {{ cluster }}
+        {{#each additionalInbounds}}
+        - application: {{application}}
+          namespace: {{namespace}}
+        {{/each}}
+  envFrom:
+    - secret: dp-rapportering-personregister-unleash-api-token
+  env:
+    - name: PDL_API_HOST
+      value: {{ PDL_API_HOST }}
+    - name: PDL_AUDIENCE
+      value: {{ PDL_AUDIENCE }}
+    - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
+      value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}
+    - name: ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE
+      value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE }}
+    - name: ARBEIDSSOKERREGISTER_RECORD_KEY_HOST
+      value: {{ ARBEIDSSOKERREGISTER_RECORD_KEY_HOST }}
+    - name: ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE
+      value: {{ ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE }}
+    - name: ARBEIDSSOKERPERIODER_TOPIC
+      value: {{ ARBEIDSSOKERPERIODER_TOPIC }}
+    - name: BEKREFTELSE_PAA_VEGNE_AV_TOPIC
+      value: {{ BEKREFTELSE_PAA_VEGNE_AV_TOPIC }}
+    - name: MELDEPLIKT_ADAPTER_HOST
+      value: {{ MELDEPLIKT_ADAPTER_HOST }}
+    - name: MELDEPLIKT_ADAPTER_SCOPE
+      value: {{ MELDEPLIKT_ADAPTER_SCOPE }}
+    - name: KAFKA_EXTRA_TOPIC
+      value: {{ KAFKA_EXTRA_TOPIC }}
+    - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner
+      value: -XX:+UseParallelGC -XX:ActiveProcessorCount=4

@@ -34,20 +34,20 @@ components:
       required:
         - ident
         - status
+        - overtattBekreftelse
       type: object
       properties:
         ident:
           type: string
         status:
           $ref: '#/components/schemas/Status'
+        overtattBekreftelse:
+          type: boolean
     Status:
       type: string
       enum:
-        - IKKE_REGISTRERT
-        - SØKT
-        - INNVILGET
-        - AVSLÅTT
-        - STANSET
+        - DAGPENGERBRUKER
+        - IKKE_DAGPENGERBRUKER
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)

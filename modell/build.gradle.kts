@@ -6,23 +6,25 @@ plugins {
 group = "no.nav.dapenger.rapportering.personregister"
 version = "unspecified"
 
-repositories {
+/*repositories {
     mavenCentral()
-}
+}*/
 
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.kotest.assertions)
+    testImplementation(libs.mockk)
 
-    testApi("org.junit.platform:junit-platform-suite-api:1.10.2")
-    testImplementation("org.junit.platform:junit-platform-suite-engine:1.10.2")
-    testImplementation("io.cucumber:cucumber-java8:7.15.0")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.15.0")
+    testApi("org.junit.platform:junit-platform-suite-api:1.12.2")
+    testImplementation("org.junit.platform:junit-platform-suite-engine:1.12.2")
+    testImplementation("io.cucumber:cucumber-java8:7.22.1")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.22.1")
 }
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(21)
 }

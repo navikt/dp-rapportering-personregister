@@ -6,26 +6,27 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.micrometer.core.instrument.MeterRegistry
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonstatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import java.time.OffsetDateTime
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val personStatusMediator: PersonstatusMediator,
+    private val personStatusMediator: PersonMediator,
     private val soknadMetrikker: SoknadMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
             .apply {
                 validate { it.requireValue("@event_name", "søknad_innsendt_varsel") }
-                validate { it.requireKey("ident", "søknadId", "søknadstidspunkt") }
-                validate { it.interestedIn("@id") }
+                validate { it.requireKey("@id", "ident", "søknadId", "søknadstidspunkt") }
             }.register(this)
     }
 
+    @WithSpan
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,
@@ -53,9 +54,5 @@ private fun JsonMessage.tilHendelse(): SøknadHendelse {
     val datoString = this["søknadstidspunkt"].asText()
     val dato = OffsetDateTime.parse(datoString).toLocalDateTime()
 
-    return SøknadHendelse(ident, referanseId, dato)
-}
-
-fun main() {
-    println("Hello, World!")
+    return SøknadHendelse(ident = ident, dato = dato, referanseId = referanseId)
 }
