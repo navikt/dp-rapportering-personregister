@@ -17,6 +17,7 @@ MELDEPLIKT_ADAPTER_SCOPE: api://dev-gcp.teamdagpenger.dp-arena-meldeplikt-adapte
 PDL_API_HOST: pdl-api.dev-fss-pub.nais.io
 PDL_AUDIENCE: dev-fss:pdl:pdl-api
 PDL_API_SCOPE: api://dev-fss.pdl.pdl-api-q1/.default
+PDL_AKTOR_TOPIC: pdl.aktor-v2
 
 KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-q1,teamarenanais.aapen-arena-meldepliktendret-v1-q1
 

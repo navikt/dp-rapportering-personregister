@@ -1,12 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka
 
-import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.KafkaProducer
 import org.apache.kafka.clients.producer.Producer
+import org.apache.kafka.common.serialization.Deserializer
 import org.testcontainers.kafka.ConfluentKafkaContainer
 import org.testcontainers.utility.DockerImageName
+import kotlin.reflect.KClass
 
 class TestKafkaContainer {
     private val kafkaContainer: ConfluentKafkaContainer = ConfluentKafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.5.0"))
@@ -26,14 +27,18 @@ class TestKafkaContainer {
         return KafkaProducer(producerConfig)
     }
 
-    fun createConsumer(groupId: String = "test-group"): KafkaConsumer<Long, Periode> {
+    fun <K, V> createConsumer(
+        groupId: String = "test-group",
+        keyDeserializer: KClass<out Deserializer<K>>,
+        valueDeserializer: KClass<out Deserializer<V>>,
+    ): KafkaConsumer<K, V> {
         val consumerConfig =
             mapOf(
                 "bootstrap.servers" to kafkaContainer.bootstrapServers,
                 "schema.registry.url" to "http://${kafkaContainer.host}:${kafkaContainer.firstMappedPort}",
                 "group.id" to groupId,
-                "key.deserializer" to "org.apache.kafka.common.serialization.LongDeserializer",
-                "value.deserializer" to "no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer",
+                "key.deserializer" to keyDeserializer.java.name,
+                "value.deserializer" to valueDeserializer.java.name,
                 "auto.offset.reset" to "earliest",
             )
         return KafkaConsumer(consumerConfig)

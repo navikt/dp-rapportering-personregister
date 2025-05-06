@@ -42,6 +42,7 @@ tasks.test {
 tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
     source(zipTree(paavegneavSchema.singleFile))
     source(zipTree(mainavroSchema.singleFile))
+    source("src/main/resources/avro/pdl_aktor_v2.avdl")
 }
 
 kotlin {
