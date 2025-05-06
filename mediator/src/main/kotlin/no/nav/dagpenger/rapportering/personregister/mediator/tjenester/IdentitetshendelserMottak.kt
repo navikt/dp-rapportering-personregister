@@ -11,7 +11,7 @@ class IdentitetshendelserMottak {
     fun consume(record: ConsumerRecords<String, Aktor>) =
         record.forEach {
             logger.info("Behandler identitetshendelse med key: ${it.key()}")
-            logger.info(defaultObjectMapper.writeValueAsString(it.value()))
+            logger.info(defaultObjectMapper.writeValueAsString(it.value().toByteBuffer()))
         }
 
     companion object {
