@@ -50,6 +50,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import io.ktor.server.cio.CIO as CIOEngine
 
 private val logger = KotlinLogging.logger {}
@@ -92,10 +93,10 @@ internal class ApplicationBuilder(
         )
 
     private val pdlAktorKafkaConsumer =
-        kafkaFactory.createConsumer<Long, Aktor>(
+        kafkaFactory.createConsumer<String, Aktor>(
             groupId = "teamdagpenger-personregister-pdl-aktor-v1",
             clientId = "teamdagpenger-personregister-pdl-aktor-consumer",
-            keyDeserializer = LongDeserializer::class,
+            keyDeserializer = StringDeserializer::class,
             valueDeserializer = AktorAvroDeserializer::class,
         )
 
@@ -195,7 +196,7 @@ data class KafkaContext(
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
     val arbeidssøkerMottak: ArbeidssøkerMottak,
-    val pdlAktorKafkaConsumer: KafkaConsumer<Long, Aktor>,
+    val pdlAktorKafkaConsumer: KafkaConsumer<String, Aktor>,
     val pdlAktorTopic: String,
     val pdlIdentitetshendelserMottak: IdentitetshendelserMottak,
 )

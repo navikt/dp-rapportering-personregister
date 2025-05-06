@@ -8,7 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords
 
 class IdentitetshendelserMottak {
     @WithSpan
-    fun consume(record: ConsumerRecords<Long, Aktor>) =
+    fun consume(record: ConsumerRecords<String, Aktor>) =
         record.forEach {
             logger.info("Behandler identitetshendelse med key: ${it.key()}")
             logger.info(defaultObjectMapper.writeValueAsString(it.value()))

@@ -39,6 +39,7 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.apache.kafka.common.serialization.LongDeserializer
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
@@ -111,7 +112,7 @@ open class ApiTestSetup {
             val pdlAktorKafkaConsumer =
                 testKafkaContainer.createConsumer(
                     "pdl-aktor-group",
-                    LongDeserializer::class,
+                    StringDeserializer::class,
                     AktorAvroDeserializer::class,
                 )
             val personObserver = mockk<PersonObserver>(relaxed = true)

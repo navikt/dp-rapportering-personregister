@@ -76,7 +76,7 @@ fun Application.pluginConfiguration(
         this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
     }
 
-    install(KafkaConsumerPlugin<Long, Aktor>("Identitetshendelser")) {
+    install(KafkaConsumerPlugin<String, Aktor>("Identitetshendelser")) {
         this.consumeFunction = kafkaContext.pdlIdentitetshendelserMottak::consume
         this.kafkaConsumer = kafkaContext.pdlAktorKafkaConsumer
         this.kafkaTopics = listOf(kafkaContext.pdlAktorTopic)
