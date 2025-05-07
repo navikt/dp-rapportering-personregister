@@ -8,9 +8,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecords
 class IdentitetshendelserMottak {
     @WithSpan
     fun consume(record: ConsumerRecords<String, Aktor>) =
-        record.forEach {
-            logger.info("Behandler identitetshendelse med key: ${it.key()}")
-            logger.info("Value ${it.value().identifikatorer}")
+        record.forEach { record ->
+            logger.info("Behandler identitetshendelse med key: ${record.key()}")
+            if (record.value() == null) {
+                logger.info("Aktør er null.")
+            } else {
+                logger.info("Value ${record.value().identifikatorer}")
+            }
         }
 
     companion object {
