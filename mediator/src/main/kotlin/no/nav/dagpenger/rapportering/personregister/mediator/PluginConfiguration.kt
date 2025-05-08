@@ -22,7 +22,6 @@ import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPl
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import no.nav.person.pdl.aktor.v2.Aktor
 
 fun Application.pluginConfiguration(
     meterRegistry: PrometheusMeterRegistry,
@@ -74,11 +73,5 @@ fun Application.pluginConfiguration(
         // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
         this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
         this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
-    }
-
-    install(KafkaConsumerPlugin<String, Aktor>("Identitetshendelser")) {
-        this.consumeFunction = kafkaContext.pdlIdentitetshendelserMottak::consume
-        this.kafkaConsumer = kafkaContext.pdlAktorKafkaConsumer
-        this.kafkaTopics = listOf(kafkaContext.pdlAktorTopic)
     }
 }

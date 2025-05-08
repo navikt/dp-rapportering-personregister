@@ -12,11 +12,8 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
-import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.jwt
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
@@ -33,21 +30,13 @@ internal fun Application.personstatusApi(
     pdlConnector: PdlConnector,
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
-    meldepliktConnector: MeldepliktConnector,
 ) {
     routing {
         route("/pdl/identer") {
             post {
                 val ident = call.receiveText()
-                val identer = pdlConnector.hentIdenter(ident, Configuration.pdlApiTokenProvider.invoke())
+                val identer = pdlConnector.hentIdenter(ident)
                 call.respond(identer)
-            }
-        }
-        route("/pdl/person") {
-            post {
-                val ident = call.receiveText()
-                val person = pdlConnector.hentPerson(ident, Configuration.pdlApiTokenProvider.invoke())
-                call.respond(person)
             }
         }
         authenticate("tokenX") {
@@ -90,19 +79,6 @@ internal fun Application.personstatusApi(
                             )
                         }
                         ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
-                }
-            }
-
-            route("/identer") {
-                get {
-                    logger.info { "GET /identer" }
-                    val ident = call.ident()
-                    val jwtToken = call.request.jwt()
-                    pdlConnector
-                        .hentIdenter(ident, jwtToken)
-                        .also {
-                            call.respond(HttpStatusCode.OK, it)
-                        }
                 }
             }
         }

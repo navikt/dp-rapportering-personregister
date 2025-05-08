@@ -12,7 +12,6 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
 import no.nav.dagpenger.pdl.PersonOppslag
-import no.nav.dagpenger.rapportering.personregister.kafka.AktorAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
@@ -28,7 +27,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.IdentitetshendelserMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
@@ -39,7 +37,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.apache.kafka.common.serialization.LongDeserializer
-import org.apache.kafka.common.serialization.StringDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
@@ -109,30 +106,19 @@ open class ApiTestSetup {
                     LongDeserializer::class,
                     PeriodeAvroDeserializer::class,
                 )
-            val pdlAktorKafkaConsumer =
-                testKafkaContainer.createConsumer(
-                    "pdl-aktor-group",
-                    StringDeserializer::class,
-                    AktorAvroDeserializer::class,
-                )
             val personObserver = mockk<PersonObserver>(relaxed = true)
             val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
-            val pdlIdentitetshendelserMottak = IdentitetshendelserMottak()
             val kafkaContext =
                 KafkaContext(
                     overtaBekreftelseKafkaProdusent,
                     arbedssøkerperiodeKafkaConsumer,
                     "ARBEIDSSOKERPERIODER_TOPIC",
                     arbeidssøkerMottak,
-                    pdlAktorKafkaConsumer,
-                    "AKTOR_TOPIC",
-                    pdlIdentitetshendelserMottak,
                 )
-            val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
             val personMediator =
                 PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
@@ -142,7 +128,7 @@ open class ApiTestSetup {
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker)
             }
 
             block()

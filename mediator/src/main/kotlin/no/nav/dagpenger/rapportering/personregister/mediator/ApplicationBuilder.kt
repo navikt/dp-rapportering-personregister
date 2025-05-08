@@ -8,7 +8,6 @@ import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.createPersonOppslag
-import no.nav.dagpenger.rapportering.personregister.kafka.AktorAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
@@ -38,19 +37,16 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.IdentitetshendelserMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import no.nav.person.pdl.aktor.v2.Aktor
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
-import org.apache.kafka.common.serialization.StringDeserializer
 import io.ktor.server.cio.CIO as CIOEngine
 
 private val logger = KotlinLogging.logger {}
@@ -75,7 +71,6 @@ internal class ApplicationBuilder(
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
-    private val pdlAktorTopic = configuration.getValue("PDL_AKTOR_TOPIC")
     private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
     private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
     private val bekreftelsePåVegneAvProdusent =
@@ -90,14 +85,6 @@ internal class ApplicationBuilder(
             clientId = "teamdagpenger-personregister-arbeidssokerperiode-consumer",
             keyDeserializer = LongDeserializer::class,
             valueDeserializer = PeriodeAvroDeserializer::class,
-        )
-
-    private val pdlAktorKafkaConsumer =
-        kafkaFactory.createConsumer<String, Aktor>(
-            groupId = "teamdagpenger-personregister-pdl-aktor-v1",
-            clientId = "teamdagpenger-personregister-pdl-aktor-consumer",
-            keyDeserializer = StringDeserializer::class,
-            valueDeserializer = AktorAvroDeserializer::class,
         )
 
     private val personObserverKafka =
@@ -137,7 +124,6 @@ internal class ApplicationBuilder(
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
-    private val pdlIdentitetshendelserMottak = IdentitetshendelserMottak()
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()
     private val kafkaContext =
@@ -146,9 +132,6 @@ internal class ApplicationBuilder(
             arbeidssøkerperioderKafkaConsumer,
             arbeidssøkerperioderTopic,
             arbeidssøkerMottak,
-            pdlAktorKafkaConsumer,
-            pdlAktorTopic,
-            pdlIdentitetshendelserMottak,
         )
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
     private val rapidsConnection =
@@ -167,7 +150,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                    personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker)
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)
@@ -196,7 +179,4 @@ data class KafkaContext(
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
     val arbeidssøkerMottak: ArbeidssøkerMottak,
-    val pdlAktorKafkaConsumer: KafkaConsumer<String, Aktor>,
-    val pdlAktorTopic: String,
-    val pdlIdentitetshendelserMottak: IdentitetshendelserMottak,
 )

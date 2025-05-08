@@ -4,15 +4,14 @@ import io.ktor.http.HttpHeaders
 import no.nav.dagpenger.pdl.PDLIdentliste
 import no.nav.dagpenger.pdl.PersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.pdlApiTokenProvider
 
-internal class PdlConnector(
+class PdlConnector(
     private val personOppslag: PersonOppslag,
-    private val tokenProvider: (token: String, audience: String) -> String = { s: String, a: String ->
-        Configuration.tokenXClient.tokenExchange(s, a).access_token ?: throw RuntimeException("Fant ikke token")
-    },
+    private val tokenProvider: () -> String? = pdlApiTokenProvider,
     private val pdlAudience: String = Configuration.pdlAudience,
 ) {
-    suspend fun hentPerson(
+    /*suspend fun hentPerson(
         ident: String,
         subjectToken: String,
     ): Person {
@@ -33,19 +32,16 @@ internal class PdlConnector(
             fødselsDato = pdlPerson.fodselsdato,
             ident = ident,
         )
-    }
+    }*/
 
-    fun hentIdenter(
-        ident: String,
-        subjectToken: String,
-    ): PDLIdentliste =
+    fun hentIdenter(ident: String): PDLIdentliste =
         personOppslag
             .hentIdenter(
                 ident,
                 listOf("NPID", "AKTORID", "FOLKEREGISTERIDENT"),
                 true,
                 mapOf(
-                    HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke(subjectToken, pdlAudience)}",
+                    HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke()}",
                     // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
                     "behandlingsnummer" to "B286",
                 ),
