@@ -39,6 +39,13 @@ internal fun Application.personstatusApi(
                 call.respond(identer)
             }
         }
+        route("/pdl/person") {
+            post {
+                val ident = call.receiveText()
+                val person = pdlConnector.hentPerson(ident)
+                call.respond(person)
+            }
+        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {
