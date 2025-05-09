@@ -12,6 +12,7 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -42,8 +43,8 @@ internal fun Application.personstatusApi(
         route("/pdl/person") {
             post {
                 val ident = call.receiveText()
-                val person = pdlConnector.hentPerson(ident)
-                call.respond(person)
+                val person = pdlConnector.hentPersonTest(ident)
+                call.respond(defaultObjectMapper.writeValueAsString(person))
             }
         }
         authenticate("tokenX") {
