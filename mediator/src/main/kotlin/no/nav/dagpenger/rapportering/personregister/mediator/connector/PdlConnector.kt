@@ -41,7 +41,7 @@ class PdlConnector(
                 listOf("NPID", "AKTORID", "FOLKEREGISTERIDENT"),
                 true,
                 mapOf(
-                    HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke()}",
+                    HttpHeaders.Authorization to "Bearer ${tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")}",
                     // https://behandlingskatalog.intern.nav.no/process/purpose/DAGPENGER/486f1672-52ed-46fb-8d64-bda906ec1bc9
                     "behandlingsnummer" to "B286",
                 ),
