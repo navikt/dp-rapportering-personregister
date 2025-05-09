@@ -44,10 +44,12 @@ class PdlConnector(
             }
         }
 
-    suspend fun hentPersonTest(id: String): Pdl.Person? =
-        pdlClient
+    suspend fun hentPersonTest(id: String): Pdl.Person? {
+        val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
+        logger.info { "Er token med? $token" }
+        return pdlClient
             .request {
-                header(HttpHeaders.Authorization, "Bearer ${tokenProvider.invoke()}")
+                header(HttpHeaders.Authorization, "Bearer $token")
                 method = HttpMethod.Post
                 setBody(PersonQuery(id).toJson().also { logger.info { "Forsøker å hente person med id $id fra PDL" } })
             }.bodyAsText()
@@ -61,6 +63,7 @@ class PdlConnector(
                     Pdl.Person.fromGraphQlJson(body)
                 }
             }
+    }
 
     suspend fun hentPerson(ident: String): Person {
         val token = tokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token")
