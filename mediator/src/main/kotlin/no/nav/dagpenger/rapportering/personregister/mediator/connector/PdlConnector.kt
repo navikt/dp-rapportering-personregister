@@ -114,9 +114,6 @@ internal data class PersonQuery(
                         gradering
                     }
                 }
-                hentGeografiskTilknytning(ident: ${'$'}ident){
-                    gtLand
-                }
                 hentIdenter(ident: ${'$'}ident, grupper: [AKTORID,FOLKEREGISTERIDENT]) {
                     identer {
                         ident,
