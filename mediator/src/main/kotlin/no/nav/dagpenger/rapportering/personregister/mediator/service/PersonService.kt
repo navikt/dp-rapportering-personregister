@@ -1,16 +1,26 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PDLIdent
 import no.nav.dagpenger.pdl.PDLIdentliste
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import java.util.concurrent.TimeUnit
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.Person as PdlPerson
 
 class PersonService(
     private val pdlConnector: PdlConnector,
     private val personRepository: PersonRepository,
 ) {
+    private val identListeCache =
+        Caffeine
+            .newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES) // Cache entries expire after 10 minutes
+            .maximumSize(1000) // Maximum number of entries in the cache
+            .build<String, PDLIdentliste>()
+
     /*fun hentPerson(ident: String): Person? {
         val pdlIdenter = hentAlleIdenterForPerson(ident)
         val personer = hentPersonFraDB(pdlIdenter.identer.map { it.ident })
@@ -65,7 +75,10 @@ class PersonService(
 
     private fun hentPersonFraDB(identer: List<String>): List<Person> = identer.mapNotNull { ident -> personRepository.hentPerson(ident) }
 
-    private fun hentAlleIdenterForPerson(ident: String): PDLIdentliste = pdlConnector.hentIdenter(ident)
+    // private
+    fun hentAlleIdenterForPerson(ident: String): PDLIdentliste = identListeCache.get(ident) { pdlConnector.hentIdenter(ident) }
+
+    suspend fun hentPerson(ident: String): PdlPerson = pdlConnector.hentPerson(ident)
 
     companion object {
         private val logger = KotlinLogging.logger {}

@@ -36,6 +36,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Synkronis
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
@@ -134,6 +135,7 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak,
         )
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
+    private val personService = PersonService(pdlConnector, personRepository)
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -150,7 +152,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, pdlConnector, personMediator, synkroniserPersonMetrikker)
+                    personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, personService)
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)

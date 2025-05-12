@@ -12,12 +12,11 @@ import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDate
@@ -28,23 +27,23 @@ private val logger = KotlinLogging.logger {}
 
 internal fun Application.personstatusApi(
     personRepository: PersonRepository,
-    pdlConnector: PdlConnector,
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
+    personService: PersonService,
 ) {
     routing {
         route("/pdl/identer") {
             post {
                 val ident = call.receiveText()
-                val identer = pdlConnector.hentIdenter(ident)
+                val identer = personService.hentAlleIdenterForPerson(ident)
                 call.respond(identer)
             }
         }
         route("/pdl/person") {
             post {
                 val ident = call.receiveText()
-                val person = pdlConnector.hentPersonTest(ident)
-                call.respond(defaultObjectMapper.writeValueAsString(person))
+                val person = personService.hentPerson(ident)
+                call.respond(person)
             }
         }
         authenticate("tokenX") {

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.natpryce.konfig.ConfigurationMap
 import com.natpryce.konfig.ConfigurationProperties
 import com.natpryce.konfig.EnvironmentVariables
@@ -15,12 +17,13 @@ import io.getunleash.DefaultUnleash
 import io.getunleash.util.UnleashConfig
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.oauth2.CachedOauth2Client
-import no.nav.dagpenger.oauth2.OAuth2Config
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
+import no.nav.dagpenger.pdl.PDLIdentliste
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon
 import java.time.ZoneId
 import java.util.UUID
+import java.util.concurrent.TimeUnit
 
 val ZONE_ID: ZoneId = ZoneId.of("Europe/Oslo")
 
@@ -104,15 +107,6 @@ internal object Configuration {
             "https://$it/graphql"
         }
     }
-    val pdlAudience by lazy { properties[Key("PDL_AUDIENCE", stringType)] }
-
-    val tokenXClient by lazy {
-        val tokenX = OAuth2Config.TokenX(properties)
-        CachedOauth2Client(
-            tokenEndpointUrl = tokenX.tokenEndpointUrl,
-            authType = tokenX.privateKey(),
-        )
-    }
 
     val kafkaSchemaRegistryConfig =
         KafkaSchemaRegistryConfig(
@@ -154,6 +148,13 @@ internal object Configuration {
     val unleash by lazy {
         DefaultUnleash(unleashConfig)
     }
+
+    val identCache: Cache<String, PDLIdentliste> =
+        Caffeine
+            .newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(1000L)
+            .build()
 }
 
 private fun String.formatUrl(): String = if (this.startsWith("http")) this else "https://$this"
