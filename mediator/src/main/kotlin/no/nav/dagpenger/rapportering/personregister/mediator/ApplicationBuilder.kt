@@ -68,11 +68,13 @@ internal class ApplicationBuilder(
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
+
+    // TODO: Bytte ut lokal cache med Valkey
     private val pdlIdentCache: Cache<String, List<Ident>> =
         Caffeine
             .newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES) // Cache entries expire after 10 minutes
-            .maximumSize(1000) // Maximum number of entries in the cache
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(1000)
             .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
