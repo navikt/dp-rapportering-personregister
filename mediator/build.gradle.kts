@@ -26,8 +26,8 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.15.0")
-    implementation("io.opentelemetry:opentelemetry-api:1.49.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.50.0")
     implementation("io.getunleash:unleash-client-java:10.2.2")
 
     testImplementation(kotlin("test"))
