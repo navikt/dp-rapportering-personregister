@@ -50,73 +50,87 @@ class PersonService(
             }
         } else {
             if (gjeldendeIdent != null) {
-                val person =
+                val gjeldendePerson =
                     personer.firstOrNull { it.ident == gjeldendeIdent } ?: Person(gjeldendeIdent).also { person ->
                         if (person.observers.isEmpty()) {
                             personObservers.forEach { observer -> person.addObserver(observer) }
                         }
                     }
                 if (pdlIdentliste.size > 1) {
-                    pdlIdentliste
-                        .filter { it.ident != gjeldendeIdent }
-                        .forEach { pdlIdent ->
-                            val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
-                            person.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
-                            historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
-                                person.statusHistorikk.put(it.first, it.second)
-                            }
-                            val arbeidssøkerperioder =
-                                (person.arbeidssøkerperioder + (historiskPerson?.arbeidssøkerperioder ?: emptyList()))
-                                    .map { it.copy(ident = gjeldendeIdent) }
-                                    .toMutableList()
-
-                            person.arbeidssøkerperioder.clear()
-                            person.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
-
-                            personRepository.slettPerson(pdlIdent.ident)
-
-                            person.apply {
-                                if (!meldeplikt && historiskPerson?.meldeplikt == true) {
-                                    meldeplikt = true
-                                }
-                                if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
-                                    meldegruppe = historiskPerson.meldegruppe
-                                }
-                            }
-                        }
-                    val overtatteArbeidssøkerperioder =
-                        person.arbeidssøkerperioder.filter {
-                            it.avsluttet == null && it.overtattBekreftelse == true
-                        }
-                    if (overtatteArbeidssøkerperioder.size > 1) {
-                        val siste = overtatteArbeidssøkerperioder.maxByOrNull { it.startet }
-                        val arbeidssøkerperioder =
-                            person.arbeidssøkerperioder.map { arbeidssøkerperiode ->
-                                if (arbeidssøkerperiode != siste) {
-                                    personer.find { arbeidssøkerperiode.ident == it.ident }?.frasiArbeidssøkerBekreftelse(
-                                        arbeidssøkerperiode.periodeId,
-                                        false,
-                                    )
-                                    arbeidssøkerperiode.overtattBekreftelse = false
-                                    arbeidssøkerperiode.copy(overtattBekreftelse = false)
-                                }
-                                arbeidssøkerperiode
-                            }
-                        person.arbeidssøkerperioder.clear()
-                        person.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
-                    }
+                    pdlIdentliste.konsoliderPersonerTilGjeldendePerson(gjeldendePerson, personer)
+                    konsoliderArbeidssøkerperioderForGjeldendePerson(gjeldendePerson, personer)
                 }
-                person.setStatus(person.vurderNyStatus())
-                if (personRepository.finnesPerson(person.ident)) {
-                    personRepository.oppdaterPerson(person)
+                gjeldendePerson.setStatus(gjeldendePerson.vurderNyStatus())
+                if (personRepository.finnesPerson(gjeldendePerson.ident)) {
+                    personRepository.oppdaterPerson(gjeldendePerson)
                 } else {
-                    personRepository.lagrePerson(person)
+                    personRepository.lagrePerson(gjeldendePerson)
                 }
-                return person
+                return gjeldendePerson
             } else {
                 logger.warn("Fant ingen gjeldende ident for ${personer.map { it.ident }}")
                 return null
             }
+        }
+    }
+
+    private fun List<Ident>.konsoliderPersonerTilGjeldendePerson(
+        gjeldendePerson: Person,
+        personer: List<Person>,
+    ) {
+        this
+            .filter { it.ident != gjeldendePerson.ident }
+            .forEach { pdlIdent ->
+                val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
+                gjeldendePerson.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
+                historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
+                    gjeldendePerson.statusHistorikk.put(it.first, it.second)
+                }
+                val arbeidssøkerperioder =
+                    (gjeldendePerson.arbeidssøkerperioder + (historiskPerson?.arbeidssøkerperioder ?: emptyList()))
+                        .map { it.copy(ident = gjeldendePerson.ident) }
+                        .toMutableList()
+
+                gjeldendePerson.arbeidssøkerperioder.clear()
+                gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
+
+                personRepository.slettPerson(pdlIdent.ident)
+
+                gjeldendePerson.apply {
+                    if (!meldeplikt && historiskPerson?.meldeplikt == true) {
+                        meldeplikt = true
+                    }
+                    if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
+                        meldegruppe = historiskPerson.meldegruppe
+                    }
+                }
+            }
+    }
+
+    private fun konsoliderArbeidssøkerperioderForGjeldendePerson(
+        gjeldendePerson: Person,
+        personListe: List<Person>,
+    ) {
+        val overtatteArbeidssøkerperioder =
+            gjeldendePerson.arbeidssøkerperioder.filter {
+                it.avsluttet == null && it.overtattBekreftelse == true
+            }
+        if (overtatteArbeidssøkerperioder.size > 1) {
+            val siste = overtatteArbeidssøkerperioder.maxByOrNull { it.startet }
+            val arbeidssøkerperioder =
+                gjeldendePerson.arbeidssøkerperioder.map { arbeidssøkerperiode ->
+                    if (arbeidssøkerperiode != siste) {
+                        personListe.find { arbeidssøkerperiode.ident == it.ident }?.frasiArbeidssøkerBekreftelse(
+                            arbeidssøkerperiode.periodeId,
+                            false,
+                        )
+                        arbeidssøkerperiode.overtattBekreftelse = false
+                        arbeidssøkerperiode.copy(overtattBekreftelse = false)
+                    }
+                    arbeidssøkerperiode
+                }
+            gjeldendePerson.arbeidssøkerperioder.clear()
+            gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
         }
     }
 
