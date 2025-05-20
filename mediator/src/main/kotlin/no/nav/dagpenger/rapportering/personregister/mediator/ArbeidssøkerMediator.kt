@@ -5,6 +5,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
@@ -14,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerp
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
     private val personRepository: PersonRepository,
+    private val personService: PersonService,
     private val personObservers: List<PersonObserver>,
     private val actionTimer: ActionTimer,
 ) {
@@ -56,7 +58,7 @@ class ArbeidssøkerMediator(
     private fun behandle(arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse) {
         logger.info { "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}" }
 
-        personRepository
+        personService
             .hentPerson(arbeidssøkerHendelse.ident)
             ?.let { person ->
                 personObservers.forEach { person.addObserver(it) }

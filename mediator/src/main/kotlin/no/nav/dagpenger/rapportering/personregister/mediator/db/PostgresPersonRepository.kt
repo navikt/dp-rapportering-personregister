@@ -116,6 +116,26 @@ class PostgresPersonRepository(
                 }
         }
 
+    override fun oppdaterIdent(
+        person: Person,
+        nyIdent: String,
+    ) = actionTimer.timedAction("db-oppdaterIdent") {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                tx
+                    .run(
+                        queryOf(
+                            "UPDATE person SET ident = :nyIdent WHERE ident = :ident",
+                            mapOf(
+                                "ident" to person.ident,
+                                "nyIdent" to nyIdent,
+                            ),
+                        ).asUpdate,
+                    ).validateRowsAffected()
+            }
+        }
+    }
+
     override fun hentAntallPersoner(): Int =
         actionTimer.timedAction("db-hentAntallPersoner") {
             using(sessionOf(dataSource)) { session ->

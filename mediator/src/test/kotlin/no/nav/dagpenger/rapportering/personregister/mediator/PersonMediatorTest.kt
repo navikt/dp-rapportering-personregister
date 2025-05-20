@@ -1,19 +1,23 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -21,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKaf
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -38,6 +43,7 @@ import java.util.UUID
 class PersonMediatorTest {
     private lateinit var rapidsConnection: TestRapid
     private lateinit var personRepository: PersonRepository
+    private lateinit var personService: PersonService
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var overtaBekreftelseKafkaProdusent: MockKafkaProducer<PaaVegneAv>
     private lateinit var personMediator: PersonMediator
@@ -46,6 +52,7 @@ class PersonMediatorTest {
     private lateinit var meldepliktMediator: MeldepliktMediator
     private lateinit var meldepliktConnector: MeldepliktConnector
 
+    private val pdlConnector = mockk<PdlConnector>()
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private lateinit var beslutningObserver: BeslutningObserver
@@ -54,16 +61,25 @@ class PersonMediatorTest {
     fun setup() {
         rapidsConnection = TestRapid()
         personRepository = InMemoryPersonRepository()
+        beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
+        beslutningObserver = BeslutningObserver(beslutningRepository)
+        personService =
+            PersonService(
+                pdlConnector = pdlConnector,
+                personRepository = personRepository,
+                personObservers = listOf(personObserver, beslutningObserver),
+                cache = Caffeine.newBuilder().build(),
+            )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
         arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-        arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
-        beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
-        beslutningObserver = BeslutningObserver(beslutningRepository)
+        arbeidssøkerMediator =
+            ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
         meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
         meldepliktMediator =
             MeldepliktMediator(
                 personRepository,
+                personService,
                 listOf(personObserver, beslutningObserver),
                 meldepliktConnector,
                 actionTimer,
@@ -71,11 +87,14 @@ class PersonMediatorTest {
         personMediator =
             PersonMediator(
                 personRepository,
+                personService,
                 arbeidssøkerMediator,
                 listOf(personObserver, beslutningObserver),
                 meldepliktMediator,
                 actionTimer,
             )
+
+        every { pdlConnector.hentIdenter(ident) } returns listOf(Ident(ident, Ident.IdentGruppe.FOLKEREGISTERIDENT, false))
     }
 
     private val ident = "12345678910"

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -18,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -38,10 +40,12 @@ import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.util.concurrent.TimeUnit
 
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+    val pdlConnector = mockk<PdlConnector>()
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -106,10 +110,19 @@ open class ApiTestSetup {
                     PeriodeAvroDeserializer::class,
                 )
             val personObserver = mockk<PersonObserver>(relaxed = true)
-            val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
+            val personService =
+                PersonService(
+                    pdlConnector = pdlConnector,
+                    personRepository = personRepository,
+                    personObservers = listOf(personObserver),
+                    cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
+                )
+            val meldepliktMediator =
+                MeldepliktMediator(personRepository, personService, listOf(personObserver), meldepliktConnector, actionTimer)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
+            val arbeidssøkerMediator =
+                ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
             val kafkaContext =
                 KafkaContext(
@@ -120,13 +133,19 @@ open class ApiTestSetup {
                 )
 
             val personMediator =
-                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
-            val personService = mockk<PersonService>()
+                PersonMediator(
+                    personRepository,
+                    personService,
+                    arbeidssøkerMediator,
+                    listOf(personObserver),
+                    meldepliktMediator,
+                    actionTimer,
+                )
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, personService)
+                personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
             }
 
             block()

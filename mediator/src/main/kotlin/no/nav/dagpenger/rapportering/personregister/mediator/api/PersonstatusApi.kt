@@ -14,7 +14,6 @@ import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
@@ -26,7 +25,6 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 internal fun Application.personstatusApi(
-    personRepository: PersonRepository,
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
     personService: PersonService,
@@ -37,13 +35,6 @@ internal fun Application.personstatusApi(
                 val ident = call.receiveText()
                 val identer = personService.hentAlleIdenterForPerson(ident)
                 call.respond(identer)
-            }
-        }
-        route("/pdl/person") {
-            post {
-                val ident = call.receiveText()
-                val person = personService.hentPerson(ident)
-                call.respond(person)
             }
         }
         authenticate("tokenX") {
@@ -73,7 +64,7 @@ internal fun Application.personstatusApi(
                 get {
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
-                    personRepository
+                    personService
                         .hentPerson(ident)
                         ?.also {
                             call.respond(

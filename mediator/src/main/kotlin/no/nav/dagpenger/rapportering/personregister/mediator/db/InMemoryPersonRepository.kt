@@ -25,6 +25,17 @@ class InMemoryPersonRepository : PersonRepository {
         personList[person.ident] = person
     }
 
+    override fun oppdaterIdent(
+        person: Person,
+        nyIdent: String,
+    ) {
+        val person =
+            personList[person.ident]
+                ?: throw IllegalArgumentException("Person med ident ${person.ident} finnes ikke")
+        personList.remove(person.ident)
+        personList[nyIdent] = person.copy(ident = nyIdent)
+    }
+
     override fun hentAntallPersoner(): Int = personList.size
 
     override fun hentAntallHendelser(): Int = personList.values.sumOf { it.hendelser.size }
