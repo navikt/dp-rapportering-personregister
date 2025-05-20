@@ -22,7 +22,7 @@ class PersonService(
         return ryddOppPersoner(pdlIdenter, personer)
     }
 
-    fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
+    private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
     private fun hentPersonFraDB(identer: List<String>): List<Person> =
         identer.mapNotNull { ident ->

@@ -30,13 +30,6 @@ internal fun Application.personstatusApi(
     personService: PersonService,
 ) {
     routing {
-        route("/pdl/identer") {
-            post {
-                val ident = call.receiveText()
-                val identer = personService.hentAlleIdenterForPerson(ident)
-                call.respond(identer)
-            }
-        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {
