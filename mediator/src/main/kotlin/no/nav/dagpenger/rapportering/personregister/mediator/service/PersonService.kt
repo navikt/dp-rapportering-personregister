@@ -43,6 +43,7 @@ class PersonService(
         } else if (personer.size == 1) {
             val person = personer.first()
             if (gjeldendeIdent != null && person.ident != gjeldendeIdent) {
+                sikkerLogg.info("Oppdaterer ident fra ${person.ident} til $gjeldendeIdent")
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
                 return person.copy(ident = gjeldendeIdent)
             } else {
@@ -82,6 +83,7 @@ class PersonService(
             .filter { it.ident != gjeldendePerson.ident }
             .forEach { pdlIdent ->
                 val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
+                sikkerLogg.info("Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}")
                 gjeldendePerson.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
                 historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
                     gjeldendePerson.statusHistorikk.put(it.first, it.second)
@@ -109,26 +111,31 @@ class PersonService(
 
     private fun konsoliderArbeidssøkerperioderForGjeldendePerson(
         gjeldendePerson: Person,
-        personListe: List<Person>,
+        personer: List<Person>,
     ) {
         val overtatteArbeidssøkerperioder =
             gjeldendePerson.arbeidssøkerperioder.filter {
                 it.avsluttet == null && it.overtattBekreftelse == true
             }
         if (overtatteArbeidssøkerperioder.size > 1) {
-            val siste = overtatteArbeidssøkerperioder.maxByOrNull { it.startet }
+            val nyesteOvertattePeriode = overtatteArbeidssøkerperioder.maxByOrNull { it.startet }
+            sikkerLogg.info("Nyeste overtatte periode er ${nyesteOvertattePeriode?.periodeId}")
             val arbeidssøkerperioder =
                 gjeldendePerson.arbeidssøkerperioder.map { arbeidssøkerperiode ->
-                    if (arbeidssøkerperiode != siste) {
-                        personListe.find { arbeidssøkerperiode.ident == it.ident }?.frasiArbeidssøkerBekreftelse(
-                            arbeidssøkerperiode.periodeId,
-                            false,
-                        )
+                    if (arbeidssøkerperiode != nyesteOvertattePeriode) {
+                        personer
+                            .find { arbeidssøkerperiode.ident == it.ident }
+                            ?.frasiArbeidssøkerBekreftelse(
+                                arbeidssøkerperiode.periodeId,
+                                false,
+                            )
                         arbeidssøkerperiode.overtattBekreftelse = false
                         arbeidssøkerperiode.copy(overtattBekreftelse = false)
                     }
                     arbeidssøkerperiode
                 }
+            sikkerLogg.info("Konsoliderer arbeidssøkerperioder for ${gjeldendePerson.ident}: $arbeidssøkerperioder")
+
             gjeldendePerson.arbeidssøkerperioder.clear()
             gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
         }
@@ -136,6 +143,7 @@ class PersonService(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 }
 
