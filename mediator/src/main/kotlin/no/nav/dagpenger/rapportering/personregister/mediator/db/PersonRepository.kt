@@ -12,6 +12,11 @@ interface PersonRepository {
 
     fun oppdaterPerson(person: Person)
 
+    fun oppdaterIdent(
+        person: Person,
+        nyIdent: String,
+    )
+
     fun hentAntallPersoner(): Int
 
     fun hentAntallHendelser(): Int

@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -16,6 +17,7 @@ import java.time.LocalDateTime
 
 class PersonMediator(
     private val personRepository: PersonRepository,
+    private val personService: PersonService,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val personObservers: List<PersonObserver>,
     private val meldepliktMediator: MeldepliktMediator,
@@ -70,7 +72,7 @@ class PersonMediator(
 
     private fun behandleHendelse(hendelse: Hendelse) {
         try {
-            personRepository
+            personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
                     if (person.observers.isEmpty()) {
@@ -87,7 +89,7 @@ class PersonMediator(
 
     fun overtaBekreftelse(ident: String) {
         logger.info { "Overta bekreftelse for ident" }
-        personRepository
+        personService
             .hentPerson(ident)
             ?.also { person ->
                 if (person.observers.isEmpty()) {
@@ -100,7 +102,7 @@ class PersonMediator(
     }
 
     private fun hentEllerOpprettPerson(ident: String): Person =
-        personRepository
+        personService
             .hentPerson(ident) ?: Person(ident)
             .also { person ->
                 if (person.observers.isEmpty()) {

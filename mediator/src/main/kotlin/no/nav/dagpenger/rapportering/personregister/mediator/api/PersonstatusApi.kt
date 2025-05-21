@@ -14,9 +14,8 @@ import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDate
@@ -26,10 +25,9 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 internal fun Application.personstatusApi(
-    personRepository: PersonRepository,
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
-    meldepliktConnector: MeldepliktConnector,
+    personService: PersonService,
 ) {
     routing {
         authenticate("tokenX") {
@@ -59,7 +57,7 @@ internal fun Application.personstatusApi(
                 get {
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
-                    personRepository
+                    personService
                         .hentPerson(ident)
                         ?.also {
                             call.respond(

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
@@ -11,18 +12,21 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
@@ -33,12 +37,15 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
+import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import java.util.concurrent.TimeUnit
 
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+    val pdlConnector = mockk<PdlConnector>()
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -96,12 +103,26 @@ open class ApiTestSetup {
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
-            val arbedssøkerperiodeKafkaConsumer = testKafkaContainer.createConsumer()
+            val arbedssøkerperiodeKafkaConsumer =
+                testKafkaContainer.createConsumer(
+                    "arbedssøkerperiode-group",
+                    LongDeserializer::class,
+                    PeriodeAvroDeserializer::class,
+                )
             val personObserver = mockk<PersonObserver>(relaxed = true)
-            val meldepliktMediator = MeldepliktMediator(personRepository, listOf(personObserver), meldepliktConnector, actionTimer)
+            val personService =
+                PersonService(
+                    pdlConnector = pdlConnector,
+                    personRepository = personRepository,
+                    personObservers = listOf(personObserver),
+                    cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
+                )
+            val meldepliktMediator =
+                MeldepliktMediator(personRepository, personService, listOf(personObserver), meldepliktConnector, actionTimer)
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
-            val arbeidssøkerMediator = ArbeidssøkerMediator(arbeidssøkerService, personRepository, listOf(personObserver), actionTimer)
+            val arbeidssøkerMediator =
+                ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
             val kafkaContext =
                 KafkaContext(
@@ -110,15 +131,21 @@ open class ApiTestSetup {
                     "ARBEIDSSOKERPERIODER_TOPIC",
                     arbeidssøkerMottak,
                 )
-            val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
 
             val personMediator =
-                PersonMediator(personRepository, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
+                PersonMediator(
+                    personRepository,
+                    personService,
+                    arbeidssøkerMediator,
+                    listOf(personObserver),
+                    meldepliktMediator,
+                    actionTimer,
+                )
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
-                personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
             }
 
             block()
@@ -137,6 +164,8 @@ open class ApiTestSetup {
         System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
         System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
         System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+        System.setProperty("PDL_API_HOST", "pdl-api.test.nais.io")
+        System.setProperty("PDL_AUDIENCE", "test:pdl:pdl-api")
     }
 
     private fun mapAppConfig(): MapApplicationConfig =

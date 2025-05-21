@@ -6,6 +6,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -14,6 +15,7 @@ import java.util.UUID
 
 class MeldepliktMediator(
     private val personRepository: PersonRepository,
+    private val personService: PersonService,
     private val personObservers: List<PersonObserver>,
     private val meldepliktConnector: MeldepliktConnector,
     private val actionTimer: ActionTimer,
@@ -39,14 +41,14 @@ class MeldepliktMediator(
         actionTimer.timedAction("behandle_hentMeldeplikt") {
             logger.info { "Henter meldeplikt for ident" }
             try {
-                personRepository
+                personService
                     .hentPerson(ident)
                     ?.let { person ->
                         if (!person.meldeplikt) {
                             val meldeplikt = runBlocking { meldepliktConnector.hentMeldeplikt(ident) }
                             if (person.meldeplikt != meldeplikt) {
                                 MeldepliktHendelse(
-                                    ident = ident,
+                                    ident = person.ident,
                                     referanseId = UUID.randomUUID().toString(),
                                     dato = LocalDateTime.now(),
                                     startDato = LocalDateTime.now(),
@@ -67,7 +69,7 @@ class MeldepliktMediator(
 
     private fun behandleHendelse(hendelse: Hendelse) {
         try {
-            personRepository
+            personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
                     if (person.observers.isEmpty()) {

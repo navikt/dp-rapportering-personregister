@@ -4,8 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -19,19 +21,22 @@ import java.util.UUID
 
 class ArbeidssøkerMediatorTest {
     private val arbeidssøkerService = mockk<ArbeidssøkerService>(relaxed = true)
-    private val personRepository = mockk<PersonRepository>(relaxed = true)
+    private lateinit var personRepository: PersonRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private val personService = mockk<PersonService>(relaxed = true)
 
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
 
     @BeforeEach
     fun setup() {
+        personRepository = InMemoryPersonRepository()
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService = arbeidssøkerService,
                 personRepository = personRepository,
                 personObservers = listOf(personObserver),
                 actionTimer = actionTimer,
+                personService = personService,
             )
     }
 
@@ -41,7 +46,7 @@ class ArbeidssøkerMediatorTest {
         val periodeId = UUID.randomUUID()
         val person = testPerson(ident, "DAGP", meldeplikt = true)
 
-        every { personRepository.hentPerson(ident) } returns person
+        every { personService.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(
             Arbeidssøkerperiode(
@@ -63,7 +68,7 @@ class ArbeidssøkerMediatorTest {
         val periodeId = UUID.randomUUID()
         val person = testPerson(ident, "ARBS", meldeplikt = true)
 
-        every { personRepository.hentPerson(ident) } returns person
+        every { personService.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(
             Arbeidssøkerperiode(
@@ -97,7 +102,7 @@ class ArbeidssøkerMediatorTest {
                 statusHistorikk.put(LocalDateTime.now(), DAGPENGERBRUKER)
             }
 
-        every { personRepository.hentPerson(ident) } returns person
+        every { personService.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(
             arbeidssøkerperiode.copy(avsluttet = LocalDateTime.now()),
@@ -123,7 +128,7 @@ class ArbeidssøkerMediatorTest {
                 avsluttet = null,
                 overtattBekreftelse = null,
             )
-        every { personRepository.hentPerson(ident) } returns person
+        every { personService.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(ident)
 
@@ -145,7 +150,7 @@ class ArbeidssøkerMediatorTest {
                 avsluttet = null,
                 overtattBekreftelse = null,
             )
-        every { personRepository.hentPerson(ident) } returns null
+        every { personService.hentPerson(ident) } returns null
 
         arbeidssøkerMediator.behandle(ident)
 
@@ -170,7 +175,7 @@ class ArbeidssøkerMediatorTest {
                 .apply { statusHistorikk.put(LocalDateTime.now(), DAGPENGERBRUKER) }
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode("12345678901") } returns
             arbeidsøkerperioder.copy(avsluttet = LocalDateTime.now())
-        every { personRepository.hentPerson(ident) } returns person
+        every { personService.hentPerson(ident) } returns person
 
         arbeidssøkerMediator.behandle(ident)
 
@@ -183,7 +188,7 @@ class ArbeidssøkerMediatorTest {
     @Test
     fun `kan håndtere feil ved henting av arbeidssøkerperiode`() {
         val ident = "12345678901"
-        every { personRepository.hentPerson(ident) } returns testPerson(ident, "DAGP", meldeplikt = true)
+        personRepository.lagrePerson(testPerson(ident, "DAGP", meldeplikt = true))
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) } throws
             RuntimeException("Feil ved henting av arbeidssøkerperiode")
 

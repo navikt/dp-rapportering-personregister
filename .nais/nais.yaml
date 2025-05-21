@@ -63,16 +63,10 @@ spec:
             - name: pgaudit.log
               value: 'write'
   accessPolicy:
-    inbound:
-      rules:
-        - application: dp-rapportering
-        {{#each additionalInbounds}}
-        - application: {{application}}
-          namespace: {{namespace}}
-        {{/each}}
     outbound:
       external:
         - host: dagpenger-unleash-api.nav.cloud.nais.io
+        - host: {{ PDL_API_HOST }}
       rules:
         - application: dp-arena-meldeplikt-adapter
         - application: paw-arbeidssoekerregisteret-api-oppslag
@@ -81,9 +75,22 @@ spec:
         - application: paw-kafka-key-generator
           namespace: paw
           cluster: {{ cluster }}
+    inbound:
+      rules:
+        - application: dp-rapportering
+        {{#each additionalInbounds}}
+        - application: {{application}}
+          namespace: {{namespace}}
+        {{/each}}
   envFrom:
     - secret: dp-rapportering-personregister-unleash-api-token
   env:
+    - name: PDL_API_HOST
+      value: {{ PDL_API_HOST }}
+    - name: PDL_AUDIENCE
+      value: {{ PDL_AUDIENCE }}
+    - name: PDL_API_SCOPE
+      value: {{ PDL_API_SCOPE }}
     - name: ARBEIDSSOKERREGISTER_OPPSLAG_HOST
       value: {{ ARBEIDSSOKERREGISTER_OPPSLAG_HOST }}
     - name: ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE

@@ -1,5 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import com.github.benmanes.caffeine.cache.Cache
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.ktor.server.engine.embeddedServer
 import io.micrometer.core.instrument.Clock
@@ -7,6 +9,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import mu.KotlinLogging
+import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
@@ -18,6 +21,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -34,10 +38,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Synkronis
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
+import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -45,6 +51,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
+import java.util.concurrent.TimeUnit
 import io.ktor.server.cio.CIO as CIOEngine
 
 private val logger = KotlinLogging.logger {}
@@ -61,6 +68,14 @@ internal class ApplicationBuilder(
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
+
+    // TODO: Bytte ut lokal cache med Valkey
+    private val pdlIdentCache: Cache<String, List<Ident>> =
+        Caffeine
+            .newBuilder()
+            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .maximumSize(1000)
+            .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
@@ -96,18 +111,22 @@ internal class ApplicationBuilder(
         ArbeidssøkerBeslutningObserver(
             arbeidssøkerBeslutningRepository,
         )
-
+    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
+    private val personService =
+        PersonService(pdlConnector, personRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver), pdlIdentCache)
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
             personRepository,
+            personService,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             actionTimer,
         )
     private val meldepliktMediator =
         MeldepliktMediator(
             personRepository,
+            personService,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             meldepliktConnector,
             actionTimer,
@@ -115,6 +134,7 @@ internal class ApplicationBuilder(
     private val personMediator =
         PersonMediator(
             personRepository,
+            personService,
             arbeidssøkerMediator,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             meldepliktMediator,
@@ -131,6 +151,7 @@ internal class ApplicationBuilder(
             arbeidssøkerperioderTopic,
             arbeidssøkerMottak,
         )
+
     private val rapidsConnection =
         RapidApplication
             .create(
@@ -147,7 +168,7 @@ internal class ApplicationBuilder(
                 with(engine.application) {
                     pluginConfiguration(meterRegistry, kafkaContext)
                     internalApi(meterRegistry)
-                    personstatusApi(personRepository, personMediator, synkroniserPersonMetrikker, meldepliktConnector)
+                    personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 }
 
                 SøknadMottak(rapid, personMediator, soknadMetrikker)
