@@ -184,6 +184,15 @@ class PersonServiceTest {
         }
         verify(exactly = 3) { personRepository.slettPerson(any()) }
     }
+
+    @Test
+    fun `hentPerson returnerer person fra databasen selv om pdl returnerer tom liste`() {
+        every { pdlConnector.hentIdenter(any()) } returns emptyList()
+        every { personRepository.hentPerson(ident) } returns person(ident, UUID.randomUUID())
+
+        val person = personService.hentPerson(ident)!!
+        person.ident shouldBe ident
+    }
 }
 
 private fun person(

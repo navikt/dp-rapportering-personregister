@@ -17,7 +17,15 @@ class PersonService(
 ) {
     fun hentPerson(ident: String): Person? {
         val pdlIdenter = hentAlleIdenterForPerson(ident)
-        val personer = hentPersonFraDB(pdlIdenter.filterNot { it.gruppe == Ident.IdentGruppe.AKTORID }.map { it.ident })
+        val personer =
+            hentPersonFraDB(
+                identer =
+                    if (pdlIdenter.isEmpty()) {
+                        listOf(ident)
+                    } else {
+                        pdlIdenter.filterNot { it.gruppe == Ident.IdentGruppe.AKTORID }.map { it.ident }
+                    },
+            )
 
         return ryddOppPersoner(pdlIdenter, personer)
     }
