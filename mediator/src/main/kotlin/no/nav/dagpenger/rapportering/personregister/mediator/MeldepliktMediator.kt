@@ -32,6 +32,7 @@ class MeldepliktMediator(
 
     suspend fun behandle(
         ident: String,
+        harMeldtSeg: Boolean,
         withDelay: Boolean = true,
     ) {
         // Delay for å la eventuell melding om meldeplikt fra Arena bli behandlet først
@@ -54,7 +55,7 @@ class MeldepliktMediator(
                                     startDato = LocalDateTime.now(),
                                     sluttDato = null,
                                     statusMeldeplikt = meldeplikt,
-                                    harMeldtSeg = true,
+                                    harMeldtSeg = harMeldtSeg,
                                 ).also { hendelse ->
                                     behandleHendelse(hendelse)
                                 }

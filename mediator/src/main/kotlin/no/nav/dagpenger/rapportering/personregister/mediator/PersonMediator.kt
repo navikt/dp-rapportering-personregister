@@ -44,7 +44,8 @@ class PersonMediator(
                     .also { person ->
                         person.behandle(hendelse)
                         personRepository.oppdaterPerson(person)
-                        runBlocking { meldepliktMediator.behandle(hendelse.ident) }
+                        runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
+                        arbeidssøkerMediator.behandle(hendelse.ident)
                     }
             }
         }

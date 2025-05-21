@@ -11,7 +11,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
@@ -38,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class PersonMediatorTest {
@@ -142,6 +146,22 @@ class PersonMediatorTest {
 
             personMediator.behandle(dagpengerMeldegruppeHendelse())
             personRepository.hentPerson(ident) shouldNotBe null
+        }
+
+        @Test
+        fun `meldegruppeendring for ny person trigger henting av meldeplikt og arbeidssøkerperiode`() {
+            val dagpengerMeldegruppeHendelse = dagpengerMeldegruppeHendelse()
+            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(dagpengerMeldegruppeHendelse.ident) } returns
+                arbeidssøkerperiodeResponse()
+            coEvery { meldepliktConnector.hentMeldeplikt(dagpengerMeldegruppeHendelse.ident) } returns true
+
+            personMediator.behandle(dagpengerMeldegruppeHendelse)
+            with(personRepository.hentPerson(ident)) {
+                this shouldNotBe null
+                this?.meldegruppe shouldBe "DAGP"
+                this?.meldeplikt shouldBe true
+                this?.arbeidssøkerperioder?.gjeldende shouldNotBe null
+            }
         }
 
         @Test
@@ -357,6 +377,28 @@ class PersonMediatorTest {
         statusMeldeplikt = status,
         referanseId = referanseId,
         harMeldtSeg = true,
+    )
+
+    private fun arbeidssøkerperiodeResponse(
+        periodeId: UUID = UUID.randomUUID(),
+        startet: OffsetDateTime = OffsetDateTime.now(),
+    ) = listOf(
+        ArbeidssøkerperiodeResponse(
+            periodeId = periodeId,
+            startet =
+                MetadataResponse(
+                    tidspunkt = startet,
+                    utfoertAv =
+                        BrukerResponse(
+                            type = "type",
+                            id = "ID",
+                        ),
+                    kilde = "kilde",
+                    aarsak = "Årsak",
+                    tidspunktFraKilde = null,
+                ),
+            avsluttet = null,
+        ),
     )
 }
 
