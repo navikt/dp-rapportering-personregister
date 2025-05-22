@@ -338,6 +338,14 @@ class PostgresPersonRepository(
                     )
                     tx.run(
                         queryOf(
+                            "DELETE FROM arbeidssoker_beslutning WHERE person_id = :person_id",
+                            mapOf(
+                                "person_id" to personId,
+                            ),
+                        ).asUpdate,
+                    )
+                    tx.run(
+                        queryOf(
                             "DELETE FROM person WHERE ident = :ident",
                             mapOf(
                                 "ident" to ident,
