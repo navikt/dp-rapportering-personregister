@@ -88,6 +88,11 @@ class PersonMediator(
         }
     }
 
+    fun ryddArbeidssøkerperioder() {
+        val personerMedDagpengerUtenOvertattArbeidssøkerperiode = personRepository.hentPersonerMedDagpenger()
+        personerMedDagpengerUtenOvertattArbeidssøkerperiode.forEach { arbeidssøkerMediator.ryddArbeidssøkerperioder(it) }
+    }
+
     fun overtaBekreftelse(ident: String) {
         logger.info { "Overta bekreftelse for ident" }
         personService

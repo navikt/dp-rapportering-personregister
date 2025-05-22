@@ -196,6 +196,44 @@ class ArbeidssøkerMediatorTest {
 
         personRepository.hentPerson(ident)?.status shouldBe IKKE_DAGPENGERBRUKER
     }
+
+    @Test
+    fun `kan rydde i arbeidssøkerperioder`() {
+        val ident = "12345678901"
+        val sistePeriodeId = UUID.randomUUID()
+        val periodeId1 = UUID.randomUUID()
+        val periodeId2 = UUID.randomUUID()
+        val person =
+            testPerson(
+                ident,
+                "DAGP",
+                meldeplikt = true,
+                arbeidsøkerperioder =
+                    mutableListOf(
+                        Arbeidssøkerperiode(
+                            periodeId = periodeId1,
+                            ident = ident,
+                            startet = LocalDateTime.now().minusDays(1),
+                            avsluttet = null,
+                            overtattBekreftelse = null,
+                        ),
+                        Arbeidssøkerperiode(
+                            periodeId = periodeId2,
+                            ident = ident,
+                            startet = LocalDateTime.now().minusDays(1),
+                            avsluttet = null,
+                            overtattBekreftelse = false,
+                        ),
+                    ),
+            )
+
+        every { personService.hentPerson(ident) } returns person
+        coEvery { }
+
+        arbeidssøkerMediator.ryddArbeidssøkerperioder(ident)
+
+        person.arbeidssøkerperioder.size shouldBe 0
+    }
 }
 
 fun testPerson(

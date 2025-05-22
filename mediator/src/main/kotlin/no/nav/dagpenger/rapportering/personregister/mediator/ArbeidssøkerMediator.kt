@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeH
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
+import java.time.LocalDateTime
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -55,6 +56,33 @@ class ArbeidssøkerMediator(
             }
         }
 
+    fun ryddArbeidssøkerperioder(ident: String) {
+        val sisteArbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+        sikkerLogg.info("Siste arbeidssøkerperiode for $ident: $sisteArbeidssøkerperiode")
+        if (sisteArbeidssøkerperiode == null) {
+            sikkerLogg.info("Ingen arbeidssøkerperioder funnet for $ident")
+            return
+        }
+        val person =
+            personService.hentPerson(ident)?.also { person ->
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { observer -> person.addObserver(observer) }
+                }
+            }
+        if (person == null) {
+            sikkerLogg.info("Ingen person funnet for $ident")
+            return
+        }
+        person.arbeidssøkerperioder
+            .filterNot { it.periodeId == sisteArbeidssøkerperiode.periodeId }
+            .forEach { arbeidsPeriode ->
+                if (arbeidsPeriode.avsluttet != null) {
+                    behandle(arbeidsPeriode.copy(avsluttet = LocalDateTime.now()))
+                }
+            }
+        behandle(person.ident)
+    }
+
     private fun behandle(arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse) {
         logger.info { "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}" }
 
@@ -69,5 +97,6 @@ class ArbeidssøkerMediator(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 }
