@@ -33,7 +33,7 @@ internal fun Application.personstatusApi(
         route("/sync") {
             get {
                 logger.info { "GET /sync" }
-                personService.ryddPersonerMedDagpengerUtenArbeidssokerperiode()
+                personService.ryddPersonerMedDagpenger()
                 call.respond(HttpStatusCode.OK)
             }
         }

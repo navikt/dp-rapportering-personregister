@@ -31,7 +31,7 @@ class PersonService(
         return ryddOppPersoner(pdlIdenter, personer)
     }
 
-    fun ryddPersonerMedDagpengerUtenArbeidssokerperiode() {
+    fun ryddPersonerMedDagpenger() {
         val identer = personRepository.hentPersonerMedDagpengerUtenArbeidssokerperiode()
         identer.forEach { ident ->
             sikkerLogg.info("Rydder opp person med ident $ident")
