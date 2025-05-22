@@ -1,0 +1,12 @@
+apiVersion: aiven.io/v1alpha1
+kind: Valkey
+
+metadata:
+    name: valkey-teamdagpenger-personregister-identer
+    namespace: teamdagpenger
+    labels:
+        team: teamdagpenger
+        app: dp-rapportering-personregister
+spec:
+    plan: {{ valkey.plan }}
+    project: {{ valkey.project }}

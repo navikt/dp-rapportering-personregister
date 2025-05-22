@@ -31,6 +31,10 @@ spec:
   azure:
     application:
       enabled: true
+  valkey:
+    - instance: identer
+      access: readwrite
+
   kafka:
     pool: {{ kafka.pool }}
   {{#if ingresses}}

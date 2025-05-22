@@ -4,6 +4,10 @@ kafka:
 ingresses:
   - https://dp-rapportering-personregister.intern.dev.nav.no
 
+valkey:
+    plan: startup-4
+    project: nav-dev
+
 cluster: dev-gcp
 
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag.paw
