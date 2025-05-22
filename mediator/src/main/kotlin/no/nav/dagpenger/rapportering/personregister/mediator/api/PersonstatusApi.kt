@@ -30,13 +30,6 @@ internal fun Application.personstatusApi(
     personService: PersonService,
 ) {
     routing {
-        route("/sync") {
-            get {
-                logger.info { "GET /sync" }
-                personService.ryddPersonerMedDagpenger()
-                call.respond(HttpStatusCode.OK)
-            }
-        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {

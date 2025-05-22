@@ -1,9 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
+import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 enum class Status {
     DAGPENGERBRUKER,
@@ -50,12 +53,18 @@ data class Person(
 }
 
 fun Person.overtaArbeidssøkerBekreftelse() {
+    logger.info("Overtar arbeidssøkerbekreftelse")
     arbeidssøkerperioder.gjeldende?.let {
+        logger.info("Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}")
         if (it.overtattBekreftelse != true) {
+            logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
             try {
+                logger.info("Antall observere: ${observers.size}")
                 observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
+                logger.info("Kjørte overtagelse på observere uten feil. Setter overtattBekreftelse=true")
                 it.overtattBekreftelse = true
             } catch (e: Exception) {
+                logger.error(e) { "Overtagelse feilet!" }
                 it.overtattBekreftelse = false
                 throw e
             }

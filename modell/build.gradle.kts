@@ -11,6 +11,8 @@ version = "unspecified"
 }*/
 
 dependencies {
+    implementation(libs.kotlin.logging)
+
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.mockk)
