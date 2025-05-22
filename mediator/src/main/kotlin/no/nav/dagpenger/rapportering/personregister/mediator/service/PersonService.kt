@@ -103,28 +103,32 @@ class PersonService(
             .filter { it.ident != gjeldendePerson.ident }
             .forEach { pdlIdent ->
                 val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
-                sikkerLogg.info("Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}")
-                gjeldendePerson.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
-                historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
-                    gjeldendePerson.statusHistorikk.put(it.first, it.second)
-                }
-                val arbeidssøkerperioder =
-                    (gjeldendePerson.arbeidssøkerperioder + (historiskPerson?.arbeidssøkerperioder ?: emptyList()))
-                        .map { it.copy(ident = gjeldendePerson.ident) }
-                        .toMutableList()
-
-                gjeldendePerson.arbeidssøkerperioder.clear()
-                gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
-
-                personRepository.slettPerson(pdlIdent.ident)
-
-                gjeldendePerson.apply {
-                    if (!meldeplikt && historiskPerson?.meldeplikt == true) {
-                        meldeplikt = true
+                if (historiskPerson != null) {
+                    sikkerLogg.info("Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}")
+                    gjeldendePerson.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
+                    historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
+                        gjeldendePerson.statusHistorikk.put(it.first, it.second)
                     }
-                    if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
-                        meldegruppe = historiskPerson.meldegruppe
+                    val arbeidssøkerperioder =
+                        (gjeldendePerson.arbeidssøkerperioder + (historiskPerson?.arbeidssøkerperioder ?: emptyList()))
+                            .map { it.copy(ident = gjeldendePerson.ident) }
+                            .toMutableList()
+
+                    gjeldendePerson.arbeidssøkerperioder.clear()
+                    gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })
+
+                    personRepository.slettPerson(pdlIdent.ident)
+
+                    gjeldendePerson.apply {
+                        if (!meldeplikt && historiskPerson?.meldeplikt == true) {
+                            meldeplikt = true
+                        }
+                        if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
+                            meldegruppe = historiskPerson.meldegruppe
+                        }
                     }
+                } else {
+                    sikkerLogg.info("Fant ikke historisk person med ident ${pdlIdent.ident}")
                 }
             }
     }
