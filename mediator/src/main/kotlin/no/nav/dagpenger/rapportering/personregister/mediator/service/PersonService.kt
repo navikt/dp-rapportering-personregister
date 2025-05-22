@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.frasiArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 
 class PersonService(
@@ -28,6 +29,17 @@ class PersonService(
             )
 
         return ryddOppPersoner(pdlIdenter, personer)
+    }
+
+    fun ryddPersonerMedDagpengerUtenArbeidssokerperiode() {
+        val identer = personRepository.hentPersonerMedDagpengerUtenArbeidssokerperiode()
+        identer.forEach { ident ->
+            sikkerLogg.info("Rydder opp person med ident $ident")
+            val person = hentPerson(ident)
+            sikkerLogg.info(
+                "Ident $ident ble returnert som $person. Har person arbeidssøkerperioder? ${person?.arbeidssøkerperioder}. gjeldende arbs.periode ${person?.arbeidssøkerperioder?.gjeldende}",
+            )
+        }
     }
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
