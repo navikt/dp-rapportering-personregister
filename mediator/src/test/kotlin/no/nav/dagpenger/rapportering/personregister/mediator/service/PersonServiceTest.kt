@@ -130,7 +130,7 @@ class PersonServiceTest {
         person.ident shouldBe nyIdent
 
         verify(exactly = 2) { personRepository.hentPerson(any()) }
-        verify(exactly = 2) { personRepository.slettPerson(any()) }
+        verify(exactly = 1) { personRepository.slettPerson(any()) }
         verify(exactly = 1) { personRepository.finnesPerson(any()) }
         verify(exactly = 1) { personRepository.oppdaterPerson(any()) }
         verify(exactly = 0) { personRepository.oppdaterIdent(any(), any()) }
@@ -182,7 +182,7 @@ class PersonServiceTest {
             meldegruppe shouldBe "DAGP"
             status shouldBe Status.DAGPENGERBRUKER
         }
-        verify(exactly = 3) { personRepository.slettPerson(any()) }
+        verify(exactly = 2) { personRepository.slettPerson(any()) }
     }
 
     @Test
