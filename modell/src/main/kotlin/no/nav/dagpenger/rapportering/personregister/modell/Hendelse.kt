@@ -27,7 +27,7 @@ data class SøknadHendelse(
             .takeIf { person.oppfyllerKrav }
             ?.let {
                 person.setStatus(it)
-                person.overtaArbeidssøkerBekreftelse()
+                person.sendOvertakelsesmelding()
             }
     }
 }
@@ -51,7 +51,7 @@ data class DagpengerMeldegruppeHendelse(
             .takeIf { person.oppfyllerKrav }
             ?.let {
                 person.setStatus(it)
-                person.overtaArbeidssøkerBekreftelse()
+                person.sendOvertakelsesmelding()
             }
     }
 }
@@ -77,7 +77,7 @@ data class AnnenMeldegruppeHendelse(
             ?.let {
                 person.setStatus(it)
                 person.arbeidssøkerperioder.gjeldende
-                    ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, !harMeldtSeg) }
+                    ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
             }
     }
 }
@@ -101,10 +101,10 @@ data class MeldepliktHendelse(
             ?.let {
                 person.setStatus(it)
                 if (person.oppfyllerKrav) {
-                    person.overtaArbeidssøkerBekreftelse()
+                    person.sendOvertakelsesmelding()
                 } else {
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.frasiArbeidssøkerBekreftelse(periode.periodeId, !harMeldtSeg) }
+                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
                 }
             }
     }

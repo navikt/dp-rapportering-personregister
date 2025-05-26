@@ -11,6 +11,9 @@ import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeH
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -54,6 +57,37 @@ class ArbeidssøkerMediator(
                 logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
             }
         }
+
+    fun behandle(paVegneAv: PaaVegneAv) {
+        val person =
+            personRepository
+                .hentPersonMedPeriodeId(paVegneAv.periodeId)
+                ?.also { person ->
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
+                    }
+                }
+
+        if (person == null) {
+            logger.error { "Fant ikke person med periodeId ${paVegneAv.periodeId} i databasen." }
+            return
+        }
+        when (paVegneAv.handling) {
+            is Start -> {
+                logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
+                person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+            }
+            is Stopp -> {
+                logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
+                person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+            }
+            else -> {
+                logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
+            }
+        }
+        logger.info("Oppdaterer person")
+        personRepository.oppdaterPerson(person)
+    }
 
     private fun behandle(arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse) {
         logger.info { "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}" }

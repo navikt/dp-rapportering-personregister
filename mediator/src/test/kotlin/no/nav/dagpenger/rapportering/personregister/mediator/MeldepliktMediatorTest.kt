@@ -25,7 +25,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -138,8 +141,13 @@ class MeldepliktMediatorTest {
     @Test
     fun `meldeplikthendelse for tidligere periode tas ikke høyde for`() {
         arbeidssøker {
+            every { personObserver.overtattArbeidssøkerbekreftelse(this@arbeidssøker, periodeId) } answers {
+                this@arbeidssøker.merkPeriodeSomOvertatt(periodeId)
+            }
+
             meldepliktMediator.behandle(meldepliktHendelse())
             personMediator.behandle(dagpengerMeldegruppeHendelse())
+            arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
             status shouldBe DAGPENGERBRUKER
             arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
             personObserver skalHaSendtOvertakelseFor this

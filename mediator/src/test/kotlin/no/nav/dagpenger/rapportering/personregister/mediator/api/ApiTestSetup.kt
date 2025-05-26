@@ -12,6 +12,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
@@ -28,6 +29,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
@@ -102,7 +104,14 @@ open class ApiTestSetup {
             val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
-            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>("paa-vegne-av", testKafkaContainer).producer
+            val paaVegneAvTopic = "paa-vegne-av-topic"
+            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>(paaVegneAvTopic, testKafkaContainer).producer
+            val bekreftelsePåVegneAvKafkaConsumer =
+                testKafkaContainer.createConsumer(
+                    "bekreftelse-pa-vegne-av-group",
+                    LongDeserializer::class,
+                    PaaVegneAvAvroDeserializer::class,
+                )
             val arbedssøkerperiodeKafkaConsumer =
                 testKafkaContainer.createConsumer(
                     "arbedssøkerperiode-group",
@@ -124,12 +133,16 @@ open class ApiTestSetup {
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
             val kafkaContext =
                 KafkaContext(
-                    overtaBekreftelseKafkaProdusent,
-                    arbedssøkerperiodeKafkaConsumer,
-                    "ARBEIDSSOKERPERIODER_TOPIC",
-                    arbeidssøkerMottak,
+                    bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,
+                    bekreftelsePåVegneAvKafkaConsumer = bekreftelsePåVegneAvKafkaConsumer,
+                    påVegneAvMottak = overtakelseMottak,
+                    påVegneAvTopic = paaVegneAvTopic,
+                    arbeidssøkerperioderKafkaConsumer = arbedssøkerperiodeKafkaConsumer,
+                    arbeidssøkerperioderTopic = "ARBEIDSSOKERPERIODER_TOPIC",
+                    arbeidssøkerMottak = arbeidssøkerMottak,
                 )
 
             val personMediator =

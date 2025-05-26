@@ -39,7 +39,6 @@ class PersonTest {
                 behandle(søknadHendelse())
 
                 status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
@@ -63,7 +62,6 @@ class PersonTest {
                 behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
     }
@@ -78,7 +76,6 @@ class PersonTest {
                 behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
 
@@ -105,7 +102,6 @@ class PersonTest {
                 behandle(meldepliktHendelse(status = true))
 
                 status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
@@ -117,7 +113,6 @@ class PersonTest {
                 behandle(meldepliktHendelse(status = true))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 arbeidssøkerperiodeObserver skalIkkeHaSendtOvertakelseFor this
             }
 
@@ -131,8 +126,6 @@ class PersonTest {
                 behandle(meldepliktHendelse(status = true))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
-                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
 
@@ -156,7 +149,6 @@ class PersonTest {
                 behandle(startetArbeidssøkerperiodeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
             }
 
@@ -223,17 +215,17 @@ class PersonTest {
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 1) { overtaArbeidssøkerBekreftelse(person) }
+    verify(exactly = 1) { sendOvertakelsesmelding(person) }
 }
 
 infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 0) { overtaArbeidssøkerBekreftelse(person) }
+    verify(exactly = 0) { sendOvertakelsesmelding(person) }
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person, fristBrutt = false) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
 }
 
 infix fun PersonObserver.skalIkkeHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 0) { frasiArbeidssøkerBekreftelse(person) }
+    verify(exactly = 0) { sendFrasigelsesmelding(person) }
 }

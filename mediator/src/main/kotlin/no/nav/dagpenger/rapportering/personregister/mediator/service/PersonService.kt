@@ -6,7 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.frasiArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 
 class PersonService(
@@ -137,7 +137,7 @@ class PersonService(
                     if (arbeidssøkerperiode != nyesteOvertattePeriode) {
                         personer
                             .find { arbeidssøkerperiode.ident == it.ident }
-                            ?.frasiArbeidssøkerBekreftelse(
+                            ?.sendFrasigelsesmelding(
                                 arbeidssøkerperiode.periodeId,
                                 false,
                             )

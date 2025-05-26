@@ -356,6 +356,28 @@ class PostgresPersonRepository(
             }.validateRowsAffected()
         }
 
+    override fun hentPersonMedPeriodeId(periodeId: UUID): Person? {
+        val ident =
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT pers.ident FROM arbeidssoker arbs 
+                        INNER JOIN person pers ON arbs.person_id = pers.id
+                        WHERE arbs.periode_id = :periode_id
+                        """.trimIndent(),
+                        mapOf("periode_id" to periodeId),
+                    ).map { row -> row.string("ident") }
+                        .asSingle,
+                )
+            }
+        if (ident == null) {
+            throw RuntimeException("Fant ikke person som eier periode med id $periodeId")
+        } else {
+            return hentPerson(ident)
+        }
+    }
+
     private fun hentPersonId(ident: String): Long? =
         using(sessionOf(dataSource)) { session ->
             session.run(

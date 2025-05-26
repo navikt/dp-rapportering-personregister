@@ -7,11 +7,15 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import java.util.UUID
 
 class ArbeidssøkerBeslutningObserver(
     private val arbeidssøkerBeslutningRepository: ArbeidssøkerBeslutningRepository,
 ) : PersonObserver {
-    override fun overtaArbeidssøkerBekreftelse(person: Person) {
+    override fun overtattArbeidssøkerbekreftelse(
+        person: Person,
+        periodeId: UUID,
+    ) {
         person.arbeidssøkerperioder.gjeldende
             ?.let { periode ->
                 val beslutning =
@@ -29,9 +33,9 @@ class ArbeidssøkerBeslutningObserver(
             }
     }
 
-    override fun frasiArbeidssøkerBekreftelse(
+    override fun frasagtArbeidssøkerbekreftelse(
         person: Person,
-        fristBrutt: Boolean,
+        periodeId: UUID,
     ) {
         person.arbeidssøkerperioder.gjeldende
             ?.let { periode ->

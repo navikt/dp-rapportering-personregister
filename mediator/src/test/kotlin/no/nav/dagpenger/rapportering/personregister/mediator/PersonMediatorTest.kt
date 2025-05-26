@@ -36,7 +36,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKE
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
+import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
+import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
+import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -179,14 +185,23 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {
+                every { personObserver.overtattArbeidssøkerbekreftelse(this@arbeidssøker, periodeId) } answers {
+                    this@arbeidssøker.merkPeriodeSomOvertatt(periodeId)
+                }
+                every { personObserver.frasagtArbeidssøkerbekreftelse(this@arbeidssøker, periodeId) } answers {
+                    this@arbeidssøker.merkPeriodeSomIkkeOvertatt(periodeId)
+                }
+
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
                 status shouldBe DAGPENGERBRUKER
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
 
                 personMediator.behandle(annenMeldegruppeHendelse())
                 status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp()))
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 personObserver skalHaFrasagtAnsvaretFor this
             }
@@ -195,8 +210,13 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppendring for tidligere periode tas ikke høyde for`() {
             arbeidssøker {
+                every { personObserver.overtattArbeidssøkerbekreftelse(this@arbeidssøker, periodeId) } answers {
+                    this@arbeidssøker.merkPeriodeSomOvertatt(periodeId)
+                }
+
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
@@ -250,22 +270,6 @@ class PersonMediatorTest {
         }
 
         @Test
-        fun `sender ikke overtakelsesmelding dersom vi allerede har overtatt arbeidssøker bekreftelse`() {
-            arbeidssøker(overtattBekreftelse = true) {
-                meldepliktMediator.behandle(meldepliktHendelse())
-                personMediator.behandle(annenMeldegruppeHendelse())
-                personRepository.oppdaterPerson(this)
-
-                status shouldBe IKKE_DAGPENGERBRUKER
-
-                personMediator.behandle(dagpengerMeldegruppeHendelse())
-
-                status shouldBe DAGPENGERBRUKER
-                personObserver skalIkkeHaSendtOvertakelseFor this
-            }
-        }
-
-        @Test
         fun `frasier arbeidssøker bekreftelse`() {
             arbeidssøker(overtattBekreftelse = true) {
                 meldepliktMediator.behandle(meldepliktHendelse())
@@ -290,6 +294,7 @@ class PersonMediatorTest {
             arbeidssøker {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
                 beslutningRepository.hentBeslutning(ident)?.apply {
@@ -306,6 +311,7 @@ class PersonMediatorTest {
             arbeidssøker {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
                 beslutningRepository.hentBeslutning(ident)?.apply {
@@ -313,6 +319,7 @@ class PersonMediatorTest {
                 }
 
                 personMediator.behandle(annenMeldegruppeHendelse())
+                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp()))
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 2
             }
         }
@@ -403,41 +410,41 @@ class PersonMediatorTest {
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 1) { overtaArbeidssøkerBekreftelse(person) }
+    verify(exactly = 1) { sendOvertakelsesmelding(person) }
 }
 
 infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 0) { overtaArbeidssøkerBekreftelse(person) }
+    verify(exactly = 0) { sendOvertakelsesmelding(person) }
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { frasiArbeidssøkerBekreftelse(person) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person) }
 }
 
 class BeslutningObserver(
     private val beslutningRepository: ArbeidssøkerBeslutningRepository,
 ) : PersonObserver {
-    override fun overtaArbeidssøkerBekreftelse(person: Person) {
-        person.arbeidssøkerperioder.gjeldende
-            ?.let { periode ->
-                val beslutning =
-                    ArbeidssøkerBeslutning(
-                        person.ident,
-                        periode.periodeId,
-                        Handling.OVERTATT,
-                        begrunnelse =
-                            "Oppfyller krav: arbedissøker, " +
-                                "meldeplikt=${person.meldeplikt} " +
-                                "og gruppe=${person.meldegruppe}",
-                    )
+    override fun overtattArbeidssøkerbekreftelse(
+        person: Person,
+        periodeId: UUID,
+    ) {
+        val beslutning =
+            ArbeidssøkerBeslutning(
+                person.ident,
+                periodeId,
+                Handling.OVERTATT,
+                begrunnelse =
+                    "Oppfyller krav: arbedissøker, " +
+                        "meldeplikt=${person.meldeplikt} " +
+                        "og gruppe=${person.meldegruppe}",
+            )
 
-                beslutningRepository.lagreBeslutning(beslutning)
-            }
+        beslutningRepository.lagreBeslutning(beslutning)
     }
 
-    override fun frasiArbeidssøkerBekreftelse(
+    override fun frasagtArbeidssøkerbekreftelse(
         person: Person,
-        fristBrutt: Boolean,
+        periodeId: UUID,
     ) {
         val periodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
         val beslutning =

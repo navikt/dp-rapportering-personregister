@@ -12,6 +12,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
+import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
@@ -40,6 +41,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObs
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
@@ -92,6 +94,14 @@ internal class ApplicationBuilder(
             keySerializer = LongSerializer::class,
             valueSerializer = PaaVegneAvAvroSerializer::class,
         )
+    private val bekreftelsePåVegneAvKafkaConsumer =
+        kafkaFactory.createConsumer<Long, PaaVegneAv>(
+            groupId = "teamdagpenger-personregister-paavegneav-v1",
+            clientId = "teamdagpenger-personregister-paavegneav-consumer",
+            keyDeserializer = LongDeserializer::class,
+            valueDeserializer = PaaVegneAvAvroDeserializer::class,
+            autoCommit = false,
+        )
     private val arbeidssøkerperioderKafkaConsumer =
         kafkaFactory.createConsumer<Long, Periode>(
             groupId = "teamdagpenger-personregister-arbeidssokerperiode-v1",
@@ -142,14 +152,18 @@ internal class ApplicationBuilder(
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+    private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()
     private val kafkaContext =
         KafkaContext(
-            bekreftelsePåVegneAvProdusent,
-            arbeidssøkerperioderKafkaConsumer,
-            arbeidssøkerperioderTopic,
-            arbeidssøkerMottak,
+            bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
+            bekreftelsePåVegneAvKafkaConsumer = bekreftelsePåVegneAvKafkaConsumer,
+            påVegneAvMottak = overtakelseMottak,
+            påVegneAvTopic = bekreftelsePåVegneAvTopic,
+            arbeidssøkerperioderKafkaConsumer = arbeidssøkerperioderKafkaConsumer,
+            arbeidssøkerperioderTopic = arbeidssøkerperioderTopic,
+            arbeidssøkerMottak = arbeidssøkerMottak,
         )
 
     private val rapidsConnection =
@@ -194,6 +208,9 @@ internal class ApplicationBuilder(
 
 data class KafkaContext(
     val bekreftelsePåVegneAvKafkaProdusent: Producer<Long, PaaVegneAv>,
+    val bekreftelsePåVegneAvKafkaConsumer: KafkaConsumer<Long, PaaVegneAv>,
+    val påVegneAvMottak: ArbeidssøkerperiodeOvertakelseMottak,
+    val påVegneAvTopic: String,
     val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
     val arbeidssøkerperioderTopic: String,
     val arbeidssøkerMottak: ArbeidssøkerMottak,
