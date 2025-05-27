@@ -36,6 +36,8 @@ interface PersonRepository {
 
     fun hentPersonerMedDagpenger(): List<String>
 
+    fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList<String>()
+
     fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
 
     fun hentPersonerSomKanSlettes(): List<String>

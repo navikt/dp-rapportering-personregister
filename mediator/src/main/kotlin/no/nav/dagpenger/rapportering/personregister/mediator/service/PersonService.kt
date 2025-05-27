@@ -15,6 +15,17 @@ class PersonService(
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
 ) {
+    // testing
+    fun triggerSendovertakelse() {
+        logger.info { "Triggerer sendOvertakelse" }
+        val identer = personRepository.hentPersonerMedDagpengerOgAktivPerioode()
+        val personer = hentPersonFraDB(identer.take(5))
+        personer.forEach { person ->
+            sikkerLogg.info("Sender overtakelsesmelding for person med ident ${person.ident}")
+            person.observers.forEach { it.sendOvertakelsesmelding(person) }
+        }
+    }
+
     fun hentPerson(ident: String): Person? {
         val pdlIdenter = hentAlleIdenterForPerson(ident)
         val personer =

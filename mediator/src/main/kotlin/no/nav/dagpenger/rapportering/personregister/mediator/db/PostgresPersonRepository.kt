@@ -271,6 +271,20 @@ class PostgresPersonRepository(
             )
         }
 
+    override fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.avsluttet IS null
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
     override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(

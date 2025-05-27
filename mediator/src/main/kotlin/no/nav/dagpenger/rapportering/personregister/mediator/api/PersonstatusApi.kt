@@ -30,6 +30,15 @@ internal fun Application.personstatusApi(
     personService: PersonService,
 ) {
     routing {
+        route("/sendovertakelse") {
+            get("/sendovertakelse") {
+                logger.info { "GET /sendovertakelse" }
+
+                personService.triggerSendovertakelse()
+
+                call.respond(HttpStatusCode.OK, "Triggered overtakelse")
+            }
+        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {
