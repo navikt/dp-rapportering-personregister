@@ -13,7 +13,7 @@ class ArbeidssøkerperiodeOvertakelseMottak(
     @WithSpan
     fun consume(records: ConsumerRecords<Long, PaaVegneAv>) =
         records.forEach { record ->
-            logger.info { "Tar imot overtakelse av periode" }
+            logger.info { "Tar imot overtakelse av periode med periodeId ${record.value().periodeId}" }
             // arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
             with(record.value()) {
                 if (this.bekreftelsesloesning != Bekreftelsesloesning.DAGPENGER) {

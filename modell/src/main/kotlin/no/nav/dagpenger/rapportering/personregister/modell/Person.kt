@@ -88,9 +88,9 @@ fun Person.sendFrasigelsesmelding(
                 try {
                     logger.info("Antall observere: ${observers.size}")
                     observers.forEach { observer -> observer.sendFrasigelsesmelding(this, fristBrutt) }
-                    logger.info("Kjørte frasielse på observere uten feil")
+                    logger.info("Kjørte frasigelse på observere uten feil")
                 } catch (e: Exception) {
-                    logger.error(e) { "Overtagelse feilet!" }
+                    logger.error(e) { "Frasigelse feilet!" }
                     throw e
                 }
             }

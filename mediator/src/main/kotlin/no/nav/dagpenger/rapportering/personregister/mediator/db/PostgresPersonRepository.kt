@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
@@ -372,7 +373,8 @@ class PostgresPersonRepository(
                 )
             }
         if (ident == null) {
-            throw RuntimeException("Fant ikke person som eier periode med id $periodeId")
+            logger.error { "Fant ikke person med periodeId $periodeId" }
+            return null
         } else {
             return hentPerson(ident)
         }
@@ -703,6 +705,10 @@ class PostgresPersonRepository(
                     )
                 }
         }
+    }
+
+    companion object {
+        val logger = KotlinLogging.logger {}
     }
 }
 
