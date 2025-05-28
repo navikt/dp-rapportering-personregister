@@ -224,7 +224,7 @@ private fun person(
             },
 ).apply {
     this.setMeldeplikt(meldeplikt)
-    this.meldegruppe = meldegruppe
+    this.setMeldegruppe(meldegruppe)
     hendelser.addAll(
         listOf(
             SøknadHendelse(ident, startet.plusHours(1), UUID.randomUUID().toString()),

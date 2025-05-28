@@ -18,7 +18,7 @@ data class Person(
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
-    var meldegruppe: String? = null
+    private var _meldegruppe: String? = null
 
     private var _meldeplikt: Boolean = false
 
@@ -48,11 +48,19 @@ data class Person(
     }
 
     val meldeplikt: Boolean
-        get() = _meldeplikt
+        @Synchronized get() = _meldeplikt
 
     @Synchronized
     fun setMeldeplikt(value: Boolean) {
         _meldeplikt = value
+    }
+
+    val meldegruppe: String?
+        @Synchronized get() = _meldegruppe
+
+    @Synchronized
+    fun setMeldegruppe(value: String?) {
+        _meldegruppe = value
     }
 
     fun behandle(hendelse: Hendelse) {

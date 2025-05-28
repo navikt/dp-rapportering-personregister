@@ -43,7 +43,7 @@ data class DagpengerMeldegruppeHendelse(
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
-        person.meldegruppe = meldegruppeKode
+        person.setMeldegruppe(meldegruppeKode)
 
         person
             .vurderNyStatus()
@@ -68,7 +68,7 @@ data class AnnenMeldegruppeHendelse(
     override val kilde: Kildesystem = Arena
 
     override fun behandle(person: Person) {
-        person.meldegruppe = meldegruppeKode
+        person.setMeldegruppe(meldegruppeKode)
 
         person
             .vurderNyStatus()
@@ -120,7 +120,7 @@ data class PersonSynkroniseringHendelse(
 
     override fun behandle(person: Person) {
         person.setMeldeplikt(true)
-        person.meldegruppe = "DAGP"
+        person.setMeldegruppe("DAGP")
     }
 }
 

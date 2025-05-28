@@ -123,7 +123,7 @@ class PersonService(
                             setMeldeplikt(true)
                         }
                         if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
-                            meldegruppe = historiskPerson.meldegruppe
+                            setMeldegruppe(historiskPerson.meldegruppe)
                         }
                     }
                 } else {

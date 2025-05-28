@@ -97,7 +97,7 @@ class PersonTest {
         @Test
         fun `behandler MeldepliktHendelse for bruker som oppfyller kravet`() =
             arbeidssøker(overtattBekreftelse = false) {
-                meldegruppe = "DAGP"
+                setMeldegruppe("DAGP")
 
                 behandle(meldepliktHendelse(status = true))
 
@@ -108,7 +108,7 @@ class PersonTest {
         @Test
         fun `behandler MeldepliktHendelse for bruker som ikke oppfyller kravet`() =
             arbeidssøker(overtattBekreftelse = false) {
-                meldegruppe = "ARBS"
+                setMeldegruppe("ARBS")
 
                 behandle(meldepliktHendelse(status = true))
 

@@ -207,6 +207,6 @@ fun testPerson(
     ident = ident,
     arbeidssøkerperioder = arbeidsøkerperioder,
 ).apply {
-    this.meldegruppe = meldegruppe
+    this.setMeldegruppe(meldegruppe)
     setMeldeplikt(meldeplikt)
 }

@@ -45,7 +45,7 @@ class PostgresPersonRepository(
                 arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
             ).apply {
                 setMeldeplikt(meldeplikt)
-                this.meldegruppe = meldegruppe
+                setMeldegruppe(meldegruppe)
                 hendelser.forEach { this.hendelser.add(it) }
             }
         }
