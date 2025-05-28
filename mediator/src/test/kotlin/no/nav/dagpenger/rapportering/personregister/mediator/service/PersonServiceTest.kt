@@ -223,7 +223,7 @@ private fun person(
                 )
             },
 ).apply {
-    this.meldeplikt = meldeplikt
+    this.setMeldeplikt(meldeplikt)
     this.meldegruppe = meldegruppe
     hendelser.addAll(
         listOf(

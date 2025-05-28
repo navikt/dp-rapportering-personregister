@@ -93,7 +93,7 @@ data class MeldepliktHendelse(
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
-        person.meldeplikt = statusMeldeplikt
+        person.setMeldeplikt(statusMeldeplikt)
 
         person
             .vurderNyStatus()
@@ -119,7 +119,7 @@ data class PersonSynkroniseringHendelse(
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {
-        person.meldeplikt = true
+        person.setMeldeplikt(true)
         person.meldegruppe = "DAGP"
     }
 }

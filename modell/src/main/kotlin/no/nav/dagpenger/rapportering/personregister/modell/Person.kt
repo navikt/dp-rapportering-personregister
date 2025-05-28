@@ -19,7 +19,8 @@ data class Person(
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
 ) {
     var meldegruppe: String? = null
-    var meldeplikt: Boolean = false
+
+    private var _meldeplikt: Boolean = false
 
     val hendelser = mutableListOf<Hendelse>()
 
@@ -44,6 +45,14 @@ data class Person(
         if (nyStatus !== status) {
             statusHistorikk.put(LocalDateTime.now(), nyStatus)
         }
+    }
+
+    val meldeplikt: Boolean
+        get() = _meldeplikt
+
+    @Synchronized
+    fun setMeldeplikt(value: Boolean) {
+        _meldeplikt = value
     }
 
     fun behandle(hendelse: Hendelse) {

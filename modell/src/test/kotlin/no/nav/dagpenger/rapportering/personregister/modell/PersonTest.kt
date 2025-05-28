@@ -82,7 +82,7 @@ class PersonTest {
         @Test
         fun `behandler AnnenMeldegruppeHendelse for bruker som vi ikke har ansvar for arbeidssøkerbekreftelse`() =
             arbeidssøker(overtattBekreftelse = false) {
-                meldeplikt = true
+                setMeldeplikt(true)
                 statusHistorikk.put(tidligere, DAGPENGERBRUKER)
 
                 behandle(annenMeldegruppeHendelse())

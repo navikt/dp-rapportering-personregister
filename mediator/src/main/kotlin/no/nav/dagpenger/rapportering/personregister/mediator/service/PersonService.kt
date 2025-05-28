@@ -120,7 +120,7 @@ class PersonService(
 
                     gjeldendePerson.apply {
                         if (!meldeplikt && historiskPerson?.meldeplikt == true) {
-                            meldeplikt = true
+                            setMeldeplikt(true)
                         }
                         if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
                             meldegruppe = historiskPerson.meldegruppe

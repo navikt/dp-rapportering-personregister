@@ -66,7 +66,7 @@ class PostgresPersonRepositoryTest {
 
             val nyHendelse = meldegruppeHendelse()
             person.hendelser.add(nyHendelse)
-            person.meldeplikt = true
+            person.setMeldeplikt(true)
             personRepository.oppdaterPerson(person)
 
             personRepository.hentPerson(ident)?.apply {

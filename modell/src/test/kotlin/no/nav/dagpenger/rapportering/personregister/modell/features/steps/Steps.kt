@@ -45,7 +45,7 @@ class Steps : No {
 
         Når("personen får meldeplikt og DAGP-meldegruppe") {
             person
-                .apply { meldeplikt = true }
+                .apply { setMeldeplikt(true) }
                 .apply { behandle(dagpengerMeldegruppeHendelse()) }
         }
 
