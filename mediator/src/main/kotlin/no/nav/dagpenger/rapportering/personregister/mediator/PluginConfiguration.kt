@@ -22,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPl
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 
 fun Application.pluginConfiguration(
     meterRegistry: PrometheusMeterRegistry,
@@ -73,5 +74,11 @@ fun Application.pluginConfiguration(
         // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
         this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
         this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
+    }
+
+    install(KafkaConsumerPlugin<Long, PaaVegneAv>("BekreftelsePåVegneAv")) {
+        this.consumeFunction = kafkaContext.påVegneAvMottak::consume
+        this.kafkaConsumer = kafkaContext.bekreftelsePåVegneAvKafkaConsumer
+        this.kafkaTopics = listOf(kafkaContext.påVegneAvTopic)
     }
 }

@@ -12,7 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.overtaArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import java.time.LocalDateTime
 
 class PersonMediator(
@@ -96,7 +96,7 @@ class PersonMediator(
                 if (person.observers.isEmpty()) {
                     personObservers.forEach { person.addObserver(it) }
                 }
-                person.overtaArbeidssøkerBekreftelse()
+                person.sendOvertakelsesmelding()
                 personRepository.oppdaterPerson(person)
                 logger.info { "Overtok bekreftelse" }
             }

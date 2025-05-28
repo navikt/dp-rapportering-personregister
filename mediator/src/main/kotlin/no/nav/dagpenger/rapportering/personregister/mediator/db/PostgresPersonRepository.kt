@@ -5,6 +5,7 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
@@ -270,6 +271,20 @@ class PostgresPersonRepository(
             )
         }
 
+    override fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
+                    WHERE p.status = 'DAGPENGERBRUKER' AND arbs.avsluttet IS null
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
     override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -355,6 +370,29 @@ class PostgresPersonRepository(
                 }
             }.validateRowsAffected()
         }
+
+    override fun hentPersonMedPeriodeId(periodeId: UUID): Person? {
+        val ident =
+            using(sessionOf(dataSource)) { session ->
+                session.run(
+                    queryOf(
+                        """
+                        SELECT pers.ident FROM arbeidssoker arbs 
+                        INNER JOIN person pers ON arbs.person_id = pers.id
+                        WHERE arbs.periode_id = :periode_id
+                        """.trimIndent(),
+                        mapOf("periode_id" to periodeId),
+                    ).map { row -> row.string("ident") }
+                        .asSingle,
+                )
+            }
+        if (ident == null) {
+            logger.error { "Fant ikke person med periodeId $periodeId" }
+            return null
+        } else {
+            return hentPerson(ident)
+        }
+    }
 
     private fun hentPersonId(ident: String): Long? =
         using(sessionOf(dataSource)) { session ->
@@ -681,6 +719,10 @@ class PostgresPersonRepository(
                     )
                 }
         }
+    }
+
+    companion object {
+        val logger = KotlinLogging.logger {}
     }
 }
 

@@ -6,7 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.frasiArbeidssøkerBekreftelse
+import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 
 class PersonService(
@@ -15,6 +15,17 @@ class PersonService(
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
 ) {
+    // testing
+    fun triggerSendovertakelse() {
+        logger.info { "Triggerer sendOvertakelse" }
+        val identer = personRepository.hentPersonerMedDagpengerOgAktivPerioode()
+        val personer = hentPersonFraDB(identer.take(5))
+        personer.forEach { person ->
+            sikkerLogg.info("Sender overtakelsesmelding for person med ident ${person.ident}")
+            person.observers.forEach { it.sendOvertakelsesmelding(person) }
+        }
+    }
+
     fun hentPerson(ident: String): Person? {
         val pdlIdenter = hentAlleIdenterForPerson(ident)
         val personer =
@@ -137,7 +148,7 @@ class PersonService(
                     if (arbeidssøkerperiode != nyesteOvertattePeriode) {
                         personer
                             .find { arbeidssøkerperiode.ident == it.ident }
-                            ?.frasiArbeidssøkerBekreftelse(
+                            ?.sendFrasigelsesmelding(
                                 arbeidssøkerperiode.periodeId,
                                 false,
                             )

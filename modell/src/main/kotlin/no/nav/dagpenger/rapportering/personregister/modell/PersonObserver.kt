@@ -1,10 +1,22 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
-interface PersonObserver {
-    fun overtaArbeidssøkerBekreftelse(person: Person) {}
+import java.util.UUID
 
-    fun frasiArbeidssøkerBekreftelse(
+interface PersonObserver {
+    fun sendOvertakelsesmelding(person: Person) {}
+
+    fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean = false,
+    ) {}
+
+    fun overtattArbeidssøkerbekreftelse(
+        person: Person,
+        periodeId: UUID,
+    ) {}
+
+    fun frasagtArbeidssøkerbekreftelse(
+        person: Person,
+        periodeId: UUID,
     )
 }

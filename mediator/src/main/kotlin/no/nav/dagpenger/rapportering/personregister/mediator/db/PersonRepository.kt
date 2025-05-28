@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import java.util.UUID
 
 interface PersonRepository {
     fun hentPerson(ident: String): Person?
@@ -35,9 +36,13 @@ interface PersonRepository {
 
     fun hentPersonerMedDagpenger(): List<String>
 
+    fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList<String>()
+
     fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
 
     fun hentPersonerSomKanSlettes(): List<String>
 
     fun slettPerson(ident: String)
+
+    fun hentPersonMedPeriodeId(periodeId: UUID): Person?
 }

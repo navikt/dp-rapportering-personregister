@@ -40,7 +40,7 @@ data class StartetArbeidssøkerperiodeHendelse(
             ?.let {
                 person.setStatus(it)
                 if (person.oppfyllerKrav) {
-                    person.overtaArbeidssøkerBekreftelse()
+                    person.sendOvertakelsesmelding()
                 }
             }
     }
@@ -63,7 +63,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             .takeIf { it != person.status }
             ?.let {
                 person.setStatus(it)
-                person.frasiArbeidssøkerBekreftelse(periodeId, fristBrutt = false, periodeAvsluttet = true)
+                person.merkPeriodeSomIkkeOvertatt(periodeId)
             }
     }
 }

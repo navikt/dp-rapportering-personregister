@@ -7,4 +7,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 
 class PaaVegneAvAvroSerializer : SpecificAvroSerializer<PaaVegneAv>()
 
+class PaaVegneAvAvroDeserializer : SpecificAvroDeserializer<PaaVegneAv>()
+
 class PeriodeAvroDeserializer : SpecificAvroDeserializer<Periode>()

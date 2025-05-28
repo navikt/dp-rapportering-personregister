@@ -11,7 +11,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords
 import java.time.LocalDateTime
 
 class ArbeidssøkerMottak(
-    private val ArbeidssøkerMediator: ArbeidssøkerMediator,
+    private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
 ) {
     @WithSpan
@@ -25,7 +25,7 @@ class ArbeidssøkerMottak(
                 startet = LocalDateTime.ofInstant(record.value().startet.tidspunkt, ZONE_ID),
                 avsluttet = record.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
                 overtattBekreftelse = null,
-            ).also(ArbeidssøkerMediator::behandle)
+            ).also(arbeidssøkerMediator::behandle)
         }
 
     companion object {

@@ -52,46 +52,58 @@ data class Person(
     }
 }
 
-fun Person.overtaArbeidssøkerBekreftelse() {
+fun Person.sendOvertakelsesmelding() {
     logger.info("Overtar arbeidssøkerbekreftelse")
     arbeidssøkerperioder.gjeldende?.let {
         logger.info("Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}")
-        if (it.overtattBekreftelse != true) {
-            logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
-            try {
-                logger.info("Antall observere: ${observers.size}")
-                observers.forEach { observer -> observer.overtaArbeidssøkerBekreftelse(this) }
-                logger.info("Kjørte overtagelse på observere uten feil. Setter overtattBekreftelse=true")
-                it.overtattBekreftelse = true
-            } catch (e: Exception) {
-                logger.error(e) { "Overtagelse feilet!" }
-                it.overtattBekreftelse = false
-                throw e
-            }
+        logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
+        try {
+            logger.info("Antall observere: ${observers.size}")
+            observers.forEach { observer -> observer.sendOvertakelsesmelding(this) }
+            logger.info("Kjørte overtagelse på observere uten feil")
+        } catch (e: Exception) {
+            logger.error(e) { "Overtagelse feilet!" }
+            throw e
         }
     }
 }
 
-fun Person.frasiArbeidssøkerBekreftelse(
+fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som overtatt")
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let { it.overtattBekreftelse = true }
+        ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som overtatt " }
+}
+
+fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
-    periodeAvsluttet: Boolean = false,
 ) {
+    logger.info("Frasier arbeidssøkerbekreftelse")
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let {
             if (it.overtattBekreftelse == true) {
+                logger.info("Gjeldende arbeidssøkerperiode har overtatt bekreftelse.")
                 try {
-                    if (!periodeAvsluttet) {
-                        observers.forEach { observer -> observer.frasiArbeidssøkerBekreftelse(this, fristBrutt) }
-                    }
-                    it.overtattBekreftelse = false
+                    logger.info("Antall observere: ${observers.size}")
+                    observers.forEach { observer -> observer.sendFrasigelsesmelding(this, fristBrutt) }
+                    logger.info("Kjørte frasigelse på observere uten feil")
                 } catch (e: Exception) {
-                    it.overtattBekreftelse = true
+                    logger.error(e) { "Frasigelse feilet!" }
                     throw e
                 }
             }
         }
+}
+
+fun Person.merkPeriodeSomIkkeOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som ikke overtatt")
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let { it.overtattBekreftelse = false }
+        ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som ikke overtatt" }
 }
 
 fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHendelse) {
