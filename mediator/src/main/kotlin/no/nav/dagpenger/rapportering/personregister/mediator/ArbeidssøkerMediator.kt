@@ -90,7 +90,10 @@ class ArbeidssøkerMediator(
                 logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
             }
         }
-        logger.info("Oppdaterer person")
+
+        logger.info(
+            "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
+        )
         personRepository.oppdaterPerson(person)
     }
 
