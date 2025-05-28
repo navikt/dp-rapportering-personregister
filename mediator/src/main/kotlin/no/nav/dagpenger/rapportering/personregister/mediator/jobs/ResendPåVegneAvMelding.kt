@@ -17,7 +17,7 @@ internal class ResendPåVegneAvMelding(
 ) {
     private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
     private val nå = ZonedDateTime.now()
-    private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring).plusHours(1)
+    private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
         tidspunktForNesteKjoring.toInstant().toEpochMilli() -
             nå.toInstant().toEpochMilli() // differansen i millisekunder mellom de to tidspunktene
@@ -37,7 +37,9 @@ internal class ResendPåVegneAvMelding(
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å sende på vegne av-meldinger" }
                         val identer = personRepository.hentPersonerMedDagpenger()
-
+                        logger.info("Hentet ${identer.size} identer som skal overtas")
+                        val personer = personService.hentPersonFraDB(identer)
+                        personer.forEach { person -> person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) } }
                         logger.info {
                             "Jobb for å sende på vegne av-meldinger ferdig. Skal ha sendt overtagelse for ${identer.size} personer."
                         }
