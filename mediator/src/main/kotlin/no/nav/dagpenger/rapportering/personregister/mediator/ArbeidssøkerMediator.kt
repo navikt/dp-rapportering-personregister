@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeH
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
@@ -70,6 +71,10 @@ class ArbeidssøkerMediator(
 
         if (person == null) {
             logger.error { "Fant ikke person med periodeId ${paVegneAv.periodeId} i databasen." }
+            return
+        }
+        if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
+            logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
             return
         }
         when (paVegneAv.handling) {
