@@ -100,7 +100,9 @@ class ArbeidssøkerMediator(
         personService
             .hentPerson(arbeidssøkerHendelse.ident)
             ?.let { person ->
-                personObservers.forEach { person.addObserver(it) }
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { person.addObserver(it) }
+                }
                 person.behandle(arbeidssøkerHendelse)
                 personRepository.oppdaterPerson(person)
             } ?: logger.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
