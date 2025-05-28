@@ -69,6 +69,7 @@ fun Person.sendOvertakelsesmelding() {
 }
 
 fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som overtatt")
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let { it.overtattBekreftelse = true }
@@ -98,6 +99,7 @@ fun Person.sendFrasigelsesmelding(
 }
 
 fun Person.merkPeriodeSomIkkeOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som ikke overtatt")
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let { it.overtattBekreftelse = false }
