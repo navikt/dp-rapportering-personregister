@@ -43,7 +43,7 @@ class PersonService(
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
-    private fun hentPersonFraDB(identer: List<String>): List<Person> =
+    fun hentPersonFraDB(identer: List<String>): List<Person> =
         identer.mapNotNull { ident ->
             personRepository.hentPerson(ident).also { person ->
                 if (person != null && person.observers.isEmpty()) {
