@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotliquery.Row
+import kotliquery.TransactionalSession
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -63,9 +64,9 @@ class PostgresPersonRepository(
 
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {
-            val personId =
-                using(sessionOf(dataSource)) { session ->
-                    session.transaction { tx ->
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    val personId =
                         tx.run(
                             queryOf(
                                 "INSERT INTO person (ident, status, meldeplikt, meldegruppe) VALUES (:ident, :status, :meldeplikt, :meldegruppe) RETURNING id",
@@ -77,17 +78,17 @@ class PostgresPersonRepository(
                                 ),
                             ).map { row -> row.long("id") }
                                 .asSingle,
-                        )
-                    }
-                } ?: throw IllegalStateException("Klarte ikke å lagre person")
+                        ) ?: throw IllegalStateException("Klarte ikke å lagre person")
 
-            person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
-            person.hendelser.forEach { lagreHendelse(personId, it) }
-            person.statusHistorikk
-                .getAll()
-                .forEach { (dato, status) ->
-                    lagreStatusHistorikk(personId, dato, status)
+                    person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it, tx) }
+                    person.hendelser.forEach { lagreHendelse(personId, it, tx) }
+                    person.statusHistorikk
+                        .getAll()
+                        .forEach { (dato, status) ->
+                            lagreStatusHistorikk(personId, dato, status, tx)
+                        }
                 }
+            }
         }
 
     override fun oppdaterPerson(person: Person) =
@@ -106,15 +107,16 @@ class PostgresPersonRepository(
                             ),
                         ).asUpdate,
                     )
+
+                    person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it, tx) }
+                    person.hendelser.forEach { lagreHendelse(personId, it, tx) }
+                    person.statusHistorikk
+                        .getAll()
+                        .forEach { (dato, status) ->
+                            lagreStatusHistorikk(personId, dato, status, tx)
+                        }
                 }
             }
-            person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it) }
-            person.hendelser.forEach { lagreHendelse(personId, it) }
-            person.statusHistorikk
-                .getAll()
-                .forEach { (dato, status) ->
-                    lagreStatusHistorikk(personId, dato, status)
-                }
         }
 
     override fun oppdaterIdent(
@@ -406,12 +408,11 @@ class PostgresPersonRepository(
     private fun lagreHendelse(
         personId: Long,
         hendelse: Hendelse,
+        tx: TransactionalSession,
     ) = actionTimer.timedAction("db-lagreHendelse") {
-        using(sessionOf(dataSource)) { session ->
-            session.transaction { tx ->
-                tx.run(
-                    queryOf(
-                        """
+        tx.run(
+            queryOf(
+                """
                 INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
@@ -424,18 +425,16 @@ class PostgresPersonRepository(
                     type = EXCLUDED.type,
                     extra = EXCLUDED.extra
                 """,
-                        personId,
-                        hendelse.dato,
-                        hendelse.hentStartDato(),
-                        hendelse.hentSluttDato(),
-                        hendelse.kilde.name,
-                        hendelse.referanseId,
-                        hendelse::class.simpleName,
-                        hendelse.hentEkstrafelter(),
-                    ).asUpdate,
-                )
-            }
-        }.validateRowsAffected()
+                personId,
+                hendelse.dato,
+                hendelse.hentStartDato(),
+                hendelse.hentSluttDato(),
+                hendelse.kilde.name,
+                hendelse.referanseId,
+                hendelse::class.simpleName,
+                hendelse.hentEkstrafelter(),
+            ).asUpdate,
+        )
     }
 
     private fun Hendelse.hentStartDato(): LocalDateTime? =
@@ -547,6 +546,7 @@ class PostgresPersonRepository(
                     kilde = Kildesystem.valueOf(kilde),
                 )
             }
+
             "AnnenMeldegruppeHendelse" -> {
                 val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 AnnenMeldegruppeHendelse(
@@ -562,6 +562,7 @@ class PostgresPersonRepository(
                     harMeldtSeg = meldegruppeExtra.harMeldtSeg ?: true,
                 )
             }
+
             "MeldepliktHendelse" -> {
                 val meldepliktExtra = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!)
                 MeldepliktHendelse(
@@ -578,6 +579,7 @@ class PostgresPersonRepository(
                     harMeldtSeg = meldepliktExtra.harMeldtSeg ?: true,
                 )
             }
+
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
                     periodeId = UUID.fromString(referanseId),
@@ -587,6 +589,7 @@ class PostgresPersonRepository(
                             "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
                         ),
                 )
+
             "AvsluttetArbeidssøkerperiodeHendelse" ->
                 AvsluttetArbeidssøkerperiodeHendelse(
                     periodeId = UUID.fromString(referanseId),
@@ -600,13 +603,17 @@ class PostgresPersonRepository(
                             "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
                         ),
                 )
+
             "PersonSynkroniseringHendelse" ->
                 PersonSynkroniseringHendelse(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
-                    startDato = startDato ?: throw IllegalStateException("PersonSynkroniseringHendelse mangler startDato"),
+                    startDato =
+                        startDato
+                            ?: throw IllegalStateException("PersonSynkroniseringHendelse mangler startDato"),
                 )
+
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
     }
@@ -660,65 +667,56 @@ class PostgresPersonRepository(
     private fun lagreArbeidssøkerperiode(
         personId: Long,
         arbeidssøkerperiode: Arbeidssøkerperiode,
+        tx: TransactionalSession,
     ) {
-        using(sessionOf(dataSource)) { session ->
-            session
-                .transaction { tx ->
-                    tx
-                        .run(
-                            queryOf(
-                                """
-                                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
-                                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
-                                ON CONFLICT (periode_id) 
-                                DO UPDATE SET 
-                                    person_id = EXCLUDED.person_id,
-                                    startet = EXCLUDED.startet,
-                                    avsluttet = EXCLUDED.avsluttet,
-                                    overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
-                                    sist_endret = CASE 
-                                        WHEN EXCLUDED.person_id IS DISTINCT FROM arbeidssoker.person_id
-                                            OR EXCLUDED.startet IS DISTINCT FROM arbeidssoker.startet
-                                            OR EXCLUDED.avsluttet IS DISTINCT FROM arbeidssoker.avsluttet
-                                            OR EXCLUDED.overtatt_bekreftelse IS DISTINCT FROM arbeidssoker.overtatt_bekreftelse
-                                        THEN EXCLUDED.sist_endret
-                                        ELSE arbeidssoker.sist_endret
-                                    END
-                                """.trimIndent(),
-                                mapOf(
-                                    "periode_id" to arbeidssøkerperiode.periodeId,
-                                    "person_id" to personId,
-                                    "startet" to arbeidssøkerperiode.startet,
-                                    "avsluttet" to arbeidssøkerperiode.avsluttet,
-                                    "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
-                                    "sist_endret" to LocalDateTime.now(),
-                                ),
-                            ).asUpdate,
-                        )
-                }.validateRowsAffected()
-        }
+        tx.run(
+            queryOf(
+                """
+                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
+                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                ON CONFLICT (periode_id) 
+                DO UPDATE SET 
+                    person_id = EXCLUDED.person_id,
+                    startet = EXCLUDED.startet,
+                    avsluttet = EXCLUDED.avsluttet,
+                    overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
+                    sist_endret = CASE 
+                        WHEN EXCLUDED.person_id IS DISTINCT FROM arbeidssoker.person_id
+                            OR EXCLUDED.startet IS DISTINCT FROM arbeidssoker.startet
+                            OR EXCLUDED.avsluttet IS DISTINCT FROM arbeidssoker.avsluttet
+                            OR EXCLUDED.overtatt_bekreftelse IS DISTINCT FROM arbeidssoker.overtatt_bekreftelse
+                        THEN EXCLUDED.sist_endret
+                        ELSE arbeidssoker.sist_endret
+                    END
+                """.trimIndent(),
+                mapOf(
+                    "periode_id" to arbeidssøkerperiode.periodeId,
+                    "person_id" to personId,
+                    "startet" to arbeidssøkerperiode.startet,
+                    "avsluttet" to arbeidssøkerperiode.avsluttet,
+                    "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
+                    "sist_endret" to LocalDateTime.now(),
+                ),
+            ).asUpdate,
+        )
     }
 
     private fun lagreStatusHistorikk(
         personId: Long,
         dato: LocalDateTime,
         status: Status,
+        tx: kotliquery.TransactionalSession,
     ) {
-        using(sessionOf(dataSource)) { session ->
-            session
-                .transaction { tx ->
-                    tx.run(
-                        queryOf(
-                            """
-                            INSERT INTO status_historikk (person_id, dato, status)
-                            VALUES (:person_id, :dato, :status)
-                            ON CONFLICT (person_id, dato) DO NOTHING
-                            """.trimIndent(),
-                            mapOf("person_id" to personId, "dato" to dato, "status" to status.name),
-                        ).asUpdate,
-                    )
-                }
-        }
+        tx.run(
+            queryOf(
+                """
+                INSERT INTO status_historikk (person_id, dato, status)
+                VALUES (:person_id, :dato, :status)
+                ON CONFLICT (person_id, dato) DO NOTHING
+                """.trimIndent(),
+                mapOf("person_id" to personId, "dato" to dato, "status" to status.name),
+            ).asUpdate,
+        )
     }
 
     companion object {
