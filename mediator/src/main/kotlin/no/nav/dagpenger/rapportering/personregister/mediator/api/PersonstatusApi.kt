@@ -36,9 +36,11 @@ internal fun Application.personstatusApi(
 ) {
     routing {
         route("/frasigelse") {
-            post<IdListRequest> {
+            post {
                 val request = call.receive<IdListRequest>()
                 val ids = request.ids
+
+                logger.info { "POST /frasigelse for ${ids.size} perioder" }
 
                 personService.triggerFrasigelse(ids)
 
