@@ -53,6 +53,7 @@ data class StartetArbeidssøkerperiodeHendelse(
             } else {
                 logger.info { "Personstatus er allerede IKKE_DAGPENGERBRUKER, ingen endring nødvendig." }
             }
+            return
         }
 
         logger.info { "Oppfyller krav med meldeplikt = ${person.meldeplikt} og meldegruppe =${person.meldegruppe}." }
