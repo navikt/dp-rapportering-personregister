@@ -1,7 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
+import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import java.time.LocalDateTime
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
 
 data class Arbeidssøkerperiode(
     val periodeId: UUID,
@@ -34,15 +39,39 @@ data class StartetArbeidssøkerperiodeHendelse(
             .takeIf { it }
             ?.let { person.leggTilNyArbeidssøkerperiode(this) }
 
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            ?.let {
-                person.setStatus(it)
-                if (person.oppfyllerKrav) {
-                    person.sendOvertakelsesmelding()
-                }
+        logger.info {
+            "Startet arbeidssøkerperiode for person med meldepliktstatus: ${person.meldeplikt} og meldegruppe: ${person.meldegruppe}"
+        }
+
+        val oppfyllerKrav = person.meldeplikt && person.meldegruppe == "DAGP"
+
+        if (!oppfyllerKrav) {
+            logger.info { "Person oppfyller ikke krav. meldeplikt: ${person.meldeplikt}. meldegruppe: ${person.meldegruppe}." }
+            if (person.status != IKKE_DAGPENGERBRUKER) {
+                logger.info { "Oppdaterer status til IKKE_DAGPENGERBRUKER" }
+                person.setStatus(IKKE_DAGPENGERBRUKER)
+            } else {
+                logger.info { "Personstatus er allerede IKKE_DAGPENGERBRUKER, ingen endring nødvendig." }
             }
+        }
+
+        logger.info { "Oppfyller krav med meldeplikt = ${person.meldeplikt} og meldegruppe =${person.meldegruppe}." }
+
+        if (person.status != DAGPENGERBRUKER) {
+            logger.info { "Oppdaterer personstatus til DAGPENGERBRUKER." }
+            person.setStatus(DAGPENGERBRUKER)
+        } else {
+            logger.info { "Personstatus er allerede DAGPENGERBRUKER, ingen endring nødvendig." }
+        }
+
+        if (!person.overtattBekreftelse) {
+            logger.info { "Setter i gang overtakelse til personen." }
+            person.sendOvertakelsesmelding()
+        } else {
+            logger.info {
+                "Arbeidssøkerperiode-overtakelsesbekreftelse er allerede satt til true ."
+            }
+        }
     }
 }
 

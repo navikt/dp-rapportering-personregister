@@ -22,7 +22,7 @@ class MeldepliktMediator(
 ) {
     fun behandle(hendelse: MeldepliktHendelse) =
         actionTimer.timedAction("behandle_MeldepliktHendelse") {
-            logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId}" }
+            logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId} med status: ${hendelse.statusMeldeplikt}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info("MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
             } else {
@@ -47,6 +47,7 @@ class MeldepliktMediator(
                     ?.let { person ->
                         if (!person.meldeplikt) {
                             val meldeplikt = runBlocking { meldepliktConnector.hentMeldeplikt(ident) }
+                            logger.info { "Hentet meldeplikt status: $meldeplikt. Nåværende meldeplikt for person: ${person.meldeplikt}" }
                             if (person.meldeplikt != meldeplikt) {
                                 MeldepliktHendelse(
                                     ident = person.ident,
