@@ -73,12 +73,14 @@ class MeldepliktMediator(
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    if (person.observers.isEmpty()) {
-                        personObservers.forEach { person.addObserver(it) }
+                    synchronized(person) {
+                        if (person.observers.isEmpty()) {
+                            personObservers.forEach { person.addObserver(it) }
+                        }
+                        person.behandle(hendelse)
+                        personRepository.oppdaterPerson(person)
+                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                     }
-                    person.behandle(hendelse)
-                    personRepository.oppdaterPerson(person)
-                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }

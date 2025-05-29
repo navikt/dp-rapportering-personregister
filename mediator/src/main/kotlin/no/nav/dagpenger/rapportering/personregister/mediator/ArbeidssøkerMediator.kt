@@ -73,28 +73,33 @@ class ArbeidssøkerMediator(
             logger.error { "Fant ikke person med periodeId ${paVegneAv.periodeId} i databasen." }
             return
         }
-        if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
-            logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
-            return
-        }
-        when (paVegneAv.handling) {
-            is Start -> {
-                logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
-                person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
-            }
-            is Stopp -> {
-                logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
-                person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
-            }
-            else -> {
-                logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
-            }
-        }
 
-        logger.info(
-            "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
-        )
-        personRepository.oppdaterPerson(person)
+        synchronized(person) {
+            if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
+                logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
+                return
+            }
+            when (paVegneAv.handling) {
+                is Start -> {
+                    logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
+                    person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                }
+
+                is Stopp -> {
+                    logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
+                    person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                }
+
+                else -> {
+                    logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
+                }
+            }
+
+            logger.info(
+                "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
+            )
+            personRepository.oppdaterPerson(person)
+        }
     }
 
     private fun behandle(arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse) {
@@ -103,11 +108,13 @@ class ArbeidssøkerMediator(
         personService
             .hentPerson(arbeidssøkerHendelse.ident)
             ?.let { person ->
-                if (person.observers.isEmpty()) {
-                    personObservers.forEach { person.addObserver(it) }
+                synchronized(person) {
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
+                    }
+                    person.behandle(arbeidssøkerHendelse)
+                    personRepository.oppdaterPerson(person)
                 }
-                person.behandle(arbeidssøkerHendelse)
-                personRepository.oppdaterPerson(person)
             } ?: logger.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
     }
 

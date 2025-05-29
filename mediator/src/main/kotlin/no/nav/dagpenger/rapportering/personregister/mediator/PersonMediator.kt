@@ -12,7 +12,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import java.time.LocalDateTime
 
 class PersonMediator(
@@ -27,10 +26,12 @@ class PersonMediator(
         actionTimer.timedAction("behandle_SoknadHendelse") {
             logger.info { "Behandler søknadshendelse: ${søknadHendelse.referanseId}" }
             hentEllerOpprettPerson(søknadHendelse.ident)
-                .also {
-                    it.behandle(søknadHendelse)
-                    personRepository.oppdaterPerson(it)
-                    arbeidssøkerMediator.behandle(søknadHendelse.ident)
+                .also { person ->
+                    synchronized(person) {
+                        person.behandle(søknadHendelse)
+                        personRepository.oppdaterPerson(person)
+                        arbeidssøkerMediator.behandle(søknadHendelse.ident)
+                    }
                 }
         }
 
@@ -42,10 +43,12 @@ class PersonMediator(
             } else {
                 hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
-                        person.behandle(hendelse)
-                        personRepository.oppdaterPerson(person)
-                        runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
-                        arbeidssøkerMediator.behandle(hendelse.ident)
+                        synchronized(person) {
+                            person.behandle(hendelse)
+                            personRepository.oppdaterPerson(person)
+                            runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
+                            arbeidssøkerMediator.behandle(hendelse.ident)
+                        }
                     }
             }
         }
@@ -65,9 +68,11 @@ class PersonMediator(
             logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
             hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
-                    person.behandle(hendelse)
-                    personRepository.oppdaterPerson(person)
-                    arbeidssøkerMediator.behandle(person.ident)
+                    synchronized(person) {
+                        person.behandle(hendelse)
+                        personRepository.oppdaterPerson(person)
+                        arbeidssøkerMediator.behandle(person.ident)
+                    }
                 }
         }
 
@@ -76,30 +81,18 @@ class PersonMediator(
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    if (person.observers.isEmpty()) {
-                        personObservers.forEach { person.addObserver(it) }
+                    synchronized(person) {
+                        if (person.observers.isEmpty()) {
+                            personObservers.forEach { person.addObserver(it) }
+                        }
+                        person.behandle(hendelse)
+                        personRepository.oppdaterPerson(person)
+                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                     }
-                    person.behandle(hendelse)
-                    personRepository.oppdaterPerson(person)
-                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
         }
-    }
-
-    fun overtaBekreftelse(ident: String) {
-        logger.info { "Overta bekreftelse for ident" }
-        personService
-            .hentPerson(ident)
-            ?.also { person ->
-                if (person.observers.isEmpty()) {
-                    personObservers.forEach { person.addObserver(it) }
-                }
-                person.sendOvertakelsesmelding()
-                personRepository.oppdaterPerson(person)
-                logger.info { "Overtok bekreftelse" }
-            }
     }
 
     private fun hentEllerOpprettPerson(ident: String): Person =
