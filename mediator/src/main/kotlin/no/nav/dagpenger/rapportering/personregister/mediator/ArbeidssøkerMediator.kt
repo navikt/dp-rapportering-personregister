@@ -112,6 +112,9 @@ class ArbeidssøkerMediator(
                     if (person.observers.isEmpty()) {
                         personObservers.forEach { person.addObserver(it) }
                     }
+                    logger.info {
+                        "Behandler arbeidssøkerhendelse for person med meldeplikt = ${person.meldeplikt} og meldegruppe = ${person.meldegruppe}"
+                    }
                     person.behandle(arbeidssøkerHendelse)
                     personRepository.oppdaterPerson(person)
                 }
