@@ -205,7 +205,7 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-        resendPaaVegneAvJob.start(personRepository, personService)
+//        resendPaaVegneAvJob.start(personRepository, personService)
     }
 }
 
