@@ -8,6 +8,7 @@ import kotliquery.sessionOf
 import kotliquery.using
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -33,21 +34,25 @@ class PostgresPersonRepository(
 ) : PersonRepository {
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
-            val personId = hentPersonId(ident) ?: return@timedAction null
-            val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident)
-            val hendelser = hentHendelser(personId, ident)
-            val statusHistorikk = hentStatusHistorikk(personId)
-            val meldeplikt = hentMeldeplikt(ident)
-            val meldegruppe = hentMeldegruppe(ident)
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    val personId = hentPersonId(ident, tx) ?: return@transaction null
+                    val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident, tx)
+                    val hendelser = hentHendelser(personId, ident, tx)
+                    val statusHistorikk = hentStatusHistorikk(personId, tx)
+                    val meldeplikt = hentMeldeplikt(ident, tx)
+                    val meldegruppe = hentMeldegruppe(ident, tx)
 
-            Person(
-                ident = ident,
-                statusHistorikk = statusHistorikk,
-                arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
-            ).apply {
-                setMeldeplikt(meldeplikt)
-                setMeldegruppe(meldegruppe)
-                hendelser.forEach { this.hendelser.add(it) }
+                    Person(
+                        ident = ident,
+                        statusHistorikk = statusHistorikk,
+                        arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
+                    ).apply {
+                        setMeldeplikt(meldeplikt)
+                        setMeldegruppe(meldegruppe)
+                        hendelser.forEach { this.hendelser.add(it) }
+                    }
+                }
             }
         }
 
@@ -93,9 +98,9 @@ class PostgresPersonRepository(
 
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
-            val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
+                    val personId = hentPersonId(person.ident, tx) ?: throw IllegalStateException("Person finnes ikke")
                     tx.run(
                         queryOf(
                             "UPDATE person SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe WHERE id = :id",
@@ -325,10 +330,9 @@ class PostgresPersonRepository(
 
     override fun slettPerson(ident: String) =
         actionTimer.timedAction("db-slettPerson") {
-            val personId = hentPersonId(ident)
-
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
+                    val personId = hentPersonId(ident, tx)
                     tx.run(
                         queryOf(
                             "DELETE FROM status_historikk WHERE person_id = :person_id",
@@ -396,14 +400,15 @@ class PostgresPersonRepository(
         }
     }
 
-    private fun hentPersonId(ident: String): Long? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT * FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> row.long("id") }
-                    .asSingle,
-            )
-        }
+    private fun hentPersonId(
+        ident: String,
+        tx: TransactionalSession,
+    ): Long? =
+        tx.run(
+            queryOf("SELECT * FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                .map { row -> row.long("id") }
+                .asSingle,
+        )
 
     private fun lagreHendelse(
         personId: Long,
@@ -486,35 +491,36 @@ class PostgresPersonRepository(
         return test
     }
 
-    private fun hentMeldegruppe(ident: String): String? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT meldegruppe FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> row.stringOrNull("meldegruppe") }
-                    .asSingle,
-            )
-        }
+    private fun hentMeldegruppe(
+        ident: String,
+        tx: TransactionalSession,
+    ): String? =
+        tx.run(
+            queryOf("SELECT meldegruppe FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                .map { row -> row.stringOrNull("meldegruppe") }
+                .asSingle,
+        )
 
-    private fun hentMeldeplikt(ident: String): Boolean =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT meldeplikt FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> row.boolean("meldeplikt") }
-                    .asSingle,
-            ) ?: throw IllegalStateException("Klarte ikke å hente meldeplikt")
-        }
+    private fun hentMeldeplikt(
+        ident: String,
+        tx: TransactionalSession,
+    ): Boolean =
+        tx.run(
+            queryOf("SELECT meldeplikt FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                .map { row -> row.boolean("meldeplikt") }
+                .asSingle,
+        ) ?: throw IllegalStateException("Klarte ikke å hente meldeplikt")
 
     private fun hentHendelser(
         personId: Long,
         ident: String,
+        tx: TransactionalSession,
     ): List<Hendelse> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
-                    .map { tilHendelse(it, ident) }
-                    .asList,
-            )
-        }
+        tx.run(
+            queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
+                .map { tilHendelse(it, ident) }
+                .asList,
+        )
 
     private fun tilHendelse(
         row: Row,
@@ -621,20 +627,19 @@ class PostgresPersonRepository(
     fun hentArbeidssøkerperioder(
         personId: Long,
         ident: String,
+        tx: TransactionalSession,
     ): List<Arbeidssøkerperiode> =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf(
-                    """
-                    SELECT * 
-                    FROM arbeidssoker
-                    WHERE person_id = :person_id
-                    """.trimIndent(),
-                    mapOf("person_id" to personId),
-                ).map { tilArbeidsøkerperiode(it, ident) }
-                    .asList,
-            )
-        }
+        tx.run(
+            queryOf(
+                """
+                SELECT * 
+                FROM arbeidssoker
+                WHERE person_id = :person_id
+                """.trimIndent(),
+                mapOf("person_id" to personId),
+            ).map { tilArbeidsøkerperiode(it, ident) }
+                .asList,
+        )
 
     private fun tilArbeidsøkerperiode(
         row: Row,
@@ -648,20 +653,21 @@ class PostgresPersonRepository(
             overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
         )
 
-    private fun hentStatusHistorikk(personId: Long): TemporalCollection<Status> =
+    private fun hentStatusHistorikk(
+        personId: Long,
+        tx: TransactionalSession,
+    ): TemporalCollection<Status> =
         TemporalCollection<Status>().apply {
-            using(sessionOf(dataSource)) { session ->
-                session.run(
-                    queryOf(
-                        "SELECT * FROM status_historikk WHERE person_id = :person_id",
-                        mapOf("person_id" to personId),
-                    ).map { row ->
-                        val dato = row.localDateTime("dato")
-                        val status = Status.valueOf(row.string("status"))
-                        put(dato, status)
-                    }.asList,
-                )
-            }
+            tx.run(
+                queryOf(
+                    "SELECT * FROM status_historikk WHERE person_id = :person_id",
+                    mapOf("person_id" to personId),
+                ).map { row ->
+                    val dato = row.localDateTime("dato")
+                    val status = Status.valueOf(row.string("status"))
+                    put(dato, status)
+                }.asList,
+            )
         }
 
     private fun lagreArbeidssøkerperiode(
@@ -705,7 +711,7 @@ class PostgresPersonRepository(
         personId: Long,
         dato: LocalDateTime,
         status: Status,
-        tx: kotliquery.TransactionalSession,
+        tx: TransactionalSession,
     ) {
         tx.run(
             queryOf(
