@@ -22,8 +22,13 @@ class PersonService(
 
         periodeList.forEach { periodeId ->
             val person = personRepository.hentPersonMedPeriodeId(periodeId)
+
             if (person != null) {
                 logger.info("Sender frasigelsesmelding for periode $periodeId")
+
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { observer -> person.addObserver(observer) }
+                }
                 person.sendFrasigelsesmelding(periodeId, false)
             } else {
                 logger.warn("Fant ikke person med periodeId $periodeId")
