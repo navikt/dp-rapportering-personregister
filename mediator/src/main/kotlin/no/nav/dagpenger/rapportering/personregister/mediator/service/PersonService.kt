@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
+import java.util.UUID
 
 class PersonService(
     private val pdlConnector: PdlConnector,
@@ -16,13 +17,17 @@ class PersonService(
     private val cache: Cache<String, List<Ident>>,
 ) {
     // testing
-    fun triggerSendovertakelse() {
-        logger.info { "Triggerer sendOvertakelse" }
-        val identer = personRepository.hentPersonerMedDagpengerOgAktivPerioode()
-        val personer = hentPersonFraDB(identer.take(5))
-        personer.forEach { person ->
-            sikkerLogg.info("Sender overtakelsesmelding for person med ident ${person.ident}")
-            person.observers.forEach { it.sendOvertakelsesmelding(person) }
+    fun triggerFrasigelse(periodeList: List<UUID>) {
+        logger.info { "Triggerer frasigelse" }
+
+        periodeList.forEach { periodeId ->
+            val person = personRepository.hentPersonMedPeriodeId(periodeId)
+            if (person != null) {
+                logger.info("Sender frasigelsesmelding for periode $periodeId")
+                person.sendFrasigelsesmelding(periodeId, false)
+            } else {
+                logger.warn("Fant ikke person med periodeId $periodeId")
+            }
         }
     }
 
