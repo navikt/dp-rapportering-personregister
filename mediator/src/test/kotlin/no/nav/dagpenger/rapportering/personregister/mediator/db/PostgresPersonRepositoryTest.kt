@@ -230,7 +230,7 @@ class PostgresPersonRepositoryTest {
                 }
 
             person.setStatus(DAGPENGERBRUKER)
-            personRepository.oppdaterPerson(person)
+            personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
             personRepository
                 .hentPerson(ident)
@@ -298,7 +298,7 @@ class PostgresPersonRepositoryTest {
             originalTimestamp shouldBe oppdatertTimestamp
 
             person.arbeidssøkerperioder.add(person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå))
-            personRepository.oppdaterPerson(person)
+            personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
             val avsluttetTimestamp =
                 using(sessionOf(dataSource)) { session ->

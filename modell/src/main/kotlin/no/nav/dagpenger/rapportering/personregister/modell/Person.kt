@@ -17,6 +17,7 @@ data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
+    val versjon: Int = 1,
 ) {
     private var _meldegruppe: String? = null
 
