@@ -36,20 +36,12 @@ class PersonService(
         }
     }
 
-    fun hentPerson(ident: String): Person? {
-        val pdlIdenter = hentAlleIdenterForPerson(ident)
-        val personer =
-            hentPersonFraDB(
-                identer =
-                    if (pdlIdenter.isEmpty()) {
-                        listOf(ident)
-                    } else {
-                        pdlIdenter.filterNot { it.gruppe == Ident.IdentGruppe.AKTORID }.map { it.ident }
-                    },
-            )
-
-        return ryddOppPersoner(pdlIdenter, personer)
-    }
+    fun hentPerson(ident: String): Person? =
+        personRepository.hentPerson(ident).also { person ->
+            if (person != null && person.observers.isEmpty()) {
+                personObservers.forEach { observer -> person.addObserver(observer) }
+            }
+        }
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
