@@ -6,12 +6,14 @@ import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 import java.util.UUID
 
 class InMemoryPersonRepository : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
+    private val personList2 = mutableListOf<Person>()
     private val fremtidigeHendelser = mutableListOf<Hendelse>()
 
     override fun hentPerson(ident: String): Person? = personList[ident]
@@ -20,10 +22,12 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun lagrePerson(person: Person) {
         personList[person.ident] = person
+        personList2.add(person)
     }
 
     override fun oppdaterPerson(person: Person) {
-        personList[person.ident] = person
+        val nyPerson = person.deepCopy(versjon = person.versjon + 1)
+        personList[person.ident] = nyPerson
     }
 
     override fun oppdaterIdent(
@@ -91,4 +95,22 @@ class InMemoryPersonRepository : PersonRepository {
         personList.values.find { person ->
             person.arbeidssøkerperioder.any { it.periodeId == periodeId }
         }
+}
+
+private fun Person.deepCopy(versjon: Int) =
+    Person(
+        ident = this.ident,
+        statusHistorikk = this.statusHistorikk,
+        arbeidssøkerperioder = this.arbeidssøkerperioder,
+        versjon = versjon,
+    ).also { nyPerson ->
+        nyPerson.setMeldegruppe(this.meldegruppe)
+        nyPerson.setMeldeplikt(this.meldeplikt)
+        nyPerson.hendelser.addAll(this.hendelser)
+    }
+
+fun <T> TemporalCollection<T>.deepCopy(): TemporalCollection<T> {
+    val newCollection = TemporalCollection<T>()
+    this.getAll().forEach { (key, value) -> newCollection.put(key, value) }
+    return newCollection
 }

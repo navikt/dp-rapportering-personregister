@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -22,20 +23,31 @@ class PersonMediator(
     private val meldepliktMediator: MeldepliktMediator,
     private val actionTimer: ActionTimer,
 ) {
-    fun behandle(søknadHendelse: SøknadHendelse) =
+    fun behandle(
+        søknadHendelse: SøknadHendelse,
+        counter: Int = 1,
+    ): Unit =
         actionTimer.timedAction("behandle_SoknadHendelse") {
             logger.info { "Behandler søknadshendelse: ${søknadHendelse.referanseId}" }
             hentEllerOpprettPerson(søknadHendelse.ident)
                 .also { person ->
-                    synchronized(person) {
-                        person.behandle(søknadHendelse)
+                    person.behandle(søknadHendelse)
+                    try {
                         personRepository.oppdaterPerson(person)
-                        arbeidssøkerMediator.behandle(søknadHendelse.ident)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${søknadHendelse.referanseId}. Counter: $counter"
+                        }
+                        behandle(søknadHendelse, counter + 1)
                     }
+                    arbeidssøkerMediator.behandle(søknadHendelse.ident)
                 }
         }
 
-    fun behandle(hendelse: DagpengerMeldegruppeHendelse) =
+    fun behandle(
+        hendelse: DagpengerMeldegruppeHendelse,
+        counter: Int = 1,
+    ): Unit =
         actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
             logger.info { "Behandler dagpenger meldegruppe hendelse: ${hendelse.referanseId}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
@@ -43,12 +55,19 @@ class PersonMediator(
             } else {
                 hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
-                        synchronized(person) {
-                            person.behandle(hendelse)
+                        person.behandle(hendelse)
+                        try {
                             personRepository.oppdaterPerson(person)
-                            runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
-                            arbeidssøkerMediator.behandle(hendelse.ident)
+                        } catch (e: OptimisticLockingException) {
+                            logger.info(e) {
+                                "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                            }
+                            behandle(hendelse, counter + 1)
                         }
+                        if (!person.meldeplikt) {
+                            runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
+                        }
+                        arbeidssøkerMediator.behandle(hendelse.ident)
                     }
             }
         }
@@ -63,32 +82,48 @@ class PersonMediator(
             }
         }
 
-    suspend fun behandle(hendelse: PersonSynkroniseringHendelse) =
+    suspend fun behandle(
+        hendelse: PersonSynkroniseringHendelse,
+        counter: Int = 1,
+    ): Unit =
         actionTimer.coTimedAction("behandle_PersonSynkroniseringHendelse") {
             logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
             hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
-                    synchronized(person) {
-                        person.behandle(hendelse)
+                    person.behandle(hendelse)
+                    try {
                         personRepository.oppdaterPerson(person)
-                        arbeidssøkerMediator.behandle(person.ident)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandle(hendelse, counter + 1)
                     }
+                    arbeidssøkerMediator.behandle(person.ident)
                 }
         }
 
-    private fun behandleHendelse(hendelse: Hendelse) {
+    private fun behandleHendelse(
+        hendelse: Hendelse,
+        counter: Int = 1,
+    ) {
         try {
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    synchronized(person) {
-                        if (person.observers.isEmpty()) {
-                            personObservers.forEach { person.addObserver(it) }
-                        }
-                        person.behandle(hendelse)
-                        personRepository.oppdaterPerson(person)
-                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
                     }
+                    person.behandle(hendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandleHendelse(hendelse, counter + 1)
+                    }
+                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }

@@ -23,9 +23,10 @@ class ArbeidssøkerMediatorTest {
     private val arbeidssøkerService = mockk<ArbeidssøkerService>(relaxed = true)
     private lateinit var personRepository: PersonRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
-    private val personService = mockk<PersonService>(relaxed = true)
+    private val personService = mockk<PersonService>()
 
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
+    val ident = "12345678901"
 
     @BeforeEach
     fun setup() {
@@ -42,7 +43,6 @@ class ArbeidssøkerMediatorTest {
 
     @Test
     fun `skal behandle startet arbeidssøkerperiode for person som oppfyller kravet`() {
-        val ident = "12345678901"
         val periodeId = UUID.randomUUID()
         val person = testPerson(ident, "DAGP", meldeplikt = true)
 
@@ -64,7 +64,6 @@ class ArbeidssøkerMediatorTest {
 
     @Test
     fun `skal behandle startet arbeidssøkerperiode for person som ikke oppfyller kravet`() {
-        val ident = "12345678901"
         val periodeId = UUID.randomUUID()
         val person = testPerson(ident, "ARBS", meldeplikt = true)
 
@@ -86,7 +85,6 @@ class ArbeidssøkerMediatorTest {
 
     @Test
     fun `skal behandle avsluttet arbeidssøkerperiode for dagpengerbruk`() {
-        val ident = "12345678901"
         val periodeId = UUID.randomUUID()
         val arbeidssøkerperiode =
             Arbeidssøkerperiode(
@@ -117,7 +115,6 @@ class ArbeidssøkerMediatorTest {
     @Test
     fun `kan hente aktiv arbeidssøkerstatus og triggerer riktig hendelse for eksisterende person`() {
         val periodeId = UUID.randomUUID()
-        val ident = "12345678901"
         val person = testPerson(ident, "DAGP", meldeplikt = true)
 
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode("12345678901") } returns
@@ -139,7 +136,6 @@ class ArbeidssøkerMediatorTest {
     @Test
     fun `kan hente aktiv arbeidssøkerstatus og triggerer riktig hendelse for ukjent person`() {
         val periodeId = UUID.randomUUID()
-        val ident = "12345678901"
         val person = testPerson(ident, "AP", meldeplikt = true)
 
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode("12345678901") } returns
@@ -160,7 +156,6 @@ class ArbeidssøkerMediatorTest {
     @Test
     fun `kan hente avsluttet arbeidssøkerstatus og triggerer riktig hendelse for eksisterende person`() {
         val periodeId = UUID.randomUUID()
-        val ident = "12345678901"
 
         val arbeidsøkerperioder =
             Arbeidssøkerperiode(
@@ -187,7 +182,6 @@ class ArbeidssøkerMediatorTest {
 
     @Test
     fun `kan håndtere feil ved henting av arbeidssøkerperiode`() {
-        val ident = "12345678901"
         personRepository.lagrePerson(testPerson(ident, "DAGP", meldeplikt = true))
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) } throws
             RuntimeException("Feil ved henting av arbeidssøkerperiode")
@@ -195,6 +189,28 @@ class ArbeidssøkerMediatorTest {
         arbeidssøkerMediator.behandle(ident)
 
         personRepository.hentPerson(ident)?.status shouldBe IKKE_DAGPENGERBRUKER
+    }
+
+    @Test
+    fun `forkaster endringer og prøver på nytt hvis personens versjon ikke stemmer`() {
+        val arbeidsøkerperioder =
+            Arbeidssøkerperiode(
+                periodeId = UUID.randomUUID(),
+                ident = ident,
+                startet = LocalDateTime.now().minusDays(1),
+                avsluttet = null,
+                overtattBekreftelse = true,
+            )
+        coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode("12345678901") } returns
+            arbeidsøkerperioder.copy(avsluttet = LocalDateTime.now())
+        val person = testPerson(ident = ident)
+        every { personService.hentPerson(ident) } returns person
+
+        personRepository.lagrePerson(person)
+
+        arbeidssøkerMediator.behandle(ident)
+
+        personRepository.hentPerson(ident)?.versjon shouldBe 2
     }
 }
 

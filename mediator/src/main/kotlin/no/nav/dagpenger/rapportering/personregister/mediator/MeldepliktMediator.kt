@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -69,19 +70,27 @@ class MeldepliktMediator(
         }
     }
 
-    private fun behandleHendelse(hendelse: Hendelse) {
+    private fun behandleHendelse(
+        hendelse: Hendelse,
+        counter: Int = 1,
+    ) {
         try {
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    synchronized(person) {
-                        if (person.observers.isEmpty()) {
-                            personObservers.forEach { person.addObserver(it) }
-                        }
-                        person.behandle(hendelse)
-                        personRepository.oppdaterPerson(person)
-                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
                     }
+                    person.behandle(hendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering for hendelse med refId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandleHendelse(hendelse, counter + 1)
+                    }
+                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }

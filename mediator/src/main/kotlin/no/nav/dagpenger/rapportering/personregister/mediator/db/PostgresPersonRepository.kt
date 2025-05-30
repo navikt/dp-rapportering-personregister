@@ -42,11 +42,13 @@ class PostgresPersonRepository(
                     val statusHistorikk = hentStatusHistorikk(personId, tx)
                     val meldeplikt = hentMeldeplikt(ident, tx)
                     val meldegruppe = hentMeldegruppe(ident, tx)
+                    val versjon = hentVersjon(ident, tx) ?: return@transaction null
 
                     Person(
                         ident = ident,
                         statusHistorikk = statusHistorikk,
                         arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
+                        versjon = versjon,
                     ).apply {
                         setMeldeplikt(meldeplikt)
                         setMeldegruppe(meldegruppe)
@@ -74,12 +76,17 @@ class PostgresPersonRepository(
                     val personId =
                         tx.run(
                             queryOf(
-                                "INSERT INTO person (ident, status, meldeplikt, meldegruppe) VALUES (:ident, :status, :meldeplikt, :meldegruppe) RETURNING id",
+                                """
+                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon) 
+                                VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon) 
+                                RETURNING id
+                                """.trimIndent(),
                                 mapOf(
                                     "ident" to person.ident,
                                     "status" to person.status.name,
                                     "meldeplikt" to person.meldeplikt,
                                     "meldegruppe" to person.meldegruppe,
+                                    "versjon" to person.versjon,
                                 ),
                             ).map { row -> row.long("id") }
                                 .asSingle,
@@ -101,17 +108,29 @@ class PostgresPersonRepository(
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
                     val personId = hentPersonId(person.ident, tx) ?: throw IllegalStateException("Person finnes ikke")
-                    tx.run(
-                        queryOf(
-                            "UPDATE person SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe WHERE id = :id",
-                            mapOf(
-                                "id" to personId,
-                                "status" to person.status.name,
-                                "meldeplikt" to person.meldeplikt,
-                                "meldegruppe" to person.meldegruppe,
-                            ),
-                        ).asUpdate,
-                    )
+                    val updateRows =
+                        tx
+                            .run(
+                                queryOf(
+                                    """
+                                    UPDATE person 
+                                    SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe, versjon = :ny_versjon
+                                    WHERE id = :id and versjon = :versjon
+                                    """.trimIndent(),
+                                    mapOf(
+                                        "id" to personId,
+                                        "status" to person.status.name,
+                                        "meldeplikt" to person.meldeplikt,
+                                        "meldegruppe" to person.meldegruppe,
+                                        "versjon" to person.versjon,
+                                        "ny_versjon" to person.versjon + 1,
+                                    ),
+                                ).asUpdate,
+                            )
+
+                    if (updateRows == 0) {
+                        throw OptimisticLockingException("Kunne ikke oppdatere person. Versjon: ${person.versjon}")
+                    }
 
                     person.arbeidssøkerperioder.forEach { lagreArbeidssøkerperiode(personId, it, tx) }
                     person.hendelser.forEach { lagreHendelse(personId, it, tx) }
@@ -407,6 +426,16 @@ class PostgresPersonRepository(
         tx.run(
             queryOf("SELECT * FROM person WHERE ident = :ident", mapOf("ident" to ident))
                 .map { row -> row.long("id") }
+                .asSingle,
+        )
+
+    private fun hentVersjon(
+        ident: String,
+        tx: TransactionalSession,
+    ): Int? =
+        tx.run(
+            queryOf("SELECT versjon FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                .map { row -> row.int("versjon") }
                 .asSingle,
         )
 
@@ -745,3 +774,7 @@ data class MeldepliktExtra(
     val statusMeldeplikt: Boolean,
     val harMeldtSeg: Boolean? = null,
 )
+
+class OptimisticLockingException(
+    message: String,
+) : RuntimeException(message)

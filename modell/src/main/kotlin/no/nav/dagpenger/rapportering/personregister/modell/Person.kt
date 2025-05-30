@@ -17,6 +17,7 @@ data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
+    val versjon: Int = 1,
 ) {
     private var _meldegruppe: String? = null
 
@@ -48,17 +49,15 @@ data class Person(
     }
 
     val meldeplikt: Boolean
-        @Synchronized get() = _meldeplikt
+        get() = _meldeplikt
 
-    @Synchronized
     fun setMeldeplikt(value: Boolean) {
         _meldeplikt = value
     }
 
     val meldegruppe: String?
-        @Synchronized get() = _meldegruppe
+        get() = _meldegruppe
 
-    @Synchronized
     fun setMeldegruppe(value: String?) {
         _meldegruppe = value
     }
@@ -69,36 +68,34 @@ data class Person(
     }
 }
 
-fun Person.sendOvertakelsesmelding() =
-    synchronized(this) {
-        logger.info("Overtar arbeidssøkerbekreftelse")
-        arbeidssøkerperioder.gjeldende?.let {
-            logger.info("Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}")
-            logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
-            try {
-                logger.info("Antall observere: ${observers.size}")
-                observers.forEach { observer -> observer.sendOvertakelsesmelding(this) }
-                logger.info("Kjørte overtagelse på observere uten feil")
-            } catch (e: Exception) {
-                logger.error(e) { "Overtagelse feilet!" }
-                throw e
-            }
+fun Person.sendOvertakelsesmelding() {
+    logger.info("Overtar arbeidssøkerbekreftelse")
+    arbeidssøkerperioder.gjeldende?.let {
+        logger.info("Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}")
+        logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
+        try {
+            logger.info("Antall observere: ${observers.size}")
+            observers.forEach { observer -> observer.sendOvertakelsesmelding(this) }
+            logger.info("Kjørte overtagelse på observere uten feil")
+        } catch (e: Exception) {
+            logger.error(e) { "Overtagelse feilet!" }
+            throw e
         }
     }
+}
 
-fun Person.merkPeriodeSomOvertatt(periodeId: UUID) =
-    synchronized(this) {
-        logger.info("Merker periode $periodeId som overtatt")
-        arbeidssøkerperioder
-            .find { it.periodeId == periodeId }
-            ?.let { it.overtattBekreftelse = true }
-            ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som overtatt " }
-    }
+fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som overtatt")
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let { it.overtattBekreftelse = true }
+        ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som overtatt " }
+}
 
 fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
-) = synchronized(this) {
+) {
     logger.info("Frasier arbeidssøkerbekreftelse")
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
@@ -117,14 +114,13 @@ fun Person.sendFrasigelsesmelding(
         }
 }
 
-fun Person.merkPeriodeSomIkkeOvertatt(periodeId: UUID) =
-    synchronized(this) {
-        logger.info("Merker periode $periodeId som ikke overtatt")
-        arbeidssøkerperioder
-            .find { it.periodeId == periodeId }
-            ?.let { it.overtattBekreftelse = false }
-            ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som ikke overtatt" }
-    }
+fun Person.merkPeriodeSomIkkeOvertatt(periodeId: UUID) {
+    logger.info("Merker periode $periodeId som ikke overtatt")
+    arbeidssøkerperioder
+        .find { it.periodeId == periodeId }
+        ?.let { it.overtattBekreftelse = false }
+        ?: logger.error { "Fant ikke periode $periodeId og klarte derfor ikke å markere perioden som ikke overtatt" }
+}
 
 fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHendelse) {
     arbeidssøkerperioder.add(
@@ -151,11 +147,11 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
 }
 
 val Person.erArbeidssøker: Boolean
-    get() = synchronized(this) { arbeidssøkerperioder.gjeldende != null }
+    get() = arbeidssøkerperioder.gjeldende != null
 
 val Person.overtattBekreftelse: Boolean
-    get() = synchronized(this) { arbeidssøkerperioder.gjeldende?.overtattBekreftelse ?: false }
+    get() = arbeidssøkerperioder.gjeldende?.overtattBekreftelse ?: false
 
 fun Person.vurderNyStatus() = if (this.oppfyllerKrav) DAGPENGERBRUKER else IKKE_DAGPENGERBRUKER
 
-val Person.oppfyllerKrav: Boolean get() = synchronized(this) { this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP" }
+val Person.oppfyllerKrav: Boolean get() = this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP"
