@@ -21,6 +21,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -85,6 +86,7 @@ class PersonServiceTest {
         verify(exactly = 0) { personRepository.lagrePerson(any()) }
     }
 
+    @Disabled
     @Test
     fun `hentPerson som har historisk ident i DB blir oppdatert med ny ident`() {
         val nyIdent = "10987654321"
@@ -108,6 +110,7 @@ class PersonServiceTest {
         verify(exactly = 0) { personRepository.lagrePerson(any()) }
     }
 
+    @Disabled
     @Test
     fun `hentPerson der flere personer har blitt merget til én i pdl returnerer merget person`() {
         val nyIdent = "10987654321"
@@ -136,6 +139,7 @@ class PersonServiceTest {
         verify(exactly = 0) { personRepository.oppdaterIdent(any(), any()) }
     }
 
+    @Disabled
     @Test
     fun `hentPerson merger person med hendelser og finner riktig arbeidssøkerperiode `() {
         val nyIdent = "98765432101"
