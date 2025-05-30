@@ -55,9 +55,7 @@ class PersonMediator(
             } else {
                 hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
-                        println("behandle dagpengerhendelse: Person.meldeplikt: ${person.meldeplikt}")
                         person.behandle(hendelse)
-                        println("etter behandle dagpengerhendelse: Person.meldeplikt: ${person.meldeplikt}")
                         try {
                             personRepository.oppdaterPerson(person)
                         } catch (e: OptimisticLockingException) {

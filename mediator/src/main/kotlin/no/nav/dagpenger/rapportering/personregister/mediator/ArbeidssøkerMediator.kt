@@ -78,38 +78,36 @@ class ArbeidssøkerMediator(
             return
         }
 
-        synchronized(person) {
-            if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
-                logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
-                return
-            }
-            when (paVegneAv.handling) {
-                is Start -> {
-                    logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
-                    person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
-                }
-
-                is Stopp -> {
-                    logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
-                    person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
-                }
-
-                else -> {
-                    logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
-                }
+        if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
+            logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
+            return
+        }
+        when (paVegneAv.handling) {
+            is Start -> {
+                logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
+                person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
             }
 
+            is Stopp -> {
+                logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
+                person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+            }
+
+            else -> {
+                logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
+            }
+        }
+
+        logger.info(
+            "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
+        )
+        try {
+            personRepository.oppdaterPerson(person)
+        } catch (e: OptimisticLockingException) {
             logger.info(
-                "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
-            )
-            try {
-                personRepository.oppdaterPerson(person)
-            } catch (e: OptimisticLockingException) {
-                logger.info(
-                    e,
-                ) { "Optimistisk låsing feilet ved oppdatering av person med periodeId ${paVegneAv.periodeId}. Counter: $counter" }
-                behandle(paVegneAv, counter + 1)
-            }
+                e,
+            ) { "Optimistisk låsing feilet ved oppdatering av person med periodeId ${paVegneAv.periodeId}. Counter: $counter" }
+            behandle(paVegneAv, counter + 1)
         }
     }
 
@@ -122,25 +120,22 @@ class ArbeidssøkerMediator(
         personService
             .hentPerson(arbeidssøkerHendelse.ident)
             ?.let { person ->
-                synchronized(person) {
-                    println("Behandler: Person er versjon ${person.versjon}")
-                    if (person.observers.isEmpty()) {
-                        personObservers.forEach { person.addObserver(it) }
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { person.addObserver(it) }
+                }
+                logger.info {
+                    "Behandler arbeidssøkerhendelse for person med meldeplikt = ${person.meldeplikt} og meldegruppe = ${person.meldegruppe}"
+                }
+                person.behandle(arbeidssøkerHendelse)
+                try {
+                    personRepository.oppdaterPerson(person)
+                } catch (e: OptimisticLockingException) {
+                    logger.info(
+                        e,
+                    ) {
+                        "Optimistisk låsing feilet ved oppdatering av person med periodeId ${arbeidssøkerHendelse.periodeId}. Counter: $counter"
                     }
-                    logger.info {
-                        "Behandler arbeidssøkerhendelse for person med meldeplikt = ${person.meldeplikt} og meldegruppe = ${person.meldegruppe}"
-                    }
-                    person.behandle(arbeidssøkerHendelse)
-                    try {
-                        personRepository.oppdaterPerson(person)
-                    } catch (e: OptimisticLockingException) {
-                        logger.info(
-                            e,
-                        ) {
-                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${arbeidssøkerHendelse.periodeId}. Counter: $counter"
-                        }
-                        behandle(arbeidssøkerHendelse, counter + 1)
-                    }
+                    behandle(arbeidssøkerHendelse, counter + 1)
                 }
             } ?: logger.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
     }

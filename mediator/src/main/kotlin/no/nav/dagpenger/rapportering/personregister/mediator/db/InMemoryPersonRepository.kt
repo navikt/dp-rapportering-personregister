@@ -16,22 +16,18 @@ class InMemoryPersonRepository : PersonRepository {
     private val personList2 = mutableListOf<Person>()
     private val fremtidigeHendelser = mutableListOf<Hendelse>()
 
-    override fun hentPerson(ident: String): Person? = personList[ident].also { println("PersonList: $personList") }
+    override fun hentPerson(ident: String): Person? = personList[ident]
 
     override fun finnesPerson(ident: String): Boolean = personList.containsKey(ident)
 
     override fun lagrePerson(person: Person) {
-        println("Lagrer person: $person")
-        println("Person.meldeplikt: ${person.meldeplikt}, person.meldegruppe: ${person.meldegruppe}")
         personList[person.ident] = person
         personList2.add(person)
     }
 
     override fun oppdaterPerson(person: Person) {
-        println("Person.meldeplikt: ${person.meldeplikt}, person.meldegruppe: ${person.meldegruppe}")
         val nyPerson = person.deepCopy(versjon = person.versjon + 1)
         personList[person.ident] = nyPerson
-        println("Ny person meldeplikt: ${nyPerson.meldeplikt}, ny person meldegruppe: ${nyPerson.meldegruppe}")
     }
 
     override fun oppdaterIdent(

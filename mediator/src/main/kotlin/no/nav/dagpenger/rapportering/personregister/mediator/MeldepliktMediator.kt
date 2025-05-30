@@ -78,21 +78,19 @@ class MeldepliktMediator(
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    synchronized(person) {
-                        if (person.observers.isEmpty()) {
-                            personObservers.forEach { person.addObserver(it) }
-                        }
-                        person.behandle(hendelse)
-                        try {
-                            personRepository.oppdaterPerson(person)
-                        } catch (e: OptimisticLockingException) {
-                            logger.info(e) {
-                                "Optimistisk låsing feilet ved oppdatering for hendelse med refId ${hendelse.referanseId}. Counter: $counter"
-                            }
-                            behandleHendelse(hendelse, counter + 1)
-                        }
-                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
+                    if (person.observers.isEmpty()) {
+                        personObservers.forEach { person.addObserver(it) }
                     }
+                    person.behandle(hendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering for hendelse med refId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandleHendelse(hendelse, counter + 1)
+                    }
+                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }

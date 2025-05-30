@@ -206,9 +206,7 @@ class ArbeidssøkerMediatorTest {
         val person = testPerson(ident = ident)
         every { personService.hentPerson(ident) } returns person
 
-        println("Person før lagring: $person")
         personRepository.lagrePerson(person)
-        println("Person etter lagring: $person")
 
         arbeidssøkerMediator.behandle(ident)
 
