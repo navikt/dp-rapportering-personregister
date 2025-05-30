@@ -6,6 +6,7 @@ import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -119,7 +120,7 @@ class MeldepliktMediatorTest {
             personMediator.behandle(dagpengerMeldegruppeHendelse())
             meldepliktMediator.behandle(meldepliktHendelse(status = true))
             status shouldBe DAGPENGERBRUKER
-            personObserver skalHaSendtOvertakelseFor this
+            verify(exactly = 1) { personObserver.sendOvertakelsesmelding(any()) }
         }
     }
 
@@ -140,20 +141,25 @@ class MeldepliktMediatorTest {
 
     @Test
     fun `meldeplikthendelse for tidligere periode tas ikke høyde for`() {
-        arbeidssøker {
-            every { personObserver.overtattArbeidssøkerbekreftelse(this@arbeidssøker, periodeId) } answers {
-                this@arbeidssøker.merkPeriodeSomOvertatt(periodeId)
-            }
+        arbeidssøker { }
+        meldepliktMediator.behandle(meldepliktHendelse())
+        val person = personRepository.hentPerson(ident)!!
+        every { personObserver.overtattArbeidssøkerbekreftelse(any(), periodeId) } answers {
+            person.merkPeriodeSomOvertatt(periodeId)
+        }
 
-            meldepliktMediator.behandle(meldepliktHendelse())
-            personMediator.behandle(dagpengerMeldegruppeHendelse())
-            arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+        personMediator.behandle(dagpengerMeldegruppeHendelse())
+        arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+
+        with(personRepository.hentPerson(ident)!!) {
             status shouldBe DAGPENGERBRUKER
             arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
-            personObserver skalHaSendtOvertakelseFor this
             hendelser.size shouldBe 2
+        }
+        personObserver skalHaSendtOvertakelseFor person
+        meldepliktMediator.behandle(meldepliktHendelse(sluttDato = LocalDateTime.now().minusDays(1), status = false))
 
-            meldepliktMediator.behandle(meldepliktHendelse(sluttDato = LocalDateTime.now().minusDays(1), status = false))
+        with(personRepository.hentPerson(ident)!!) {
             status shouldBe DAGPENGERBRUKER
             arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
             hendelser.size shouldBe 2

@@ -43,7 +43,12 @@ data class DagpengerMeldegruppeHendelse(
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
+        println(
+            "Behandler dagpengerhendelse. Person.versjon: ${person.versjon}. meldegruppeKode: $meldegruppeKode, meldeplikt: ${person.meldeplikt}",
+        )
         person.setMeldegruppe(meldegruppeKode)
+
+        println("Oppfyller krav: ${person.oppfyllerKrav}")
 
         person
             .vurderNyStatus()

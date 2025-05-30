@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 import com.github.benmanes.caffeine.cache.Cache
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -92,7 +93,12 @@ class PersonService(
                 }
                 gjeldendePerson.setStatus(gjeldendePerson.vurderNyStatus())
                 if (personRepository.finnesPerson(gjeldendePerson.ident)) {
-                    personRepository.oppdaterPerson(gjeldendePerson)
+                    try {
+                        personRepository.oppdaterPerson(gjeldendePerson)
+                    } catch (e: OptimisticLockingException) {
+                        sikkerLogg.warn(e) { "Optimistisk låsing feilet ved oppdatering av person ${gjeldendePerson.ident}" }
+                        ryddOppPersoner(pdlIdentliste, personer)
+                    }
                 } else {
                     personRepository.lagrePerson(gjeldendePerson)
                 }

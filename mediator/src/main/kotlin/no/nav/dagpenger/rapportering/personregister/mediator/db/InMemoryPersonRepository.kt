@@ -22,12 +22,16 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun lagrePerson(person: Person) {
         println("Lagrer person: $person")
+        println("Person.meldeplikt: ${person.meldeplikt}, person.meldegruppe: ${person.meldegruppe}")
         personList[person.ident] = person
         personList2.add(person)
     }
 
     override fun oppdaterPerson(person: Person) {
-        personList[person.ident] = person.copy(versjon = person.versjon + 1)
+        println("Person.meldeplikt: ${person.meldeplikt}, person.meldegruppe: ${person.meldegruppe}")
+        val nyPerson = person.deepCopy(versjon = person.versjon + 1)
+        personList[person.ident] = nyPerson
+        println("Ny person meldeplikt: ${nyPerson.meldeplikt}, ny person meldegruppe: ${nyPerson.meldegruppe}")
     }
 
     override fun oppdaterIdent(
@@ -100,10 +104,14 @@ class InMemoryPersonRepository : PersonRepository {
 private fun Person.deepCopy(versjon: Int) =
     Person(
         ident = this.ident,
-        statusHistorikk = this.statusHistorikk.deepCopy(),
-        arbeidssøkerperioder = this.arbeidssøkerperioder.map { it.copy() }.toMutableList(),
+        statusHistorikk = this.statusHistorikk,
+        arbeidssøkerperioder = this.arbeidssøkerperioder,
         versjon = versjon,
-    )
+    ).also { nyPerson ->
+        nyPerson.setMeldegruppe(this.meldegruppe)
+        nyPerson.setMeldeplikt(this.meldeplikt)
+        nyPerson.hendelser.addAll(this.hendelser)
+    }
 
 fun <T> TemporalCollection<T>.deepCopy(): TemporalCollection<T> {
     val newCollection = TemporalCollection<T>()
