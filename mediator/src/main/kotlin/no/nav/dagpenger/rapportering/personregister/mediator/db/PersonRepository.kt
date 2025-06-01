@@ -45,4 +45,6 @@ interface PersonRepository {
     fun slettPerson(ident: String)
 
     fun hentPersonMedPeriodeId(periodeId: UUID): Person?
+
+    fun hentAlleIdenter(): List<String>
 }

@@ -29,6 +29,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ResendPåVegneAvMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.RettPersonStatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.SlettPersonerJob
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -157,6 +158,7 @@ internal class ApplicationBuilder(
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
+    private val rettPersonStatusJob = RettPersonStatusJob()
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
@@ -205,7 +207,7 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-//        resendPaaVegneAvJob.start(personRepository, personService)
+//        rettPersonStatusJob.start(personRepository, arbeidssøkerService)
     }
 }
 
