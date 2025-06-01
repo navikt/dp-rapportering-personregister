@@ -5,6 +5,9 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -25,6 +28,7 @@ internal class RettPersonStatusJob(
 
     fun start(
         personRepository: PersonRepository,
+        tempPersonRepository: TempPersonRepository,
         arbeidssøkerService: ArbeidssøkerService,
     ) {
         logger.info { "Tidspunkt for neste kjøring av RettPersonStatusJob: $tidspunktForNesteKjoring" }
@@ -38,8 +42,9 @@ internal class RettPersonStatusJob(
                     if (isLeader(httpClient, logger)) {
                         val identListe = personRepository.hentAlleIdenter()
                         logger.info { "Hentet ${identListe.size} identer for oppdatering av personstatus" }
+                        val identer = fyllTempPersonTabell(identListe, tempPersonRepository)
 
-                        identListe.forEach { ident ->
+                        identer.forEach { ident ->
                             val person = personRepository.hentPerson(ident)
 
                             val sisteArbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
@@ -47,6 +52,9 @@ internal class RettPersonStatusJob(
                             if (person != null) {
                                 val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
                                 personRepository.oppdaterPerson(oppdatertPerson)
+                                tempPersonRepository.oppdaterPerson(
+                                    TempPerson(ident, status = TempPersonStatus.FERDIGSTILT),
+                                )
                             }
                         }
                     } else {
@@ -58,4 +66,23 @@ internal class RettPersonStatusJob(
             },
         )
     }
+}
+
+private fun fyllTempPersonTabell(
+    identer: List<String>,
+    repository: TempPersonRepository,
+): List<String> {
+    if (repository.isEmpty()) {
+        logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
+
+        identer.map { ident ->
+            val tempPerson = TempPerson(ident)
+            repository.lagrePerson(tempPerson)
+        }
+
+        return repository.hentAlleIdenter()
+    }
+
+    logger.info { "Midlertidig person tabell er allerede fylt, henter eksisterende identer" }
+    return repository.hentAlleIdenter()
 }
