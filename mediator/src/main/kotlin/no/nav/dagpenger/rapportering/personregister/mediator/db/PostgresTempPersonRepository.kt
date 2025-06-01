@@ -29,7 +29,12 @@ class PostgresTempPersonRepository(
         }
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
-                val query = queryOf("INSERT INTO temp_person (ident, status) VALUES (?, ?)", person.ident, person.status.name)
+                val query =
+                    queryOf(
+                        "INSERT INTO temp_person (ident, status, oppdatert) VALUES (?, ?, CURRENT_TIMESTAMP)",
+                        person.ident,
+                        person.status.name,
+                    )
                 tx.run(query.asUpdate)
             }
         }

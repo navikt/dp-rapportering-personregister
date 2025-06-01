@@ -40,6 +40,7 @@ internal class RettPersonStatusJob(
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
+                        logger.info { "Starter jobb for å oppdatere personstatus" }
                         val identer = hentTempPersonIdenter(personRepository, tempPersonRepository)
                         logger.info { "Hentet ${identer.size} identer for oppdatering av personstatus" }
 
@@ -74,18 +75,25 @@ private fun hentTempPersonIdenter(
     personRepository: PersonRepository,
     tempPersonRepository: TempPersonRepository,
 ): List<String> {
+    logger.info { "Henter identer fra persontabell" }
     val identer = personRepository.hentAlleIdenter()
+    logger.info { "Hentet ${identer.size} identer fra persontabell" }
     if (tempPersonRepository.isEmpty()) {
         logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
 
-        identer.map { ident ->
-            val tempPerson = TempPerson(ident)
-            tempPersonRepository.lagrePerson(tempPerson)
+        try {
+            identer.map { ident ->
+                val tempPerson = TempPerson(ident)
+                logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
+                tempPersonRepository.lagrePerson(tempPerson)
+                logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
+            }
+            logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
+
+            return tempPersonRepository.hentAlleIdenter()
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved lagring av midlertidige personer i databasen" }
         }
-
-        logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
-
-        return tempPersonRepository.hentAlleIdenter()
     }
 
     logger.info { "Midlertidig person tabell er allerede fylt." }
