@@ -25,7 +25,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.databas
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -124,7 +123,6 @@ open class ApiTestSetup {
                 PersonService(
                     pdlConnector = pdlConnector,
                     personRepository = personRepository,
-                    tempPersonRepository = mockk<TempPersonRepository>(),
                     personObservers = listOf(personObserver),
                     cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
                 )

@@ -48,15 +48,6 @@ internal fun Application.personstatusApi(
             }
         }
 
-        route("/synctempersontabell") {
-            get {
-                logger.info { "GET /synctempersontabell" }
-                logger.info { "Fyller midlertidig person tabell med identer fra person tabell" }
-                personService.fyllTempPersonTabell()
-
-                call.respond(HttpStatusCode.OK, ("Synkronisert midlertidig person tabell med identer fra person tabell"))
-            }
-        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {

@@ -40,20 +40,23 @@ internal class RettPersonStatusJob(
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
-                        val identer = tempPersonRepository.hentAlleIdenter()
+                        val identer = hentTempPersonIdenter(personRepository, tempPersonRepository)
                         logger.info { "Hentet ${identer.size} identer for oppdatering av personstatus" }
 
                         identer.forEach { ident ->
-                            val person = personRepository.hentPerson(ident)
+                            val tempPerson = tempPersonRepository.hentPerson(ident)
+                            if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
+                                val person = personRepository.hentPerson(ident)
 
-                            val sisteArbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+                                val sisteArbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
 
-                            if (person != null) {
-                                val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
-                                personRepository.oppdaterPerson(oppdatertPerson)
-                                tempPersonRepository.oppdaterPerson(
-                                    TempPerson(ident, status = TempPersonStatus.FERDIGSTILT),
-                                )
+                                if (person != null) {
+                                    val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
+                                    personRepository.oppdaterPerson(oppdatertPerson)
+                                    tempPersonRepository.oppdaterPerson(
+                                        TempPerson(ident, status = TempPersonStatus.FERDIGSTILT),
+                                    )
+                                }
                             }
                         }
                     } else {
@@ -65,4 +68,26 @@ internal class RettPersonStatusJob(
             },
         )
     }
+}
+
+private fun hentTempPersonIdenter(
+    personRepository: PersonRepository,
+    tempPersonRepository: TempPersonRepository,
+): List<String> {
+    val identer = personRepository.hentAlleIdenter()
+    if (tempPersonRepository.isEmpty()) {
+        logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
+
+        identer.map { ident ->
+            val tempPerson = TempPerson(ident)
+            tempPersonRepository.lagrePerson(tempPerson)
+        }
+
+        logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
+
+        return tempPersonRepository.hentAlleIdenter()
+    }
+
+    logger.info { "Midlertidig person tabell er allerede fylt." }
+    return tempPersonRepository.hentAlleIdenter()
 }

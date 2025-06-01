@@ -4,8 +4,6 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -16,7 +14,6 @@ import java.util.UUID
 class PersonService(
     private val pdlConnector: PdlConnector,
     private val personRepository: PersonRepository,
-    private val tempPersonRepository: TempPersonRepository,
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
 ) {
@@ -38,21 +35,6 @@ class PersonService(
                 logger.warn("Fant ikke person med periodeId $periodeId")
             }
         }
-    }
-
-    fun fyllTempPersonTabell() {
-        val identer = personRepository.hentAlleIdenter()
-        if (tempPersonRepository.isEmpty()) {
-            logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
-
-            identer.map { ident ->
-                val tempPerson = TempPerson(ident)
-                tempPersonRepository.lagrePerson(tempPerson)
-            }
-
-            logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
-        }
-        logger.info { "Midlertidig person tabell er allerede fylt." }
     }
 
     fun hentPerson(ident: String): Person? =

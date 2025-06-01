@@ -10,7 +10,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -34,7 +33,6 @@ class AktiverHendelserJobTest : ApiTestSetup() {
         PersonService(
             pdlConnector = pdlConnector,
             personRepository = personRepository,
-            tempPersonRepository = mockk<TempPersonRepository>(),
             personObservers = listOf(personObserver),
             cache = Caffeine.newBuilder().build(),
         )

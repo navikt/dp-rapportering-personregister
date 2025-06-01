@@ -130,7 +130,6 @@ internal class ApplicationBuilder(
         PersonService(
             pdlConnector,
             personRepository,
-            tempPersonRepository,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             pdlIdentCache,
         )
@@ -215,7 +214,7 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-//        rettPersonStatusJob.start(personRepository, arbeidssøkerService)
+        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
     }
 }
 
