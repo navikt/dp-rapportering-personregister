@@ -75,27 +75,35 @@ private fun hentTempPersonIdenter(
     personRepository: PersonRepository,
     tempPersonRepository: TempPersonRepository,
 ): List<String> {
-    logger.info { "Henter identer fra persontabell" }
-    val identer = personRepository.hentAlleIdenter()
-    logger.info { "Hentet ${identer.size} identer fra persontabell" }
-    if (tempPersonRepository.isEmpty()) {
-        logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
+    try {
+        logger.info { "Henter identer fra persontabell" }
 
-        try {
-            identer.map { ident ->
-                val tempPerson = TempPerson(ident)
-                logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
-                tempPersonRepository.lagrePerson(tempPerson)
-                logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
+        val identer = personRepository.hentAlleIdenter()
+
+        logger.info { "Hentet ${identer.size} identer fra persontabell" }
+
+        if (tempPersonRepository.isEmpty()) {
+            logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
+
+            try {
+                identer.map { ident ->
+                    val tempPerson = TempPerson(ident)
+                    logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
+                    tempPersonRepository.lagrePerson(tempPerson)
+                    logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
+                }
+                logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
+
+                return tempPersonRepository.hentAlleIdenter()
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved lagring av midlertidige personer i databasen" }
             }
-            logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
-
-            return tempPersonRepository.hentAlleIdenter()
-        } catch (e: Exception) {
-            logger.error(e) { "Feil ved lagring av midlertidige personer i databasen" }
         }
-    }
 
-    logger.info { "Midlertidig person tabell er allerede fylt." }
-    return tempPersonRepository.hentAlleIdenter()
+        logger.info { "Midlertidig person tabell er allerede fylt." }
+        return tempPersonRepository.hentAlleIdenter()
+    } catch (e: Exception) {
+        logger.error(e) { "Feil ved henting av midlertidig identer" }
+        return emptyList()
+    }
 }
