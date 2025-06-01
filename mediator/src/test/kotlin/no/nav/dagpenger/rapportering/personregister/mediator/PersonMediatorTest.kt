@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnec
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
@@ -78,6 +79,7 @@ class PersonMediatorTest {
             PersonService(
                 pdlConnector = pdlConnector,
                 personRepository = personRepository,
+                tempPersonRepository = mockk<TempPersonRepository>(),
                 personObservers = listOf(personObserver, beslutningObserver),
                 cache = Caffeine.newBuilder().build(),
             )

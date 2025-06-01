@@ -47,6 +47,16 @@ internal fun Application.personstatusApi(
                 call.respond(HttpStatusCode.OK, mapOf("Frasagt arbeidssøkerbekreftelse for" to ids.size))
             }
         }
+
+        route("/synctempersontabell") {
+            get {
+                logger.info { "GET /synctempersontabell" }
+                logger.info { "Fyller midlertidig person tabell med identer fra person tabell" }
+                personService.fyllTempPersonTabell()
+
+                call.respond(HttpStatusCode.OK, ("Synkronisert midlertidig person tabell med identer fra person tabell"))
+            }
+        }
         authenticate("tokenX") {
             route("/personstatus") {
                 post {

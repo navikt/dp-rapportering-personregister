@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnec
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -50,6 +51,7 @@ class MeldepliktMediatorTest {
 
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private val tempPersonRepository = mockk<TempPersonRepository>(relaxed = true)
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
 
@@ -61,6 +63,7 @@ class MeldepliktMediatorTest {
             PersonService(
                 pdlConnector = pdlConnector,
                 personRepository = personRepository,
+                tempPersonRepository = tempPersonRepository, // Using the same repository for simplicity in tests
                 personObservers = listOf(personObserver),
                 cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
             )
