@@ -47,6 +47,7 @@ internal fun Application.personstatusApi(
                 call.respond(HttpStatusCode.OK, mapOf("Frasagt arbeidssøkerbekreftelse for" to ids.size))
             }
         }
+
         authenticate("tokenX") {
             route("/personstatus") {
                 post {

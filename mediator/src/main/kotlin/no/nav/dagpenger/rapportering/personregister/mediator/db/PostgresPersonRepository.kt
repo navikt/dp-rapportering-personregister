@@ -425,6 +425,15 @@ class PostgresPersonRepository(
         }
     }
 
+    override fun hentAlleIdenter(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT ident FROM person")
+                    .map { it.string("ident") }
+                    .asList,
+            )
+        }
+
     private fun hentPersonId(
         ident: String,
         tx: TransactionalSession,

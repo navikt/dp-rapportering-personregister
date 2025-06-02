@@ -26,9 +26,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnec
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ResendPåVegneAvMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.RettPersonStatusJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.SendPaaVegneAvForAlleJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.SlettPersonerJob
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -81,6 +84,7 @@ internal class ApplicationBuilder(
             .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
@@ -124,7 +128,12 @@ internal class ApplicationBuilder(
         )
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
     private val personService =
-        PersonService(pdlConnector, personRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver), pdlIdentCache)
+        PersonService(
+            pdlConnector,
+            personRepository,
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            pdlIdentCache,
+        )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
@@ -157,6 +166,8 @@ internal class ApplicationBuilder(
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
+    private val rettPersonStatusJob = RettPersonStatusJob()
+    private val sendPaaVegneAvForAlleJob = SendPaaVegneAvForAlleJob()
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
@@ -205,7 +216,9 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-//        resendPaaVegneAvJob.start(personRepository, personService)
+        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
+        // Jobben under må kjøres etter rettPersonStatusJob!!
+        // sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
     }
 }
 
