@@ -2,24 +2,24 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.ktor.client.HttpClient
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
+import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
-import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal class RettPersonStatusJob(
+internal class SendPaaVegneAvForAlleJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
     private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
@@ -33,57 +33,83 @@ internal class RettPersonStatusJob(
     fun start(
         personRepository: PersonRepository,
         tempPersonRepository: TempPersonRepository,
-        arbeidssøkerService: ArbeidssøkerService,
+        observers: List<PersonObserver>,
     ) {
-        logger.info { "Tidspunkt for neste kjøring av RettPersonStatusJob: $tidspunktForNesteKjoring" }
+        logger.info { "Tidspunkt for neste kjøring av SendPaaVegneAvForAlleJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
-            name = "Rett person status",
+            name = "Send paaVegneAv-melding for alle",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 1.hours.inWholeMilliseconds,
+            period = Long.MAX_VALUE,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
-                        logger.info { "Starter jobb for å oppdatere personstatus" }
+                        logger.info { "Starter jobb for å sende paavegneav-melding" }
                         val identer = hentTempPersonIdenter(tempPersonRepository)
-                        logger.info { "Hentet ${identer.size} identer for oppdatering av personstatus" }
+                        logger.info { "Hentet ${identer.size} identer for sending av på vegne av-melding" }
 
-                        identer.forEach { ident ->
-                            val tempPerson = tempPersonRepository.hentPerson(ident)
-                            if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
-                                val person = personRepository.hentPerson(ident)
+                        sendPaaVegneAv(identer, personRepository, tempPersonRepository, observers)
 
-                                val sisteArbeidssøkerperiode =
-                                    try {
-                                        if (person?.arbeidssøkerperioder?.gjeldende != null) {
-                                            person.arbeidssøkerperioder.gjeldende
-                                        } else {
-                                            runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
-                                        }
-                                    } catch (e: Exception) {
-                                        sikkerLogg.error(e) { "Feil ved henting av siste arbeidssøkerperiode for person: $ident" }
-                                        null
-                                    }
-
-                                if (person != null) {
-                                    val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
-                                    personRepository.oppdaterPerson(oppdatertPerson)
-                                    tempPersonRepository.oppdaterPerson(
-                                        TempPerson(ident, status = TempPersonStatus.RETTET),
-                                    )
-                                }
-                            }
-                        }
-
-                        logger.info { "Jobb for å oppdatere personstatus er fullført" }
+                        logger.info { "Jobb for å sende paavegneav-melding er fullført" }
                     } else {
-                        logger.info { "Pod er ikke leader, så jobb for å oppdatere personstatus startes ikke her" }
+                        logger.info { "Pod er ikke leader, så jobb for å sende på vegne av-meldinger startes ikke her" }
                     }
                 } catch (ex: Exception) {
-                    logger.error(ex) { "Jobb for å oppdatere personstatus feilet" }
+                    logger.error(ex) { "Jobb for å sende på vegne av-meldinger feilet" }
                 }
             },
         )
+    }
+
+    fun sendPaaVegneAv(
+        identer: List<String>,
+        personRepository: PersonRepository,
+        tempPersonRepository: TempPersonRepository,
+        observers: List<PersonObserver>,
+    ) {
+        identer.forEach { ident ->
+            val tempPerson = tempPersonRepository.hentPerson(ident)
+            if (tempPerson != null && tempPerson.status == TempPersonStatus.RETTET) {
+                val person =
+                    personRepository.hentPerson(ident)?.apply {
+                        if (this.observers.isEmpty()) {
+                            observers.forEach { observer ->
+                                this.addObserver(observer)
+                            }
+                        }
+                    }
+
+                if (person != null) {
+                    person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse = null
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        sikkerLogg.error(e) { "Optimistisk låsing feilet ved oppdatering av person med ident: $ident" }
+                    } catch (e: Exception) {
+                        sikkerLogg.error(e) { "Feil ved oppdatering av person med ident: $ident" }
+                    }
+
+                    if (person.status == Status.DAGPENGERBRUKER) {
+                        person.observers.forEach { observer ->
+                            observer.sendOvertakelsesmelding(person)
+                        }
+                    } else {
+                        person.observers.forEach { observer ->
+                            observer.sendFrasigelsesmelding(person)
+                        }
+                    }
+                    tempPersonRepository.oppdaterPerson(
+                        TempPerson(ident, status = TempPersonStatus.FERDIGSTILT),
+                    )
+                } else {
+                    sikkerLogg.warn { "Fant ikke person med ident: $ident" }
+                }
+            } else {
+                sikkerLogg.warn {
+                    "Fant ikke midlertidig person med ident: $ident eller status er ikke rettet: ${tempPerson?.status}"
+                }
+            }
+        }
     }
 }
 
