@@ -95,10 +95,14 @@ private fun hentTempPersonIdenter(tempPersonRepository: TempPersonRepository): L
 
             try {
                 identer.map { ident ->
-                    val tempPerson = TempPerson(ident)
-                    logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
-                    tempPersonRepository.lagrePerson(tempPerson)
-                    logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
+                    try {
+                        val tempPerson = TempPerson(ident)
+                        logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
+                        tempPersonRepository.lagrePerson(tempPerson)
+                        logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Feil ved lagring av midlertidig person med ident: $ident" }
+                    }
                 }
                 logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
 

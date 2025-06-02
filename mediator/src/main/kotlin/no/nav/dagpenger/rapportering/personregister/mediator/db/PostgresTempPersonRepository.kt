@@ -4,7 +4,10 @@ import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
+import mu.KotlinLogging
 import javax.sql.DataSource
+
+private val logger = KotlinLogging.logger {}
 
 class PostgresTempPersonRepository(
     private val dataSource: DataSource,
@@ -25,7 +28,8 @@ class PostgresTempPersonRepository(
 
     override fun lagrePerson(person: TempPerson) {
         if (hentPerson(person.ident) != null) {
-            throw IllegalArgumentException("Person with ident ${person.ident} already exists")
+            logger.warn { "Personen eksiterer allerede" }
+            return
         }
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
