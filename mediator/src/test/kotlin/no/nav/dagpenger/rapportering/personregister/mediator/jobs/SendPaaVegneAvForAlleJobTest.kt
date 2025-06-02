@@ -1,9 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.kotest.matchers.shouldBe
+import io.mockk.justRun
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
+import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
@@ -46,19 +48,27 @@ class SendPaaVegneAvForAlleJobTest {
         )
 
     @Test
-    fun `sender paaVegneAvMelding for alle identer`() {
-        val periodeId = UUID.randomUUID()
-        identer.forEach { ident -> tempPersonRepository.lagrePerson(TempPerson(ident, TempPersonStatus.RETTET)) }
-        identer.forEach { ident -> personRepository.lagrePerson(lagPerson(ident, periodeId)) }
+    fun `sender paaVegneAvMelding for alle identer`() =
+        withMigratedDb {
+            val periodeId = UUID.randomUUID()
+            identer.forEach { ident -> tempPersonRepository.lagrePerson(TempPerson(ident, TempPersonStatus.RETTET)) }
+            identer.forEach { ident -> personRepository.lagrePerson(lagPerson(ident, periodeId)) }
 
-        job.sendPaaVegneAv(identer, personRepository, tempPersonRepository, observers)
+            observers.forEach { observer ->
+                justRun { observer.sendOvertakelsesmelding(any()) }
+            }
+            observers.forEach { observer ->
+                justRun { observer.sendFrasigelsesmelding(any()) }
+            }
 
-        identer.forEach {
-            with(tempPersonRepository.hentPerson(it)!!) {
-                status shouldBe TempPersonStatus.FERDIGSTILT
+            job.sendPaaVegneAv(identer, personRepository, tempPersonRepository, observers)
+
+            identer.forEach {
+                with(tempPersonRepository.hentPerson(it)!!) {
+                    status shouldBe TempPersonStatus.FERDIGSTILT
+                }
             }
         }
-    }
 
     private fun lagPerson(
         ident: String,

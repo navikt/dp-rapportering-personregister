@@ -90,7 +90,7 @@ class PostgresTempPersonRepository(
                                 INSERT INTO temp_person (ident, status)
                                 SELECT ident, 'IKKE_PABEGYNT'
                                 FROM person
-                                LIMIT 85000;
+                                LIMIT 90000;
                 """,
                     )
                 val rowsAffected = tx.run(query.asUpdate)
