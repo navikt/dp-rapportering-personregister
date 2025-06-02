@@ -40,7 +40,7 @@ internal class RettPersonStatusJob(
             name = "Rett person status",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 1.hours.inWholeMilliseconds,
+            period = 3.hours.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
@@ -50,14 +50,17 @@ internal class RettPersonStatusJob(
 
                         identer.forEach { ident ->
                             val tempPerson = tempPersonRepository.hentPerson(ident)
+                            logger.info { "Hentet midlertidig person. Behandler" }
                             if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
                                 val person = personRepository.hentPerson(ident)
 
                                 val sisteArbeidssøkerperiode =
                                     try {
                                         if (person?.arbeidssøkerperioder?.gjeldende != null) {
+                                            logger.info { "Person har gjeldende periode. Bruker denne." }
                                             person.arbeidssøkerperioder.gjeldende
                                         } else {
+                                            logger.info { "Person har ikke gjeldende periode. Henter siste arbeidssøkerperiode" }
                                             runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
                                         }
                                     } catch (e: Exception) {
@@ -71,6 +74,8 @@ internal class RettPersonStatusJob(
                                     tempPersonRepository.oppdaterPerson(
                                         TempPerson(ident, status = TempPersonStatus.RETTET),
                                     )
+                                } else {
+                                    sikkerLogg.warn { "Fant ikke person med ident: $ident " }
                                 }
                             }
                         }

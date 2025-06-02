@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -13,6 +14,90 @@ import java.util.UUID
 
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
+
+    @Test
+    fun `ingen hendelser`() {
+        val person = Person(ident)
+
+        oppfyllerkravVedSynkronisering(person) shouldBe false
+    }
+
+    @Test
+    fun `ingen PersonsynkroniseringHendelse`() {
+        val nå = LocalDateTime.now()
+        val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
+        val hendelse2 = meldepliktHendelse(dato = nå.minusDays(1), status = true)
+
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe false
+    }
+
+    @Test
+    fun `har kun PersonsynkroniseringHendelse`() {
+        val nå = LocalDateTime.now()
+        val hendelse = PersonSynkroniseringHendelse(ident, nå, "123", nå)
+        val person = Person(ident).apply { hendelser.add(hendelse) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe true
+    }
+
+    @Test
+    fun `siste hendelse er PersonsynkroniseringHendelse`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
+        val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "ARBS", true)
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe true
+    }
+
+    @Test
+    fun `PersonsynkroniseringHendelse er i midten`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
+        val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse3 = AnnenMeldegruppeHendelse(ident, tidligere.minusDays(1), "456", tidligere.minusDays(1), null, "ARBS", true)
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe false
+    }
+
+    @Test
+    fun `PersonsynkroniseringHendelse er eldste`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
+        val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe false
+    }
+
+    @Test
+    fun `PersonsynkroniseringHendelse er eldste men siste er 'DAGP' uten meldeplikt`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
+        val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe false
+    }
+
+    @Test
+    fun `PersonsynkroniseringHendelse er eldste men siste er 'DAGP' med meldeplikt`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
+        val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse3 = meldepliktHendelse(dato = tidligere.minusDays(1), status = true)
+        val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3)) }
+
+        oppfyllerkravVedSynkronisering(person) shouldBe true
+    }
 
     @Test
     fun `beregner meldeplikt status ved tom liste`() {
@@ -255,6 +340,21 @@ class RettPersonStatusUtilsTest {
         person.status shouldBe Status.IKKE_DAGPENGERBRUKER
     }
 
+    @Test
+    fun `er dagpenger ved personsynkronsiering`() {
+        val nå = LocalDateTime.now()
+
+        val person =
+            Person(ident).apply {
+                hendelser.add(personSynkroniseringHendelse(nå))
+                hendelser.add(meldepliktHendelse(dato = nå.minusDays(1), status = false))
+                hendelser.add(annenMeldegruppeHendelse(dato = nå.minusDays(2)))
+            }
+
+        rettPersonStatus(person, null)
+        person.status shouldBe Status.DAGPENGERBRUKER
+    }
+
     private fun meldepliktHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         status: Boolean = false,
@@ -269,4 +369,9 @@ class RettPersonStatusUtilsTest {
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS", true)
+
+    private fun personSynkroniseringHendelse(
+        dato: LocalDateTime = LocalDateTime.now(),
+        referanseId: String = "123",
+    ) = PersonSynkroniseringHendelse(ident, dato, referanseId, dato)
 }

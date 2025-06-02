@@ -5,6 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 
 fun beregnMeldepliktStatus(person: Person) =
@@ -26,27 +27,59 @@ fun beregnMeldegruppeStatus(person: Person) =
             }
         }
 
+fun oppfyllerkravVedSynkronisering(person: Person): Boolean {
+    val sisteMeldeplikt = beregnMeldepliktStatus(person)
+    val sisteMelgruppe = beregnMeldegruppeStatus(person)
+
+    return person.hendelser
+        .takeIf { hendelser -> hendelser.any { it is PersonSynkroniseringHendelse } }
+        ?.filter {
+            it is DagpengerMeldegruppeHendelse ||
+                it is AnnenMeldegruppeHendelse ||
+                it is PersonSynkroniseringHendelse ||
+                it is MeldepliktHendelse
+        }?.maxByOrNull { it.dato }
+        ?.let {
+            when (it) {
+                is PersonSynkroniseringHendelse -> return true
+                is DagpengerMeldegruppeHendelse -> return sisteMeldeplikt
+                is AnnenMeldegruppeHendelse -> return false
+                is MeldepliktHendelse -> it.statusMeldeplikt && sisteMelgruppe == "DAGP"
+                else -> false
+            }
+        } ?: false
+}
+
 fun rettPersonStatus(
     person: Person,
     sisteArbeidssøkerperiode: Arbeidssøkerperiode?,
 ): Person {
-    val beregnetMeldeplikt = beregnMeldepliktStatus(person)
-    if (person.meldeplikt != beregnetMeldeplikt) {
-        person.setMeldeplikt(beregnetMeldeplikt)
-    }
+    if (oppfyllerkravVedSynkronisering(person)) {
+        person.setMeldeplikt(true)
+        person.setMeldegruppe("DAGP")
 
-    val beregnetMeldegruppe = beregnMeldegruppeStatus(person)
-    if (person.meldegruppe != beregnetMeldegruppe) {
-        person.setMeldegruppe(beregnetMeldegruppe)
-    }
+        if (person.status != Status.DAGPENGERBRUKER) {
+            person.setStatus(Status.DAGPENGERBRUKER)
+        }
+    } else {
+        val beregnetMeldeplikt = beregnMeldepliktStatus(person)
+        if (person.meldeplikt != beregnetMeldeplikt) {
+            person.setMeldeplikt(beregnetMeldeplikt)
+        }
 
-    val erArbeidssøker = sisteArbeidssøkerperiode?.avsluttet == null
+        val beregnetMeldegruppe = beregnMeldegruppeStatus(person)
+        if (person.meldegruppe != beregnetMeldegruppe) {
+            person.setMeldegruppe(beregnetMeldegruppe)
+        }
 
-    val oppfyllerKrav = beregnetMeldeplikt && beregnetMeldegruppe == "DAGP" && erArbeidssøker
-    val nyStatus = if (oppfyllerKrav) Status.DAGPENGERBRUKER else Status.IKKE_DAGPENGERBRUKER
+        val erArbeidssøker = sisteArbeidssøkerperiode?.avsluttet == null
 
-    if (person.status != nyStatus) {
-        person.setStatus(nyStatus)
+        val oppfyllerKrav = beregnetMeldeplikt && beregnetMeldegruppe == "DAGP" && erArbeidssøker
+        val nyStatus = if (oppfyllerKrav) Status.DAGPENGERBRUKER else Status.IKKE_DAGPENGERBRUKER
+
+        if (person.status != nyStatus) {
+            person.setStatus(nyStatus)
+        }
     }
 
     return person
