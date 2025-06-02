@@ -94,12 +94,13 @@ internal class SendPaaVegneAvForAlleJob(
                         person.observers.forEach { observer ->
                             observer.sendOvertakelsesmelding(person)
                         }
-                    } else {
-                        sikkerLogg.info { "Sender frasigelsesmelding for person med ident: $ident" }
-                        person.observers.forEach { observer ->
-                            observer.sendFrasigelsesmelding(person)
-                        }
                     }
+//                    else {
+//                        sikkerLogg.info { "Sender frasigelsesmelding for person med ident: $ident" }
+//                        person.observers.forEach { observer ->
+//                            observer.sendFrasigelsesmelding(person)
+//                        }
+//                    }
                     tempPersonRepository.oppdaterPerson(
                         TempPerson(ident, status = TempPersonStatus.FERDIGSTILT),
                     )

@@ -216,9 +216,9 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
+//        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
         // Jobben under må kjøres etter rettPersonStatusJob!!
-        // sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
+        sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
     }
 }
 
