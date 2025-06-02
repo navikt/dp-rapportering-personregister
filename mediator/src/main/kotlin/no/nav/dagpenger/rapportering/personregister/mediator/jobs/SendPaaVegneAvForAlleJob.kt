@@ -45,7 +45,7 @@ internal class SendPaaVegneAvForAlleJob(
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å sende paavegneav-melding" }
-                        val identer = hentTempPersonIdenter(tempPersonRepository)
+                        val identer = tempPersonRepository.hentAlleIdenter()
                         logger.info { "Hentet ${identer.size} identer for sending av på vegne av-melding" }
 
                         sendPaaVegneAv(identer, personRepository, tempPersonRepository, observers)
@@ -90,10 +90,12 @@ internal class SendPaaVegneAvForAlleJob(
                     }
 
                     if (person.status == Status.DAGPENGERBRUKER) {
+                        sikkerLogg.info { "Sender på vegne av-melding for person med ident: $ident" }
                         person.observers.forEach { observer ->
                             observer.sendOvertakelsesmelding(person)
                         }
                     } else {
+                        sikkerLogg.info { "Sender frasigelsesmelding for person med ident: $ident" }
                         person.observers.forEach { observer ->
                             observer.sendFrasigelsesmelding(person)
                         }
@@ -110,43 +112,5 @@ internal class SendPaaVegneAvForAlleJob(
                 }
             }
         }
-    }
-}
-
-private fun hentTempPersonIdenter(tempPersonRepository: TempPersonRepository): List<String> {
-    try {
-        logger.info { "Henter identer fra persontabell" }
-        if (tempPersonRepository.isEmpty()) {
-            logger.info { "Fyller midlertidig person tabell" }
-            tempPersonRepository.syncPersoner()
-
-            logger.info { "Henter midlertidig identer" }
-            val identer = tempPersonRepository.hentAlleIdenter()
-            logger.info { "Hentet ${identer.size} midlertidige identer" }
-
-            try {
-                identer.map { ident ->
-                    try {
-                        val tempPerson = TempPerson(ident)
-                        logger.info { "Lagrer midlertidig person med ident: ${tempPerson.ident} og status: ${tempPerson.status}" }
-                        tempPersonRepository.lagrePerson(tempPerson)
-                        logger.info { "Lagring av midlertidig person med ident: ${tempPerson.ident} fullført" }
-                    } catch (e: Exception) {
-                        logger.error(e) { "Feil ved lagring av midlertidig person med ident: $ident" }
-                    }
-                }
-                logger.info { "Midlertidig person tabell er fylt med ${identer.size}" }
-
-                return tempPersonRepository.hentAlleIdenter()
-            } catch (e: Exception) {
-                logger.error(e) { "Feil ved lagring av midlertidige personer i databasen" }
-            }
-        }
-
-        logger.info { "Midlertidig person tabell er allerede fylt." }
-        return tempPersonRepository.hentAlleIdenter()
-    } catch (e: Exception) {
-        logger.error(e) { "Feil ved henting av midlertidig identer" }
-        return emptyList()
     }
 }

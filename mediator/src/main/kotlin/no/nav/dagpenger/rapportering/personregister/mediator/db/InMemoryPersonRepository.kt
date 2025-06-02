@@ -98,6 +98,8 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun hentAlleIdenter(): List<String> = personList2.map { it.ident }
 
+    override fun hentIdenterMedAvvik(): List<String> = emptyList()
+
     private fun Person.deepCopy(versjon: Int) =
         Person(
             ident = this.ident,

@@ -434,7 +434,19 @@ class PostgresPersonRepository(
             )
         }
 
-    private fun hentPersonId(
+    override fun hentIdenterMedAvvik(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident from person  p where p.status = 'IKKE_DAGPENGERBRUKER' and p.meldeplikt = false and p.meldegruppe = 'DAGP';
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
+    fun hentPersonId(
         ident: String,
         tx: TransactionalSession,
     ): Long? =

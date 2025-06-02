@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeH
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -14,6 +15,30 @@ import java.util.UUID
 
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
+
+    @Test
+    fun `har kun PersonsynkroniseringHendelse og DAGP`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
+        val hendelse2 = DagpengerMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "DAG", true)
+        val person =
+            Person(ident).apply {
+                hendelser.addAll(
+                    listOf(
+                        hendelse1,
+                        hendelse2,
+                        StartetArbeidssøkerperiodeHendelse(
+                            UUID.randomUUID(),
+                            "12345678903",
+                            nå.minusDays(2),
+                        ),
+                    ),
+                )
+            }
+
+        harKunPersonSynkroniseringOgDAGPHendelse(person) shouldBe true
+    }
 
     @Test
     fun `ingen hendelser`() {

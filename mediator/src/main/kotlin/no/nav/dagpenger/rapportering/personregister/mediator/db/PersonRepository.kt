@@ -47,4 +47,6 @@ interface PersonRepository {
     fun hentPersonMedPeriodeId(periodeId: UUID): Person?
 
     fun hentAlleIdenter(): List<String>
+
+    fun hentIdenterMedAvvik(): List<String>
 }

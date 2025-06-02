@@ -2,10 +2,12 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 
 fun beregnMeldepliktStatus(person: Person) =
@@ -50,11 +52,25 @@ fun oppfyllerkravVedSynkronisering(person: Person): Boolean {
         } ?: false
 }
 
+fun harKunPersonSynkroniseringOgDAGPHendelse(person: Person): Boolean =
+    person.hendelser
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse }
+        .takeIf { it.isNotEmpty() }
+        ?.all { it is PersonSynkroniseringHendelse || it is DagpengerMeldegruppeHendelse }
+        ?: false
+
 fun rettPersonStatus(
     person: Person,
     sisteArbeidssøkerperiode: Arbeidssøkerperiode?,
 ): Person {
     if (oppfyllerkravVedSynkronisering(person)) {
+        person.setMeldeplikt(true)
+        person.setMeldegruppe("DAGP")
+
+        if (person.status != Status.DAGPENGERBRUKER) {
+            person.setStatus(Status.DAGPENGERBRUKER)
+        }
+    } else if (harKunPersonSynkroniseringOgDAGPHendelse(person)) {
         person.setMeldeplikt(true)
         person.setMeldegruppe("DAGP")
 

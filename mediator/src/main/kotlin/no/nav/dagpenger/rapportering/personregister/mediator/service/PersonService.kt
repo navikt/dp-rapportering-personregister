@@ -4,9 +4,11 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.rettPersonStatus
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.util.UUID
@@ -17,6 +19,33 @@ class PersonService(
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
 ) {
+    fun rettAvvik() {
+        val identer = personRepository.hentIdenterMedAvvik()
+
+        logger.info { "Rett avvik for: ${identer.size} identer" }
+        identer.forEach { ident ->
+            sikkerLogg.info { "Rett avvik for ident: $ident" }
+            val person = hentPerson(ident)
+            if (person == null) {
+                logger.warn { "Fant ikke person med ident: $ident" }
+                return@forEach
+            }
+
+            val sisteArbeidssperiode = person.arbeidssøkerperioder.gjeldende
+            logger.info { "Siste arbeidssøkerperiode  ${sisteArbeidssperiode?.periodeId}" }
+
+            rettPersonStatus(person, sisteArbeidssperiode)
+
+            try {
+                personRepository.oppdaterPerson(person)
+            } catch (e: OptimisticLockingException) {
+                sikkerLogg.warn(e) { "Optimistisk låsing feilet ved retting av person ${person.ident}" }
+                rettAvvik()
+            }
+            logger.info { "Rettet person status" }
+        }
+    }
+
     // testing
     fun triggerFrasigelse(periodeList: List<UUID>) {
         logger.info { "Triggerer frasigelse" }
