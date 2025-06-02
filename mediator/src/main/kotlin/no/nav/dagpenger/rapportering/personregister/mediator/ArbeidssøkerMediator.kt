@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
@@ -16,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
+import kotlin.time.Duration.Companion.seconds
 
 class ArbeidssøkerMediator(
     private val arbeidssøkerService: ArbeidssøkerService,
@@ -60,10 +62,15 @@ class ArbeidssøkerMediator(
             }
         }
 
-    fun behandle(
+    suspend fun behandle(
         paVegneAv: PaaVegneAv,
         counter: Int = 1,
+        withDelay: Boolean = true,
     ) {
+        if (withDelay) {
+            logger.info("Behandler PaaVegneAv-melding. Venter i 5 sekunder.")
+            delay(5.seconds)
+        }
         logger.info { "Behandler PaaVegneAv-melding: for periodeId: ${paVegneAv.periodeId}" }
 
         val person =
@@ -114,7 +121,7 @@ class ArbeidssøkerMediator(
             logger.info(
                 e,
             ) { "Optimistisk låsing feilet ved oppdatering av person med periodeId ${paVegneAv.periodeId}. Counter: $counter" }
-            behandle(paVegneAv, counter + 1)
+            behandle(paVegneAv, counter + 1, false)
         }
     }
 

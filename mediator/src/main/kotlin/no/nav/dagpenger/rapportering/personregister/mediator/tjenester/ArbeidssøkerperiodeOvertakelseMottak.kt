@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -21,7 +22,7 @@ class ArbeidssøkerperiodeOvertakelseMottak(
                         "Bekreftelsesløsning i melding om overtakelse av perioden ${this.periodeId} var ${this.bekreftelsesloesning}.",
                     )
                 } else {
-                    arbeidssøkerMediator.behandle(this)
+                    runBlocking { arbeidssøkerMediator.behandle(this@with) }
                 }
             }
         }

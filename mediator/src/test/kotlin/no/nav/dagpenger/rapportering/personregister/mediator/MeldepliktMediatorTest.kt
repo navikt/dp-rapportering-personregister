@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -149,7 +150,7 @@ class MeldepliktMediatorTest {
         }
 
         personMediator.behandle(dagpengerMeldegruppeHendelse())
-        arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+        runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
 
         with(personRepository.hentPerson(ident)!!) {
             status shouldBe DAGPENGERBRUKER

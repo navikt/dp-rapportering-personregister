@@ -10,6 +10,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
@@ -202,7 +203,7 @@ class PersonMediatorTest {
 
             with(person) {
                 status shouldBe DAGPENGERBRUKER
-                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
             }
@@ -214,7 +215,7 @@ class PersonMediatorTest {
             personMediator.behandle(annenMeldegruppeHendelse())
             with(person2) {
                 status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp()))
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 personObserver skalHaFrasagtAnsvaretFor this
             }
@@ -230,7 +231,7 @@ class PersonMediatorTest {
                 person.merkPeriodeSomOvertatt(periodeId)
             }
             personMediator.behandle(dagpengerMeldegruppeHendelse())
-            arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+            runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
             with(person) {
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -313,7 +314,7 @@ class PersonMediatorTest {
             arbeidssøker {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
-                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
 
@@ -331,7 +332,7 @@ class PersonMediatorTest {
             arbeidssøker {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
-                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start()))
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
                 beslutningRepository.hentBeslutning(ident)?.apply {
@@ -339,7 +340,7 @@ class PersonMediatorTest {
                 }
 
                 personMediator.behandle(annenMeldegruppeHendelse())
-                arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp()))
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 2
             }
         }
