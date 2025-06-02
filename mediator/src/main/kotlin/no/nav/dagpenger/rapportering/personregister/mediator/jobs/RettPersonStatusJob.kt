@@ -16,6 +16,7 @@ import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class RettPersonStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
@@ -51,7 +52,13 @@ internal class RettPersonStatusJob(
                             if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
                                 val person = personRepository.hentPerson(ident)
 
-                                val sisteArbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+                                val sisteArbeidssøkerperiode =
+                                    try {
+                                        runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+                                    } catch (e: Exception) {
+                                        sikkerLogg.error(e) { "Feil ved henting av siste arbeidssøkerperiode for person: $ident" }
+                                        null
+                                    }
 
                                 if (person != null) {
                                     val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
@@ -62,6 +69,8 @@ internal class RettPersonStatusJob(
                                 }
                             }
                         }
+
+                        logger.info { "Jobb for å oppdatere personstatus er fullført" }
                     } else {
                         logger.info { "Pod er ikke leader, så jobb for å sende på vegne av-meldinger startes ikke her" }
                     }
