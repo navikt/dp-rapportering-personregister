@@ -4,12 +4,19 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 
 class PostgresTempPersonRepositoryTest {
     private val repository =
         PostgresTempPersonRepository(
             dataSource = dataSource,
+        )
+    private val personRepository =
+        PostgresPersonRepository(
+            dataSource = dataSource,
+            actionTimer = actionTimer,
         )
 
     @Test
@@ -95,6 +102,30 @@ class PostgresTempPersonRepositoryTest {
                 listOf(
                     person1.ident,
                     person2.ident,
+                )
+        }
+
+    @Test
+    fun `syncer personer fra person tabell`() =
+        withMigratedDb {
+            val person1 = Person("12345678901")
+            val person2 = Person("12345678902")
+            val person3 = Person("12345678903")
+
+            personRepository.lagrePerson(person1)
+            personRepository.lagrePerson(person2)
+            personRepository.lagrePerson(person3)
+
+            personRepository.hentAntallPersoner() shouldBe 3
+
+            repository.syncPersoner()
+
+            repository.isEmpty() shouldBe false
+            repository.hentAlleIdenter() shouldBe
+                listOf(
+                    person1.ident,
+                    person2.ident,
+                    person3.ident,
                 )
         }
 }

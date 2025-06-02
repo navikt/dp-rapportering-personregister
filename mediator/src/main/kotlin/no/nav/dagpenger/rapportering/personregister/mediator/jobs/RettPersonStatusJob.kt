@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.ktor.client.HttpClient
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
@@ -26,6 +27,7 @@ internal class RettPersonStatusJob(
         tidspunktForNesteKjoring.toInstant().toEpochMilli() -
             nå.toInstant().toEpochMilli() // differansen i millisekunder mellom de to tidspunktene
 
+    @WithSpan
     fun start(
         personRepository: PersonRepository,
         tempPersonRepository: TempPersonRepository,
@@ -41,7 +43,7 @@ internal class RettPersonStatusJob(
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å oppdatere personstatus" }
-                        val identer = hentTempPersonIdenter(personRepository, tempPersonRepository)
+                        val identer = hentTempPersonIdenter(tempPersonRepository)
                         logger.info { "Hentet ${identer.size} identer for oppdatering av personstatus" }
 
                         identer.forEach { ident ->
@@ -71,19 +73,16 @@ internal class RettPersonStatusJob(
     }
 }
 
-private fun hentTempPersonIdenter(
-    personRepository: PersonRepository,
-    tempPersonRepository: TempPersonRepository,
-): List<String> {
+private fun hentTempPersonIdenter(tempPersonRepository: TempPersonRepository): List<String> {
     try {
         logger.info { "Henter identer fra persontabell" }
-
-        val identer = personRepository.hentAlleIdenter()
-
-        logger.info { "Hentet ${identer.size} identer fra persontabell" }
-
         if (tempPersonRepository.isEmpty()) {
-            logger.info { "Fyller midlertidig person tabell med ${identer.size} identer" }
+            logger.info { "Fyller midlertidig person tabell" }
+            tempPersonRepository.syncPersoner()
+
+            logger.info { "Henter midlertidig identer" }
+            val identer = tempPersonRepository.hentAlleIdenter()
+            logger.info { "Hentet ${identer.size} midlertidige identer" }
 
             try {
                 identer.map { ident ->

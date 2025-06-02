@@ -76,4 +76,24 @@ class PostgresTempPersonRepository(
                 tx.run(query.map(rowMapper).asList)
             }
         }
+
+    override fun syncPersoner() {
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                val query =
+                    queryOf(
+                        """
+                                INSERT INTO temp_person (ident, status)
+                                SELECT ident, 'IKKE_PABEGYNT'
+                                FROM person
+                                LIMIT 85000;
+                """,
+                    )
+                val rowsAffected = tx.run(query.asUpdate)
+                if (rowsAffected == 0) {
+                    throw IllegalStateException("No rows were inserted into temp_person.")
+                }
+            }
+        }
+    }
 }
