@@ -64,14 +64,21 @@ class ArbeidssøkerMediator(
         paVegneAv: PaaVegneAv,
         counter: Int = 1,
     ) {
+        logger.info { "Behandler PaaVegneAv-melding: for periodeId: ${paVegneAv.periodeId}" }
+
         val person =
-            personRepository
-                .hentPersonMedPeriodeId(paVegneAv.periodeId)
-                ?.also { person ->
-                    if (person.observers.isEmpty()) {
-                        personObservers.forEach { person.addObserver(it) }
+            try {
+                personRepository
+                    .hentPersonMedPeriodeId(paVegneAv.periodeId)
+                    ?.also { person ->
+                        if (person.observers.isEmpty()) {
+                            personObservers.forEach { person.addObserver(it) }
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved henting av person ved behandling med periodeId ${paVegneAv.periodeId}" }
+                return
+            }
 
         if (person == null) {
             logger.error { "Fant ikke person med periodeId ${paVegneAv.periodeId} i databasen." }

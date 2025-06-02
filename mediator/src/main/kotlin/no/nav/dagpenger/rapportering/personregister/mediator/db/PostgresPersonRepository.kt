@@ -398,19 +398,25 @@ class PostgresPersonRepository(
 
     override fun hentPersonMedPeriodeId(periodeId: UUID): Person? {
         val ident =
-            using(sessionOf(dataSource)) { session ->
-                session.run(
-                    queryOf(
-                        """
-                        SELECT pers.ident FROM arbeidssoker arbs 
-                        INNER JOIN person pers ON arbs.person_id = pers.id
-                        WHERE arbs.periode_id = :periode_id
-                        """.trimIndent(),
-                        mapOf("periode_id" to periodeId),
-                    ).map { row -> row.string("ident") }
-                        .asSingle,
-                )
+            try {
+                using(sessionOf(dataSource)) { session ->
+                    session.run(
+                        queryOf(
+                            """
+                            SELECT pers.ident FROM arbeidssoker arbs 
+                            INNER JOIN person pers ON arbs.person_id = pers.id
+                            WHERE arbs.periode_id = :periode_id
+                            """.trimIndent(),
+                            mapOf("periode_id" to periodeId),
+                        ).map { row -> row.string("ident") }
+                            .asSingle,
+                    )
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved henting av person i query med periodeId $periodeId" }
+                return null
             }
+
         if (ident == null) {
             logger.error { "Fant ikke person med periodeId $periodeId" }
             return null
