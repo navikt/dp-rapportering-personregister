@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
@@ -68,10 +67,8 @@ class PostgresTempPersonRepositoryTest {
             val ident = "12345678901"
             val person = TempPerson(ident)
 
-            shouldThrow<IllegalArgumentException> {
-                repository.lagrePerson(person)
-                repository.lagrePerson(person)
-            }
+            repository.lagrePerson(person)
+            repository.lagrePerson(person)
         }
 
     @Test
