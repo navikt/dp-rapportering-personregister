@@ -16,8 +16,8 @@ spec:
   readiness:
     path: /isReady
   replicas:
-    min: 2
-    max: 4
+    min: 8
+    max: 10
   resources:
     limits:
       memory: 1024Mi
