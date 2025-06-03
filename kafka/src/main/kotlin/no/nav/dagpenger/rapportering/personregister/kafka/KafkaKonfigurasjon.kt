@@ -26,6 +26,8 @@ data class KafkaKonfigurasjon(
             KafkaAvroSerializerConfig.AUTO_REGISTER_SCHEMAS to schemaRegistryKonfigurasjon.autoRegisterSchema,
             KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG to true,
             KafkaAvroSerializerConfig.VALUE_SUBJECT_NAME_STRATEGY to TopicNameStrategy::class.java.name,
+            "max.poll.interval.ms" to 5000,
+            "max.poll.records" to 100,
         )
 
     private val kafkaSecutiryProperties: Map<String, Any?>? get() =

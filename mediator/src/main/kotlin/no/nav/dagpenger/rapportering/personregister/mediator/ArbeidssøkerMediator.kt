@@ -68,8 +68,8 @@ class ArbeidssøkerMediator(
         withDelay: Boolean = true,
     ) {
         if (withDelay) {
-            logger.info("Behandler PaaVegneAv-melding. Venter i 5 sekunder.")
-            delay(5.seconds)
+            logger.info("Behandler PaaVegneAv-melding. Venter i 2 sekunder.")
+            delay(2.seconds)
         }
         logger.info { "Behandler PaaVegneAv-melding: for periodeId: ${paVegneAv.periodeId}" }
 
