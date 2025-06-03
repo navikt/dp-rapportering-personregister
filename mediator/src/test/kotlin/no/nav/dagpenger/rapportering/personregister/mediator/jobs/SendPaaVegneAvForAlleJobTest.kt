@@ -16,7 +16,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -79,10 +78,6 @@ class SendPaaVegneAvForAlleJobTest {
             setMeldegruppe("DAGP")
             arbeidssøkerperioder.add(lagArbeidssøkerperiode(periodeId, ident, overtattBekreftelse = true))
             setStatus(vurderNyStatus())
-        }.also {
-            println(
-                "Person: $it. Status: ${it.status}, vurder status: ${it.vurderNyStatus()} erArbeidssøker: ${it.erArbeidssøker}, meldeplikt: ${it.meldeplikt}, meldegruppe: ${it.meldegruppe}",
-            )
         }
 
     private fun søknadHendelse(
