@@ -218,7 +218,7 @@ internal class ApplicationBuilder(
         slettPersonerJob.start(personRepository)
 //        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
         // Jobben under må kjøres etter rettPersonStatusJob!!
-        sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
+//        sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
     }
 }
 
