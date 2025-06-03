@@ -68,8 +68,8 @@ class ArbeidssøkerMediator(
         withDelay: Boolean = true,
     ) {
         if (withDelay) {
-            logger.info("Behandler PaaVegneAv-melding. Venter i 2 sekunder.")
-            delay(2.seconds)
+            logger.info("Behandler PaaVegneAv-melding. Venter i 1 sekunder.")
+            delay(1.seconds)
         }
         logger.info { "Behandler PaaVegneAv-melding: for periodeId: ${paVegneAv.periodeId}" }
 
@@ -99,7 +99,11 @@ class ArbeidssøkerMediator(
         when (paVegneAv.handling) {
             is Start -> {
                 logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
-                person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                if (person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse == true) {
+                    logger.info { "Person har allerede overtatt bekreftelse for periodeId: ${paVegneAv.periodeId}" }
+                } else {
+                    person.observers.forEach { it.overtattArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                }
             }
 
             is Stopp -> {
