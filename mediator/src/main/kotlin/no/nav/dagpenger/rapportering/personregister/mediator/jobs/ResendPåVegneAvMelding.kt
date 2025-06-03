@@ -36,7 +36,7 @@ internal class ResendPåVegneAvMelding(
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å sende på vegne av-meldinger" }
-                        val identer = personRepository.hentPersonerMedDagpenger()
+                        val identer = personRepository.hentPersonerMedDagpengerUtenOvertattPeriode()
                         logger.info("Hentet ${identer.size} identer som skal overtas")
                         val personer = personService.hentPersonFraDB(identer)
                         personer.forEach { person -> person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) } }
