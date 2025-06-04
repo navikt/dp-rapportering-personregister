@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
+import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -15,6 +16,43 @@ import java.util.UUID
 
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
+
+    /*
+
+    beregnStatus
+    1. Riktig hendelse, men feil rekkefølge
+     */
+
+    @Test
+    fun `riktig hendelser, men feil rekkefølge`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå.plusDays(1), null, "ARBS", true)
+        val person =
+            Person(ident).apply {
+                hendelser.addAll(listOf(hendelse1, hendelse2))
+                setStatus(Status.DAGPENGERBRUKER)
+            }
+
+        beregnStatus(person) shouldBe Status.IKKE_DAGPENGERBRUKER
+        beregnStatus(person) shouldNotBeEqual person.status
+    }
+
+    @Test
+    fun `riktig hendelser og riktig rekkefølge`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "ARBS", true)
+        val person =
+            Person(ident).apply {
+                hendelser.addAll(listOf(hendelse1, hendelse2))
+                setStatus(Status.DAGPENGERBRUKER)
+            }
+
+        beregnStatus(person) shouldNotBeEqual Status.DAGPENGERBRUKER
+    }
 
     @Test
     fun `har kun PersonsynkroniseringHendelse og DAGP`() {
@@ -71,19 +109,19 @@ class RettPersonStatusUtilsTest {
     fun `siste hendelse er PersonsynkroniseringHendelse`() {
         val nå = LocalDateTime.now()
         val tidligere = nå.minusDays(1)
-        val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
-        val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "ARBS", true)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå.plusDays(1), null, "ARBS", true)
         val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
 
-        oppfyllerkravVedSynkronisering(person) shouldBe true
+        oppfyllerkravVedSynkronisering(person) shouldBe false
     }
 
     @Test
     fun `PersonsynkroniseringHendelse er i midten`() {
         val nå = LocalDateTime.now()
         val tidligere = nå.minusDays(1)
-        val hendelse1 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
-        val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+        val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
         val hendelse3 = AnnenMeldegruppeHendelse(ident, tidligere.minusDays(1), "456", tidligere.minusDays(1), null, "ARBS", true)
         val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3)) }
 
@@ -157,7 +195,12 @@ class RettPersonStatusUtilsTest {
         val tidligere = nå.minusDays(1)
         val person =
             Person(ident).apply {
-                hendelser.addAll(listOf(meldepliktHendelse(dato = nå, status = true), meldepliktHendelse(dato = tidligere, status = false)))
+                hendelser.addAll(
+                    listOf(
+                        meldepliktHendelse(dato = tidligere.minusDays(1), startDato = nå, status = true),
+                        meldepliktHendelse(dato = nå, startDato = tidligere, status = false),
+                    ),
+                )
             }
 
         beregnMeldepliktStatus(person) shouldBe true
@@ -382,8 +425,9 @@ class RettPersonStatusUtilsTest {
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
+        startDato: LocalDateTime = dato.plusDays(1),
         status: Boolean = false,
-    ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status, true)
+    ) = MeldepliktHendelse(ident, dato, "123", startDato, null, status, true)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),

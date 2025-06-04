@@ -9,18 +9,19 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 
 fun beregnMeldepliktStatus(person: Person) =
     person.hendelser
         .filterIsInstance<MeldepliktHendelse>()
-        .maxByOrNull { it.dato }
+        .maxByOrNull { it.startDato }
         ?.statusMeldeplikt
         ?: false
 
 fun beregnMeldegruppeStatus(person: Person) =
     person.hendelser
         .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
-        .maxByOrNull { it.dato }
+        .maxByOrNull { it.startDato }
         ?.let {
             when (it) {
                 is DagpengerMeldegruppeHendelse -> it.meldegruppeKode
@@ -40,7 +41,7 @@ fun oppfyllerkravVedSynkronisering(person: Person): Boolean {
                 it is AnnenMeldegruppeHendelse ||
                 it is PersonSynkroniseringHendelse ||
                 it is MeldepliktHendelse
-        }?.maxByOrNull { it.dato }
+        }?.maxByOrNull { it.startDato }
         ?.let {
             when (it) {
                 is PersonSynkroniseringHendelse -> return true
@@ -58,6 +59,23 @@ fun harKunPersonSynkroniseringOgDAGPHendelse(person: Person): Boolean =
         .takeIf { it.isNotEmpty() }
         ?.all { it is PersonSynkroniseringHendelse || it is DagpengerMeldegruppeHendelse }
         ?: false
+
+fun beregnStatus(person: Person): Status {
+    if (oppfyllerkravVedSynkronisering(person)) {
+        return Status.DAGPENGERBRUKER
+    } else if (harKunPersonSynkroniseringOgDAGPHendelse(person)) {
+        return Status.DAGPENGERBRUKER
+    } else {
+        val beregnetMeldeplikt = beregnMeldepliktStatus(person)
+
+        val beregnetMeldegruppe = beregnMeldegruppeStatus(person)
+
+        val oppfyllerKrav = beregnetMeldeplikt && beregnetMeldegruppe == "DAGP" && person.erArbeidssøker
+        val nyStatus = if (oppfyllerKrav) Status.DAGPENGERBRUKER else Status.IKKE_DAGPENGERBRUKER
+
+        return nyStatus
+    }
+}
 
 fun rettPersonStatus(
     person: Person,

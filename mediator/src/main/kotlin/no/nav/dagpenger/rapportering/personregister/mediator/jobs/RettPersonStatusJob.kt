@@ -48,6 +48,8 @@ internal class RettPersonStatusJob(
                         val identer = hentTempPersonIdenter(tempPersonRepository)
                         logger.info { "Hentet ${identer.size} identer for oppdatering av personstatus" }
 
+                        val avvikIdentList = mutableListOf<String>()
+
                         identer.forEach { ident ->
                             val tempPerson = tempPersonRepository.hentPerson(ident)
                             logger.info { "Hentet midlertidig person. Behandler" }
