@@ -8,11 +8,13 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
+import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class AvvikStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
@@ -52,6 +54,18 @@ internal class AvvikStatusJob(
                                 if (person != null) {
                                     val nyStatus = beregnStatus(person)
                                     if (nyStatus != person.status) {
+                                        val beregnetMeldepliktStatus = beregnMeldepliktStatus(person)
+                                        val beregnetMG = beregnMeldegruppeStatus(person)
+                                        val erArbeidssøker = person.erArbeidssøker
+
+                                        sikkerLogg.info {
+                                            "Avvik: Person med ident: $ident har statusavvik. " +
+                                                "Nåværende status: ${person.status}, " +
+                                                "Beregnet status: $nyStatus, " +
+                                                "Beregnet meldeplikt: $beregnetMeldepliktStatus, " +
+                                                "Beregnet meldegruppe: $beregnetMG, " +
+                                                "Er arbeidssøker: $erArbeidssøker"
+                                        }
                                         logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
                                         try {
                                             tempPersonRepository.oppdaterPerson(
