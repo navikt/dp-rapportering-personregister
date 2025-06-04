@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 enum class TempPersonStatus {
     IKKE_PABEGYNT,
+    AVVIK,
     RETTET,
     FERDIGSTILT,
 }

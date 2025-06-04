@@ -44,25 +44,28 @@ internal class AvvikStatusJob(
                         logger.info { "Hentet ${identer.size} identer for sjekking av status" }
 
                         identer.forEach { ident ->
-                            val person = personRepository.hentPerson(ident)
+                            val tempPerson = tempPersonRepository.hentPerson(ident)
+                            logger.info { "Hentet midlertidig person. Behandler" }
+                            if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
+                                val person = personRepository.hentPerson(ident)
 
-                            if (person == null) {
-                                logger.warn { "Fant ingen person i databasen, hopper over." }
-                                return@forEach
-                            }
-
-                            val nyStatus = beregnStatus(person)
-                            if (nyStatus != person.status) {
-                                logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
-                                try {
-                                    tempPersonRepository.lagrePerson(
-                                        TempPerson(
-                                            ident = ident,
-                                            status = TempPersonStatus.RETTET,
-                                        ),
-                                    )
-                                } catch (ex: Exception) {
-                                    logger.error(ex) { "Kunne ikke lagre midlertidig person" }
+                                if (person != null) {
+                                    val nyStatus = beregnStatus(person)
+                                    if (nyStatus != person.status) {
+                                        logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
+                                        try {
+                                            tempPersonRepository.lagrePerson(
+                                                TempPerson(
+                                                    ident = ident,
+                                                    status = TempPersonStatus.AVVIK,
+                                                ),
+                                            )
+                                        } catch (ex: Exception) {
+                                            logger.error(ex) { "Kunne ikke lagre midlertidig person" }
+                                        }
+                                    }
+                                } else {
+                                    logger.warn { "Fant ikke person som vi skulle behandle" }
                                 }
                             }
                         }
