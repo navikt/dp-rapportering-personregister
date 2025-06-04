@@ -671,9 +671,7 @@ class PostgresPersonRepository(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
-                    startDato =
-                        startDato
-                            ?: throw IllegalStateException("PersonSynkroniseringHendelse mangler startDato"),
+                    startDato = dato,
                 )
 
             else -> throw IllegalArgumentException("Unknown type: $type")

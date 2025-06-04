@@ -71,7 +71,7 @@ internal fun Application.personstatusApi(
                         PersonSynkroniseringHendelse(
                             ident = ident,
                             dato = LocalDateTime.now(),
-                            startDato = fraDato,
+                            startDato = LocalDateTime.now(),
                             referanseId = UUID.randomUUID().toString(),
                         ),
                     )
