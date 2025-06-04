@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
@@ -50,17 +51,25 @@ internal class AvsluttetPerioderJob(
                                 val person = personRepository.hentPerson(ident)
 
                                 if (person != null) {
-                                    val avsluttetperiode =
+                                    val gjeldendePeriode =
                                         person
                                             ?.arbeidssøkerperioder
                                             ?.firstOrNull { it.avsluttet == null }
 
-                                    if (avsluttetperiode == null) {
-                                        logger.info { "Person har ingen gjeldende periode." }
+                                    if (gjeldendePeriode == null && person.status == Status.DAGPENGERBRUKER) {
+                                        logger.info { "Person er Dagpengerbruker men har ingen gjeldende periode." }
+                                        person.setStatus(Status.IKKE_DAGPENGERBRUKER)
+                                        person.arbeidssøkerperioder.forEach { it.overtattBekreftelse = false }
+
                                         try {
-                                            tempPersonRepository.oppdaterPerson(TempPerson(ident, TempPersonStatus.AVVIK))
+                                            personRepository.oppdaterPerson(person)
                                         } catch (e: Exception) {
-                                            logger.error(e) { "Feil ved oppdatering av personstatus til AVVIK for ident $ident" }
+                                            logger.error(e) { "Feil ved oppdatering av person" }
+                                        }
+                                        try {
+                                            tempPersonRepository.oppdaterPerson(TempPerson(ident, TempPersonStatus.RETTET))
+                                        } catch (e: Exception) {
+                                            logger.error(e) { "Feil ved oppdatering av personstatus til RETTET" }
                                         }
                                     } else {
                                         logger.info { "Person har en gjeldende periode. Ingen oppdatering nødvendig." }
