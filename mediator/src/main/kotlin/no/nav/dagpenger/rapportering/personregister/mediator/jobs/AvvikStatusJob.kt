@@ -54,7 +54,7 @@ internal class AvvikStatusJob(
                                     if (nyStatus != person.status) {
                                         logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
                                         try {
-                                            tempPersonRepository.lagrePerson(
+                                            tempPersonRepository.oppdaterPerson(
                                                 TempPerson(
                                                     ident = ident,
                                                     status = TempPersonStatus.AVVIK,
@@ -62,6 +62,18 @@ internal class AvvikStatusJob(
                                             )
                                         } catch (ex: Exception) {
                                             logger.error(ex) { "Kunne ikke lagre midlertidig person" }
+                                        }
+                                    } else {
+                                        logger.info { "Person har ingen statusavvik" }
+                                        try {
+                                            tempPersonRepository.oppdaterPerson(
+                                                TempPerson(
+                                                    ident = ident,
+                                                    status = TempPersonStatus.FERDIGSTILT,
+                                                ),
+                                            )
+                                        } catch (ex: Exception) {
+                                            logger.error(ex) { "Kunne ikke lagre midlertidig person som er ferdigstilt" }
                                         }
                                     }
                                 } else {
