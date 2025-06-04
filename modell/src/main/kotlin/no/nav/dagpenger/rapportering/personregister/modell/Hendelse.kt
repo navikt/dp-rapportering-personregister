@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 interface Hendelse {
     val ident: String
     val dato: LocalDateTime
+    val startDato: LocalDateTime
     val kilde: Kildesystem
     val referanseId: String
 
@@ -16,6 +17,7 @@ interface Hendelse {
 data class SøknadHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
+    override val startDato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.Søknad
@@ -36,7 +38,7 @@ data class DagpengerMeldegruppeHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
     override val referanseId: String,
-    val startDato: LocalDateTime,
+    override val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     val harMeldtSeg: Boolean,
@@ -60,7 +62,7 @@ data class AnnenMeldegruppeHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
     override val referanseId: String,
-    val startDato: LocalDateTime,
+    override val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     val harMeldtSeg: Boolean,
@@ -86,7 +88,7 @@ data class MeldepliktHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
     override val referanseId: String,
-    val startDato: LocalDateTime,
+    override val startDato: LocalDateTime,
     val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
     val harMeldtSeg: Boolean,
@@ -114,7 +116,7 @@ data class PersonSynkroniseringHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
     override val referanseId: String,
-    val startDato: LocalDateTime,
+    override val startDato: LocalDateTime,
 ) : Hendelse {
     override val kilde: Kildesystem = Dagpenger
 

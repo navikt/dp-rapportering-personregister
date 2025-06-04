@@ -377,8 +377,9 @@ class PersonMediatorTest {
     private fun søknadHendelse(
         ident: String = this.ident,
         dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = SøknadHendelse(ident, dato, referanseId)
+    ) = SøknadHendelse(ident, dato, startDato, referanseId)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,

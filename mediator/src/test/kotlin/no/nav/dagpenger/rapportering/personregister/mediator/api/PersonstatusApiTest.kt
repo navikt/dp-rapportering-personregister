@@ -171,4 +171,5 @@ fun lagHendelse(ident: String) =
         ident = ident,
         referanseId = "123",
         dato = LocalDateTime.now(),
+        startDato = LocalDateTime.now(),
     )

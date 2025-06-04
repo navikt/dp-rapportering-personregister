@@ -39,6 +39,7 @@ class Steps : No {
             SøknadHendelse(
                 ident,
                 LocalDateTime.now(),
+                LocalDateTime.now(),
                 UUID.randomUUID().toString(),
             ).apply { person.behandle(this) }
         }

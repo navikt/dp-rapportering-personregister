@@ -591,7 +591,7 @@ class PostgresPersonRepository(
         val kilde = row.string("kilde")
 
         return when (type) {
-            "SøknadHendelse" -> SøknadHendelse(ident, dato, referanseId)
+            "SøknadHendelse" -> SøknadHendelse(ident, dato, dato, referanseId)
             "DagpengerMeldegruppeHendelse" -> {
                 val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 DagpengerMeldegruppeHendelse(

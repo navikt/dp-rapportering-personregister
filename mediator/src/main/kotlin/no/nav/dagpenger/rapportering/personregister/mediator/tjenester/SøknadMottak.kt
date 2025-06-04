@@ -54,5 +54,5 @@ private fun JsonMessage.tilHendelse(): SøknadHendelse {
     val datoString = this["søknadstidspunkt"].asText()
     val dato = OffsetDateTime.parse(datoString).toLocalDateTime()
 
-    return SøknadHendelse(ident = ident, dato = dato, referanseId = referanseId)
+    return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
 }

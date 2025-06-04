@@ -231,7 +231,7 @@ private fun person(
     this.setMeldegruppe(meldegruppe)
     hendelser.addAll(
         listOf(
-            SøknadHendelse(ident, startet.plusHours(1), UUID.randomUUID().toString()),
+            SøknadHendelse(ident, startet.plusHours(1), startet.plusHours(1), UUID.randomUUID().toString()),
             if (meldegruppe ==
                 "DAGP"
             ) {

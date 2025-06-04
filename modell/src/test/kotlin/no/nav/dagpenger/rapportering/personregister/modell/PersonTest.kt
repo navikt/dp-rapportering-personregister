@@ -192,7 +192,7 @@ class PersonTest {
     private fun søknadHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = SøknadHendelse(ident, dato, referanseId)
+    ) = SøknadHendelse(ident, dato, dato, referanseId)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,

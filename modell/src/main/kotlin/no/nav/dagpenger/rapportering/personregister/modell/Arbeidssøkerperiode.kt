@@ -20,6 +20,7 @@ abstract class ArbeidssøkerperiodeHendelse(
     open val periodeId: UUID,
     override val ident: String,
     override val dato: LocalDateTime,
+    override val startDato: LocalDateTime,
 ) : Hendelse {
     override val referanseId by lazy { periodeId.toString() }
 
@@ -32,7 +33,7 @@ data class StartetArbeidssøkerperiodeHendelse(
     override val periodeId: UUID,
     override val ident: String,
     val startet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now()) {
+) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
     override fun behandle(person: Person) {
         person.arbeidssøkerperioder
             .none { it.periodeId == periodeId }
@@ -81,7 +82,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     override val ident: String,
     val startet: LocalDateTime,
     val avsluttet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now()) {
+) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
     override fun behandle(person: Person) {
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }

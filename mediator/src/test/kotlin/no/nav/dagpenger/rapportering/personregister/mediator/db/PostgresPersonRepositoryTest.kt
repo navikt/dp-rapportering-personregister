@@ -328,6 +328,7 @@ class PostgresPersonRepositoryTest {
             ident = "12345678901",
             referanseId = UUID.randomUUID().toString(),
             dato = LocalDateTime.now(),
+            startDato = LocalDateTime.now(),
         )
 
     private fun arbeidssøkerperiode() =

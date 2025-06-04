@@ -35,6 +35,7 @@ class SøknadMottakTest {
             SøknadHendelse(
                 ident,
                 dato.toLocalDateTime(),
+                dato.toLocalDateTime(),
                 søknadId,
             )
 
