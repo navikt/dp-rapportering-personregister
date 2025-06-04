@@ -29,6 +29,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvsluttetPerioderJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvvikStatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.RettPersonStatusJob
@@ -170,6 +171,7 @@ internal class ApplicationBuilder(
     private val rettPersonStatusJob = RettPersonStatusJob()
     private val sendPaaVegneAvForAlleJob = SendPaaVegneAvForAlleJob()
     private val avvikStatusJob = AvvikStatusJob()
+    private val avsluttetPerioderJob = AvsluttetPerioderJob()
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
@@ -219,6 +221,7 @@ internal class ApplicationBuilder(
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
         avvikStatusJob.start(personRepository, tempPersonRepository)
+        avsluttetPerioderJob.start(personRepository, tempPersonRepository)
 //        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
         // Jobben under må kjøres etter rettPersonStatusJob!!
 //        sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
