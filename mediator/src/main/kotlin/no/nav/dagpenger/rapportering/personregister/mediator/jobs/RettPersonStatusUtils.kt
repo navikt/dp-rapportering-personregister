@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringH
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 
 fun beregnMeldepliktStatus(person: Person) =
     person.hendelser
@@ -76,6 +77,9 @@ fun harKunPersonSynkroniseringOgDAGPHendelse(person: Person): Boolean =
         ?: false
 
 fun beregnStatus(person: Person): Status {
+    if (person.arbeidssøkerperioder.gjeldende == null) {
+        return Status.IKKE_DAGPENGERBRUKER
+    }
     if (oppfyllerkravVedSynkronisering(person)) {
         return Status.DAGPENGERBRUKER
     } else if (harKunPersonSynkroniseringOgDAGPHendelse(person)) {
