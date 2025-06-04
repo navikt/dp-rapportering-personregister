@@ -21,7 +21,12 @@ fun beregnMeldepliktStatus(person: Person) =
 fun beregnMeldegruppeStatus(person: Person) =
     person.hendelser
         .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
-        .maxByOrNull { it.startDato }
+        .sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }.firstOrNull()
         ?.let {
             when (it) {
                 is DagpengerMeldegruppeHendelse -> it.meldegruppeKode

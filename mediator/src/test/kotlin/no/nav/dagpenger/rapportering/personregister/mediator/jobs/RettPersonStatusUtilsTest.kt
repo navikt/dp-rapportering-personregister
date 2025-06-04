@@ -17,11 +17,20 @@ import java.util.UUID
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
 
-    /*
+    @Test
+    fun `beregn meldekort med samtidig hendelser`() {
+        val nå = LocalDateTime.of(2023, 10, 1, 12, 0)
+        val tidligere = LocalDateTime.of(2023, 9, 30, 12, 0)
 
-    beregnStatus
-    1. Riktig hendelse, men feil rekkefølge
-     */
+        val hendelse1 = dagpengerMeldegruppeHendelse(dato = nå, startDato = nå, referanseId = "123")
+        val hendelse2 = annenMeldegruppeHendelse(dato = tidligere, startDato = nå, referanseId = "456")
+
+        val person =
+            Person(ident)
+                .apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+
+        beregnMeldegruppeStatus(person) shouldBe "DAGP"
+    }
 
     @Test
     fun `riktig hendelser, men feil rekkefølge`() {
@@ -431,13 +440,15 @@ class RettPersonStatusUtilsTest {
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
+        startDato: LocalDateTime = dato.plusDays(1),
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "DAGP", true)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "DAGP", true)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
+        startDato: LocalDateTime = dato.plusDays(1),
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS", true)
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "ARBS", true)
 
     private fun personSynkroniseringHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
