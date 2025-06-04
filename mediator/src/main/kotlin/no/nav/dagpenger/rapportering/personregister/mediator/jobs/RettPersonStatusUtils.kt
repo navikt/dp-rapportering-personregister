@@ -14,7 +14,12 @@ import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 fun beregnMeldepliktStatus(person: Person) =
     person.hendelser
         .filterIsInstance<MeldepliktHendelse>()
-        .maxByOrNull { it.startDato }
+        .sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }.firstOrNull()
         ?.statusMeldeplikt
         ?: false
 
@@ -46,7 +51,12 @@ fun oppfyllerkravVedSynkronisering(person: Person): Boolean {
                 it is AnnenMeldegruppeHendelse ||
                 it is PersonSynkroniseringHendelse ||
                 it is MeldepliktHendelse
-        }?.maxByOrNull { it.startDato }
+        }?.sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }?.firstOrNull()
         ?.let {
             when (it) {
                 is PersonSynkroniseringHendelse -> return true
