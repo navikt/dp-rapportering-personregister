@@ -19,7 +19,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 internal class AvvikStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.now().plusMinutes(3)
+    private val tidspunktForKjoring = LocalTime.now().plusMinutes(2)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
