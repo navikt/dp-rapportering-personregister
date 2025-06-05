@@ -34,7 +34,9 @@ interface PersonRepository {
 
     fun slettFremtidigHendelse(referanseId: String)
 
-    fun hentPersonerMedDagpenger(): List<String>
+    fun hentPersonerMedDagpengerUtenOvertattPeriode(): List<String>
+
+    fun hentPersonerUtenDagpengerMedAktivPeriode(): List<String>
 
     fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList<String>()
 

@@ -8,7 +8,6 @@ import kotliquery.sessionOf
 import kotliquery.using
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -283,7 +282,7 @@ class PostgresPersonRepository(
             }.validateRowsAffected()
         }
 
-    override fun hentPersonerMedDagpenger(): List<String> =
+    override fun hentPersonerMedDagpengerUtenOvertattPeriode(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
                 queryOf(
@@ -291,6 +290,20 @@ class PostgresPersonRepository(
                     SELECT ident FROM person p 
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
                     WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse IS NOT true AND arbs.avsluttet IS null
+                    """.trimIndent(),
+                ).map { it.string("ident") }
+                    .asList,
+            )
+        }
+
+    override fun hentPersonerUtenDagpengerMedAktivPeriode(): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT ident FROM person p 
+                    INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
+                    WHERE p.status = 'IKKE_DAGPENGERBRUKER' AND arbs.avsluttet IS null
                     """.trimIndent(),
                 ).map { it.string("ident") }
                     .asList,

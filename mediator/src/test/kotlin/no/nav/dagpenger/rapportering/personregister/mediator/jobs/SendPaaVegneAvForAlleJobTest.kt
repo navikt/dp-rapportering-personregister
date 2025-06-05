@@ -1,15 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
-import io.kotest.matchers.shouldBe
 import io.mockk.justRun
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -26,7 +23,6 @@ import java.util.UUID
 
 class SendPaaVegneAvForAlleJobTest {
     private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
     private val observers = listOf(mockk<PersonObserver>())
     private val job = SendPaaVegneAvForAlleJob(createMockClient(200, "OK"))
 
@@ -51,7 +47,6 @@ class SendPaaVegneAvForAlleJobTest {
     fun `sender paaVegneAvMelding for alle identer`() =
         withMigratedDb {
             val periodeId = UUID.randomUUID()
-            identer.forEach { ident -> tempPersonRepository.lagrePerson(TempPerson(ident, TempPersonStatus.RETTET)) }
             identer.forEach { ident -> personRepository.lagrePerson(lagPerson(ident, periodeId)) }
 
             observers.forEach { observer ->
@@ -61,13 +56,9 @@ class SendPaaVegneAvForAlleJobTest {
                 justRun { observer.sendFrasigelsesmelding(any()) }
             }
 
-            job.sendPaaVegneAv(identer, personRepository, tempPersonRepository, observers)
+            job.sendPaaVegneAv(identer, personRepository, observers)
 
-            identer.forEach {
-                with(tempPersonRepository.hentPerson(it)!!) {
-                    status shouldBe TempPersonStatus.FERDIGSTILT
-                }
-            }
+            verify(exactly = 6) { observers.forEach { it.sendFrasigelsesmelding(any()) } }
         }
 
     private fun lagPerson(
@@ -83,6 +74,8 @@ class SendPaaVegneAvForAlleJobTest {
                     startetArbeidssøkerperiodeHendelse(ident, periodeId),
                 ),
             )
+            setMeldeplikt(false)
+            setMeldegruppe("DAGP")
             arbeidssøkerperioder.add(lagArbeidssøkerperiode(periodeId, ident, overtattBekreftelse = true))
             setStatus(vurderNyStatus())
         }
