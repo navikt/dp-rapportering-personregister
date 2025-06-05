@@ -308,11 +308,14 @@ class RettPersonStatusUtilsTest {
         fun `siste hendelse er PersonsynkroniseringHendelse`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
-            val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå.plusDays(1), null, "ARBS", true)
-            val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
+            val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
+            val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", nå, null, "ARBS", true)
+            val hendelse3 = DagpengerMeldegruppeHendelse(ident, tidligere, "456", nå, null, "DAGP", true)
 
-            beregnStatus(person) shouldBe Status.IKKE_DAGPENGERBRUKER
+            arbeidssøker {
+                hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3))
+                beregnStatus(this) shouldBe Status.DAGPENGERBRUKER
+            }
         }
 
         @Test

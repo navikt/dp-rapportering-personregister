@@ -16,6 +16,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 private fun oppfyllerKravVedSynkronisering(person: Person): Boolean {
     if (person.harKunPersonSynkroniseringHendelse() ||
+        person.harPersonsynkroniseringSomSisteHendelse() ||
         person.harKunPersonSynkroniseringOgDAGPHendelse() ||
         person.harKunPersonSynkroniseringOgMeldepliktHendelse()
     ) {
@@ -93,4 +94,17 @@ private fun Person.harKunPersonSynkroniseringOgMeldepliktHendelse(): Boolean =
         .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
         .takeIf { it.isNotEmpty() }
         ?.all { it is PersonSynkroniseringHendelse || it is MeldepliktHendelse }
+        ?: false
+
+private fun Person.harPersonsynkroniseringSomSisteHendelse(): Boolean =
+    hendelser
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
+        .takeIf { it.isNotEmpty() }
+        ?.sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }?.firstOrNull()
+        ?.let { it is PersonSynkroniseringHendelse }
         ?: false
