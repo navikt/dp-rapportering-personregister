@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -75,21 +76,21 @@ fun beregnStatus(person: Person): Status {
 
 private fun Person.harKunPersonSynkroniseringHendelse(): Boolean =
     hendelser
-        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse }
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
         .takeIf { it.isNotEmpty() }
         ?.all { it is PersonSynkroniseringHendelse }
         ?: false
 
 private fun Person.harKunPersonSynkroniseringOgDAGPHendelse(): Boolean =
     hendelser
-        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse }
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
         .takeIf { it.isNotEmpty() }
         ?.all { it is PersonSynkroniseringHendelse || it is DagpengerMeldegruppeHendelse }
         ?: false
 
 private fun Person.harKunPersonSynkroniseringOgMeldepliktHendelse(): Boolean =
     hendelser
-        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse }
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
         .takeIf { it.isNotEmpty() }
         ?.all { it is PersonSynkroniseringHendelse || it is MeldepliktHendelse }
         ?: false

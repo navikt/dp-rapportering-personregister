@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -176,9 +177,11 @@ class RettPersonStatusUtilsTest {
         fun `har kun personsynkroniseringhendelse`() {
             val nå = LocalDateTime.now()
             val hendelse = personSynkroniseringHendelse(dato = nå)
+            val søknad = SøknadHendelse(ident, nå, nå, "123")
 
             arbeidssøker {
                 hendelser.add(hendelse)
+                hendelser.add(søknad)
                 beregnStatus(this) shouldBe Status.DAGPENGERBRUKER
             }
         }
