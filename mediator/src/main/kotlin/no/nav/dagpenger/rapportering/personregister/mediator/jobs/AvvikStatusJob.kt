@@ -8,13 +8,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
-import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
+import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
 
 private val logger = KotlinLogging.logger {}
-private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class AvvikStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
@@ -30,6 +29,7 @@ internal class AvvikStatusJob(
     fun start(
         personRepository: PersonRepository,
         tempPersonRepository: TempPersonRepository,
+        observerList: List<PersonObserver>,
     ) {
         logger.info { "Tidspunkt for neste kjøring av AvvikStatusJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
@@ -49,29 +49,29 @@ internal class AvvikStatusJob(
                             val tempPerson = tempPersonRepository.hentPerson(ident)
                             logger.info { "Hentet midlertidig person. Behandler" }
                             if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
-                                val person = personRepository.hentPerson(ident)
+                                val person =
+                                    personRepository.hentPerson(ident)?.apply {
+                                        if (this.observers.isEmpty()) {
+                                            observerList.forEach { observer -> this.addObserver(observer) }
+                                        }
+                                    }
 
                                 if (person != null) {
                                     val nyStatus = beregnStatus(person)
                                     if (nyStatus != person.status) {
-                                        val beregnetMeldepliktStatus = beregnMeldepliktStatus(person)
-                                        val beregnetMG = beregnMeldegruppeStatus(person)
-                                        val erArbeidssøker = person.erArbeidssøker
-
-                                        sikkerLogg.info {
-                                            "Avvik: Person med ident: $ident har statusavvik. " +
-                                                "Nåværende status: ${person.status}, " +
-                                                "Beregnet status: $nyStatus, " +
-                                                "Beregnet meldeplikt: $beregnetMeldepliktStatus, " +
-                                                "Beregnet meldegruppe: $beregnetMG, " +
-                                                "Er arbeidssøker: $erArbeidssøker"
-                                        }
                                         logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
+                                        rettAvvik(person, nyStatus)
+                                        try {
+                                            personRepository.oppdaterPerson(person)
+                                        } catch (ex: Exception) {
+                                            logger.error(ex) { "Kunne ikke lagre person med oppdatert status" }
+                                        }
+
                                         try {
                                             tempPersonRepository.oppdaterPerson(
                                                 TempPerson(
                                                     ident = ident,
-                                                    status = TempPersonStatus.AVVIK,
+                                                    status = TempPersonStatus.RETTET,
                                                 ),
                                             )
                                         } catch (ex: Exception) {

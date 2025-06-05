@@ -75,6 +75,21 @@ fun beregnStatus(person: Person): Status {
     return nyStatus
 }
 
+fun rettAvvik(
+    person: Person,
+    nyStatus: Status,
+) {
+    if (nyStatus == Status.DAGPENGERBRUKER) {
+        person.setMeldeplikt(true)
+        person.setMeldegruppe("DAGP")
+        person.setStatus(Status.DAGPENGERBRUKER)
+        person.observers.forEach { it.sendOvertakelsesmelding(person) }
+    } else {
+        person.setStatus(Status.IKKE_DAGPENGERBRUKER)
+        person.observers.forEach { it.sendFrasigelsesmelding(person) }
+    }
+}
+
 private fun Person.harKunPersonSynkroniseringHendelse(): Boolean =
     hendelser
         .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
