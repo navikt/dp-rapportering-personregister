@@ -8,7 +8,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
-import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -52,7 +51,7 @@ internal class AvvikStatusJob(
                             if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
                                 val person = personRepository.hentPerson(ident)
 
-                                if (person != null && person.status == Status.DAGPENGERBRUKER) {
+                                if (person != null) {
                                     val nyStatus = beregnStatus(person)
                                     if (nyStatus != person.status) {
                                         val beregnetMeldepliktStatus = beregnMeldepliktStatus(person)

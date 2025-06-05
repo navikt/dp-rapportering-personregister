@@ -51,7 +51,6 @@ internal fun Application.personstatusApi(
         route("/rettelse") {
             get {
                 logger.info { "GET /rettelse" }
-                personService.rettAvvik()
 
                 call.respond(HttpStatusCode.OK, "Rettelse av personstatus er utført")
             }

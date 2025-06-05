@@ -6,7 +6,6 @@ import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -69,11 +68,11 @@ internal class RettPersonStatusJob(
                                     }
 
                                 if (person != null) {
-                                    val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
-                                    personRepository.oppdaterPerson(oppdatertPerson)
-                                    tempPersonRepository.oppdaterPerson(
-                                        TempPerson(ident, status = TempPersonStatus.RETTET),
-                                    )
+//                                    val oppdatertPerson = rettPersonStatus(person, sisteArbeidssøkerperiode)
+//                                    personRepository.oppdaterPerson(oppdatertPerson)
+//                                    tempPersonRepository.oppdaterPerson(
+//                                        TempPerson(ident, status = TempPersonStatus.RETTET),
+//                                    )
                                 } else {
                                     sikkerLogg.warn { "Fant ikke person med ident: $ident " }
                                 }
