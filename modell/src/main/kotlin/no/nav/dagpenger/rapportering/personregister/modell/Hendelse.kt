@@ -34,6 +34,21 @@ data class SøknadHendelse(
     }
 }
 
+data class VedtakHendelse(
+    override val ident: String,
+    override val dato: LocalDateTime,
+    override val startDato: LocalDateTime,
+    override val referanseId: String,
+) : Hendelse {
+    override val kilde: Kildesystem = Kildesystem.PJ
+
+    override fun behandle(person: Person) {
+        person.setAnsvarligSystem(AnsvarligSystem.DP)
+        person.sendStartMeldingTilMeldekortregister()
+        // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
+    }
+}
+
 data class DagpengerMeldegruppeHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
@@ -131,4 +146,5 @@ enum class Kildesystem {
     Arena,
     Arbeidssokerregisteret,
     Dagpenger,
+    PJ,
 }

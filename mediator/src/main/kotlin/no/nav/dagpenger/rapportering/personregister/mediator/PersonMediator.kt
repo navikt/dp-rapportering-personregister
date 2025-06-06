@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import java.time.LocalDateTime
 
 class PersonMediator(
@@ -41,6 +42,26 @@ class PersonMediator(
                         behandle(søknadHendelse, counter + 1)
                     }
                     arbeidssøkerMediator.behandle(søknadHendelse.ident)
+                }
+        }
+
+    fun behandle(
+        vedtakHendelse: VedtakHendelse,
+        counter: Int = 1,
+    ): Unit =
+        actionTimer.timedAction("behandle_VedtakHendelse") {
+            logger.info { "Behandler vedtakshendelse: ${vedtakHendelse.referanseId}" }
+            hentEllerOpprettPerson(vedtakHendelse.ident)
+                .also { person ->
+                    person.behandle(vedtakHendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med behandlingId ${vedtakHendelse.referanseId}. Counter: $counter"
+                        }
+                        behandle(vedtakHendelse, counter + 1)
+                    }
                 }
         }
 

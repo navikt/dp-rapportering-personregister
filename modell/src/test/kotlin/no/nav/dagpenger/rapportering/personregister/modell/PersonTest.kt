@@ -44,6 +44,18 @@ class PersonTest {
     }
 
     @Nested
+    inner class VedtakHendelser {
+        @Test
+        fun `behandler vedtak hendelse`() =
+            arbeidssøker {
+                behandle(vedtakHendelse())
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                arbeidssøkerperiodeObserver skalHaSendtStartMeldingFor this
+            }
+    }
+
+    @Nested
     inner class DagpengerHendelser {
         @Test
         fun `behandler dagpengermeldegruppe hendelse for bruker som ikke oppfyller kravet`() =
@@ -194,6 +206,11 @@ class PersonTest {
         referanseId: String = "123",
     ) = SøknadHendelse(ident, dato, dato, referanseId)
 
+    private fun vedtakHendelse(
+        dato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = VedtakHendelse(ident, dato, dato, referanseId)
+
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
@@ -228,4 +245,8 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
 
 infix fun PersonObserver.skalIkkeHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 0) { sendFrasigelsesmelding(person) }
+}
+
+infix fun PersonObserver.skalHaSendtStartMeldingFor(person: Person) {
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(person) }
 }

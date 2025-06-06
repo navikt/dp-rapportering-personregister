@@ -29,6 +29,16 @@ class SoknadMetrikker(
             .register(meterRegistry)
 }
 
+class VedtakMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val vedtakMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_vedtak_mottatt_total")
+            .description("Indikerer antall mottatte vedtak")
+            .register(meterRegistry)
+}
+
 class MeldegruppeendringMetrikker(
     private val meterRegistry: MeterRegistry,
 ) {
