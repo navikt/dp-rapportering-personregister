@@ -92,10 +92,11 @@ class ArbeidssøkerMediator(
             return
         }
 
-        if (person.arbeidssøkerperioder.gjeldende?.periodeId != paVegneAv.periodeId) {
-            logger.error { "Perioden er ikke gjeldende periode for bruker. Dropper meldingen." }
+        if (person.arbeidssøkerperioder.none { it.periodeId == paVegneAv.periodeId }) {
+            logger.error { "Person har ingen arbeidssøkerperiode med periodeId ${paVegneAv.periodeId}. Dropper meldingen." }
             return
         }
+
         when (paVegneAv.handling) {
             is Start -> {
                 logger.info { "Behandler PaaVegneAv-melding med start for periodeId: ${paVegneAv.periodeId}" }
@@ -108,7 +109,11 @@ class ArbeidssøkerMediator(
 
             is Stopp -> {
                 logger.info { "Behandler PaaVegneAv-melding med stopp for periodeId: ${paVegneAv.periodeId}" }
-                person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                if (person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse == false) {
+                    logger.info { "Person har allerede frasagt bekreftelse for periodeId: ${paVegneAv.periodeId}" }
+                } else {
+                    person.observers.forEach { it.frasagtArbeidssøkerbekreftelse(person, paVegneAv.periodeId) }
+                }
             }
 
             else -> {
