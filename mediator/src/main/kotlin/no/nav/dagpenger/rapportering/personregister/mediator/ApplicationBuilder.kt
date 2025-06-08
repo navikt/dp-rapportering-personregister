@@ -223,8 +223,7 @@ internal class ApplicationBuilder(
         avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
 //        avsluttetPerioderJob.start(personRepository, tempPersonRepository)
 //        rettPersonStatusJob.start(personRepository, tempPersonRepository, arbeidssøkerService)
-        // Jobben under må kjøres etter rettPersonStatusJob!!
-//        sendPaaVegneAvForAlleJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
+        sendPaaVegneAvForAlleJob.start(personRepository, listOf(personObserverKafka, arbeidssøkerBeslutningObserver))
     }
 }
 

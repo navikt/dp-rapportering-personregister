@@ -72,8 +72,11 @@ class InMemoryPersonRepository : PersonRepository {
         }
     }
 
-    override fun hentPersonerMedDagpenger(): List<String> =
+    override fun hentPersonerMedDagpengerUtenOvertattPeriode(): List<String> =
         personList.values.filter { it.status == Status.DAGPENGERBRUKER }.map { it.ident }
+
+    override fun hentPersonerUtenDagpengerMedAktivPeriode(): List<String> =
+        personList.values.filter { it.status == Status.IKKE_DAGPENGERBRUKER }.map { it.ident }
 
     override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
         personList.values
