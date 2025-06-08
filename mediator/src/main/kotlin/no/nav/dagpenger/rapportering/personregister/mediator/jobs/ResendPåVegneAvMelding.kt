@@ -5,17 +5,18 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class ResendPåVegneAvMelding(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
+    private val tidspunktForKjoring = LocalTime.now().plusMinutes(3)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
@@ -31,15 +32,41 @@ internal class ResendPåVegneAvMelding(
             name = "Resend PaaVegneAv",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 1.hours.inWholeMilliseconds,
+            period = Long.MAX_VALUE,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å sende på vegne av-meldinger" }
-                        val identer = personRepository.hentPersonerMedDagpenger()
-                        logger.info("Hentet ${identer.size} identer som skal overtas")
-                        val personer = personService.hentPersonFraDB(identer)
-                        personer.forEach { person -> person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) } }
+
+                        val identer =
+                            personRepository
+                                .hentPersonerMedDagpengerMedAvvikBekreftelse()
+                                .plus(personRepository.hentPersonerUtenDagpengerMedAvvikBekreftelse())
+                                .distinct()
+
+                        logger.info("Hentet ${identer.size} identer som skal rettes")
+
+                        try {
+                            identer.forEach { ident ->
+                                val person = personService.hentPerson(ident)
+                                if (person != null) {
+                                    if (person.status == Status.DAGPENGERBRUKER) {
+                                        sikkerLogg.info { "Sender overtakelsesmelding for ident: $ident" }
+                                        person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) }
+                                    }
+
+                                    if (person.status == Status.IKKE_DAGPENGERBRUKER) {
+                                        sikkerLogg.info { "Sender frasigelsesmelding for ident: $ident" }
+                                        person.observers.forEach { observer -> observer.sendFrasigelsesmelding(person) }
+                                    }
+                                } else {
+                                    sikkerLogg.warn { "Fant ikke person for ident: $ident" }
+                                }
+                            }
+                        } catch (ex: Exception) {
+                            logger.error(ex) { "Feil under sending av på vegne av-meldinger" }
+                        }
+
                         logger.info {
                             "Jobb for å sende på vegne av-meldinger ferdig. Skal ha sendt overtagelse for ${identer.size} personer."
                         }

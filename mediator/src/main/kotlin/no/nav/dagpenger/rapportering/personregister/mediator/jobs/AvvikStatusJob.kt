@@ -12,13 +12,14 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
 
 internal class AvvikStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.now().plusMinutes(2)
+    private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
@@ -36,7 +37,7 @@ internal class AvvikStatusJob(
             name = "Sjekk status avvik",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = Long.MAX_VALUE,
+            period = 2.hours.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {

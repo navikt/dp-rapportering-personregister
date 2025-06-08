@@ -38,6 +38,10 @@ interface PersonRepository {
 
     fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList<String>()
 
+    fun hentPersonerMedDagpengerMedAvvikBekreftelse(): List<String> = emptyList<String>()
+
+    fun hentPersonerUtenDagpengerMedAvvikBekreftelse(): List<String> = emptyList<String>()
+
     fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
 
     fun hentPersonerSomKanSlettes(): List<String>
