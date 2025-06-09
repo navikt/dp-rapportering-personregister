@@ -18,7 +18,7 @@ dependencies {
     testImplementation(libs.mockk)
 
     testApi("org.junit.platform:junit-platform-suite-api:1.13.0")
-    testImplementation("org.junit.platform:junit-platform-suite-engine:1.13.0")
+    testImplementation("org.junit.platform:junit-platform-suite-engine:1.13.1")
     testImplementation("io.cucumber:cucumber-java8:7.23.0")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.23.0")
 }
