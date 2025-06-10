@@ -10,6 +10,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.every
+import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
@@ -18,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataR
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -121,6 +123,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             Person(ident)
                 .apply { behandle(lagHendelse(ident)) }
                 .also {
+                    it.setAnsvarligSystem(AnsvarligSystem.ARENA)
                     personRepository.lagrePerson(it)
                 }
 
@@ -134,6 +137,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["ident"].asText() shouldBe ident
                 obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe false
+                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.ARENA.value
             }
 
             personRepository.oppdaterPerson(
@@ -149,7 +153,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                             true,
                         ),
                     ),
-                ),
+                ).also { it.setAnsvarligSystem(AnsvarligSystem.DP) },
             )
 
             with(
@@ -162,6 +166,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["ident"].asText() shouldBe ident
                 obj["status"].asText() shouldBe StatusResponse.DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe true
+                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
             }
         }
 }

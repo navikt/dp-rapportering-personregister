@@ -27,6 +27,7 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun oppdaterPerson(person: Person) {
         val nyPerson = person.deepCopy(versjon = person.versjon + 1)
+        nyPerson.setAnsvarligSystem(person.ansvarligSystem)
         personList[person.ident] = nyPerson
     }
 
