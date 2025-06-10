@@ -27,7 +27,7 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.16.0")
-    implementation("io.opentelemetry:opentelemetry-api:1.50.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.51.0")
     implementation("io.getunleash:unleash-client-java:10.2.2")
 
     testImplementation(kotlin("test"))
@@ -36,7 +36,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.ktor.client.mock)
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.13.1")
     testImplementation("io.ktor:ktor-server-test-host-jvm:${libs.versions.ktor.get()}")
     testImplementation(libs.rapids.and.rivers.test)
     testImplementation("org.testcontainers:kafka:1.21.1")
