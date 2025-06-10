@@ -27,6 +27,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -36,6 +37,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
@@ -146,6 +148,35 @@ class PersonMediatorTest {
                     ?.apply {
                         ident shouldBe ident
                         status shouldBe IKKE_DAGPENGERBRUKER
+                    }
+            }
+        }
+    }
+
+    @Nested
+    inner class VedtakHendelser {
+        @Test
+        fun `vedtak for ny person`() {
+            personMediator.behandle(vedtakHendelse(ident))
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ident shouldBe ident
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                }
+        }
+
+        @Test
+        fun `vedtak for eksisterende person`() {
+            testPerson {
+                personMediator.behandle(vedtakHendelse(ident))
+
+                personRepository
+                    .hentPerson(ident)
+                    ?.apply {
+                        ident shouldBe ident
+                        ansvarligSystem shouldBe AnsvarligSystem.DP
                     }
             }
         }
@@ -380,6 +411,13 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = SøknadHendelse(ident, dato, startDato, referanseId)
+
+    private fun vedtakHendelse(
+        ident: String = this.ident,
+        dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = VedtakHendelse(ident, dato, startDato, referanseId)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,

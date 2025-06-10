@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSou
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
@@ -310,6 +311,30 @@ class PostgresPersonRepositoryTest {
                     )
                 }
             avsluttetTimestamp shouldBe after(originalTimestamp!!)
+        }
+    }
+
+    @Test
+    fun `kan oppdatere persons ansvarlig system`() {
+        withMigratedDb {
+            val person = testPerson()
+            person.setAnsvarligSystem(AnsvarligSystem.ARENA)
+            personRepository.lagrePerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                }
+
+            person.setAnsvarligSystem(AnsvarligSystem.DP)
+            personRepository.oppdaterPerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                }
         }
     }
 

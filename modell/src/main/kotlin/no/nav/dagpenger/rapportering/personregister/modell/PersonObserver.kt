@@ -8,15 +8,20 @@ interface PersonObserver {
     fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean = false,
-    ) {}
+    ) {
+    }
 
     fun overtattArbeidssøkerbekreftelse(
         person: Person,
         periodeId: UUID,
-    ) {}
+    ) {
+    }
 
     fun frasagtArbeidssøkerbekreftelse(
         person: Person,
         periodeId: UUID,
-    )
+    ) {
+    }
+
+    fun sendStartMeldingTilMeldekortregister(person: Person) {}
 }

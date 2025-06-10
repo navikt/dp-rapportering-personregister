@@ -13,6 +13,11 @@ enum class Status {
     IKKE_DAGPENGERBRUKER,
 }
 
+enum class AnsvarligSystem {
+    ARENA,
+    DP,
+}
+
 data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
@@ -22,6 +27,8 @@ data class Person(
     private var _meldegruppe: String? = null
 
     private var _meldeplikt: Boolean = false
+
+    private var _ansvarligSystem: AnsvarligSystem? = null
 
     val hendelser = mutableListOf<Hendelse>()
 
@@ -60,6 +67,19 @@ data class Person(
 
     fun setMeldegruppe(value: String?) {
         _meldegruppe = value
+    }
+
+    val ansvarligSystem: AnsvarligSystem?
+        get() =
+            if (status == DAGPENGERBRUKER && _ansvarligSystem == null) {
+                _ansvarligSystem = AnsvarligSystem.ARENA
+                _ansvarligSystem
+            } else {
+                _ansvarligSystem
+            }
+
+    fun setAnsvarligSystem(value: AnsvarligSystem?) {
+        _ansvarligSystem = value
     }
 
     fun behandle(hendelse: Hendelse) {
@@ -144,6 +164,19 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
             overtattBekreftelse = false,
         ),
     )
+}
+
+fun Person.sendStartMeldingTilMeldekortregister() {
+    logger.info("Sender Start-melding til Meldekortregister")
+
+    try {
+        logger.info("Antall observere: ${observers.size}")
+        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this) }
+        logger.info("Sendte Start-melding på observere uten feil")
+    } catch (e: Exception) {
+        logger.error(e) { "Overtagelse feilet!" }
+        throw e
+    }
 }
 
 val Person.erArbeidssøker: Boolean

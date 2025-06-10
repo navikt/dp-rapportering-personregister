@@ -11,10 +11,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldegrup
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 
 object MetrikkerTestUtil {
     private val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     val soknadMetrikker = SoknadMetrikker(meterRegistry)
+    val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
     val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
