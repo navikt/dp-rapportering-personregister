@@ -17,7 +17,7 @@ val mainavroSchema by configurations.creating {
 }
 
 dependencies {
-    api("io.confluent:kafka-avro-serializer:7.9.1")
+    api("io.confluent:kafka-avro-serializer:8.0.0")
     api("io.confluent:kafka-schema-registry:7.9.1")
     api("io.confluent:kafka-streams-avro-serde:7.9.1")
     api("org.apache.avro:avro:1.12.0")
