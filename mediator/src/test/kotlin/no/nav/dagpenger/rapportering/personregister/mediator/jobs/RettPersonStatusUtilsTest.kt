@@ -22,6 +22,23 @@ class RettPersonStatusUtilsTest {
     @Nested
     inner class BeregnerMeldepliktStatus {
         @Test
+        fun `perosnsynkroniseringhendelse etter siste meldeplikthendelse`() {
+            val nå = LocalDateTime.now()
+            val tidligere = nå.minusDays(1)
+            val person =
+                Person(ident).apply {
+                    hendelser.addAll(
+                        listOf(
+                            meldepliktHendelse(dato = tidligere, status = false),
+                            personSynkroniseringHendelse(dato = nå, referanseId = "123"),
+                        ),
+                    )
+                }
+
+            beregnMeldepliktStatus(person) shouldBe true
+        }
+
+        @Test
         fun `beregner meldeplikt status ved tom liste`() {
             val person = Person(ident)
 
@@ -173,6 +190,18 @@ class RettPersonStatusUtilsTest {
 
     @Nested
     inner class BeregnerStatus {
+        @Test
+        fun `oppfyller krav ved å ha kun meldegruppe synk hendelser`() {
+            val nå = LocalDateTime.now()
+            val hendelse1 = annenMeldegruppeHendelse(dato = nå, referanseId = "123")
+            val hendelse2 = personSynkroniseringHendelse(dato = nå.minusDays(1), referanseId = "456")
+
+            arbeidssøker {
+                hendelser.addAll(listOf(hendelse1, hendelse2))
+                beregnStatus(this) shouldBe Status.IKKE_DAGPENGERBRUKER
+            }
+        }
+
         @Test
         fun `har kun personsynkroniseringhendelse`() {
             val nå = LocalDateTime.now()

@@ -18,30 +18,18 @@ private fun oppfyllerKravVedSynkronisering(person: Person): Boolean {
     if (person.harKunPersonSynkroniseringHendelse() ||
         person.harPersonsynkroniseringSomSisteHendelse() ||
         person.harKunPersonSynkroniseringOgDAGPHendelse() ||
-        person.harKunPersonSynkroniseringOgMeldepliktHendelse()
+        person.harKunPersonSynkroniseringOgMeldepliktHendelse() ||
+        person.oppfyllerVedKunMeldegruppeOgPersonsynkroniseringHendelse()
     ) {
         sikkerLogg.info { "Person med ident ${person.ident} oppfyller krav ved synkronisering. ${person.hendelser}" }
         return true
     }
-
     return false
 }
 
 fun beregnMeldepliktStatus(person: Person) =
     person.hendelser
-        .filterIsInstance<MeldepliktHendelse>()
-        .sortedWith { a, b ->
-            when {
-                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
-                else -> b.dato.compareTo(a.dato)
-            }
-        }.firstOrNull()
-        ?.statusMeldeplikt
-        ?: false
-
-fun beregnMeldegruppeStatus(person: Person) =
-    person.hendelser
-        .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
+        .filter { it is MeldepliktHendelse || it is PersonSynkroniseringHendelse }
         .sortedWith { a, b ->
             when {
                 a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
@@ -50,6 +38,24 @@ fun beregnMeldegruppeStatus(person: Person) =
         }.firstOrNull()
         ?.let {
             when (it) {
+                is MeldepliktHendelse -> it.statusMeldeplikt
+                is PersonSynkroniseringHendelse -> true
+                else -> false
+            }
+        } ?: false
+
+fun beregnMeldegruppeStatus(person: Person) =
+    person.hendelser
+        .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse || it is PersonSynkroniseringHendelse }
+        .sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }.firstOrNull()
+        ?.let {
+            when (it) {
+                is PersonSynkroniseringHendelse -> "DAGP"
                 is DagpengerMeldegruppeHendelse -> it.meldegruppeKode
                 is AnnenMeldegruppeHendelse -> it.meldegruppeKode
                 else -> null
@@ -123,3 +129,38 @@ private fun Person.harPersonsynkroniseringSomSisteHendelse(): Boolean =
         }?.firstOrNull()
         ?.let { it is PersonSynkroniseringHendelse }
         ?: false
+
+private fun Person.harKunMeldegruppeOgPersonsynkroniseringHendelse(): Boolean =
+    hendelser
+        .filterNot { it is StartetArbeidssøkerperiodeHendelse || it is AvsluttetArbeidssøkerperiodeHendelse || it is SøknadHendelse }
+        .takeIf { it.isNotEmpty() }
+        ?.all { it is PersonSynkroniseringHendelse || it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
+        ?: false
+
+private fun Person.oppfyllerVedKunMeldegruppeOgPersonsynkroniseringHendelse(): Boolean {
+    if (harKunMeldegruppeOgPersonsynkroniseringHendelse()) {
+        sikkerLogg.info { "Person med ident $ident oppfyller krav ved synkronisering. $hendelser" }
+
+        val sisteHendelse =
+            hendelser
+                .filterNot {
+                    it is StartetArbeidssøkerperiodeHendelse ||
+                        it is AvsluttetArbeidssøkerperiodeHendelse ||
+                        it is SøknadHendelse
+                }.sortedWith { a, b ->
+                    when {
+                        a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                        else -> b.dato.compareTo(a.dato)
+                    }
+                }.firstOrNull()
+
+        return when (sisteHendelse) {
+            is PersonSynkroniseringHendelse -> true
+            is DagpengerMeldegruppeHendelse -> true
+            is AnnenMeldegruppeHendelse -> false
+            else -> false
+        }
+    }
+
+    return false
+}
