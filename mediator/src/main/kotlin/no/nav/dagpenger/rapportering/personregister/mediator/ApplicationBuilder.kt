@@ -220,8 +220,8 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-//        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
-        resendPaaVegneAvJob.start(personRepository, personService)
+        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
+//        resendPaaVegneAvJob.start(personRepository, personService)
     }
 }
 

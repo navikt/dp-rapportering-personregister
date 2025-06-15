@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -16,7 +17,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 internal class ResendPåVegneAvMelding(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.now().plusMinutes(3)
+    private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
@@ -32,7 +33,7 @@ internal class ResendPåVegneAvMelding(
             name = "Resend PaaVegneAv",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = Long.MAX_VALUE,
+            period = 5.hours.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
@@ -46,6 +47,9 @@ internal class ResendPåVegneAvMelding(
 
                         logger.info("Hentet ${identer.size} identer som skal rettes")
 
+                        var antallOvertakelser = 0
+                        var antallFrasigelser = 0
+
                         try {
                             identer.forEach { ident ->
                                 val person = personService.hentPerson(ident)
@@ -53,11 +57,13 @@ internal class ResendPåVegneAvMelding(
                                     if (person.status == Status.DAGPENGERBRUKER) {
                                         sikkerLogg.info { "Sender overtakelsesmelding for ident: $ident" }
                                         person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) }
+                                        antallOvertakelser++
                                     }
 
                                     if (person.status == Status.IKKE_DAGPENGERBRUKER) {
                                         sikkerLogg.info { "Sender frasigelsesmelding for ident: $ident" }
                                         person.observers.forEach { observer -> observer.sendFrasigelsesmelding(person) }
+                                        antallFrasigelser++
                                     }
                                 } else {
                                     sikkerLogg.warn { "Fant ikke person for ident: $ident" }
@@ -68,7 +74,7 @@ internal class ResendPåVegneAvMelding(
                         }
 
                         logger.info {
-                            "Jobb for å sende på vegne av-meldinger ferdig. Skal ha sendt overtagelse for ${identer.size} personer."
+                            "Jobb for å sende på vegne av-meldinger ferdig. Antall overtakelser: $antallOvertakelser, Antall frasigelser: $antallFrasigelser"
                         }
                     } else {
                         logger.info { "Pod er ikke leader, så jobb for å sende på vegne av-meldinger startes ikke her" }

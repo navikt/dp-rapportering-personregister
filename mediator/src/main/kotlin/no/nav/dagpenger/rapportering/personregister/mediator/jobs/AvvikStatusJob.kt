@@ -37,12 +37,13 @@ internal class AvvikStatusJob(
             name = "Sjekk status avvik",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 2.hours.inWholeMilliseconds,
+            period = 3.hours.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å oppdatere personstatus" }
                         val identer = hentTempPersonIdenter(tempPersonRepository)
+                        var antallrettedePersoner = 0
 
                         logger.info { "Hentet ${identer.size} identer for sjekking av status" }
 
@@ -62,6 +63,7 @@ internal class AvvikStatusJob(
                                     if (nyStatus != person.status) {
                                         logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
                                         rettAvvik(person, nyStatus)
+                                        antallrettedePersoner++
                                         try {
                                             personRepository.oppdaterPerson(person)
                                         } catch (ex: Exception) {
@@ -97,7 +99,7 @@ internal class AvvikStatusJob(
                             }
                         }
 
-                        logger.info { "Jobb for å sjekke statusavvik er fullført" }
+                        logger.info { "Jobb for å sjekke personstatus er fullført. Antall rettede personer: $antallrettedePersoner" }
                     } else {
                         logger.info { "Pod er ikke leader, så jobb for å oppdatere personstatus startes ikke her" }
                     }
