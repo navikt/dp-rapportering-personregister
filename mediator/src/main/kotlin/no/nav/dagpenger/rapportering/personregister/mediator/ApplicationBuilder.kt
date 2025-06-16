@@ -221,7 +221,7 @@ internal class ApplicationBuilder(
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
         avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
-//        resendPaaVegneAvJob.start(personRepository, personService)
+        resendPaaVegneAvJob.start(personRepository, personService)
     }
 }
 

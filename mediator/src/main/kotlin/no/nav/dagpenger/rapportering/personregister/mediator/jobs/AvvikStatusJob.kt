@@ -49,7 +49,6 @@ internal class AvvikStatusJob(
 
                         identer.forEach { ident ->
                             val tempPerson = tempPersonRepository.hentPerson(ident)
-                            logger.info { "Hentet midlertidig person. Behandler" }
                             if (tempPerson != null && tempPerson.status == TempPersonStatus.IKKE_PABEGYNT) {
                                 val person =
                                     personRepository.hentPerson(ident)?.apply {
@@ -81,7 +80,6 @@ internal class AvvikStatusJob(
                                             logger.error(ex) { "Kunne ikke lagre midlertidig person" }
                                         }
                                     } else {
-                                        logger.info { "Person har ingen statusavvik" }
                                         try {
                                             tempPersonRepository.oppdaterPerson(
                                                 TempPerson(
