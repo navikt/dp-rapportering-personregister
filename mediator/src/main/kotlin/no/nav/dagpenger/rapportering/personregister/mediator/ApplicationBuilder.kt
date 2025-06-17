@@ -136,7 +136,7 @@ internal class ApplicationBuilder(
         ArbeidssøkerBeslutningObserver(
             arbeidssøkerBeslutningRepository,
         )
-    private val personObserverMeldekortregister = PersonObserverMeldekortregister()
+    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
     private val personService =

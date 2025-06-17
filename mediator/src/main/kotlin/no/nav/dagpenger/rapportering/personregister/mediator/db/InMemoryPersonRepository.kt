@@ -35,11 +35,11 @@ class InMemoryPersonRepository : PersonRepository {
         person: Person,
         nyIdent: String,
     ) {
-        val person =
+        val funnetPerson =
             personList[person.ident]
                 ?: throw IllegalArgumentException("Person med ident ${person.ident} finnes ikke")
-        personList.remove(person.ident)
-        personList[nyIdent] = person.copy(ident = nyIdent)
+        personList.remove(funnetPerson.ident)
+        personList[nyIdent] = funnetPerson.copy(ident = nyIdent)
     }
 
     override fun hentAntallPersoner(): Int = personList.size
@@ -100,6 +100,8 @@ class InMemoryPersonRepository : PersonRepository {
     override fun hentAlleIdenter(): List<String> = personList2.map { it.ident }
 
     override fun hentIdenterMedAvvik(): List<String> = emptyList()
+
+    override fun hentPersonId(ident: String): Long = 0
 
     private fun Person.deepCopy(versjon: Int) =
         Person(

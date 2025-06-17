@@ -36,7 +36,7 @@ interface PersonRepository {
 
     fun hentPersonerMedDagpenger(): List<String>
 
-    fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList<String>()
+    fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> = emptyList()
 
     fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String>
 
@@ -49,4 +49,6 @@ interface PersonRepository {
     fun hentAlleIdenter(): List<String>
 
     fun hentIdenterMedAvvik(): List<String>
+
+    fun hentPersonId(ident: String): Long?
 }

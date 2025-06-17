@@ -36,7 +36,7 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-hentPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(ident, tx) ?: return@transaction null
+                    val personId = hentPersonId(ident) ?: return@transaction null
                     val statusHistorikk = hentStatusHistorikk(personId, tx)
                     val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident, tx)
                     val versjon = hentVersjon(ident, tx) ?: return@transaction null
@@ -111,7 +111,7 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-oppdaterPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(person.ident, tx) ?: throw IllegalStateException("Person finnes ikke")
+                    val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
                     val updateRows =
                         tx
                             .run(
@@ -360,7 +360,7 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-slettPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(ident, tx)
+                    val personId = hentPersonId(ident)
                     tx.run(
                         queryOf(
                             "DELETE FROM status_historikk WHERE person_id = :person_id",
@@ -455,15 +455,14 @@ class PostgresPersonRepository(
             )
         }
 
-    private fun hentPersonId(
-        ident: String,
-        tx: TransactionalSession,
-    ): Long? =
-        tx.run(
-            queryOf("SELECT id FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                .map { row -> row.long("id") }
-                .asSingle,
-        )
+    override fun hentPersonId(ident: String): Long? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT id FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.long("id") }
+                    .asSingle,
+            )
+        }
 
     private fun hentVersjon(
         ident: String,
