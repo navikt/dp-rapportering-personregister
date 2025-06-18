@@ -23,5 +23,3 @@ KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-p,teamarenanai
 additionalInbounds:
   - application: meldekort-api
     namespace: meldekort
-  - application: tokenx-token-generator
-    namespace: aura
