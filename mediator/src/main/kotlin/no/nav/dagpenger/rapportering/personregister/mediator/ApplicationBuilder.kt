@@ -30,6 +30,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPers
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvsluttetPerioderJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvvikPersonsynkroniseringJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvvikStatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.RettPersonStatusJob
@@ -182,6 +183,7 @@ internal class ApplicationBuilder(
     private val rettPersonStatusJob = RettPersonStatusJob()
     private val sendPaaVegneAvForAlleJob = SendPaaVegneAvForAlleJob()
     private val avvikStatusJob = AvvikStatusJob()
+    private val avvikPersonsynkroniseringJob = AvvikPersonsynkroniseringJob()
     private val avsluttetPerioderJob = AvsluttetPerioderJob()
     private val kafkaContext =
         KafkaContext(
@@ -232,7 +234,8 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
+//        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
+        avvikPersonsynkroniseringJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
         resendPaaVegneAvJob.start(personRepository, personService)
     }
 }

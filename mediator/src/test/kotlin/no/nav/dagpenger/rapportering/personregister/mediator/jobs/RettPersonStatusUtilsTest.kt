@@ -19,6 +19,29 @@ import java.util.UUID
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
 
+    @Test
+    fun `test personsynkronisering avvik`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val person =
+            Person(ident).apply {
+                setStatus(Status.DAGPENGERBRUKER)
+                hendelser.addAll(
+                    listOf(
+                        meldepliktHendelse(dato = tidligere, status = false),
+                        personSynkroniseringHendelse(dato = nå, referanseId = "123"),
+                        annenMeldegruppeHendelse(
+                            dato = tidligere,
+                            startDato = tidligere,
+                            referanseId = "456",
+                        ),
+                    ),
+                )
+            }
+
+        harPersonsynkroniseringAvvik(person) shouldBe true
+    }
+
     @Nested
     inner class BeregnerMeldepliktStatus {
         @Test

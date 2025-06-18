@@ -164,3 +164,29 @@ private fun Person.oppfyllerVedKunMeldegruppeOgPersonsynkroniseringHendelse(): B
 
     return false
 }
+
+fun harPersonsynkroniseringAvvik(person: Person): Boolean {
+    if (person.status == Status.DAGPENGERBRUKER) {
+        val meldegruppe =
+            person.hendelser
+                .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
+                .sortedWith { a, b ->
+                    when {
+                        a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                        else -> b.dato.compareTo(a.dato)
+                    }
+                }.firstOrNull()
+
+                ?.let {
+                    when (it) {
+                        is DagpengerMeldegruppeHendelse -> it.meldegruppeKode
+                        is AnnenMeldegruppeHendelse -> it.meldegruppeKode
+                        else -> null
+                    }
+                }
+
+        return meldegruppe != "DAGP"
+    }
+
+    return false
+}
