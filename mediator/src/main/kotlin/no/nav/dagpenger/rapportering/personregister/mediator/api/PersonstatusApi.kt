@@ -11,6 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
@@ -85,13 +86,14 @@ internal fun Application.personstatusApi(
                     val ident = call.ident()
                     personService
                         .hentPerson(ident)
-                        ?.also {
+                        ?.also { person ->
                             call.respond(
                                 HttpStatusCode.OK,
                                 PersonResponse(
-                                    ident = it.ident,
-                                    status = StatusResponse.valueOf(it.status.name),
-                                    overtattBekreftelse = it.overtattBekreftelse,
+                                    ident = person.ident,
+                                    status = StatusResponse.valueOf(person.status.name),
+                                    overtattBekreftelse = person.overtattBekreftelse,
+                                    ansvarligSystem = person.ansvarligSystem?.let { AnsvarligSystemResponse.valueOf(it.name) },
                                 ),
                             )
                         }

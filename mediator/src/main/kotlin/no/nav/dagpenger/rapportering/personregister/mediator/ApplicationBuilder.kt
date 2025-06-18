@@ -42,8 +42,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldegrup
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
+import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
@@ -51,6 +53,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -67,9 +70,16 @@ private val logger = KotlinLogging.logger {}
 internal class ApplicationBuilder(
     configuration: Map<String, String>,
 ) : RapidsConnection.StatusListener {
+    companion object {
+        private lateinit var rapidsConnection: RapidsConnection
+
+        fun getRapidsConnection(): RapidsConnection = rapidsConnection
+    }
+
     private val meterRegistry =
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
+    private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
@@ -123,17 +133,18 @@ internal class ApplicationBuilder(
             arbeidssøkerConnector,
             bekreftelsePåVegneAvTopic,
         )
-
     private val arbeidssøkerBeslutningObserver =
         ArbeidssøkerBeslutningObserver(
             arbeidssøkerBeslutningRepository,
         )
+    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
+
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
     private val personService =
         PersonService(
             pdlConnector,
             personRepository,
-            listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
+            listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
             pdlIdentCache,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
@@ -183,31 +194,32 @@ internal class ApplicationBuilder(
             arbeidssøkerMottak = arbeidssøkerMottak,
         )
 
-    private val rapidsConnection =
-        RapidApplication
-            .create(
-                env = configuration,
-                builder = {
-                    this.withKtor(
-                        embeddedServer(CIOEngine, port = 8080, module = {}),
-                    )
-                },
-            ) { engine, rapid ->
-                logger.info { "Starter rapid with" }
-                logger.info { "config: $config" }
+    init {
+        rapidsConnection =
+            RapidApplication
+                .create(
+                    env = configuration,
+                    builder = {
+                        this.withKtor(
+                            embeddedServer(CIOEngine, port = 8080, module = {}),
+                        )
+                    },
+                ) { engine, rapid ->
+                    logger.info { "Starter rapid with" }
+                    logger.info { "config: $config" }
 
-                with(engine.application) {
-                    pluginConfiguration(meterRegistry, kafkaContext)
-                    internalApi(meterRegistry)
-                    personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                    with(engine.application) {
+                        pluginConfiguration(meterRegistry, kafkaContext)
+                        internalApi(meterRegistry)
+                        personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                    }
+
+                    SøknadMottak(rapid, personMediator, soknadMetrikker)
+                    VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
+                    MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
+                    MeldepliktendringMottak(rapid, meldepliktMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
                 }
 
-                SøknadMottak(rapid, personMediator, soknadMetrikker)
-                MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
-                MeldepliktendringMottak(rapid, meldepliktMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
-            }
-
-    init {
         rapidsConnection.register(this)
     }
 

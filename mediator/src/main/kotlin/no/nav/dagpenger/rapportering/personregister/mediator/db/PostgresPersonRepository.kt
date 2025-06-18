@@ -8,9 +8,9 @@ import kotliquery.sessionOf
 import kotliquery.using
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AvsluttetArbeidssøkerperiodeHendelse
@@ -36,13 +36,15 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-hentPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(ident, tx) ?: return@transaction null
-                    val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident, tx)
-                    val hendelser = hentHendelser(personId, ident, tx)
+                    val personId = hentPersonId(ident) ?: return@transaction null
                     val statusHistorikk = hentStatusHistorikk(personId, tx)
+                    val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident, tx)
+                    val versjon = hentVersjon(ident, tx) ?: return@transaction null
+
                     val meldeplikt = hentMeldeplikt(ident, tx)
                     val meldegruppe = hentMeldegruppe(ident, tx)
-                    val versjon = hentVersjon(ident, tx) ?: return@transaction null
+                    val ansvarligSystem = hentAnsvarligSystem(ident, tx)?.let { AnsvarligSystem.valueOf(it) }
+                    val hendelser = hentHendelser(personId, ident, tx)
 
                     Person(
                         ident = ident,
@@ -52,6 +54,7 @@ class PostgresPersonRepository(
                     ).apply {
                         setMeldeplikt(meldeplikt)
                         setMeldegruppe(meldegruppe)
+                        setAnsvarligSystem(ansvarligSystem)
                         hendelser.forEach { this.hendelser.add(it) }
                     }
                 }
@@ -77,8 +80,8 @@ class PostgresPersonRepository(
                         tx.run(
                             queryOf(
                                 """
-                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon) 
-                                VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon) 
+                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon, ansvarlig_system) 
+                                VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon, :ansvarlig_system) 
                                 RETURNING id
                                 """.trimIndent(),
                                 mapOf(
@@ -87,6 +90,7 @@ class PostgresPersonRepository(
                                     "meldeplikt" to person.meldeplikt,
                                     "meldegruppe" to person.meldegruppe,
                                     "versjon" to person.versjon,
+                                    "ansvarlig_system" to person.ansvarligSystem?.name,
                                 ),
                             ).map { row -> row.long("id") }
                                 .asSingle,
@@ -107,14 +111,18 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-oppdaterPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(person.ident, tx) ?: throw IllegalStateException("Person finnes ikke")
+                    val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
                     val updateRows =
                         tx
                             .run(
                                 queryOf(
                                     """
                                     UPDATE person 
-                                    SET status = :status, meldeplikt = :meldeplikt, meldegruppe = :meldegruppe, versjon = :ny_versjon
+                                    SET status = :status,
+                                        meldeplikt = :meldeplikt,
+                                        meldegruppe = :meldegruppe,
+                                        versjon = :ny_versjon,
+                                        ansvarlig_system = :ansvarlig_system
                                     WHERE id = :id and versjon = :versjon
                                     """.trimIndent(),
                                     mapOf(
@@ -124,6 +132,7 @@ class PostgresPersonRepository(
                                         "meldegruppe" to person.meldegruppe,
                                         "versjon" to person.versjon,
                                         "ny_versjon" to person.versjon + 1,
+                                        "ansvarlig_system" to person.ansvarligSystem?.name,
                                     ),
                                 ).asUpdate,
                             )
@@ -351,7 +360,7 @@ class PostgresPersonRepository(
         actionTimer.timedAction("db-slettPerson") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
-                    val personId = hentPersonId(ident, tx)
+                    val personId = hentPersonId(ident)
                     tx.run(
                         queryOf(
                             "DELETE FROM status_historikk WHERE person_id = :person_id",
@@ -476,15 +485,14 @@ class PostgresPersonRepository(
             )
         }
 
-    fun hentPersonId(
-        ident: String,
-        tx: TransactionalSession,
-    ): Long? =
-        tx.run(
-            queryOf("SELECT * FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                .map { row -> row.long("id") }
-                .asSingle,
-        )
+    override fun hentPersonId(ident: String): Long? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf("SELECT id FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.long("id") }
+                    .asSingle,
+            )
+        }
 
     private fun hentVersjon(
         ident: String,
@@ -808,6 +816,16 @@ class PostgresPersonRepository(
             ).asUpdate,
         )
     }
+
+    private fun hentAnsvarligSystem(
+        ident: String,
+        tx: TransactionalSession,
+    ): String? =
+        tx.run(
+            queryOf("SELECT ansvarlig_system FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                .map { row -> row.stringOrNull("ansvarlig_system") }
+                .asSingle,
+        )
 
     companion object {
         val logger = KotlinLogging.logger {}
