@@ -12,6 +12,7 @@ import org.apache.kafka.common.MetricName
 import org.apache.kafka.common.PartitionInfo
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.Uuid
+import org.apache.kafka.common.metrics.KafkaMetric
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
@@ -45,12 +46,6 @@ class MockKafkaProducer<T> : Producer<Long, T> {
 
     override fun beginTransaction() {}
 
-    @Deprecated("Deprecated in Java")
-    override fun sendOffsetsToTransaction(
-        p0: MutableMap<TopicPartition, OffsetAndMetadata>?,
-        p1: String?,
-    ) {}
-
     override fun sendOffsetsToTransaction(
         p0: MutableMap<TopicPartition, OffsetAndMetadata>?,
         p1: ConsumerGroupMetadata?,
@@ -59,6 +54,10 @@ class MockKafkaProducer<T> : Producer<Long, T> {
     override fun commitTransaction() {}
 
     override fun abortTransaction() {}
+
+    override fun registerMetricForSubscription(kafkaMetric: KafkaMetric?) {}
+
+    override fun unregisterMetricFromSubscription(kafkaMetric: KafkaMetric?) {}
 
     override fun flush() {
         _meldinger.clear()
