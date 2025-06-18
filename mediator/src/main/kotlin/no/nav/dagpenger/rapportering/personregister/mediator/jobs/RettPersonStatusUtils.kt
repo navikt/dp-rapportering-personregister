@@ -185,7 +185,7 @@ fun harPersonsynkroniseringAvvik(person: Person): Boolean {
                     }
                 }
 
-        return meldegruppe != "DAGP"
+        return meldegruppe != null && meldegruppe != "DAGP"
     }
 
     return false
