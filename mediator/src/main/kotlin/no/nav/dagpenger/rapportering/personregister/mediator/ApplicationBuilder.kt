@@ -52,6 +52,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonServi
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
@@ -216,6 +217,7 @@ internal class ApplicationBuilder(
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                     }
 
+                    MeldekortTestdataMottak(rapid)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
                     VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
                     MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
