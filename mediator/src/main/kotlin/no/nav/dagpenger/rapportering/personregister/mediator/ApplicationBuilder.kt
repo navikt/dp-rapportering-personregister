@@ -238,7 +238,7 @@ internal class ApplicationBuilder(
         slettPersonerJob.start(personRepository)
 //        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
         avvikPersonsynkroniseringJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
-        resendPaaVegneAvJob.start(personRepository, personService)
+//        resendPaaVegneAvJob.start(personRepository, personService)
     }
 }
 
