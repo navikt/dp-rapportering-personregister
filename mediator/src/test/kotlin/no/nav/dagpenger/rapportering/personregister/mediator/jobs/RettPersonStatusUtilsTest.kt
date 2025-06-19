@@ -20,6 +20,59 @@ class RettPersonStatusUtilsTest {
     val ident = "12345678903"
 
     @Test
+    fun `fjerner ikke alle Personsynk hendelser`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val person =
+            Person(ident).apply {
+                setStatus(Status.DAGPENGERBRUKER)
+                hendelser.addAll(
+                    listOf(
+                        meldepliktHendelse(dato = tidligere, status = false),
+                        personSynkroniseringHendelse(dato = nå, startDato = tidligere, referanseId = "123"),
+                        annenMeldegruppeHendelse(
+                            dato = tidligere,
+                            startDato = tidligere,
+                            referanseId = "456",
+                        ),
+                    ),
+                )
+            }
+
+        rettPersonSynkroniseringAvvik(person)
+
+        person.hendelser.size shouldBe 3
+        person.hendelser.any { it is PersonSynkroniseringHendelse } shouldBe true
+    }
+
+    @Test
+    fun `fjerner alle Personsynk hendelser`() {
+        val nå = LocalDateTime.now()
+        val tidligere = nå.minusDays(1)
+        val person =
+            Person(ident).apply {
+                setStatus(Status.DAGPENGERBRUKER)
+                hendelser.addAll(
+                    listOf(
+                        meldepliktHendelse(dato = tidligere, status = false),
+                        personSynkroniseringHendelse(dato = nå, startDato = nå, referanseId = "123"),
+                        personSynkroniseringHendelse(dato = nå, startDato = nå.minusHours(2), referanseId = "123"),
+                        annenMeldegruppeHendelse(
+                            dato = tidligere,
+                            startDato = tidligere,
+                            referanseId = "456",
+                        ),
+                    ),
+                )
+            }
+
+        rettPersonSynkroniseringAvvik(person)
+
+        person.hendelser.size shouldBe 2
+        person.hendelser.any { it is PersonSynkroniseringHendelse } shouldBe false
+    }
+
+    @Test
     fun `test personsynkronisering avvik`() {
         val nå = LocalDateTime.now()
         val tidligere = nå.minusDays(1)

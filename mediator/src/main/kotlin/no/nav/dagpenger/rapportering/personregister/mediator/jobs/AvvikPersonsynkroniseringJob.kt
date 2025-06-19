@@ -58,6 +58,7 @@ internal class AvvikPersonsynkroniseringJob(
                                 if (person != null) {
                                     if (harPersonsynkroniseringAvvik(person)) {
                                         logger.info { "Person har personsynk avvik: nåværende meldegruppe: ${person.meldegruppe}" }
+                                        rettPersonSynkroniseringAvvik(person)
                                         try {
                                             personRepository.oppdaterPerson(person)
                                         } catch (ex: Exception) {
@@ -68,7 +69,7 @@ internal class AvvikPersonsynkroniseringJob(
                                             tempPersonRepository.oppdaterPerson(
                                                 TempPerson(
                                                     ident = ident,
-                                                    status = TempPersonStatus.AVVIK,
+                                                    status = TempPersonStatus.RETTET,
                                                 ),
                                             )
                                         } catch (ex: Exception) {

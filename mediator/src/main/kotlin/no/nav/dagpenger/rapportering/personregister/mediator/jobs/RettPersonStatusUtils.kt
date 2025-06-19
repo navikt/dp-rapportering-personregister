@@ -190,3 +190,19 @@ fun harPersonsynkroniseringAvvik(person: Person): Boolean {
 
     return false
 }
+
+fun rettPersonSynkroniseringAvvik(person: Person) {
+    person.hendelser
+        .filterIsInstance<AnnenMeldegruppeHendelse>()
+        .sortedWith { a, b ->
+            when {
+                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                else -> b.dato.compareTo(a.dato)
+            }
+        }.firstOrNull()
+        ?.let { annenMeldegruppeHendelse ->
+            person.hendelser.removeIf {
+                it is PersonSynkroniseringHendelse && it.startDato > annenMeldegruppeHendelse.startDato
+            }
+        }
+}
