@@ -173,7 +173,10 @@ fun harPersonsynkroniseringAvvik(person: Person): Boolean {
                 .sortedWith { a, b ->
                     when {
                         a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
-                        else -> b.dato.compareTo(a.dato)
+                        a.dato != b.dato -> b.dato.compareTo(a.dato)
+                        a is DagpengerMeldegruppeHendelse && b is AnnenMeldegruppeHendelse -> -1
+                        b is DagpengerMeldegruppeHendelse && a is AnnenMeldegruppeHendelse -> 1
+                        else -> 0
                     }
                 }.firstOrNull()
 

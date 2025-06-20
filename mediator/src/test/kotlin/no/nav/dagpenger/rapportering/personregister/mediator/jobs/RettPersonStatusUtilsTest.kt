@@ -81,11 +81,11 @@ class RettPersonStatusUtilsTest {
                 setStatus(Status.DAGPENGERBRUKER)
                 hendelser.addAll(
                     listOf(
-                        meldepliktHendelse(dato = tidligere, status = false),
-                        personSynkroniseringHendelse(dato = nå, referanseId = "123"),
+                        dagpengerMeldegruppeHendelse(dato = tidligere, startDato = nå),
+                        personSynkroniseringHendelse(dato = nå, startDato = nå, referanseId = "123"),
                         annenMeldegruppeHendelse(
-                            dato = tidligere,
-                            startDato = tidligere,
+                            dato = nå,
+                            startDato = nå,
                             referanseId = "456",
                         ),
                     ),
