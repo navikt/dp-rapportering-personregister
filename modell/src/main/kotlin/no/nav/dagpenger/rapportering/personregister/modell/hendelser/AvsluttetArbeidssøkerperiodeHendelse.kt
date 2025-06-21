@@ -15,6 +15,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
 ) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
     override fun behandle(person: Person) {
         person.hendelser.add(this)
+
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
             ?.let { it.avsluttet = avsluttet }
