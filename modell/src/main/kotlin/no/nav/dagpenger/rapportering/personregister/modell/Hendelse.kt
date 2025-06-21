@@ -2,17 +2,8 @@ package no.nav.dagpenger.rapportering.personregister.modell
 
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Arena
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
-
-interface Hendelse {
-    val ident: String
-    val dato: LocalDateTime
-    val startDato: LocalDateTime
-    val kilde: Kildesystem
-    val referanseId: String
-
-    fun behandle(person: Person)
-}
 
 data class SøknadHendelse(
     override val ident: String,

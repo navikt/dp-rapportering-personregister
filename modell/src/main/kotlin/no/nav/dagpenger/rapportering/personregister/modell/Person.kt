@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.modell
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
 import java.util.UUID
 

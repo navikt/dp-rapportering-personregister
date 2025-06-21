@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.util.UUID
 
 interface PersonRepository {
