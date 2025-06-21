@@ -40,56 +40,6 @@ data class VedtakHendelse(
     }
 }
 
-data class DagpengerMeldegruppeHendelse(
-    override val ident: String,
-    override val dato: LocalDateTime,
-    override val referanseId: String,
-    override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
-    val meldegruppeKode: String,
-    val harMeldtSeg: Boolean,
-    override val kilde: Kildesystem = Arena,
-) : Hendelse {
-    override fun behandle(person: Person) {
-        person.setMeldegruppe(meldegruppeKode)
-
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            .takeIf { person.oppfyllerKrav }
-            ?.let {
-                person.setStatus(it)
-                person.sendOvertakelsesmelding()
-            }
-    }
-}
-
-data class AnnenMeldegruppeHendelse(
-    override val ident: String,
-    override val dato: LocalDateTime,
-    override val referanseId: String,
-    override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
-    val meldegruppeKode: String,
-    val harMeldtSeg: Boolean,
-) : Hendelse {
-    override val kilde: Kildesystem = Arena
-
-    override fun behandle(person: Person) {
-        person.setMeldegruppe(meldegruppeKode)
-
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            .takeIf { !person.oppfyllerKrav }
-            ?.let {
-                person.setStatus(it)
-                person.arbeidssøkerperioder.gjeldende
-                    ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
-            }
-    }
-}
-
 data class MeldepliktHendelse(
     override val ident: String,
     override val dato: LocalDateTime,
@@ -130,12 +80,4 @@ data class PersonSynkroniseringHendelse(
         person.setMeldeplikt(true)
         person.setMeldegruppe("DAGP")
     }
-}
-
-enum class Kildesystem {
-    Søknad,
-    Arena,
-    Arbeidssokerregisteret,
-    Dagpenger,
-    PJ,
 }

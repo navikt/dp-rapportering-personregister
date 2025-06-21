@@ -26,10 +26,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
-import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -39,6 +37,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
