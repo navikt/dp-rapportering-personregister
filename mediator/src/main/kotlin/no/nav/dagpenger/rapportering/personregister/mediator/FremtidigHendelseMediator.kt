@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 
 class FremtidigHendelseMediator(
     private val personRepository: PersonRepository,

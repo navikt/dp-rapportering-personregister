@@ -2,17 +2,8 @@ package no.nav.dagpenger.rapportering.personregister.modell
 
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Arena
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
-
-interface Hendelse {
-    val ident: String
-    val dato: LocalDateTime
-    val startDato: LocalDateTime
-    val kilde: Kildesystem
-    val referanseId: String
-
-    fun behandle(person: Person)
-}
 
 data class SøknadHendelse(
     override val ident: String,
@@ -23,6 +14,7 @@ data class SøknadHendelse(
     override val kilde: Kildesystem = Kildesystem.Søknad
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person
             .vurderNyStatus()
             .takeIf { it != person.status }
@@ -43,59 +35,10 @@ data class VedtakHendelse(
     override val kilde: Kildesystem = Kildesystem.PJ
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setAnsvarligSystem(AnsvarligSystem.DP)
         person.sendStartMeldingTilMeldekortregister()
         // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
-    }
-}
-
-data class DagpengerMeldegruppeHendelse(
-    override val ident: String,
-    override val dato: LocalDateTime,
-    override val referanseId: String,
-    override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
-    val meldegruppeKode: String,
-    val harMeldtSeg: Boolean,
-    override val kilde: Kildesystem = Arena,
-) : Hendelse {
-    override fun behandle(person: Person) {
-        person.setMeldegruppe(meldegruppeKode)
-
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            .takeIf { person.oppfyllerKrav }
-            ?.let {
-                person.setStatus(it)
-                person.sendOvertakelsesmelding()
-            }
-    }
-}
-
-data class AnnenMeldegruppeHendelse(
-    override val ident: String,
-    override val dato: LocalDateTime,
-    override val referanseId: String,
-    override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
-    val meldegruppeKode: String,
-    val harMeldtSeg: Boolean,
-) : Hendelse {
-    override val kilde: Kildesystem = Arena
-
-    override fun behandle(person: Person) {
-        person.setMeldegruppe(meldegruppeKode)
-
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            .takeIf { !person.oppfyllerKrav }
-            ?.let {
-                person.setStatus(it)
-                person.arbeidssøkerperioder.gjeldende
-                    ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
-            }
     }
 }
 
@@ -110,6 +53,7 @@ data class MeldepliktHendelse(
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setMeldeplikt(statusMeldeplikt)
 
         person
@@ -136,15 +80,8 @@ data class PersonSynkroniseringHendelse(
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setMeldeplikt(true)
         person.setMeldegruppe("DAGP")
     }
-}
-
-enum class Kildesystem {
-    Søknad,
-    Arena,
-    Arbeidssokerregisteret,
-    Dagpenger,
-    PJ,
 }

@@ -5,6 +5,8 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -13,6 +15,7 @@ import java.util.UUID
 class PersonTest {
     private val ident = "12345678901"
     private val nå = LocalDateTime.now()
+    private val senere = nå.plusDays(1)
     private val tidligere = nå.minusDays(1)
     private val periodeId = UUID.randomUUID()
 
@@ -84,8 +87,8 @@ class PersonTest {
         fun `behandler AnnenMeldegruppeHendelse for bruker som vi allerede har tatt ansvar for arbeidssøkerbekreftelse`() =
             arbeidssøker(overtattBekreftelse = true) {
                 behandle(meldepliktHendelse(status = true))
-                behandle(dagpengerMeldegruppeHendelse())
-                behandle(annenMeldegruppeHendelse())
+                behandle(dagpengerMeldegruppeHendelse(startDato = nå))
+                behandle(annenMeldegruppeHendelse(startDato = senere))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
@@ -132,9 +135,9 @@ class PersonTest {
         fun `behandler MeldepliktHendelse for Dagpengerbruker som ikke lenger oppfyller kravet `() =
             arbeidssøker {
                 behandle(meldepliktHendelse(status = true))
-                behandle(dagpengerMeldegruppeHendelse())
+                behandle(dagpengerMeldegruppeHendelse(startDato = nå))
 
-                behandle(annenMeldegruppeHendelse())
+                behandle(annenMeldegruppeHendelse(startDato = senere))
                 behandle(meldepliktHendelse(status = true))
 
                 status shouldBe IKKE_DAGPENGERBRUKER
@@ -210,16 +213,6 @@ class PersonTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = VedtakHendelse(ident, dato, dato, referanseId)
-
-    private fun dagpengerMeldegruppeHendelse(
-        dato: LocalDateTime = nå,
-        referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "DAGP", true)
-
-    private fun annenMeldegruppeHendelse(
-        dato: LocalDateTime = nå,
-        referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS", true)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,

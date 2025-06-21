@@ -26,10 +26,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
-import no.nav.dagpenger.rapportering.personregister.modell.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.dagpenger.rapportering.personregister.modell.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -39,10 +37,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGER
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
-import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
-import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
@@ -231,7 +229,7 @@ class PersonMediatorTest {
             every { personObserver.overtattArbeidssøkerbekreftelse(any(), periodeId) } answers {
                 person.merkPeriodeSomOvertatt(periodeId)
             }
-            personMediator.behandle(dagpengerMeldegruppeHendelse())
+            personMediator.behandle(dagpengerMeldegruppeHendelse(startDato = nå))
 
             with(person) {
                 status shouldBe DAGPENGERBRUKER
@@ -244,7 +242,7 @@ class PersonMediatorTest {
             every { personObserver.frasagtArbeidssøkerbekreftelse(any(), periodeId) } answers {
                 person2.merkPeriodeSomIkkeOvertatt(periodeId)
             }
-            personMediator.behandle(annenMeldegruppeHendelse())
+            personMediator.behandle(annenMeldegruppeHendelse(startDato = nå.plusDays(1)))
             with(person2) {
                 status shouldBe IKKE_DAGPENGERBRUKER
                 runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
@@ -423,15 +421,17 @@ class PersonMediatorTest {
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "DAGP", harMeldtSeg = true)
+    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = startDato, sluttDato = sluttDato, "DAGP", harMeldtSeg = true)
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "ARBS", harMeldtSeg = true)
+    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = startDato, sluttDato = sluttDato, "ARBS", harMeldtSeg = true)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,

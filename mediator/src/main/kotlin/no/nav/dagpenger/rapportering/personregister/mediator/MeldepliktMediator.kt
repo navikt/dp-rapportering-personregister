@@ -8,9 +8,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockin
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
-import no.nav.dagpenger.rapportering.personregister.modell.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
