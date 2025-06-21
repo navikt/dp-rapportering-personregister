@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.jobs
+package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Person

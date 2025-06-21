@@ -2,6 +2,11 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.beregnMeldegruppeStatus
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.beregnMeldepliktStatus
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.beregnStatus
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.harPersonsynkroniseringAvvik
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.rettPersonSynkroniseringAvvik
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse

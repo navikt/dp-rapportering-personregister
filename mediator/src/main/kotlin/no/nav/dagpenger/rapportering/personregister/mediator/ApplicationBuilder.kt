@@ -26,16 +26,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnec
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvsluttetPerioderJob
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvvikPersonsynkroniseringJob
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AvvikStatusJob
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ResendPåVegneAvMelding
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.RettPersonStatusJob
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.SendPaaVegneAvForAlleJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.SlettPersonerJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.AvvikPersonsynkroniseringJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.AvvikStatusJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
@@ -98,7 +94,6 @@ internal class ApplicationBuilder(
             .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
@@ -178,14 +173,13 @@ internal class ApplicationBuilder(
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val slettPersonerJob = SlettPersonerJob()
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
-    private val rettPersonStatusJob = RettPersonStatusJob()
-    private val sendPaaVegneAvForAlleJob = SendPaaVegneAvForAlleJob()
     private val avvikStatusJob = AvvikStatusJob()
     private val avvikPersonsynkroniseringJob = AvvikPersonsynkroniseringJob()
-    private val avsluttetPerioderJob = AvsluttetPerioderJob()
+
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
@@ -236,9 +230,9 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
         slettPersonerJob.start(personRepository)
-        avvikStatusJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
+        avvikStatusJob.start(personRepository, listOf(personObserverKafka))
+        avvikPersonsynkroniseringJob.start(personRepository, listOf(personObserverKafka))
         resendPaaVegneAvJob.start(personRepository, personService)
-//        avvikPersonsynkroniseringJob.start(personRepository, tempPersonRepository, listOf(personObserverKafka))
     }
 }
 

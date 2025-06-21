@@ -1,9 +1,10 @@
-package no.nav.dagpenger.rapportering.personregister.mediator.jobs
+package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
 import io.ktor.client.HttpClient
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
@@ -17,7 +18,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 internal class ResendPåVegneAvMelding(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
-    private val tidspunktForKjoring = LocalTime.now().plusMinutes(5)
+    private val tidspunktForKjoring = LocalTime.now().plusMinutes(40)
     private val nå = ZonedDateTime.now()
     private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring)
     private val millisekunderTilNesteKjoring =
