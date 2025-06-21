@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
-import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Arena
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
@@ -39,35 +38,6 @@ data class VedtakHendelse(
         person.setAnsvarligSystem(AnsvarligSystem.DP)
         person.sendStartMeldingTilMeldekortregister()
         // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
-    }
-}
-
-data class MeldepliktHendelse(
-    override val ident: String,
-    override val dato: LocalDateTime,
-    override val referanseId: String,
-    override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
-    val statusMeldeplikt: Boolean,
-    val harMeldtSeg: Boolean,
-    override val kilde: Kildesystem = Arena,
-) : Hendelse {
-    override fun behandle(person: Person) {
-        person.hendelser.add(this)
-        person.setMeldeplikt(statusMeldeplikt)
-
-        person
-            .vurderNyStatus()
-            .takeIf { it != person.status }
-            ?.let {
-                person.setStatus(it)
-                if (person.oppfyllerKrav) {
-                    person.sendOvertakelsesmelding()
-                } else {
-                    person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
-                }
-            }
     }
 }
 

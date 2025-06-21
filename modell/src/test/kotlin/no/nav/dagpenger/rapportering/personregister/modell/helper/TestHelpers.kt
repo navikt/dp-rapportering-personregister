@@ -4,6 +4,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -44,3 +45,9 @@ fun annenMeldegruppeHendelse(
     startDato: LocalDateTime = nå,
     referanseId: String = "123",
 ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "ARBS", true)
+
+fun meldepliktHendelse(
+    dato: LocalDateTime = nå,
+    startDato: LocalDateTime = nå,
+    status: Boolean = false,
+) = MeldepliktHendelse(ident, dato, "123", startDato, null, status, true)

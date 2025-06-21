@@ -12,7 +12,7 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
-import no.nav.dagpenger.rapportering.personregister.modell.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
