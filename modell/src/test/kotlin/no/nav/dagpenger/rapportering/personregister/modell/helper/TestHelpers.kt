@@ -3,13 +3,16 @@ package no.nav.dagpenger.rapportering.personregister.modell.helper
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
-private val ident = "12345678901"
+val ident = "12345678901"
 val nå: LocalDateTime = LocalDateTime.now()
+val tidligere: LocalDateTime = nå.minusDays(1)
 val periodeId: UUID = UUID.randomUUID()
 
 fun testPerson(block: Person.() -> Unit) {
@@ -51,3 +54,11 @@ fun meldepliktHendelse(
     startDato: LocalDateTime = nå,
     status: Boolean = false,
 ) = MeldepliktHendelse(ident, dato, "123", startDato, null, status, true)
+
+fun startetArbeidssøkerperiodeHendelse(
+    periodeId: UUID = UUID.randomUUID(),
+    ident: String = "12345678901",
+    startet: LocalDateTime = tidligere,
+) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, startet)
+
+fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå)
