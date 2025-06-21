@@ -36,6 +36,7 @@ data class StartetArbeidssøkerperiodeHendelse(
     val startet: LocalDateTime,
 ) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.arbeidssøkerperioder
             .none { it.periodeId == periodeId }
             .takeIf { it }
@@ -85,6 +86,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     val avsluttet: LocalDateTime,
 ) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
             ?.let { it.avsluttet = avsluttet }

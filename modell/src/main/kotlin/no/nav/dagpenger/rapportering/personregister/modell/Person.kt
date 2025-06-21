@@ -84,7 +84,6 @@ data class Person(
     }
 
     fun behandle(hendelse: Hendelse) {
-        hendelser.add(hendelse)
         hendelse.behandle(this)
     }
 }

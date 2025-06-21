@@ -14,6 +14,7 @@ data class SøknadHendelse(
     override val kilde: Kildesystem = Kildesystem.Søknad
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person
             .vurderNyStatus()
             .takeIf { it != person.status }
@@ -34,6 +35,7 @@ data class VedtakHendelse(
     override val kilde: Kildesystem = Kildesystem.PJ
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setAnsvarligSystem(AnsvarligSystem.DP)
         person.sendStartMeldingTilMeldekortregister()
         // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
@@ -51,6 +53,7 @@ data class MeldepliktHendelse(
     override val kilde: Kildesystem = Arena,
 ) : Hendelse {
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setMeldeplikt(statusMeldeplikt)
 
         person
@@ -77,6 +80,7 @@ data class PersonSynkroniseringHendelse(
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {
+        person.hendelser.add(this)
         person.setMeldeplikt(true)
         person.setMeldegruppe("DAGP")
     }
