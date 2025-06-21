@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
@@ -114,10 +113,4 @@ class InMemoryPersonRepository : PersonRepository {
             nyPerson.setMeldeplikt(this.meldeplikt)
             nyPerson.hendelser.addAll(this.hendelser)
         }
-
-    fun <T> TemporalCollection<T>.deepCopy(): TemporalCollection<T> {
-        val newCollection = TemporalCollection<T>()
-        this.getAll().forEach { (key, value) -> newCollection.put(key, value) }
-        return newCollection
-    }
 }

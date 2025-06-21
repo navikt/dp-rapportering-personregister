@@ -239,10 +239,6 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
 }
 
-infix fun PersonObserver.skalIkkeHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 0) { sendFrasigelsesmelding(person) }
-}
-
 infix fun PersonObserver.skalHaSendtStartMeldingFor(person: Person) {
     verify(exactly = 1) { sendStartMeldingTilMeldekortregister(person) }
 }

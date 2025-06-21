@@ -15,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
@@ -99,12 +98,6 @@ class SendPaaVegneAvForAlleJobTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
     ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "DAGP", true)
-
-    private fun annenMeldegruppeHendelse(
-        ident: String,
-        dato: LocalDateTime = nå,
-        referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, dato.plusDays(1), null, "ARBS", true)
 
     private fun meldepliktHendelse(
         ident: String,

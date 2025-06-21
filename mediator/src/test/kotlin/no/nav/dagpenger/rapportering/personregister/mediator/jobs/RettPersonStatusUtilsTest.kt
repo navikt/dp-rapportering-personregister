@@ -334,7 +334,6 @@ class RettPersonStatusUtilsTest {
         fun `rekkefølge spiller ingen rolle`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val p = personSynkroniseringHendelse(dato = tidligere, referanseId = "123")
             val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
             val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå.plusDays(1), null, "ARBS", true)
             val person =

@@ -508,7 +508,6 @@ class BeslutningObserver(
         person: Person,
         periodeId: UUID,
     ) {
-        val periodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
         val beslutning =
             ArbeidssøkerBeslutning(
                 person.ident,
