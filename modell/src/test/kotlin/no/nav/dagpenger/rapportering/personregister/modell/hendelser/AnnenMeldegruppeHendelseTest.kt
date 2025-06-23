@@ -43,12 +43,12 @@ class AnnenMeldegruppeHendelseTest {
         }
 
     @Test
-    fun `ignorerer hendelse med samme startdato som eksisterende`() =
+    fun `behandler hendelse med samme startdato som eksisterende`() =
         testPerson {
             behandle(annenMeldegruppeHendelse(startDato = nå))
             behandle(dagpengerMeldegruppeHendelse(startDato = nå))
 
-            meldegruppe shouldBe "ARBS"
+            meldegruppe shouldBe "DAGP"
         }
 
     @Test

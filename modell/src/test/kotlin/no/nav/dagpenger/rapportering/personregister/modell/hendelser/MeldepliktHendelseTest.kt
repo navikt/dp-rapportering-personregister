@@ -42,12 +42,12 @@ class MeldepliktHendelseTest {
         }
 
     @Test
-    fun `ignorerer hendelse med samme startdato som eksisterende`() =
+    fun `behandler hendelse med samme startdato som eksisterende`() =
         testPerson {
             behandle(meldepliktHendelse(startDato = nå, status = true))
             behandle(meldepliktHendelse(startDato = nå, status = false))
 
-            meldeplikt shouldBe true
+            meldeplikt shouldBe false
         }
 
     @Test

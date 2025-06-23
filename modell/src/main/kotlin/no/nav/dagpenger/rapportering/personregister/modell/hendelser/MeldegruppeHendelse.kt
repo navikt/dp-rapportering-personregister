@@ -9,5 +9,5 @@ fun MeldegruppeHendelse.gjelderTilbakeITid(person: Person) =
         .filterIsInstance<MeldegruppeHendelse>()
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldegruppeHendelse ->
-            !this.startDato.isAfter(sisteMeldegruppeHendelse.startDato)
+            this.startDato.isBefore(sisteMeldegruppeHendelse.startDato)
         } ?: false
