@@ -64,16 +64,23 @@ fun beregnMeldegruppeStatus(person: Person) =
 
 fun beregnStatus(person: Person): Status {
     if (!person.erArbeidssøker) {
+        sikkerLogg.info { "Person med ident ${person.ident} er ikke arbeidssøker, setter status til IKKE_DAGPENGERBRUKER" }
         return Status.IKKE_DAGPENGERBRUKER
     }
 
     if (oppfyllerKravVedSynkronisering(person)) {
+        sikkerLogg.info { "Person med ident ${person.ident} oppfyller krav ved synkronisering, setter status til DAGPENGERBRUKER" }
         return Status.DAGPENGERBRUKER
     }
 
     val beregnetMeldeplikt = beregnMeldepliktStatus(person)
 
     val beregnetMeldegruppe = beregnMeldegruppeStatus(person)
+
+    sikkerLogg.info {
+        "Person med ident ${person.ident} har beregnet meldeplikt: $beregnetMeldeplikt, " +
+            "beregnet meldegruppe: $beregnetMeldegruppe, arbeidssøker: ${person.erArbeidssøker}"
+    }
 
     val oppfyllerKrav = beregnetMeldeplikt && beregnetMeldegruppe == "DAGP" && person.erArbeidssøker
     val nyStatus = if (oppfyllerKrav) Status.DAGPENGERBRUKER else Status.IKKE_DAGPENGERBRUKER

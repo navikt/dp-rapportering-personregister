@@ -13,6 +13,7 @@ import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.hours
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class AvvikStatusJob(
     private val httpClient: HttpClient = createHttpClient(),
@@ -55,7 +56,10 @@ internal class AvvikStatusJob(
                             if (person != null) {
                                 val nyStatus = beregnStatus(person)
                                 if (nyStatus != person.status) {
-                                    logger.info { "Person har statusavvik: nåværende status: ${person.status}, beregnet: $nyStatus" }
+                                    sikkerLogg.warn {
+                                        "Person har statusavvik: ident: ${person.ident} nåværende status: ${person.status}, " +
+                                            "beregnet: $nyStatus"
+                                    }
                                     rettAvvik(person, nyStatus)
                                     antallrettedePersoner++
                                     try {
