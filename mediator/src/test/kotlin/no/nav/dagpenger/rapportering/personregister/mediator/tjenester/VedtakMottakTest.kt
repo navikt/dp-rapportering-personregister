@@ -43,7 +43,7 @@ class VedtakMottakTest {
             {
               "@event_name": "vedtak_fattet",
               "behandletHendelse": {
-                "type": "Meldekort"
+                "type": "Søknad"
               },
               "behandlingId": "$behandlingId",
               "ident": "$ident",

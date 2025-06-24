@@ -31,7 +31,7 @@ class VedtakMottak(
             .apply {
                 precondition {
                     it.requireValue("@event_name", "vedtak_fattet")
-                    it.requireValue("behandletHendelse.type", "Soknad")
+                    it.requireValue("behandletHendelse.type", "Søknad")
                 }
                 validate { it.requireKey("behandlingId", "ident", "virkningsdato") }
             }.register(this)
