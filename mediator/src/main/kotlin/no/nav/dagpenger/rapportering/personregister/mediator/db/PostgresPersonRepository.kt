@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringH
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
@@ -544,6 +545,7 @@ class PostgresPersonRepository(
             is StartetArbeidssøkerperiodeHendelse -> this.startet
             is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
             is PersonSynkroniseringHendelse -> this.startDato
+            is VedtakHendelse -> this.startDato
             is SøknadHendelse -> null
             else -> null
         }
@@ -710,6 +712,14 @@ class PostgresPersonRepository(
                     dato = dato,
                     referanseId = referanseId,
                     startDato = dato,
+                )
+
+            "VedtakHendelse" ->
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = startDato ?: dato,
+                    referanseId = referanseId,
                 )
 
             else -> throw IllegalArgumentException("Unknown type: $type")

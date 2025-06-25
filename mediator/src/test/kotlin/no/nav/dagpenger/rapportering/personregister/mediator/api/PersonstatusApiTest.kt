@@ -26,6 +26,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -140,6 +141,28 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.ARENA.value
             }
 
+            // Får VedtakHendelse
+            personRepository
+                .hentPerson(ident)
+                ?.also { person ->
+                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref"))
+                    personRepository.oppdaterPerson(person)
+                }
+
+            with(
+                client.get("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+                val obj = defaultObjectMapper.readTree(bodyAsText())
+                obj["ident"].asText() shouldBe ident
+                obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
+                obj["overtattBekreftelse"].asBoolean() shouldBe false
+                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
+            }
+
+            // Oppdaterer Status og AnsvarligSystem
             personRepository.oppdaterPerson(
                 Person(
                     ident,
@@ -153,6 +176,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                             true,
                         ),
                     ),
+                    2,
                 ).also { it.setAnsvarligSystem(AnsvarligSystem.DP) },
             )
 

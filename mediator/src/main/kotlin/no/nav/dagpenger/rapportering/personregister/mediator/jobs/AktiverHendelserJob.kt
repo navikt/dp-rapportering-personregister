@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
@@ -72,6 +73,7 @@ internal class AktiverHendelserJob(
                 is DagpengerMeldegruppeHendelse -> personMediator.behandle(it)
                 is AnnenMeldegruppeHendelse -> personMediator.behandle(it)
                 is MeldepliktHendelse -> meldepliktMediator.behandle(it)
+                is VedtakHendelse -> personMediator.behandle(it)
                 else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
             }
             personRepository.slettFremtidigHendelse(it.referanseId)
