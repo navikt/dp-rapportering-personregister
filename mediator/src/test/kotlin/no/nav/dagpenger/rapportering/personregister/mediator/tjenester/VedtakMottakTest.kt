@@ -7,6 +7,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.vedtakMetrikker
@@ -57,5 +58,29 @@ class VedtakMottakTest {
         hendelseSlot.captured.dato.toLocalDate() shouldBe dato
         hendelseSlot.captured.startDato shouldBe dato.atStartOfDay()
         hendelseSlot.captured.referanseId shouldBe behandlingId
+    }
+
+    @Test
+    fun `skal hoppe over vedtak med feil ident`() {
+        val ident = "12345"
+        val behandlingId = "123e4567-e89b-12d3-a456-426614174000"
+        val dato = LocalDate.now()
+
+        val vedtakFattetMelding =
+            """
+            {
+              "@event_name": "vedtak_fattet",
+              "behandletHendelse": {
+                "type": "Søknad"
+              },
+              "behandlingId": "$behandlingId",
+              "ident": "$ident",
+              "virkningsdato": "$dato" 
+            }
+            """.trimIndent()
+
+        testRapid.sendTestMessage(vedtakFattetMelding)
+
+        verify(exactly = 0) { personMediator.behandle(any<VedtakHendelse>()) }
     }
 }

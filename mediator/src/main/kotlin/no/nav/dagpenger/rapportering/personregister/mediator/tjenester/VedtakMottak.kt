@@ -56,6 +56,11 @@ class VedtakMottak(
             val ident = packet["ident"].asText()
             val virkningsdato = packet["virkningsdato"].asLocalDate()
 
+            if (!ident.matches(Regex("[0-9]{11}"))) {
+                logger.error("Person-ident må ha 11 sifre")
+                return
+            }
+
             val vedtakHendelse =
                 VedtakHendelse(
                     ident,

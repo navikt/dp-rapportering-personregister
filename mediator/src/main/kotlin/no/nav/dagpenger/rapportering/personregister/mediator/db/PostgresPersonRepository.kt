@@ -513,7 +513,7 @@ class PostgresPersonRepository(
         tx.run(
             queryOf(
                 """
-                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
