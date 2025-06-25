@@ -30,6 +30,8 @@ class PersonObserverMeldekortregister(
                     "handling" to "START",
                 ),
             )
+
+        sikkerlogg.info { "Sender Start-elding til Meldekortregister: ${message.toJson()}" }
         getRapidsConnection().publish(person.ident, message.toJson())
     }
 }
