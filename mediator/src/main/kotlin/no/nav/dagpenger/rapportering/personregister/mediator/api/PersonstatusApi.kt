@@ -84,20 +84,26 @@ internal fun Application.personstatusApi(
                 get {
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
-                    personService
-                        .hentPerson(ident)
-                        ?.also { person ->
-                            call.respond(
-                                HttpStatusCode.OK,
-                                PersonResponse(
-                                    ident = person.ident,
-                                    status = StatusResponse.valueOf(person.status.name),
-                                    overtattBekreftelse = person.overtattBekreftelse,
-                                    ansvarligSystem = person.ansvarligSystem?.let { AnsvarligSystemResponse.valueOf(it.name) },
-                                ),
-                            )
-                        }
-                        ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
+
+                    try {
+                        personService
+                            .hentPerson(ident)
+                            ?.also { person ->
+                                call.respond(
+                                    HttpStatusCode.OK,
+                                    PersonResponse(
+                                        ident = person.ident,
+                                        status = StatusResponse.valueOf(person.status.name),
+                                        overtattBekreftelse = person.overtattBekreftelse,
+                                        ansvarligSystem = person.ansvarligSystem?.let { AnsvarligSystemResponse.valueOf(it.name) },
+                                    ),
+                                )
+                            }
+                            ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
+                    } catch (e: Exception) {
+                        logger.error(e) { "Kunne ikke hente personstatus" }
+                        call.respond(HttpStatusCode.InternalServerError, "Kunne ikke hente personstatus")
+                    }
                 }
             }
         }

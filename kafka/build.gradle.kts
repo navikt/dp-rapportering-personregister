@@ -27,7 +27,7 @@ dependencies {
     paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:1.25.03.26.32-1")
     mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.13764081353.1-2")
 
-    testImplementation(platform("org.junit:junit-bom:5.13.1"))
+    testImplementation(platform("org.junit:junit-bom:5.13.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
