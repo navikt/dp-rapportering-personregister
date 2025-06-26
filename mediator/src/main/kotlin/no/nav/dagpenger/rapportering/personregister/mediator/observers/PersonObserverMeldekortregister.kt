@@ -6,7 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class PersonObserverMeldekortregister(
     private val personRepository: PersonRepository,
@@ -16,7 +16,10 @@ class PersonObserverMeldekortregister(
         private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
-    override fun sendStartMeldingTilMeldekortregister(person: Person) {
+    override fun sendStartMeldingTilMeldekortregister(
+        person: Person,
+        startDato: LocalDateTime,
+    ) {
         logger.info("Sender Start-melding til Meldekortregister for person")
         sikkerlogg.info("Sender Start-melding til Meldekortregister for person ${person.ident}")
 
@@ -26,7 +29,7 @@ class PersonObserverMeldekortregister(
                 mapOf(
                     "personId" to (personRepository.hentPersonId(person.ident) ?: 0),
                     "ident" to person.ident,
-                    "dato" to LocalDate.now(),
+                    "dato" to startDato,
                     "handling" to "START",
                 ),
             )

@@ -168,12 +168,12 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
     )
 }
 
-fun Person.sendStartMeldingTilMeldekortregister() {
+fun Person.sendStartMeldingTilMeldekortregister(startDato: LocalDateTime) {
     logger.info("Sender Start-melding til Meldekortregister")
 
     try {
         logger.info("Antall observere: ${observers.size}")
-        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this) }
+        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, startDato) }
         logger.info("Sendte Start-melding på observere uten feil")
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }

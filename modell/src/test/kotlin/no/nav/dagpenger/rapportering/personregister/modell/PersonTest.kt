@@ -57,7 +57,7 @@ class PersonTest {
                 behandle(vedtakHendelse())
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
-                arbeidssøkerperiodeObserver skalHaSendtStartMeldingFor this
+                this skalHaSendtStartMeldingFor nå
             }
     }
 
@@ -239,6 +239,6 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
 }
 
-infix fun PersonObserver.skalHaSendtStartMeldingFor(person: Person) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(person) }
+infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato) }
 }

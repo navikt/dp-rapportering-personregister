@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 interface PersonObserver {
@@ -23,5 +24,8 @@ interface PersonObserver {
     ) {
     }
 
-    fun sendStartMeldingTilMeldekortregister(person: Person) {}
+    fun sendStartMeldingTilMeldekortregister(
+        person: Person,
+        startDato: LocalDateTime,
+    ) {}
 }

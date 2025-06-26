@@ -1,6 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.observers
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -11,7 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class PersonObserverMeldekortregisterTest {
     @Test
@@ -23,13 +23,14 @@ class PersonObserverMeldekortregisterTest {
         val personId = 1234L
         val ident = "12345678910"
         val person = Person(ident)
+        val startDato = LocalDateTime.now().minusDays(1)
 
         val personRepository = mockk<PersonRepository>(relaxed = true)
         every { personRepository.hentPersonId(eq(ident)) } returns personId
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -37,7 +38,7 @@ class PersonObserverMeldekortregisterTest {
         message["@event_name"].asText() shouldBe "meldekortoppretting"
         message["personId"].asLong() shouldBe personId
         message["ident"].asText() shouldBe ident
-        message["dato"].asLocalDate() shouldBe LocalDate.now()
+        message["dato"].asLocalDateTime() shouldBe startDato
         message["handling"].asText() shouldBe "START"
     }
 }
