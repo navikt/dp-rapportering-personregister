@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -14,11 +15,14 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -33,6 +37,7 @@ data class IdListRequest(
 internal fun Application.personstatusApi(
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
+    meldegruppeendringMetrikker: MeldegruppeendringMetrikker,
     personService: PersonService,
 ) {
     routing {
@@ -63,20 +68,42 @@ internal fun Application.personstatusApi(
                     logger.info { "POST /personstatus" }
                     val ident = call.ident()
 
-                    val rawText = call.receiveText()
-                    val dateText = rawText.trim('"')
-                    val fraDato = LocalDate.parse(dateText).atStartOfDay()
+                    var meldegruppekode = ""
+                    var datoFra = LocalDate.now()
+                    try {
+                        val json = defaultObjectMapper.readTree(call.receiveText())
+                        meldegruppekode = json["meldegruppekode"]?.asText() ?: ""
+                        datoFra = json["datoFra"]?.asLocalDate() ?: LocalDate.now()
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Kunne ikke lese request ved POST /personstatus. Gammel format?" }
+                    }
 
-                    personMediator.behandle(
-                        PersonSynkroniseringHendelse(
-                            ident = ident,
-                            dato = LocalDateTime.now(),
-                            startDato = LocalDateTime.now(),
-                            referanseId = UUID.randomUUID().toString(),
-                        ),
-                    )
+                    if (meldegruppekode == "ATTF" || meldegruppekode == "INDIV") {
+                        personMediator.behandle(
+                            AnnenMeldegruppeHendelse(
+                                ident = ident,
+                                dato = LocalDateTime.now(),
+                                referanseId = UUID.randomUUID().toString(),
+                                startDato = datoFra.atStartOfDay(),
+                                sluttDato = null,
+                                meldegruppeKode = meldegruppekode,
+                                harMeldtSeg = true,
+                            ),
+                        )
 
-                    synkroniserPersonMetrikker.personSynkronisert.increment()
+                        meldegruppeendringMetrikker.annenMeldegruppeMottatt.increment()
+                    } else {
+                        personMediator.behandle(
+                            PersonSynkroniseringHendelse(
+                                ident = ident,
+                                dato = LocalDateTime.now(),
+                                startDato = LocalDateTime.now(),
+                                referanseId = UUID.randomUUID().toString(),
+                            ),
+                        )
+
+                        synkroniserPersonMetrikker.personSynkronisert.increment()
+                    }
 
                     call.respond(HttpStatusCode.OK)
                 }

@@ -204,7 +204,7 @@ internal class ApplicationBuilder(
                     with(engine.application) {
                         pluginConfiguration(meterRegistry, kafkaContext)
                         internalApi(meterRegistry)
-                        personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                        personstatusApi(personMediator, synkroniserPersonMetrikker, meldegruppeendringMetrikker, personService)
                     }
 
                     MeldekortTestdataMottak(rapid)
