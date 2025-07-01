@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
-import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -21,10 +20,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -37,7 +35,6 @@ data class IdListRequest(
 internal fun Application.personstatusApi(
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
-    meldegruppeendringMetrikker: MeldegruppeendringMetrikker,
     personService: PersonService,
 ) {
     routing {
@@ -68,30 +65,23 @@ internal fun Application.personstatusApi(
                     logger.info { "POST /personstatus" }
                     val ident = call.ident()
 
-                    var meldegruppekode = ""
-                    var datoFra = LocalDate.now()
+                    var dagpengerbruker: Boolean? = null
                     try {
                         val json = defaultObjectMapper.readTree(call.receiveText())
-                        meldegruppekode = json["meldegruppekode"]?.asText() ?: ""
-                        datoFra = json["datoFra"]?.asLocalDate() ?: LocalDate.now()
+                        dagpengerbruker = json["dagpengerbruker"]?.asBoolean()
                     } catch (e: Exception) {
                         logger.warn(e) { "Kunne ikke lese request ved POST /personstatus. Gammel format?" }
                     }
 
-                    if (meldegruppekode == "ATTF" || meldegruppekode == "INDIV") {
+                    if (dagpengerbruker == false) {
                         personMediator.behandle(
-                            AnnenMeldegruppeHendelse(
+                            PersonIkkeDagpengerSynkroniseringHendelse(
                                 ident = ident,
                                 dato = LocalDateTime.now(),
+                                startDato = LocalDateTime.now(),
                                 referanseId = UUID.randomUUID().toString(),
-                                startDato = datoFra.atStartOfDay(),
-                                sluttDato = null,
-                                meldegruppeKode = meldegruppekode,
-                                harMeldtSeg = true,
                             ),
                         )
-
-                        meldegruppeendringMetrikker.annenMeldegruppeMottatt.increment()
                     } else {
                         personMediator.behandle(
                             PersonSynkroniseringHendelse(
@@ -101,9 +91,9 @@ internal fun Application.personstatusApi(
                                 referanseId = UUID.randomUUID().toString(),
                             ),
                         )
-
-                        synkroniserPersonMetrikker.personSynkronisert.increment()
                     }
+
+                    synkroniserPersonMetrikker.personSynkronisert.increment()
 
                     call.respond(HttpStatusCode.OK)
                 }

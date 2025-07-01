@@ -97,7 +97,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `Post personstatus kan få data om meldegruppe`() =
+    fun `Post personstatus kan få dagpengerbruker = true og false`() =
         setUpTestApplication {
             coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
                 listOf(
@@ -118,7 +118,14 @@ class PersonstatusApiTest : ApiTestSetup() {
             with(
                 client.post("/personstatus") {
                     header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
-                    setBody(LocalDate.now().format(DateTimeFormatter.ISO_DATE))
+                    setBody(
+                        """
+                        {
+                          "dagpengerbruker": true,
+                          "datoFra": "${LocalDate.now().format(DateTimeFormatter.ISO_DATE)}"
+                        }
+                        """.trimIndent(),
+                    )
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -131,7 +138,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                     setBody(
                         """
                         {
-                          "meldegruppekode": "ATTF",
+                          "dagpengerbruker": false,
                           "datoFra": "${LocalDate.now().format(DateTimeFormatter.ISO_DATE)}"
                         }
                         """.trimIndent(),
