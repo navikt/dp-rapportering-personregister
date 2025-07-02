@@ -97,6 +97,70 @@ class PersonstatusApiTest : ApiTestSetup() {
         }
 
     @Test
+    fun `Post personstatus kan få dagpengerbruker = true og false`() =
+        setUpTestApplication {
+            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        UUID.randomUUID(),
+                        MetadataResponse(
+                            OffsetDateTime.now(ZoneOffset.UTC),
+                            BrukerResponse("", ""),
+                            "Arena",
+                            "Årsak",
+                            null,
+                        ),
+                        null,
+                    ),
+                )
+
+            // Oppretter bruker
+            with(
+                client.post("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    setBody(
+                        """
+                        {
+                          "dagpengerbruker": true,
+                          "datoFra": "${LocalDate.now().format(DateTimeFormatter.ISO_DATE)}"
+                        }
+                        """.trimIndent(),
+                    )
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+            }
+
+            // Bruker fikk en annen meldegruppe
+            with(
+                client.post("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    setBody(
+                        """
+                        {
+                          "dagpengerbruker": false,
+                          "datoFra": "${LocalDate.now().format(DateTimeFormatter.ISO_DATE)}"
+                        }
+                        """.trimIndent(),
+                    )
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+            }
+
+            // Bruker må ha status IKKE_DAGPENGERBRUKER nå
+            with(
+                client.get("/personstatus") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["status"].asText() shouldBe "IKKE_DAGPENGERBRUKER"
+            }
+        }
+
+    @Test
     fun `Get personstatus uten token gir unauthorized`() =
         setUpTestApplication {
             with(client.get("/personstatus")) {

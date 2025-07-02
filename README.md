@@ -126,6 +126,7 @@ Konkrete implementasjoner inkluderer:
 - AnnenMeldegruppeHendelse
 - MeldepliktHendelse
 - PersonSynkroniseringHendelse
+- PersonIkkeDagpengerSynkroniseringHendelse
 
 Kildesystem kan være:
 - Søknad

@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
@@ -545,6 +546,7 @@ class PostgresPersonRepository(
             is StartetArbeidssøkerperiodeHendelse -> this.startet
             is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
             is PersonSynkroniseringHendelse -> this.startDato
+            is PersonIkkeDagpengerSynkroniseringHendelse -> this.startDato
             is VedtakHendelse -> this.startDato
             is SøknadHendelse -> null
             else -> null
@@ -708,6 +710,14 @@ class PostgresPersonRepository(
 
             "PersonSynkroniseringHendelse" ->
                 PersonSynkroniseringHendelse(
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    startDato = dato,
+                )
+
+            "PersonIkkeDagpengerSynkroniseringHendelse" ->
+                PersonIkkeDagpengerSynkroniseringHendelse(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,

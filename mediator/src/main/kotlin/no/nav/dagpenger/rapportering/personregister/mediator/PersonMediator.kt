@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
@@ -109,6 +110,27 @@ class PersonMediator(
     ): Unit =
         actionTimer.coTimedAction("behandle_PersonSynkroniseringHendelse") {
             logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
+            hentEllerOpprettPerson(hendelse.ident)
+                .also { person ->
+                    person.behandle(hendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandle(hendelse, counter + 1)
+                    }
+                    arbeidssøkerMediator.behandle(person.ident)
+                }
+        }
+
+    suspend fun behandle(
+        hendelse: PersonIkkeDagpengerSynkroniseringHendelse,
+        counter: Int = 1,
+    ): Unit =
+        actionTimer.coTimedAction("behandle_PersonIkkeDagpengerSynkroniseringHendelse") {
+            logger.info { "Behandler PersonIkkeDagpengerSynkroniseringHendelse: ${hendelse.referanseId}" }
             hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
                     person.behandle(hendelse)

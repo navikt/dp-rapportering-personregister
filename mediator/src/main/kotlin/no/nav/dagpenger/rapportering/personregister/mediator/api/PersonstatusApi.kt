@@ -14,13 +14,14 @@ import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -63,18 +64,33 @@ internal fun Application.personstatusApi(
                     logger.info { "POST /personstatus" }
                     val ident = call.ident()
 
-                    val rawText = call.receiveText()
-                    val dateText = rawText.trim('"')
-                    val fraDato = LocalDate.parse(dateText).atStartOfDay()
+                    var dagpengerbruker: Boolean? = null
+                    try {
+                        val json = defaultObjectMapper.readTree(call.receiveText())
+                        dagpengerbruker = json["dagpengerbruker"]?.asBoolean()
+                    } catch (e: Exception) {
+                        logger.warn(e) { "Kunne ikke lese request ved POST /personstatus. Gammel format?" }
+                    }
 
-                    personMediator.behandle(
-                        PersonSynkroniseringHendelse(
-                            ident = ident,
-                            dato = LocalDateTime.now(),
-                            startDato = LocalDateTime.now(),
-                            referanseId = UUID.randomUUID().toString(),
-                        ),
-                    )
+                    if (dagpengerbruker == false) {
+                        personMediator.behandle(
+                            PersonIkkeDagpengerSynkroniseringHendelse(
+                                ident = ident,
+                                dato = LocalDateTime.now(),
+                                startDato = LocalDateTime.now(),
+                                referanseId = UUID.randomUUID().toString(),
+                            ),
+                        )
+                    } else {
+                        personMediator.behandle(
+                            PersonSynkroniseringHendelse(
+                                ident = ident,
+                                dato = LocalDateTime.now(),
+                                startDato = LocalDateTime.now(),
+                                referanseId = UUID.randomUUID().toString(),
+                            ),
+                        )
+                    }
 
                     synkroniserPersonMetrikker.personSynkronisert.increment()
 
