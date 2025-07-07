@@ -56,7 +56,8 @@ class PersonTest {
             arbeidssøker {
                 behandle(vedtakHendelse())
 
-                ansvarligSystem shouldBe AnsvarligSystem.DP
+                // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
+                ansvarligSystem shouldBe AnsvarligSystem.ARENA
                 this skalHaSendtStartMeldingFor nå
             }
     }

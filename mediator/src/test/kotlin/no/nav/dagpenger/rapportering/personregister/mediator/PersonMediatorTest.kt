@@ -162,7 +162,8 @@ class PersonMediatorTest {
                 .hentPerson(ident)
                 ?.apply {
                     ident shouldBe ident
-                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
+                    ansvarligSystem shouldBe AnsvarligSystem.ARENA
                 }
         }
 
@@ -175,7 +176,8 @@ class PersonMediatorTest {
                     .hentPerson(ident)
                     ?.apply {
                         ident shouldBe ident
-                        ansvarligSystem shouldBe AnsvarligSystem.DP
+                        // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
+                        ansvarligSystem shouldBe AnsvarligSystem.ARENA
                     }
             }
         }

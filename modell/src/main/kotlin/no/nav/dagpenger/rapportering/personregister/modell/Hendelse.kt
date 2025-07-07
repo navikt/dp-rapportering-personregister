@@ -35,7 +35,8 @@ data class VedtakHendelse(
 
     override fun behandle(person: Person) {
         person.hendelser.add(this)
-        person.setAnsvarligSystem(AnsvarligSystem.DP)
+        // TODO: person.setAnsvarligSystem(AnsvarligSystem.DP) når vi har dp-meldekortregister
+        person.setAnsvarligSystem(AnsvarligSystem.ARENA)
         person.sendStartMeldingTilMeldekortregister(startDato)
         // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
     }
