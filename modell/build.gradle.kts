@@ -19,8 +19,8 @@ dependencies {
 
     testApi("org.junit.platform:junit-platform-suite-api:1.13.3")
     testImplementation("org.junit.platform:junit-platform-suite-engine:1.13.3")
-    testImplementation("io.cucumber:cucumber-java8:7.25.0")
-    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.25.0")
+    testImplementation("io.cucumber:cucumber-java8:7.26.0")
+    testImplementation("io.cucumber:cucumber-junit-platform-engine:7.26.0")
 }
 
 tasks.test {
