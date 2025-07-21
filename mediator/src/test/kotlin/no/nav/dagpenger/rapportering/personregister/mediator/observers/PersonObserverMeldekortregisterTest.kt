@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.observers
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -40,5 +41,6 @@ class PersonObserverMeldekortregisterTest {
         message["ident"].asText() shouldBe ident
         message["dato"].asLocalDateTime() shouldBe startDato
         message["handling"].asText() shouldBe "START"
+        message["referanseId"].asText() shouldNotBe null
     }
 }
