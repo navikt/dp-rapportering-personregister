@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PersonObserverMeldekortregister(
     private val personRepository: PersonRepository,
@@ -31,10 +32,11 @@ class PersonObserverMeldekortregister(
                     "ident" to person.ident,
                     "dato" to startDato,
                     "handling" to "START",
+                    "referanseId" to UUID.randomUUID().toString(),
                 ),
             )
 
-        sikkerlogg.info { "Sender Start-elding til Meldekortregister: ${message.toJson()}" }
+        sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
         getRapidsConnection().publish(person.ident, message.toJson())
     }
 }
