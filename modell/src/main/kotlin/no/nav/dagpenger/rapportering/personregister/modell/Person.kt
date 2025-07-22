@@ -31,7 +31,7 @@ data class Person(
 
     private var _meldeplikt: Boolean = false
 
-    private var _ansvarligSystem: AnsvarligSystem? = null
+    private var _ansvarligSystem: AnsvarligSystem? = AnsvarligSystem.ARENA
 
     val hendelser = mutableListOf<Hendelse>()
 
