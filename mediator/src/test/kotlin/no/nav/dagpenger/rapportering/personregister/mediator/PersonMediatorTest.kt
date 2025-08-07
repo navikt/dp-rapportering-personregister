@@ -525,7 +525,7 @@ class BeslutningObserver(
 class ArbeidssøkerBeslutningRepositoryFaker : ArbeidssøkerBeslutningRepository {
     private val beslutninger = mutableListOf<ArbeidssøkerBeslutning>()
 
-    override fun hentBeslutning(periodeId: String) = beslutninger.lastOrNull { it.periodeId.toString() == periodeId }
+    override fun hentBeslutning(id: String) = beslutninger.lastOrNull { it.periodeId.toString() == id }
 
     override fun lagreBeslutning(beslutning: ArbeidssøkerBeslutning) {
         beslutninger.add(beslutning)

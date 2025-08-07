@@ -13,10 +13,10 @@ class PostgressArbeidssøkerBeslutningRepository(
     private val dataSource: DataSource,
     private val actionTimer: ActionTimer,
 ) : ArbeidssøkerBeslutningRepository {
-    override fun hentBeslutning(ident: String) =
+    override fun hentBeslutning(id: String) =
         actionTimer.timedAction("db-hentBeslutning") {
             using(sessionOf(dataSource)) { session ->
-                val personId = hentPersonId(ident)
+                val personId = hentPersonId(id)
 
                 session.run(
                     queryOf(
@@ -26,7 +26,7 @@ class PostgressArbeidssøkerBeslutningRepository(
                         WHERE person_id = ?
                         """,
                         personId,
-                    ).map { tilArbeidssøkerBeslutning(it, ident) }.asSingle,
+                    ).map { tilArbeidssøkerBeslutning(it, id) }.asSingle,
                 )
             }
         }

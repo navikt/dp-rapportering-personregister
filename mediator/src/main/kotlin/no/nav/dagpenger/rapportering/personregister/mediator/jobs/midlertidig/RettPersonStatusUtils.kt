@@ -32,7 +32,7 @@ fun beregnMeldepliktStatus(person: Person) =
         .filter { it is MeldepliktHendelse || it is PersonSynkroniseringHendelse }
         .sortedWith { a, b ->
             when {
-                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                !a.startDato.isEqual(b.startDato) -> b.startDato.compareTo(a.startDato)
                 else -> b.dato.compareTo(a.dato)
             }
         }.firstOrNull()
@@ -49,7 +49,7 @@ fun beregnMeldegruppeStatus(person: Person) =
         .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse || it is PersonSynkroniseringHendelse }
         .sortedWith { a, b ->
             when {
-                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                !a.startDato.isEqual(b.startDato) -> b.startDato.compareTo(a.startDato)
                 else -> b.dato.compareTo(a.dato)
             }
         }.firstOrNull()
@@ -130,7 +130,7 @@ private fun Person.harPersonsynkroniseringSomSisteHendelse(): Boolean =
         .takeIf { it.isNotEmpty() }
         ?.sortedWith { a, b ->
             when {
-                a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                !a.startDato.isEqual(b.startDato) -> b.startDato.compareTo(a.startDato)
                 else -> b.dato.compareTo(a.dato)
             }
         }?.firstOrNull()
@@ -156,7 +156,7 @@ private fun Person.oppfyllerVedKunMeldegruppeOgPersonsynkroniseringHendelse(): B
                         it is SøknadHendelse
                 }.sortedWith { a, b ->
                     when {
-                        a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
+                        !a.startDato.isEqual(b.startDato) -> b.startDato.compareTo(a.startDato)
                         else -> b.dato.compareTo(a.dato)
                     }
                 }.firstOrNull()
@@ -179,8 +179,8 @@ fun harPersonsynkroniseringAvvik(person: Person): Boolean {
                 .filter { it is DagpengerMeldegruppeHendelse || it is AnnenMeldegruppeHendelse }
                 .sortedWith { a, b ->
                     when {
-                        a.startDato != b.startDato -> b.startDato.compareTo(a.startDato)
-                        a.dato != b.dato -> b.dato.compareTo(a.dato)
+                        !a.startDato.isEqual(b.startDato) -> b.startDato.compareTo(a.startDato)
+                        !a.dato.isEqual(b.dato) -> b.dato.compareTo(a.dato)
                         a is DagpengerMeldegruppeHendelse && b is AnnenMeldegruppeHendelse -> -1
                         b is DagpengerMeldegruppeHendelse && a is AnnenMeldegruppeHendelse -> 1
                         else -> 0
