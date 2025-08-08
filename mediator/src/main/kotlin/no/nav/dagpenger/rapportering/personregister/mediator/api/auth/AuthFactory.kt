@@ -13,6 +13,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.auth.jwt.JWTAuthenticationProvider
+import io.ktor.server.auth.jwt.JWTPrincipal
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import java.net.URI
@@ -26,9 +27,21 @@ object AuthFactory {
         val client_id by stringType
     }
 
+    @Suppress("ClassName")
+    private object azure_app : PropertyGroup() {
+        val well_known_url by stringType
+        val client_id by stringType
+    }
+
     private val tokenXConfiguration: OpenIdConfiguration by lazy {
         runBlocking {
             httpClient.get(Configuration.properties[token_x.well_known_url]).body()
+        }
+    }
+
+    private val azureAdConfiguration: OpenIdConfiguration by lazy {
+        runBlocking {
+            httpClient.get(Configuration.properties[azure_app.well_known_url]).body()
         }
     }
 
@@ -51,6 +64,16 @@ object AuthFactory {
         realm = Configuration.APP_NAME
         validate { credentials ->
             validator(credentials)
+        }
+    }
+
+    fun JWTAuthenticationProvider.Config.azureAd() {
+        verifier(jwkProvider(URI(azureAdConfiguration.jwksUri).toURL()), azureAdConfiguration.issuer) {
+            withAudience(Configuration.properties[azure_app.client_id])
+        }
+        realm = Configuration.APP_NAME
+        validate { credentials ->
+            JWTPrincipal(credentials.payload)
         }
     }
 

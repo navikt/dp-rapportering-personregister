@@ -20,6 +20,7 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaConsumerPlugin
 import no.nav.dagpenger.rapportering.personregister.kafka.plugin.KafkaProducerPlugin
+import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.azureAd
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.AuthFactory.tokenX
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -29,6 +30,7 @@ fun Application.pluginConfiguration(
     kafkaContext: KafkaContext,
     auth: AuthenticationConfig.() -> Unit = {
         jwt("tokenX") { tokenX() }
+        jwt("azureAd") { azureAd() }
     },
 ) {
     install(Authentication) {
