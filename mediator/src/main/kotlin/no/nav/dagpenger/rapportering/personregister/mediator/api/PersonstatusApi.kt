@@ -12,7 +12,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
-import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
+import no.nav.dagpenger.rapportering.personregister.api.models.PersonStatusResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
@@ -107,11 +107,16 @@ internal fun Application.personstatusApi(
                             ?.also { person ->
                                 call.respond(
                                     HttpStatusCode.OK,
-                                    PersonResponse(
+                                    PersonStatusResponse(
                                         ident = person.ident,
                                         status = StatusResponse.valueOf(person.status.name),
                                         overtattBekreftelse = person.overtattBekreftelse,
-                                        ansvarligSystem = person.ansvarligSystem?.let { AnsvarligSystemResponse.valueOf(it.name) },
+                                        ansvarligSystem =
+                                            person.ansvarligSystem?.let {
+                                                AnsvarligSystemResponse.valueOf(
+                                                    it.name,
+                                                )
+                                            },
                                     ),
                                 )
                             }

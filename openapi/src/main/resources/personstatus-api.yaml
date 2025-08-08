@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonStatus'
         404:
           description: Not Found
       summary: Hent personstatus
@@ -28,9 +28,33 @@ paths:
       security:
         - tokenX: []
 
+  /person/{personId}:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        404:
+          description: Not Found
+      summary: Hent person
+      description: Hent person basert på id
+      operationId: get-person
+      parameters:
+        - in: path
+          name: personId
+          required: true
+          schema:
+            type: string
+          description: ID til personen
+      security:
+        - azureAd: []
+
 components:
   schemas:
-    Person:
+    PersonStatus:
       required:
         - ident
         - status
@@ -55,6 +79,25 @@ components:
       enum:
         - ARENA
         - DP
+    Person:
+      required:
+        - ident
+        - fornavn
+        - etternavn
+        - status
+        - overtattBekreftelse
+      type: object
+      properties:
+        ident:
+          type: string
+        fornavn:
+          type: string
+        etternavn:
+          type: string
+        mellomnavn:
+          type: string
+        statsborgerskap:
+          type: string
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)
@@ -88,5 +131,11 @@ components:
         
         For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
         - [dev-gcp](https://wonderwalled-idporten.intern.dev.nav.no/api/obo?aud=dev-gcp:teamdagpenger:dp-rapportering-personregister)
+    azureAd:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bruker Azure AD til autentisering for saksbehandlere. Token må ha riktig tilganger.
   headers: { }
   responses: { }

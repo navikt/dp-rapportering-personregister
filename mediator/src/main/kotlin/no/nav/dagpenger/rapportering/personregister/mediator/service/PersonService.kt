@@ -1,4 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
+
 import com.github.benmanes.caffeine.cache.Cache
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -43,6 +44,8 @@ class PersonService(
                 personObservers.forEach { observer -> person.addObserver(observer) }
             }
         }
+
+    fun hentPersonIdent(personId: Long): String? = personRepository.hentPersonIdent(personId)
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 

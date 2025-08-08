@@ -70,7 +70,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -78,7 +78,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                     setBody(LocalDate.now().format(DateTimeFormatter.ISO_DATE))
                 },
             ) {
@@ -87,7 +87,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -117,7 +117,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Oppretter bruker
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                     setBody(
                         """
                         {
@@ -134,7 +134,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Bruker fikk en annen meldegruppe
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                     setBody(
                         """
                         {
@@ -151,7 +151,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Bruker må ha status IKKE_DAGPENGERBRUKER nå
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -173,7 +173,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -194,7 +194,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -215,7 +215,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -247,7 +247,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueToken(ident)}")
+                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
