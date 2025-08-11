@@ -28,27 +28,26 @@ paths:
       security:
         - tokenX: []
 
-  /person/{personId}:
-    get:
+  /person:
+    post:
       responses:
         200:
           description: OK
           content:
-            application/json:
+            text/plain:
               schema:
-                $ref: '#/components/schemas/Person'
+                type: integer
         404:
           description: Not Found
-      summary: Hent person
-      description: Hent person basert på id
-      operationId: get-person
-      parameters:
-        - in: path
-          name: personId
+      summary: Hent ID til en person
+      description: Hent ID til en person basert på ident
+      operationId: post-person
+      requestBody:
           required: true
-          schema:
-            type: string
-          description: ID til personen
+          content:
+            text/plain:
+              schema:
+                type: string
       security:
         - azureAd: []
 
@@ -79,25 +78,6 @@ components:
       enum:
         - ARENA
         - DP
-    Person:
-      required:
-        - ident
-        - fornavn
-        - etternavn
-        - status
-        - overtattBekreftelse
-      type: object
-      properties:
-        ident:
-          type: string
-        fornavn:
-          type: string
-        etternavn:
-          type: string
-        mellomnavn:
-          type: string
-        statsborgerskap:
-          type: string
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)

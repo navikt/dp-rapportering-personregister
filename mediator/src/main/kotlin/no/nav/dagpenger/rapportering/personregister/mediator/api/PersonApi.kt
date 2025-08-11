@@ -3,48 +3,38 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.RoutingCall
-import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import mu.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.api.models.PersonResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 
 private val logger = KotlinLogging.logger {}
 
-internal fun Application.personApi(
-    personService: PersonService,
-    pdlConnector: PdlConnector,
-) {
+internal fun Application.personApi(personService: PersonService) {
     routing {
         authenticate("azureAd") {
-            route("/person/{personId}") {
-                get {
-                    logger.info { "GET /person/{personId}" }
-                    val personId = call.getPersonId()
+            route("/person") {
+                post {
+                    logger.info { "GET /person" }
+                    val ident = call.receive<String>()
 
-                    val ident = personService.hentPersonIdent(personId)
-                    if (ident == null) {
-                        call.respond(HttpStatusCode.NotFound, "Finner ikke person med personId")
-                        return@get
+                    if (!ident.matches(Regex("[0-9]{11}"))) {
+                        logger.error("Person-ident må ha 11 sifre")
+                        call.respond(HttpStatusCode.BadRequest, "Person-ident må ha 11 sifre")
+                        return@post
                     }
 
                     try {
-                        pdlConnector
-                            .hentPerson(ident)
-                            ?.also { person ->
+                        personService
+                            .hentPersonId(ident)
+                            ?.also { personId ->
                                 call.respond(
                                     HttpStatusCode.OK,
-                                    PersonResponse(
-                                        ident = ident,
-                                        fornavn = person.fornavn,
-                                        etternavn = person.etternavn,
-                                        mellomnavn = person.mellomnavn,
-                                        statsborgerskap = person.statsborgerskap,
-                                    ),
+                                    personId,
                                 )
                             }
                             ?: call.respond(HttpStatusCode.NotFound, "Finner ikke person")
@@ -57,7 +47,3 @@ internal fun Application.personApi(
         }
     }
 }
-
-private fun RoutingCall.getPersonId(): Long =
-    this.parameters["personId"]?.toLongOrNull()
-        ?: throw IllegalArgumentException("Ugyldig personId")

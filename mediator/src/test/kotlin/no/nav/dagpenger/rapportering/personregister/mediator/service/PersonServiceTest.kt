@@ -205,6 +205,14 @@ class PersonServiceTest {
 
         personService.hentPersonIdent(personId) shouldBe ident
     }
+
+    @Test
+    fun `kan hente personId ved bruk av ident`() {
+        val personId = 1L
+        every { personRepository.hentPersonId(eq(ident)) } returns personId
+
+        personService.hentPersonId(ident) shouldBe personId
+    }
 }
 
 private fun person(
