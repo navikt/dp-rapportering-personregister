@@ -19,7 +19,7 @@ internal fun Application.personApi(personService: PersonService) {
         authenticate("azureAd") {
             route("/person") {
                 post {
-                    logger.info { "GET /person" }
+                    logger.info { "POST /person" }
                     val ident = call.receive<String>()
 
                     if (!ident.matches(Regex("[0-9]{11}"))) {
