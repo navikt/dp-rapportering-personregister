@@ -38,9 +38,4 @@ class InMemoryPersonRepositoryTest {
     fun `kan ikke finne en person som ikke er lagret`() {
         personRepository.hentPerson(person.ident) shouldBe null
     }
-
-    @Test
-    fun `hentPersonIdent returnerer tom ident`() {
-        personRepository.hentPersonIdent(0L) shouldBe null
-    }
 }

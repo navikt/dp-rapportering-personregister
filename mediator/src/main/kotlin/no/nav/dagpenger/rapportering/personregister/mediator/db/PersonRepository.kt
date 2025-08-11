@@ -55,6 +55,4 @@ interface PersonRepository {
     fun hentIdenterMedAvvik(): List<String>
 
     fun hentPersonId(ident: String): Long?
-
-    fun hentPersonIdent(personId: Long): String?
 }

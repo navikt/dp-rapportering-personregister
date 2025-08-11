@@ -339,15 +339,13 @@ class PostgresPersonRepositoryTest {
     }
 
     @Test
-    fun `kan hente personId ved bruk av ident og ident ved bruk av personId`() {
+    fun `kan hente personId ved bruk av ident`() {
         withMigratedDb {
             val person = testPerson()
             personRepository.lagrePerson(person)
 
             val personId = personRepository.hentPersonId(ident)
             personId shouldNotBe null
-
-            personRepository.hentPersonIdent(personId!!) shouldBe ident
         }
     }
 

@@ -496,15 +496,6 @@ class PostgresPersonRepository(
             )
         }
 
-    override fun hentPersonIdent(personId: Long): String? =
-        using(sessionOf(dataSource)) { session ->
-            session.run(
-                queryOf("SELECT ident FROM person WHERE id = :id", mapOf("id" to personId))
-                    .map { row -> row.string("ident") }
-                    .asSingle,
-            )
-        }
-
     private fun hentVersjon(
         ident: String,
         tx: TransactionalSession,
