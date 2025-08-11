@@ -19,7 +19,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Person'
+                $ref: '#/components/schemas/PersonStatus'
         404:
           description: Not Found
       summary: Hent personstatus
@@ -28,9 +28,32 @@ paths:
       security:
         - tokenX: []
 
+  /person:
+    post:
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: integer
+        404:
+          description: Not Found
+      summary: Hent ID til en person
+      description: Hent ID til en person basert på ident
+      operationId: post-person
+      requestBody:
+          required: true
+          content:
+            text/plain:
+              schema:
+                type: string
+      security:
+        - azureAd: []
+
 components:
   schemas:
-    Person:
+    PersonStatus:
       required:
         - ident
         - status
@@ -88,5 +111,11 @@ components:
         
         For å teste APIet kan du lage et gyldig OBO-token ved å bruke wonderwalled:
         - [dev-gcp](https://wonderwalled-idporten.intern.dev.nav.no/api/obo?aud=dev-gcp:teamdagpenger:dp-rapportering-personregister)
+    azureAd:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bruker Azure AD til autentisering for saksbehandlere. Token må ha riktig tilganger.
   headers: { }
   responses: { }

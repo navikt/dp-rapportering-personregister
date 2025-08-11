@@ -25,6 +25,7 @@ val ZONE_ID: ZoneId = ZoneId.of("Europe/Oslo")
 
 internal object Configuration {
     const val APP_NAME = "dp-rapportering-personregister"
+
     private val defaultProperties =
         ConfigurationMap(
             mapOf(

@@ -338,6 +338,17 @@ class PostgresPersonRepositoryTest {
         }
     }
 
+    @Test
+    fun `kan hente personId ved bruk av ident`() {
+        withMigratedDb {
+            val person = testPerson()
+            personRepository.lagrePerson(person)
+
+            val personId = personRepository.hentPersonId(ident)
+            personId shouldNotBe null
+        }
+    }
+
     private fun testPerson(
         hendelser: MutableList<Hendelse> = mutableListOf(),
         arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),

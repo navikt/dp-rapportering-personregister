@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.confi
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
+import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -205,6 +206,7 @@ internal class ApplicationBuilder(
                         pluginConfiguration(meterRegistry, kafkaContext)
                         internalApi(meterRegistry)
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                        personApi(personService)
                     }
 
                     MeldekortTestdataMottak(rapid)

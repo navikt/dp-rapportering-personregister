@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
@@ -52,22 +51,8 @@ open class ApiTestSetup {
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
         const val REQUIRED_AUDIENCE = "tokenx"
-        val TEST_PRIVATE_JWK =
-            """
-            {
-                "kty":"RSA",
-                "alg":"RS256",
-                "use":"sig",
-                "p":"_xCPvqs85ZZVg460Qfot26rQoNRPTOVDo5p4nqH3ep6BK_5TvoU5LFXd26W-1V1Lc5fcvvftClPOT201xgat4DVtliNtoc8od_tWr190A3AzbsAVFOx0nKa5uhLBxP9SsPM84llp6PXF6QTMGFiPYuoLDaQQqL1K4BbHq3ZzF2M",
-                "q":"7QLqW75zkfSDrn5rMoF50WXyB_ysNx6-2SvaXKGXaOn80IR7QW5vwkleJnsdz_1kr04rJws2p4HBJjUFfSJDi1Dapj7tbIwb0a1szDs6Y2fAa3DlzgXZCkoE2TIrW6UITgs14pI_a7RasclE71FpoZ78XNBvj3NmZugkNLBvRjs",
-                "d":"f7aT4poed8uKdcSD95mvbfBdb6X-M86d99su0c390d6gWwYudeilDugH9PMwqUeUhY0tdaRVXr6rDDIKLSE-uEyaYKaramev0cG-J_QWYJU2Lx-4vDGNHAE7gC99o1Ee_LXqMDCBawMYyVcSWx7PxGQfzhSsARsAIbkarO1sg9zsqPS4exSMbK8wyCTPgRbnkB32_UdZSGbdSib1jSYyyoAItZ8oZHiltVsZIlA97kS4AGPtozde043NC7Ik0uEzgB5qJ_tR7vW8MfDrBj6da2NrLh0UH-q28dooBO1vEu0rvKZIescXYk9lk1ZakHhhpZaLykDOGzxCpronzP3_kQ",
-                "e":"AQAB",
-                "qi":"9kMIR6pEoiwN3M6O0n8bnh6c3KbLMoQQ1j8_Zyir7ZIlmRpWYl6HtK0VnD88zUuNKTrQa7-jfE5uAUa0PubzfRqybACb4S3HIAuSQP00_yCPzCSRrbpGRDFqq-8eWVwI9VdiN4oqkaaWcL1pd54IDcHIbfk-ZtNtZgsOlodeRMo",
-                "dp":"VUecSAvI2JpjDRFxg326R2_dQWi6-uLMsq67FY7hx8WnOqZWKaUxcHllLENGguAmkgd8bv1F6-YJXNUO3Z7uE8DJWyGNTkSNK1CFsy0fBOdGywi-A7jrZFT6VBRhZRRY-YDaInPyzUkfWsGX26wAhPnrqCvqxgBEQJhdOh7obDE",
-                "dq":"7EUfw92T8EhEjUrRKkQQYEK0iGnGdBxePLiOshEUky3PLT8kcBHbr17cUJgjHBiKqofOVNnE3i9nkOMCWcAyfUtY7KmGndL-WIP-FYplpnrjQzgEnuENgEhRlQOCXZWjNcnPKdKJDqF4WAtAgSIznz6SbSQMUoDD8IoyraPFCck",
-                "n":"7CU8tTANiN6W_fD9SP1dK2vQvCkf7-nwvBYe5CfANV0_Bb0ZmQb77FVVsl1beJ7EYLz3cJmL8Is1RCHKUK_4ydqihNjEWTyZiQoj1i67pkqk_zRvfQa9raZR4uZbuBxx7dWUoPC6fFH2F_psAlHW0zf90fsLvhB6Aqq3uvO7XXqo8qNl9d_JSG0Rg_2QUYVb0WKmPVbbhgwtkFu0Tyuev-VZ9IzTbbr5wmZwEUVY7YAi73pDJkcZt5r2WjOF_cuIXe-O2vwbOrRgmJfHO9--mVLdATnEyrb6q2oy_75h6JjP-R4-TD1hyoFFoE2gmj-kSS6Z_Gggljs3Aw7--Nh10Q"
-            }
-            """.trimIndent()
+        const val AZURE_APP_CLIENT_ID = "test_client_id"
+        const val AZURE_OPENID_CONFIG_ISSUER = "test_issuer"
 
         var mockOAuth2Server = MockOAuth2Server()
 
@@ -98,14 +83,13 @@ open class ApiTestSetup {
         clean()
 
         testApplication {
-            environment {
-                config = mapAppConfig()
-            }
-            val meterRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
+            val meterRegistry =
+                PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
-            val overtaBekreftelseKafkaProdusent = TestKafkaProducer<PaaVegneAv>(paaVegneAvTopic, testKafkaContainer).producer
+            val overtaBekreftelseKafkaProdusent =
+                TestKafkaProducer<PaaVegneAv>(paaVegneAvTopic, testKafkaContainer).producer
             val bekreftelsePåVegneAvKafkaConsumer =
                 testKafkaContainer.createConsumer(
                     "bekreftelse-pa-vegne-av-group",
@@ -127,11 +111,23 @@ open class ApiTestSetup {
                     cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
                 )
             val meldepliktMediator =
-                MeldepliktMediator(personRepository, personService, listOf(personObserver), meldepliktConnector, actionTimer)
+                MeldepliktMediator(
+                    personRepository,
+                    personService,
+                    listOf(personObserver),
+                    meldepliktConnector,
+                    actionTimer,
+                )
 
             val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
             val arbeidssøkerMediator =
-                ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
+                ArbeidssøkerMediator(
+                    arbeidssøkerService,
+                    personRepository,
+                    personService,
+                    listOf(personObserver),
+                    actionTimer,
+                )
             val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
             val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
             val kafkaContext =
@@ -159,6 +155,7 @@ open class ApiTestSetup {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(meterRegistry)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                personApi(personService)
             }
 
             block()
@@ -168,10 +165,9 @@ open class ApiTestSetup {
     private fun setEnvConfig() {
         System.setProperty("DB_JDBC_URL", "${database.jdbcUrl}&user=${database.username}&password=${database.password}")
         System.setProperty("token-x.client-id", TOKENX_ISSUER_ID)
-        System.setProperty("TOKEN_X_CLIENT_ID", TOKENX_ISSUER_ID)
-        System.setProperty("TOKEN_X_PRIVATE_JWK", TEST_PRIVATE_JWK)
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
-        System.setProperty("TOKEN_X_WELL_KNOWN_URL", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
+        System.setProperty("azure-app.well-known-url", mockOAuth2Server.wellKnownUrl(AZURE_OPENID_CONFIG_ISSUER).toString())
+        System.setProperty("azure-app.client-id", AZURE_APP_CLIENT_ID)
         System.setProperty("GITHUB_SHA", "some_sha")
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
         System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
@@ -180,15 +176,6 @@ open class ApiTestSetup {
         System.setProperty("PDL_API_HOST", "pdl-api.test.nais.io")
         System.setProperty("PDL_AUDIENCE", "test:pdl:pdl-api")
     }
-
-    private fun mapAppConfig(): MapApplicationConfig =
-        MapApplicationConfig(
-            "no.nav.security.jwt.issuers.size" to "1",
-            "no.nav.security.jwt.issuers.0.issuer_name" to TOKENX_ISSUER_ID,
-            "no.nav.security.jwt.issuers.0.discoveryurl" to mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString(),
-            "no.nav.security.jwt.issuers.0.accepted_audience" to REQUIRED_AUDIENCE,
-            "ktor.environment" to "local",
-        )
 
     private fun clean() {
         println("Cleaning database")
@@ -201,7 +188,7 @@ open class ApiTestSetup {
         }
     }
 
-    fun issueToken(ident: String): String =
+    fun issueTokenX(ident: String): String =
         mockOAuth2Server
             .issueToken(
                 TOKENX_ISSUER_ID,
@@ -210,5 +197,13 @@ open class ApiTestSetup {
                     audience = listOf(REQUIRED_AUDIENCE),
                     claims = mapOf("pid" to ident, "acr" to "Level4"),
                 ),
+            ).serialize()
+
+    fun issueAzureAdToken(claims: Map<String, Any>): String =
+        mockOAuth2Server
+            .issueToken(
+                audience = AZURE_APP_CLIENT_ID,
+                issuerId = AZURE_OPENID_CONFIG_ISSUER,
+                claims = claims,
             ).serialize()
 }

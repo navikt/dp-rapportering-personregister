@@ -1,4 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
+
 import com.github.benmanes.caffeine.cache.Cache
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -43,6 +44,8 @@ class PersonService(
                 personObservers.forEach { observer -> person.addObserver(observer) }
             }
         }
+
+    fun hentPersonId(ident: String): Long? = personRepository.hentPersonId(ident)
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
@@ -112,12 +115,12 @@ class PersonService(
                 val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
                 if (historiskPerson != null) {
                     sikkerLogg.info("Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}")
-                    gjeldendePerson.hendelser.addAll(historiskPerson?.hendelser ?: emptyList())
-                    historiskPerson?.statusHistorikk?.getAll()?.forEach { it ->
+                    gjeldendePerson.hendelser.addAll(historiskPerson.hendelser)
+                    historiskPerson.statusHistorikk.getAll().forEach {
                         gjeldendePerson.statusHistorikk.put(it.first, it.second)
                     }
                     val arbeidssøkerperioder =
-                        (gjeldendePerson.arbeidssøkerperioder + (historiskPerson?.arbeidssøkerperioder ?: emptyList()))
+                        (gjeldendePerson.arbeidssøkerperioder + (historiskPerson.arbeidssøkerperioder))
                             .map { it.copy(ident = gjeldendePerson.ident) }
                             .toMutableList()
 
@@ -127,10 +130,10 @@ class PersonService(
                     personRepository.slettPerson(pdlIdent.ident)
 
                     gjeldendePerson.apply {
-                        if (!meldeplikt && historiskPerson?.meldeplikt == true) {
+                        if (!meldeplikt && historiskPerson.meldeplikt) {
                             setMeldeplikt(true)
                         }
-                        if (meldegruppe != "DAGP" && historiskPerson?.meldegruppe == "DAGP") {
+                        if (meldegruppe != "DAGP" && historiskPerson.meldegruppe == "DAGP") {
                             setMeldegruppe(historiskPerson.meldegruppe)
                         }
                     }
