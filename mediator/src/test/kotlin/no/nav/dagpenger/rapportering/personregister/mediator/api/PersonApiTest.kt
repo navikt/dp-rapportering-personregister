@@ -11,7 +11,6 @@ import io.mockk.every
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
@@ -31,18 +30,18 @@ class PersonApiTest : ApiTestSetup() {
     }
 
     @Test
-    fun `Post person uten token gir unauthorized`() =
+    fun `hentPersonId uten token gir unauthorized`() =
         setUpTestApplication {
-            with(client.post("/person")) {
+            with(client.post("/hentPersonId")) {
                 status shouldBe HttpStatusCode.Unauthorized
             }
         }
 
     @Test
-    fun `Post person gir bad request hvis idenr ikke er gyldig`() =
+    fun `hentPersonId gir bad request hvis ident ikke er gyldig`() =
         setUpTestApplication {
             with(
-                client.post("/person") {
+                client.post("/hentPersonId") {
                     header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
                     setBody("hei")
                 },
@@ -52,10 +51,10 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `Post person gir not found hvis personen ikke finnes`() =
+    fun `hentPersonId gir not found hvis personen ikke finnes`() =
         setUpTestApplication {
             with(
-                client.post("/person") {
+                client.post("/hentPersonId") {
                     header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
                     setBody(ident)
                 },
@@ -65,7 +64,7 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `Post person returnerer personId hvis den finnes`() =
+    fun `hentPersonId returnerer personId hvis den finnes`() =
         setUpTestApplication {
             val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
 
@@ -76,13 +75,70 @@ class PersonApiTest : ApiTestSetup() {
                 }
 
             with(
-                client.post("/person") {
+                client.post("/hentPersonId") {
                     header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
                     setBody(ident)
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
                 bodyAsText() shouldBe "1"
+            }
+        }
+
+    @Test
+    fun `hentIdent uten token gir unauthorized`() =
+        setUpTestApplication {
+            with(client.post("/hentIdent")) {
+                status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
+
+    @Test
+    fun `hentIdent gir bad request hvis ident ikke er gyldig`() =
+        setUpTestApplication {
+            with(
+                client.post("/hentIdent") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    setBody("hei")
+                },
+            ) {
+                status shouldBe HttpStatusCode.BadRequest
+            }
+        }
+
+    @Test
+    fun `hentIdent gir not found hvis personen ikke finnes`() =
+        setUpTestApplication {
+            with(
+                client.post("/hentIdent") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    setBody("1")
+                },
+            ) {
+                status shouldBe HttpStatusCode.NotFound
+            }
+        }
+
+    @Test
+    fun `hentIdent returnerer ident hvis den finnes`() =
+        setUpTestApplication {
+            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            Person(ident)
+                .apply { behandle(lagHendelse(ident)) }
+                .also {
+                    personRepository.lagrePerson(it)
+                }
+            val personId = personRepository.hentPersonId(ident)
+
+            with(
+                client.post("/hentIdent") {
+                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    setBody(personId.toString())
+                },
+            ) {
+                status shouldBe HttpStatusCode.OK
+                bodyAsText() shouldBe ident
             }
         }
 }

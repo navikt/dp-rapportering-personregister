@@ -28,7 +28,7 @@ paths:
       security:
         - tokenX: []
 
-  /person:
+  /hentPersonId:
     post:
       responses:
         200:
@@ -41,13 +41,36 @@ paths:
           description: Not Found
       summary: Hent ID til en person
       description: Hent ID til en person basert på ident
-      operationId: post-person
+      operationId: post-hentPersonId
       requestBody:
           required: true
           content:
             text/plain:
               schema:
                 type: string
+      security:
+        - azureAd: []
+
+  /hentIdent:
+    post:
+      responses:
+        200:
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+        404:
+          description: Not Found
+      summary: Hent ident til en person
+      description: Hent ident til en person basert på ID
+      operationId: post-hentIdent
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: integer
       security:
         - azureAd: []
 

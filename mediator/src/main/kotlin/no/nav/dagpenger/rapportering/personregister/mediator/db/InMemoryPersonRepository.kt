@@ -102,6 +102,8 @@ class InMemoryPersonRepository : PersonRepository {
 
     override fun hentPersonId(ident: String): Long = 0
 
+    override fun hentIdent(personId: Long): String? = null
+
     private fun Person.deepCopy(versjon: Int) =
         Person(
             ident = this.ident,
