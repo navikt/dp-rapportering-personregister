@@ -1,12 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.kotest.matchers.shouldBe
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.coEvery
 import io.mockk.every
@@ -70,7 +69,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -78,7 +77,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                     setBody(LocalDate.now().format(DateTimeFormatter.ISO_DATE))
                 },
             ) {
@@ -87,7 +86,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -117,7 +116,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Oppretter bruker
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                     setBody(
                         """
                         {
@@ -134,7 +133,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Bruker fikk en annen meldegruppe
             with(
                 client.post("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                     setBody(
                         """
                         {
@@ -151,7 +150,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             // Bruker må ha status IKKE_DAGPENGERBRUKER nå
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -173,7 +172,7 @@ class PersonstatusApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -194,7 +193,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -215,7 +214,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
@@ -247,7 +246,7 @@ class PersonstatusApiTest : ApiTestSetup() {
 
             with(
                 client.get("/personstatus") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueTokenX(ident)}")
+                    bearerAuth(issueTokenX(ident))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK

@@ -37,6 +37,7 @@ internal fun Application.personstatusApi(
     personService: PersonService,
 ) {
     routing {
+        // TODO: Slett eller beskytt med autentisering
         route("/frasigelse") {
             post {
                 val request = call.receive<IdListRequest>()
@@ -50,6 +51,7 @@ internal fun Application.personstatusApi(
             }
         }
 
+        // TODO: Slett eller beskytt med autentisering
         route("/rettelse") {
             get {
                 logger.info { "GET /rettelse" }

@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
+    val personObserver = mockk<PersonObserver>(relaxed = true)
     val pdlConnector = mockk<PdlConnector>()
 
     companion object {
@@ -102,7 +103,6 @@ open class ApiTestSetup {
                     LongDeserializer::class,
                     PeriodeAvroDeserializer::class,
                 )
-            val personObserver = mockk<PersonObserver>(relaxed = true)
             val personService =
                 PersonService(
                     pdlConnector = pdlConnector,
