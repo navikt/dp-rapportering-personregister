@@ -78,6 +78,7 @@ spec:
     inbound:
       rules:
         - application: dp-rapportering
+        - application: dp-meldekortregister
         {{#each additionalInbounds}}
         - application: "{{application}}"
           namespace: "{{namespace}}"

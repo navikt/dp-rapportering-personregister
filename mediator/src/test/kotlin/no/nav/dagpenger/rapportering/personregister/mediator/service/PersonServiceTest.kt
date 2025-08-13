@@ -199,11 +199,13 @@ class PersonServiceTest {
     }
 
     @Test
-    fun `kan hente personId ved bruk av ident`() {
+    fun `kan hente personId ved bruk av ident og ident ved bruk av personId`() {
         val personId = 1L
         every { personRepository.hentPersonId(eq(ident)) } returns personId
+        every { personRepository.hentIdent(eq(personId)) } returns ident
 
         personService.hentPersonId(ident) shouldBe personId
+        personService.hentIdent(personId) shouldBe ident
     }
 }
 

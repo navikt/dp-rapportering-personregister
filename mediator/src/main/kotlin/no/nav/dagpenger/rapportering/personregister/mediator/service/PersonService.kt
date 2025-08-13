@@ -47,6 +47,8 @@ class PersonService(
 
     fun hentPersonId(ident: String): Long? = personRepository.hentPersonId(ident)
 
+    fun hentIdent(personId: Long): String? = personRepository.hentIdent(personId)
+
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
     fun hentPersonFraDB(identer: List<String>): List<Person> =
