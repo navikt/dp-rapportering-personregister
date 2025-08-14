@@ -121,12 +121,16 @@ Den inneholder:
 - **behandle():** en funksjon som iverksetter effekter på en Person.
 
 Konkrete implementasjoner inkluderer:
-- SøknadHendelse
-- DagpengerMeldegruppeHendelse
 - AnnenMeldegruppeHendelse
+- AvsluttetArbeidssøkerperiodeHendelse
+- DagpengerMeldegruppeHendelse
 - MeldepliktHendelse
-- PersonSynkroniseringHendelse
+- MeldesyklusErPassertHendelse
 - PersonIkkeDagpengerSynkroniseringHendelse
+- PersonSynkroniseringHendelse
+- StartetArbeidssøkerperiodeHendelse
+- SøknadHendelse
+- VedtakHendelse
 
 Kildesystem kan være:
 - Søknad

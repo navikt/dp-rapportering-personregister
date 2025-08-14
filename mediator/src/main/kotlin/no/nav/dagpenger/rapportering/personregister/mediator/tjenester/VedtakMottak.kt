@@ -12,7 +12,7 @@ import mu.withLoggingContext
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
 

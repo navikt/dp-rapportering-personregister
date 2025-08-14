@@ -69,20 +69,6 @@ internal fun Application.personApi(personService: PersonService) {
                     }
                 }
             }
-
-            route("/frasiAnsvar") {
-                post {
-                    logger.info { "POST /frasiAnsvar" }
-                    val identer = call.receive<List<String>>()
-
-                    identer.forEach { ident ->
-                        val person = personService.hentPerson(ident)
-                        person?.observers?.forEach { it.sendFrasigelsesmelding(person, true) }
-                    }
-
-                    call.respond(HttpStatusCode.OK)
-                }
-            }
         }
     }
 }

@@ -33,12 +33,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -379,6 +380,27 @@ class PersonMediatorTest {
         }
     }
 
+    @Nested
+    inner class MeldesyklusErPassert {
+        @Test
+        fun `send frasigelsesmelding når meldesyklus er passert`() {
+            val meldesyklusErPassertHendelse =
+                MeldesyklusErPassertHendelse(
+                    ident,
+                    LocalDateTime.now(),
+                    UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(),
+                    LocalDateTime.now().minusDays(35),
+                    LocalDateTime.now().minusDays(14),
+                )
+
+            arbeidssøker(overtattBekreftelse = true) {
+                personMediator.behandle(meldesyklusErPassertHendelse)
+                personObserver skalHaFrasagtAnsvaretMedFristBruttFor this
+            }
+        }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -483,6 +505,10 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person) }
+}
+
+infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
+    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
 }
 
 class BeslutningObserver(

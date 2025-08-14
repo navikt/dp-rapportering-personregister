@@ -49,6 +49,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -209,11 +210,22 @@ internal class ApplicationBuilder(
                         personApi(personService)
                     }
 
+                    MeldegruppeendringMottak(
+                        rapid,
+                        personMediator,
+                        fremtidigHendelseMediator,
+                        meldegruppeendringMetrikker,
+                    )
                     MeldekortTestdataMottak(rapid)
+                    MeldepliktendringMottak(
+                        rapid,
+                        meldepliktMediator,
+                        fremtidigHendelseMediator,
+                        meldepliktendringMetrikker,
+                    )
+                    MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
                     VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
-                    MeldegruppeendringMottak(rapid, personMediator, fremtidigHendelseMediator, meldegruppeendringMetrikker)
-                    MeldepliktendringMottak(rapid, meldepliktMediator, fremtidigHendelseMediator, meldepliktendringMetrikker)
                 }
 
         rapidsConnection.register(this)
