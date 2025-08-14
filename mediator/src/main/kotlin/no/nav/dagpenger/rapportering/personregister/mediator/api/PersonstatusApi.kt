@@ -19,8 +19,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
-import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -37,6 +37,7 @@ internal fun Application.personstatusApi(
     personService: PersonService,
 ) {
     routing {
+        // TODO: Slett eller beskytt med autentisering
         route("/frasigelse") {
             post {
                 val request = call.receive<IdListRequest>()
@@ -50,6 +51,7 @@ internal fun Application.personstatusApi(
             }
         }
 
+        // TODO: Slett eller beskytt med autentisering
         route("/rettelse") {
             get {
                 logger.info { "GET /rettelse" }

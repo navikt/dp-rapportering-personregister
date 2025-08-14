@@ -13,19 +13,19 @@ import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.ArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -549,26 +549,25 @@ class PostgresPersonRepository(
 
     private fun Hendelse.hentStartDato(): LocalDateTime? =
         when (this) {
-            is DagpengerMeldegruppeHendelse -> this.startDato
             is AnnenMeldegruppeHendelse -> this.startDato
-            is MeldepliktHendelse -> this.startDato
-            is StartetArbeidssøkerperiodeHendelse -> this.startet
             is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
-            is PersonSynkroniseringHendelse -> this.startDato
+            is DagpengerMeldegruppeHendelse -> this.startDato
+            is MeldepliktHendelse -> this.startDato
+            is MeldesyklusErPassertHendelse -> this.periodeFraOgMed
             is PersonIkkeDagpengerSynkroniseringHendelse -> this.startDato
+            is PersonSynkroniseringHendelse -> this.startDato
+            is StartetArbeidssøkerperiodeHendelse -> this.startet
             is VedtakHendelse -> this.startDato
-            is SøknadHendelse -> null
             else -> null
         }
 
     private fun Hendelse.hentSluttDato(): LocalDateTime? =
         when (this) {
-            is DagpengerMeldegruppeHendelse -> this.sluttDato
             is AnnenMeldegruppeHendelse -> this.sluttDato
-            is MeldepliktHendelse -> this.sluttDato
-            is StartetArbeidssøkerperiodeHendelse -> null
             is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
-            is SøknadHendelse -> null
+            is DagpengerMeldegruppeHendelse -> this.sluttDato
+            is MeldepliktHendelse -> this.sluttDato
+            is MeldesyklusErPassertHendelse -> this.periodeTilOgMed
             else -> null
         }
 
@@ -590,8 +589,11 @@ class PostgresPersonRepository(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
-                is ArbeidssøkerperiodeHendelse -> null
-                is SøknadHendelse -> null
+                is MeldesyklusErPassertHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        MeldesyklusErPassertExtra(meldekortregisterPeriodeId = this.meldekortregisterPeriodeId),
+                    )
+
                 else -> null
             }
 
@@ -690,6 +692,24 @@ class PostgresPersonRepository(
                     statusMeldeplikt = meldepliktExtra.statusMeldeplikt,
                     kilde = Kildesystem.valueOf(kilde),
                     harMeldtSeg = meldepliktExtra.harMeldtSeg ?: true,
+                )
+            }
+
+            "MeldesyklusErPassertHendelse" -> {
+                val extra = defaultObjectMapper.readValue<MeldesyklusErPassertExtra>(extra!!)
+                MeldesyklusErPassertHendelse(
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    meldekortregisterPeriodeId = extra.meldekortregisterPeriodeId,
+                    periodeFraOgMed =
+                        startDato ?: throw IllegalStateException(
+                            "MeldesyklusErPassertHendelse med referanseId $referanseId mangler startDato",
+                        ),
+                    periodeTilOgMed =
+                        sluttDato ?: throw IllegalStateException(
+                            "MeldesyklusErPassertHendelse med referanseId $referanseId mangler sluttDato",
+                        ),
                 )
             }
 
@@ -875,6 +895,10 @@ data class MeldegruppeExtra(
 data class MeldepliktExtra(
     val statusMeldeplikt: Boolean,
     val harMeldtSeg: Boolean? = null,
+)
+
+data class MeldesyklusErPassertExtra(
+    val meldekortregisterPeriodeId: String,
 )
 
 class OptimisticLockingException(

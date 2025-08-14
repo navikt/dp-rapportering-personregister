@@ -9,7 +9,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegrup
 import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -183,6 +186,17 @@ class PersonTest {
             }
     }
 
+    @Nested
+    inner class MeldesyklusErPassertHendelser {
+        @Test
+        fun `behandler meldesyklus er passert hendelse`() =
+            arbeidssøker(overtattBekreftelse = true) {
+                behandle(meldesyklusErPassertHendelse())
+
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretMedFristBruttFor this
+            }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         Person(ident)
             .apply { addObserver(arbeidssøkerperiodeObserver) }
@@ -226,6 +240,16 @@ class PersonTest {
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 
     private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå)
+
+    private fun meldesyklusErPassertHendelse() =
+        MeldesyklusErPassertHendelse(
+            ident,
+            nå,
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            tidligere,
+            nå,
+        )
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
@@ -238,6 +262,10 @@ infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
+}
+
+infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
+    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {

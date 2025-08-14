@@ -4,6 +4,7 @@ enum class Kildesystem {
     Søknad,
     Arena,
     Arbeidssokerregisteret,
+    Meldekortregister,
     Dagpenger,
     PJ,
 }

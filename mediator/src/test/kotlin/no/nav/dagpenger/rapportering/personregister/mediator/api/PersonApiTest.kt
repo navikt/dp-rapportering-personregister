@@ -1,11 +1,10 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.request.header
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
-import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
@@ -42,7 +41,7 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentPersonId") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody("hei")
                 },
             ) {
@@ -55,7 +54,7 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentPersonId") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody(ident)
                 },
             ) {
@@ -76,7 +75,7 @@ class PersonApiTest : ApiTestSetup() {
 
             with(
                 client.post("/hentPersonId") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody(ident)
                 },
             ) {
@@ -98,7 +97,7 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentIdent") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody("hei")
                 },
             ) {
@@ -111,7 +110,7 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentIdent") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody("1")
                 },
             ) {
@@ -133,7 +132,7 @@ class PersonApiTest : ApiTestSetup() {
 
             with(
                 client.post("/hentIdent") {
-                    header(HttpHeaders.Authorization, "Bearer ${issueAzureAdToken(emptyMap())}")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
                     setBody(personId.toString())
                 },
             ) {
