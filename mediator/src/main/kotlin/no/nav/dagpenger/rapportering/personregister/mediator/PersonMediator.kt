@@ -7,14 +7,15 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDateTime
 
 class PersonMediator(
@@ -143,6 +144,26 @@ class PersonMediator(
                         behandle(hendelse, counter + 1)
                     }
                     arbeidssøkerMediator.behandle(person.ident)
+                }
+        }
+
+    fun behandle(
+        hendelse: MeldesyklusErPassertHendelse,
+        counter: Int = 1,
+    ): Unit =
+        actionTimer.timedAction("behandle_MeldesyklusErPassertHendelse") {
+            logger.info { "Behandler MeldesyklusErPassertHendelse: ${hendelse.referanseId}" }
+            hentEllerOpprettPerson(hendelse.ident)
+                .also { person ->
+                    person.behandle(hendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                        }
+                        behandle(hendelse, counter + 1)
+                    }
                 }
         }
 

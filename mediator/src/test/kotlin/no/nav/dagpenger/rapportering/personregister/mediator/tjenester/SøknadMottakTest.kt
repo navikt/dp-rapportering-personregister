@@ -5,7 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime

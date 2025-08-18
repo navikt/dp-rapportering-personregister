@@ -15,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonServi
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
@@ -27,7 +26,6 @@ import java.util.UUID
 
 class AktiverHendelserJobTest : ApiTestSetup() {
     private val arbeidssøkerService = mockk<ArbeidssøkerService>()
-    private val personObserver = mockk<PersonObserver>(relaxed = true)
     private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val personService =
         PersonService(

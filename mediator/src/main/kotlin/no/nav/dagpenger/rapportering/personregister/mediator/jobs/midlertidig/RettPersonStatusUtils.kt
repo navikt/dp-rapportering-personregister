@@ -2,15 +2,15 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
 import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
