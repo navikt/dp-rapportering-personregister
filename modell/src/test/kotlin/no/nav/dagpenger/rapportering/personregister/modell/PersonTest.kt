@@ -193,7 +193,7 @@ class PersonTest {
             arbeidssøker(overtattBekreftelse = true) {
                 behandle(meldesyklusErPassertHendelse())
 
-                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretMedFristBruttFor this
+                arbeidssøkerperiodeObserver skalHaFrasagtSegAnsvaretMedFristBruttFor this
             }
     }
 
@@ -264,7 +264,7 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
 }
 
-infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
+infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
 }
 
