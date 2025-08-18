@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
-import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -27,39 +26,12 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
-data class IdListRequest(
-    val ids: List<UUID>,
-)
-
 internal fun Application.personstatusApi(
     personMediator: PersonMediator,
     synkroniserPersonMetrikker: SynkroniserPersonMetrikker,
     personService: PersonService,
 ) {
     routing {
-        // TODO: Slett eller beskytt med autentisering
-        route("/frasigelse") {
-            post {
-                val request = call.receive<IdListRequest>()
-                val ids = request.ids
-
-                logger.info { "POST /frasigelse for ${ids.size} perioder" }
-
-                personService.triggerFrasigelse(ids)
-
-                call.respond(HttpStatusCode.OK, mapOf("Frasagt arbeidssøkerbekreftelse for" to ids.size))
-            }
-        }
-
-        // TODO: Slett eller beskytt med autentisering
-        route("/rettelse") {
-            get {
-                logger.info { "GET /rettelse" }
-
-                call.respond(HttpStatusCode.OK, "Rettelse av personstatus er utført")
-            }
-        }
-
         authenticate("tokenX") {
             route("/personstatus") {
                 post {
