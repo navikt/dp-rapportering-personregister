@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.observers
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.Companion.getRapidsConnection
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.Person

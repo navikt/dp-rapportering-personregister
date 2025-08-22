@@ -1,6 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker

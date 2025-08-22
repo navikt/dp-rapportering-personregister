@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import com.github.benmanes.caffeine.cache.Cache
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository

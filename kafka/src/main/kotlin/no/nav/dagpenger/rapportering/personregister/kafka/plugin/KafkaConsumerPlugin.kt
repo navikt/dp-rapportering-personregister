@@ -2,6 +2,7 @@
 
 package no.nav.dagpenger.rapportering.personregister.kafka.plugin
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationPlugin
 import io.ktor.server.application.ApplicationStarted
 import io.ktor.server.application.ApplicationStopping
@@ -11,7 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.NoopConsumerRebalanceListener
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.defaultErrorFunction
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.defaultSuccessFunction

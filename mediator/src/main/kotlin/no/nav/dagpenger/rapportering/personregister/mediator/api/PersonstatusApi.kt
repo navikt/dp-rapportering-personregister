@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
@@ -9,7 +10,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
-import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.PersonStatusResponse
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse

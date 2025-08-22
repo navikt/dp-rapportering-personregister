@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.leggTilNyArbeidssøkerperiode
@@ -9,7 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
 import java.util.UUID
 
-private val logger = mu.KotlinLogging.logger {}
+private val logger = KotlinLogging.logger {}
 
 data class StartetArbeidssøkerperiodeHendelse(
     override val periodeId: UUID,

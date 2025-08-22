@@ -1,11 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 

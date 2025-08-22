@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient

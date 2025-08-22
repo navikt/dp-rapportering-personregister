@@ -1,8 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import mu.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader

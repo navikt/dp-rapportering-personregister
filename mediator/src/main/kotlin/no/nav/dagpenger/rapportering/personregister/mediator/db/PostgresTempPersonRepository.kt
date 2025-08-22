@@ -1,10 +1,10 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
-import mu.KotlinLogging
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}

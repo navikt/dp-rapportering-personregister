@@ -1,10 +1,10 @@
 package no.nav.dagpenger.rapportering.personregister.kafka.plugin
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationPlugin
 import io.ktor.server.application.ApplicationStopping
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.hooks.MonitoringEvent
-import mu.KotlinLogging
 import org.apache.kafka.clients.producer.Producer
 import java.time.Duration
 

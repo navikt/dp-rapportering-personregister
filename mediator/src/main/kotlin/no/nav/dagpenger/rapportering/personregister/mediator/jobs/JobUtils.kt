@@ -1,11 +1,11 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import kotlinx.coroutines.runBlocking
-import mu.KLogger
 import java.net.InetAddress
 
 data class Leader(

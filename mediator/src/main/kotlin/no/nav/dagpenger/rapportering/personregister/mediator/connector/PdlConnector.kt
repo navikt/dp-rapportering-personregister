@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpHeaders
-import mu.KotlinLogging
 import no.nav.dagpenger.pdl.PersonOppslag
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.pdlApiTokenProvider
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
