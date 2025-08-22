@@ -247,9 +247,6 @@ class PersonTest {
             nå,
             nå,
             UUID.randomUUID().toString(),
-            UUID.randomUUID().toString(),
-            tidligere.toLocalDate(),
-            nå.toLocalDate(),
         )
 }
 

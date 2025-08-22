@@ -589,15 +589,6 @@ class PostgresPersonRepository(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
-                is MeldesyklusErPassertHendelse ->
-                    defaultObjectMapper.writeValueAsString(
-                        MeldesyklusErPassertExtra(
-                            meldekortregisterPeriodeId = this.meldekortregisterPeriodeId,
-                            periodeFraOgMed = this.periodeFraOgMed,
-                            periodeTilOgMed = this.periodeTilOgMed,
-                        ),
-                    )
-
                 else -> null
             }
 
@@ -706,9 +697,6 @@ class PostgresPersonRepository(
                     dato = dato,
                     startDato = dato,
                     referanseId = referanseId,
-                    meldekortregisterPeriodeId = extra.meldekortregisterPeriodeId,
-                    periodeFraOgMed = extra.periodeFraOgMed,
-                    periodeTilOgMed = extra.periodeTilOgMed,
                 )
             }
 

@@ -59,9 +59,6 @@ class MeldesyklusErPassertMottakTest {
         hendelseSlot.captured.dato.toLocalDate() shouldBe dato
         hendelseSlot.captured.startDato.toLocalDate() shouldBe dato
         hendelseSlot.captured.referanseId shouldBe referanseId
-        hendelseSlot.captured.meldekortregisterPeriodeId shouldBe meldekortregisterPeriodeId
-        hendelseSlot.captured.periodeFraOgMed shouldBe periodeFraOgMed
-        hendelseSlot.captured.periodeTilOgMed shouldBe periodeTilOgMed
     }
 
     @Test
