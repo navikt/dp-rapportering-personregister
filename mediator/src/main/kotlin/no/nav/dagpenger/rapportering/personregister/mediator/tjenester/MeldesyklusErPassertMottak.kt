@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
@@ -52,8 +53,8 @@ class MeldesyklusErPassertMottak(
         val ident = packet["ident"].asText()
         val referanseId = packet["referanseId"].asText()
         val meldekortregisterPeriodeId = packet["meldekortregisterPeriodeId"].asText()
-        val periodeFraOgMed = packet["periodeFraOgMed"].asLocalDateTime()
-        val periodeTilOgMed = packet["periodeTilOgMed"].asLocalDateTime()
+        val periodeFraOgMed = packet["periodeFraOgMed"].asLocalDate()
+        val periodeTilOgMed = packet["periodeTilOgMed"].asLocalDate()
 
         if (!ident.matches(Regex("[0-9]{11}"))) {
             logger.error("Person-ident må ha 11 sifre")
@@ -63,6 +64,7 @@ class MeldesyklusErPassertMottak(
         val meldesyklusErPassertHendelse =
             MeldesyklusErPassertHendelse(
                 ident,
+                LocalDateTime.now(),
                 LocalDateTime.now(),
                 referanseId,
                 meldekortregisterPeriodeId,

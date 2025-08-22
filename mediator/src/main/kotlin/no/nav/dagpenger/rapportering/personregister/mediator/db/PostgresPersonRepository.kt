@@ -26,6 +26,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -553,7 +554,7 @@ class PostgresPersonRepository(
             is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
             is DagpengerMeldegruppeHendelse -> this.startDato
             is MeldepliktHendelse -> this.startDato
-            is MeldesyklusErPassertHendelse -> this.periodeFraOgMed
+            is MeldesyklusErPassertHendelse -> this.startDato
             is PersonIkkeDagpengerSynkroniseringHendelse -> this.startDato
             is PersonSynkroniseringHendelse -> this.startDato
             is StartetArbeidssøkerperiodeHendelse -> this.startet
@@ -567,7 +568,6 @@ class PostgresPersonRepository(
             is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
             is DagpengerMeldegruppeHendelse -> this.sluttDato
             is MeldepliktHendelse -> this.sluttDato
-            is MeldesyklusErPassertHendelse -> this.periodeTilOgMed
             else -> null
         }
 
@@ -591,7 +591,11 @@ class PostgresPersonRepository(
 
                 is MeldesyklusErPassertHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        MeldesyklusErPassertExtra(meldekortregisterPeriodeId = this.meldekortregisterPeriodeId),
+                        MeldesyklusErPassertExtra(
+                            meldekortregisterPeriodeId = this.meldekortregisterPeriodeId,
+                            periodeFraOgMed = this.periodeFraOgMed,
+                            periodeTilOgMed = this.periodeTilOgMed,
+                        ),
                     )
 
                 else -> null
@@ -700,16 +704,11 @@ class PostgresPersonRepository(
                 MeldesyklusErPassertHendelse(
                     ident = ident,
                     dato = dato,
+                    startDato = dato,
                     referanseId = referanseId,
                     meldekortregisterPeriodeId = extra.meldekortregisterPeriodeId,
-                    periodeFraOgMed =
-                        startDato ?: throw IllegalStateException(
-                            "MeldesyklusErPassertHendelse med referanseId $referanseId mangler startDato",
-                        ),
-                    periodeTilOgMed =
-                        sluttDato ?: throw IllegalStateException(
-                            "MeldesyklusErPassertHendelse med referanseId $referanseId mangler sluttDato",
-                        ),
+                    periodeFraOgMed = extra.periodeFraOgMed,
+                    periodeTilOgMed = extra.periodeTilOgMed,
                 )
             }
 
@@ -899,6 +898,8 @@ data class MeldepliktExtra(
 
 data class MeldesyklusErPassertExtra(
     val meldekortregisterPeriodeId: String,
+    val periodeFraOgMed: LocalDate,
+    val periodeTilOgMed: LocalDate,
 )
 
 class OptimisticLockingException(

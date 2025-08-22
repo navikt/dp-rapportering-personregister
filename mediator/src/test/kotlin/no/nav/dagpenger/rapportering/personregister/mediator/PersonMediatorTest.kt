@@ -50,6 +50,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -388,10 +389,11 @@ class PersonMediatorTest {
                 MeldesyklusErPassertHendelse(
                     ident,
                     LocalDateTime.now(),
+                    LocalDateTime.now(),
                     UUID.randomUUID().toString(),
                     UUID.randomUUID().toString(),
-                    LocalDateTime.now().minusDays(35),
-                    LocalDateTime.now().minusDays(14),
+                    LocalDate.now().minusDays(35),
+                    LocalDate.now().minusDays(14),
                 )
 
             arbeidssøker(overtattBekreftelse = true) {

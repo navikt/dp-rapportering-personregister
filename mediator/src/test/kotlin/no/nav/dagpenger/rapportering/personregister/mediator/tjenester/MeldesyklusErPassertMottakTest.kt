@@ -13,7 +13,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Meldesyklus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.util.UUID
 
 class MeldesyklusErPassertMottakTest {
@@ -38,8 +37,8 @@ class MeldesyklusErPassertMottakTest {
         val dato = LocalDate.now()
         val referanseId = UUID.randomUUID().toString()
         val meldekortregisterPeriodeId = UUID.randomUUID().toString()
-        val periodeFraOgMed = LocalDateTime.now().minusDays(35)
-        val periodeTilOgMed = LocalDateTime.now().minusDays(21)
+        val periodeFraOgMed = LocalDate.now().minusDays(35)
+        val periodeTilOgMed = LocalDate.now().minusDays(21)
 
         val melding =
             """
@@ -58,6 +57,7 @@ class MeldesyklusErPassertMottakTest {
 
         hendelseSlot.captured.ident shouldBe ident
         hendelseSlot.captured.dato.toLocalDate() shouldBe dato
+        hendelseSlot.captured.startDato.toLocalDate() shouldBe dato
         hendelseSlot.captured.referanseId shouldBe referanseId
         hendelseSlot.captured.meldekortregisterPeriodeId shouldBe meldekortregisterPeriodeId
         hendelseSlot.captured.periodeFraOgMed shouldBe periodeFraOgMed
@@ -70,8 +70,8 @@ class MeldesyklusErPassertMottakTest {
         val dato = LocalDate.now()
         val referanseId = UUID.randomUUID().toString()
         val meldekortregisterPeriodeId = UUID.randomUUID().toString()
-        val periodeFraOgMed = LocalDateTime.now().minusDays(35)
-        val periodeTilOgMed = LocalDateTime.now().minusDays(21)
+        val periodeFraOgMed = LocalDate.now().minusDays(35)
+        val periodeTilOgMed = LocalDate.now().minusDays(21)
 
         val melding =
             """

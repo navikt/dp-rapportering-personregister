@@ -245,10 +245,11 @@ class PersonTest {
         MeldesyklusErPassertHendelse(
             ident,
             nå,
-            UUID.randomUUID().toString(),
-            UUID.randomUUID().toString(),
-            tidligere,
             nå,
+            UUID.randomUUID().toString(),
+            UUID.randomUUID().toString(),
+            tidligere.toLocalDate(),
+            nå.toLocalDate(),
         )
 }
 
