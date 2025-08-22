@@ -68,7 +68,7 @@ class ArbeidssøkerMediator(
         withDelay: Boolean = true,
     ) {
         if (withDelay) {
-            logger.info("Behandler PaaVegneAv-melding. Venter i 1 sekunder.")
+            logger.info { "Behandler PaaVegneAv-melding. Venter i 1 sekunder." }
             delay(1.seconds)
         }
         logger.info { "Behandler PaaVegneAv-melding: for periodeId: ${paVegneAv.periodeId}" }
@@ -121,9 +121,9 @@ class ArbeidssøkerMediator(
             }
         }
 
-        logger.info(
-            "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}",
-        )
+        logger.info {
+            "Oppdaterer person med periodeId ${paVegneAv.periodeId} og overtattBekreftelse = ${person.arbeidssøkerperioder.gjeldende?.overtattBekreftelse}"
+        }
         try {
             personRepository.oppdaterPerson(person)
         } catch (e: OptimisticLockingException) {

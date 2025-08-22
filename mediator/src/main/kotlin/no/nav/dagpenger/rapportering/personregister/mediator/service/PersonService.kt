@@ -26,14 +26,14 @@ class PersonService(
             val person = personRepository.hentPersonMedPeriodeId(periodeId)
 
             if (person != null) {
-                logger.info("Sender frasigelsesmelding for periode $periodeId")
+                logger.info { "Sender frasigelsesmelding for periode $periodeId" }
 
                 if (person.observers.isEmpty()) {
                     personObservers.forEach { observer -> person.addObserver(observer) }
                 }
                 person.sendFrasigelsesmelding(periodeId, false)
             } else {
-                logger.warn("Fant ikke person med periodeId $periodeId")
+                logger.warn { "Fant ikke person med periodeId $periodeId" }
             }
         }
     }
@@ -70,7 +70,7 @@ class PersonService(
         } else if (personer.size == 1) {
             val person = personer.first()
             if (gjeldendeIdent != null && person.ident != gjeldendeIdent) {
-                sikkerLogg.info("Oppdaterer ident fra ${person.ident} til $gjeldendeIdent")
+                sikkerLogg.info { "Oppdaterer ident fra ${person.ident} til $gjeldendeIdent" }
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
                 return person.copy(ident = gjeldendeIdent)
             } else {
@@ -101,7 +101,7 @@ class PersonService(
                 }
                 return gjeldendePerson
             } else {
-                logger.warn("Fant ingen gjeldende ident for ${personer.map { it.ident }}")
+                logger.warn { "Fant ingen gjeldende ident for ${personer.map { it.ident }}" }
                 return null
             }
         }
@@ -116,7 +116,7 @@ class PersonService(
             .forEach { pdlIdent ->
                 val historiskPerson = personer.firstOrNull { it.ident == pdlIdent.ident }
                 if (historiskPerson != null) {
-                    sikkerLogg.info("Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}")
+                    sikkerLogg.info { "Konsoliderer person med ident ${pdlIdent.ident} til ${gjeldendePerson.ident}" }
                     gjeldendePerson.hendelser.addAll(historiskPerson.hendelser)
                     historiskPerson.statusHistorikk.getAll().forEach {
                         gjeldendePerson.statusHistorikk.put(it.first, it.second)
@@ -140,7 +140,7 @@ class PersonService(
                         }
                     }
                 } else {
-                    sikkerLogg.info("Fant ikke historisk person med ident ${pdlIdent.ident}")
+                    sikkerLogg.info { "Fant ikke historisk person med ident ${pdlIdent.ident}" }
                 }
             }
     }
@@ -155,7 +155,7 @@ class PersonService(
             }
         if (overtatteArbeidssøkerperioder.size > 1) {
             val nyesteOvertattePeriode = overtatteArbeidssøkerperioder.maxByOrNull { it.startet }
-            sikkerLogg.info("Nyeste overtatte periode er ${nyesteOvertattePeriode?.periodeId}")
+            sikkerLogg.info { "Nyeste overtatte periode er ${nyesteOvertattePeriode?.periodeId}" }
             val arbeidssøkerperioder =
                 gjeldendePerson.arbeidssøkerperioder.map { arbeidssøkerperiode ->
                     if (arbeidssøkerperiode != nyesteOvertattePeriode) {
@@ -170,7 +170,7 @@ class PersonService(
                     }
                     arbeidssøkerperiode
                 }
-            sikkerLogg.info("Konsoliderer arbeidssøkerperioder for ${gjeldendePerson.ident}: $arbeidssøkerperioder")
+            sikkerLogg.info { "Konsoliderer arbeidssøkerperioder for ${gjeldendePerson.ident}: $arbeidssøkerperioder" }
 
             gjeldendePerson.arbeidssøkerperioder.clear()
             gjeldendePerson.arbeidssøkerperioder.addAll(arbeidssøkerperioder.distinctBy { it.periodeId })

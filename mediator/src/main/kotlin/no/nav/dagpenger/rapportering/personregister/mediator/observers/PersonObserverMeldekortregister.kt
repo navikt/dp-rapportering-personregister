@@ -21,8 +21,8 @@ class PersonObserverMeldekortregister(
         person: Person,
         startDato: LocalDateTime,
     ) {
-        logger.info("Sender Start-melding til Meldekortregister for person")
-        sikkerlogg.info("Sender Start-melding til Meldekortregister for person ${person.ident}")
+        logger.info { "Sender Start-melding til Meldekortregister for person" }
+        sikkerlogg.info { "Sender Start-melding til Meldekortregister for person ${person.ident}" }
 
         val message =
             JsonMessage.newMessage(

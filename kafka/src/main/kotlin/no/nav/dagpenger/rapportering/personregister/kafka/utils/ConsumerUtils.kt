@@ -10,13 +10,13 @@ private val logger = KotlinLogging.logger {}
 
 fun <K, V> KafkaConsumer<K, V>.defaultSuccessFunction(records: ConsumerRecords<K, V>) {
     if (!records.isEmpty) {
-        logger.debug("Kafka Consumer success. {} records processed", records.count())
+        logger.debug { "Kafka Consumer success. ${records.count()} records processed" }
         this.commitSync()
     }
 }
 
 fun defaultErrorFunction(throwable: Throwable) {
-    logger.error("Kafka Consumer failed", throwable)
+    logger.error(throwable) { "Kafka Consumer failed" }
     throw throwable
 }
 

@@ -41,7 +41,7 @@ class KafkaConsumerPluginConfig<K, V> {
 fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaConsumerPluginConfig<K, V>> {
     val pluginName = "${pluginInstance}${PLUGIN_NAME_SUFFIX}"
     return createApplicationPlugin(pluginName, ::KafkaConsumerPluginConfig) {
-        logger.info("Installerer {}", pluginName)
+        logger.info { "Installerer $pluginName" }
         val kafkaTopics = requireNotNull(pluginConfig.kafkaTopics) { "KafkaTopics er null" }
         val kafkaConsumer = requireNotNull(pluginConfig.kafkaConsumer) { "KafkaConsumer er null" }
         val consumeFunction = requireNotNull(pluginConfig.consumeFunction) { "ConsumeFunction er null" }
@@ -55,12 +55,12 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
         var consumeJob: Job? = null
 
         on(MonitoringEvent(ApplicationStarted)) { application ->
-            logger.info("Klargjør {} Kafka Consumer", pluginInstance)
+            logger.info { "Klargjør $pluginInstance Kafka Consumer" }
             kafkaConsumer.subscribe(kafkaTopics, rebalanceListener)
 
             consumeJob =
                 application.launch(coroutineDispatcher) {
-                    logger.info("Starter {} Kafka Consumer", pluginInstance)
+                    logger.info { "Starter $pluginInstance Kafka Consumer" }
                     while (!shutdownFlag.get()) {
                         try {
                             val records = kafkaConsumer.poll(pollTimeout)
@@ -74,13 +74,13 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
                             // TODO: Sette isAlive/isReady til unhealthy
                         }
                     }
-                    logger.info("Stoppet {} Kafka Consumer", pluginInstance)
+                    logger.info { "Stoppet $pluginInstance Kafka Consumer" }
                     consumeJob?.cancel()
                 }
         }
 
         on(MonitoringEvent(ApplicationStopping)) { _ ->
-            logger.info("Stopper {} Kafka Consumer", pluginInstance)
+            logger.info { "Stopper $pluginInstance Kafka Consumer" }
             shutdownFlag.set(true)
             consumeJob?.cancel()
             kafkaConsumer.unsubscribe()

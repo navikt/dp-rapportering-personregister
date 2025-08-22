@@ -74,7 +74,7 @@ class PersonMediator(
         actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
             logger.info { "Behandler dagpenger meldegruppe hendelse: ${hendelse.referanseId}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
-                logger.info("DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+                logger.info { "DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
@@ -99,7 +99,7 @@ class PersonMediator(
         actionTimer.timedAction("behandle_AnnenMeldegruppeHendelse") {
             logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
-                logger.info("AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+                logger.info { "AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 behandleHendelse(hendelse)
             }

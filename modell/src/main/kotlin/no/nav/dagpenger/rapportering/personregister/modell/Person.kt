@@ -91,14 +91,14 @@ data class Person(
 }
 
 fun Person.sendOvertakelsesmelding() {
-    logger.info("Overtar arbeidssøkerbekreftelse")
+    logger.info { "Overtar arbeidssøkerbekreftelse" }
     arbeidssøkerperioder.gjeldende?.let {
-        logger.info("Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}")
-        logger.info("Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse.")
+        logger.info { "Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}" }
+        logger.info { "Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse." }
         try {
-            logger.info("Antall observere: ${observers.size}")
+            logger.info { "Antall observere: ${observers.size}" }
             observers.forEach { observer -> observer.sendOvertakelsesmelding(this) }
-            logger.info("Kjørte overtagelse på observere uten feil")
+            logger.info { "Kjørte overtagelse på observere uten feil" }
         } catch (e: Exception) {
             logger.error(e) { "Overtagelse feilet!" }
             throw e
@@ -107,7 +107,7 @@ fun Person.sendOvertakelsesmelding() {
 }
 
 fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
-    logger.info("Merker periode $periodeId som overtatt")
+    logger.info { "Merker periode $periodeId som overtatt" }
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let { it.overtattBekreftelse = true }
@@ -118,16 +118,16 @@ fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
 ) {
-    logger.info("Frasier arbeidssøkerbekreftelse")
+    logger.info { "Frasier arbeidssøkerbekreftelse" }
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let {
             if (it.overtattBekreftelse == true) {
-                logger.info("Gjeldende arbeidssøkerperiode har overtatt bekreftelse.")
+                logger.info { "Gjeldende arbeidssøkerperiode har overtatt bekreftelse." }
                 try {
-                    logger.info("Antall observere: ${observers.size}")
+                    logger.info { "Antall observere: ${observers.size}" }
                     observers.forEach { observer -> observer.sendFrasigelsesmelding(this, fristBrutt) }
-                    logger.info("Kjørte frasigelse på observere uten feil")
+                    logger.info { "Kjørte frasigelse på observere uten feil" }
                 } catch (e: Exception) {
                     logger.error(e) { "Frasigelse feilet!" }
                     throw e
@@ -137,7 +137,7 @@ fun Person.sendFrasigelsesmelding(
 }
 
 fun Person.merkPeriodeSomIkkeOvertatt(periodeId: UUID) {
-    logger.info("Merker periode $periodeId som ikke overtatt")
+    logger.info { "Merker periode $periodeId som ikke overtatt" }
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let { it.overtattBekreftelse = false }
@@ -169,12 +169,12 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
 }
 
 fun Person.sendStartMeldingTilMeldekortregister(startDato: LocalDateTime) {
-    logger.info("Sender Start-melding til Meldekortregister")
+    logger.info { "Sender Start-melding til Meldekortregister" }
 
     try {
-        logger.info("Antall observere: ${observers.size}")
+        logger.info { "Antall observere: ${observers.size}" }
         observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, startDato) }
-        logger.info("Sendte Start-melding på observere uten feil")
+        logger.info { "Sendte Start-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }
         throw e

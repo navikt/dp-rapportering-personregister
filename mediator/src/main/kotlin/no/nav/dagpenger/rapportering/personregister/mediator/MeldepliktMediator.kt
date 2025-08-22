@@ -25,7 +25,7 @@ class MeldepliktMediator(
         actionTimer.timedAction("behandle_MeldepliktHendelse") {
             logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId} med status: ${hendelse.statusMeldeplikt}" }
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
-                logger.info("MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer.")
+                logger.info { "MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 behandleHendelse(hendelse)
             }

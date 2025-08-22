@@ -46,7 +46,7 @@ internal class ResendPåVegneAvMelding(
                                 .plus(personRepository.hentPersonerUtenDagpengerMedAvvikBekreftelse())
                                 .distinct()
 
-                        logger.info("Hentet ${identer.size} identer som skal rettes")
+                        logger.info { "Hentet ${identer.size} identer som skal rettes" }
 
                         var antallOvertakelser = 0
                         var antallFrasigelser = 0

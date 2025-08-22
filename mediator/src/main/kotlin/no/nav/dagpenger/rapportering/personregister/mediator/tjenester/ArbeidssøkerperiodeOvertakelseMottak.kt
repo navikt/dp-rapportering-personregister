@@ -18,9 +18,9 @@ class ArbeidssøkerperiodeOvertakelseMottak(
             // arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
             with(record.value()) {
                 if (this.bekreftelsesloesning != Bekreftelsesloesning.DAGPENGER) {
-                    logger.warn(
-                        "Bekreftelsesløsning i melding om overtakelse av perioden ${this.periodeId} var ${this.bekreftelsesloesning}.",
-                    )
+                    logger.warn {
+                        "Bekreftelsesløsning i melding om overtakelse av perioden ${this.periodeId} var ${this.bekreftelsesloesning}."
+                    }
                 } else {
                     runBlocking { arbeidssøkerMediator.behandle(this@with) }
                 }
