@@ -29,7 +29,9 @@ class PersonObserverKafka(
     override fun sendOvertakelsesmelding(person: Person) {
         try {
             logger.info { "Starter overtagelse av bekreftelse for person. Arbs.perioder: ${person.arbeidssøkerperioder.size}" }
-            sikkerlogg.info { "Starter overtagelse av bekreftelse for person ${person.ident}. Arbs.perioder: ${person.arbeidssøkerperioder}" }
+            sikkerlogg.info {
+                "Starter overtagelse av bekreftelse for person ${person.ident}. Arbs.perioder: ${person.arbeidssøkerperioder}"
+            }
             val gjeldendePeriodeId = person.arbeidssøkerperioder.gjeldende?.periodeId
             logger.info { "Gjeldende periodeId: $gjeldendePeriodeId" }
             sikkerlogg.info { "Gjeldende periodeId: $gjeldendePeriodeId" }
