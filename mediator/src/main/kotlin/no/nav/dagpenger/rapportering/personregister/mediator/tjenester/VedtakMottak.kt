@@ -34,7 +34,7 @@ class VedtakMottak(
                     it.requireValue("@event_name", "vedtak_fattet")
                     it.requireValue("behandletHendelse.type", "Søknad")
                 }
-                validate { it.requireKey("behandlingId", "ident", "virkningsdato") }
+                validate { it.requireKey("behandlingId", "ident", "virkningsdato", "behandletHendelse") }
             }.register(this)
     }
 
@@ -46,6 +46,7 @@ class VedtakMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asText()
+        val hendelseId = packet["behandletHendelse"]["id"].asText()
 
         withLoggingContext(
             "behandlingId" to behandlingId,
@@ -68,6 +69,7 @@ class VedtakMottak(
                     LocalDateTime.now(),
                     virkningsdato.atStartOfDay(),
                     behandlingId,
+                    hendelseId,
                 )
 
             if (virkningsdato.isAfter(LocalDate.now())) {

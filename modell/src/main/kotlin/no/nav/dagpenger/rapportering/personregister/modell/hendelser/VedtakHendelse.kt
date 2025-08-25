@@ -11,6 +11,7 @@ data class VedtakHendelse(
     override val dato: LocalDateTime,
     override val startDato: LocalDateTime,
     override val referanseId: String,
+    val behandletHendelseId: String,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ
 
