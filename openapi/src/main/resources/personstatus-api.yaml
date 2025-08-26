@@ -34,9 +34,9 @@ paths:
         200:
           description: OK
           content:
-            text/plain:
+            application/json:
               schema:
-                type: integer
+                $ref: '#/components/schemas/PersonIdBody'
         404:
           description: Not Found
       summary: Hent ID til en person
@@ -45,9 +45,9 @@ paths:
       requestBody:
           required: true
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/IdentBody'
       security:
         - azureAd: []
 
@@ -57,9 +57,9 @@ paths:
         200:
           description: OK
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/IdentBody'
         404:
           description: Not Found
       summary: Hent ident til en person
@@ -68,14 +68,28 @@ paths:
       requestBody:
         required: true
         content:
-          text/plain:
+          application/json:
             schema:
-              type: integer
+              $ref: '#/components/schemas/PersonIdBody'
       security:
         - azureAd: []
 
 components:
   schemas:
+    IdentBody:
+      required:
+        - ident
+      type: object
+      properties:
+        ident:
+          type: string
+    PersonIdBody:
+      required:
+        - personId
+      type: object
+      properties:
+        personId:
+          type: integer
     PersonStatus:
       required:
         - ident
