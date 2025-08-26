@@ -1,12 +1,16 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.kotest.matchers.shouldBe
+import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -41,8 +45,9 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentPersonId") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody("hei")
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody("hei")))
                 },
             ) {
                 status shouldBe HttpStatusCode.BadRequest
@@ -54,8 +59,9 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentPersonId") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody(ident)
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody(ident)))
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -75,12 +81,13 @@ class PersonApiTest : ApiTestSetup() {
 
             with(
                 client.post("/hentPersonId") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody(ident)
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody(ident)))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                bodyAsText() shouldBe "1"
+                defaultObjectMapper.readTree(bodyAsText())["personId"].asText() shouldBe "1"
             }
         }
 
@@ -97,8 +104,9 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentIdent") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody("hei")
+                    setBody("{ personId: 'hei' }")
                 },
             ) {
                 status shouldBe HttpStatusCode.BadRequest
@@ -110,8 +118,9 @@ class PersonApiTest : ApiTestSetup() {
         setUpTestApplication {
             with(
                 client.post("/hentIdent") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody("1")
+                    setBody(defaultObjectMapper.writeValueAsString(PersonIdBody(1)))
                 },
             ) {
                 status shouldBe HttpStatusCode.NotFound
@@ -128,16 +137,17 @@ class PersonApiTest : ApiTestSetup() {
                 .also {
                     personRepository.lagrePerson(it)
                 }
-            val personId = personRepository.hentPersonId(ident)
+            val personId = personRepository.hentPersonId(ident)!!
 
             with(
                 client.post("/hentIdent") {
+                    header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
-                    setBody(personId.toString())
+                    setBody(defaultObjectMapper.writeValueAsString(PersonIdBody(personId)))
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                bodyAsText() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
             }
         }
 }
