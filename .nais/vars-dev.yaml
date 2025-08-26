@@ -3,6 +3,7 @@ kafka:
 
 ingresses:
   - https://dp-rapportering-personregister.intern.dev.nav.no
+wonderwalled: true
 
 cluster: dev-gcp
 

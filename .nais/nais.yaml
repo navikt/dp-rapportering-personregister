@@ -79,6 +79,12 @@ spec:
       rules:
         - application: dp-rapportering
         - application: dp-meldekortregister
+        - application: dp-saksbehandling-frontend
+        {{#if wonderwalled}}
+        - application: azure-token-generator
+          namespace: nais
+          cluster: dev-gcp
+        {{/if}}
         {{#each additionalInbounds}}
         - application: "{{application}}"
           namespace: "{{namespace}}"
