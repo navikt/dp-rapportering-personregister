@@ -3,7 +3,6 @@ kafka:
 
 ingresses:
   - https://dp-rapportering-personregister.intern.dev.nav.no
-wonderwalled: true
 
 cluster: dev-gcp
 
@@ -28,3 +27,5 @@ additionalInbounds:
     namespace: meldekort
   - application: tokenx-token-generator
     namespace: aura
+  - application: azure-token-generator
+    namespace: nais
