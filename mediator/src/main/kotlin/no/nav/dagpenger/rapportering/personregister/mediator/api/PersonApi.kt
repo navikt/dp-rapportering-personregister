@@ -87,25 +87,17 @@ internal fun Application.personApi(personService: PersonService) {
                 post {
                     logger.info { "POST /hentIdent" }
 
-                    try {
-                        val request = call.receive<PersonIdBody>()
+                    val request = call.receive<PersonIdBody>()
 
-                        personService
-                            .hentIdent(request.personId)
-                            ?.also { ident ->
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    IdentBody(ident),
-                                )
-                            }
-                            ?: throw PersonNotFoundException()
-                    } catch (e: BadRequestException) {
-                        logger.error(e) { "Ikke gyldig personId" }
-                        throw BadRequestException("Ikke gyldig personId")
-                    } catch (e: Exception) {
-                        logger.error(e) { "Kunne ikke hente person" }
-                        throw e
-                    }
+                    personService
+                        .hentIdent(request.personId)
+                        ?.also { ident ->
+                            call.respond(
+                                HttpStatusCode.OK,
+                                IdentBody(ident),
+                            )
+                        }
+                        ?: throw PersonNotFoundException()
                 }
             }
         }
