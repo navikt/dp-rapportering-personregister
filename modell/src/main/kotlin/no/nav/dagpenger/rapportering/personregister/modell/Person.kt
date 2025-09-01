@@ -206,13 +206,13 @@ val Person.overtattBekreftelse: Boolean
 fun Person.vurderNyStatus() = if (this.oppfyllerKrav) DAGPENGERBRUKER else IKKE_DAGPENGERBRUKER
 
 val Person.oppfyllerKrav: Boolean get() =
-    this.erArbeidssøker &&
-        (
-            if (this.ansvarligSystem ==
-                AnsvarligSystem.ARENA
-            ) {
-                this.meldeplikt && this.meldegruppe == "DAGP"
-            } else {
-                this.vedtak == VedtakType.INNVILGET
-            }
-        )
+    this.erArbeidssøker && this.harRiktigMeldestatusEllerVedtak
+
+val Person.harRiktigMeldestatusEllerVedtak: Boolean get() =
+    if (this.ansvarligSystem ==
+        AnsvarligSystem.ARENA
+    ) {
+        this.meldeplikt && this.meldegruppe == "DAGP"
+    } else {
+        this.vedtak == VedtakType.INNVILGET
+    }
