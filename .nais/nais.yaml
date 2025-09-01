@@ -113,3 +113,15 @@ spec:
       value: "{{ KAFKA_EXTRA_TOPIC }}"
     - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner
       value: -XX:+UseParallelGC -XX:ActiveProcessorCount=4
+    - name: GRUPPER_SAKSBEHANDLER
+      value: {{azure.grupper.saksbehandler}}
+  azure:
+    application:
+      enabled: true
+      tenant: {{azure.tenant}}
+      allowAllUsers: false
+      claims:
+        extra:
+          - NAVident
+        groups:
+          - id: {{azure.grupper.saksbehandler}}
