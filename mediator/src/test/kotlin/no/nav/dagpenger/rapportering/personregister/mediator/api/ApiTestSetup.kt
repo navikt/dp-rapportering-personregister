@@ -1,11 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.getunleash.Unleash
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.mockk.every
 import io.mockk.mockk
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
@@ -48,6 +50,7 @@ open class ApiTestSetup {
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val personObserver = mockk<PersonObserver>(relaxed = true)
     val pdlConnector = mockk<PdlConnector>()
+    val unleash = mockk<Unleash>()
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -84,6 +87,7 @@ open class ApiTestSetup {
         clean()
 
         testApplication {
+            every { unleash.isEnabled(any()) } returns true
             val meterRegistry =
                 PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -149,6 +153,7 @@ open class ApiTestSetup {
                     listOf(personObserver),
                     meldepliktMediator,
                     actionTimer,
+                    unleash,
                 )
 
             application {

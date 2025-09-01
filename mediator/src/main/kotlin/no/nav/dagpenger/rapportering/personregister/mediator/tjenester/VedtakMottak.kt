@@ -10,7 +10,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
@@ -62,22 +61,18 @@ class VedtakMottak(
                 logger.error { "Person-ident må ha 11 sifre" }
                 return
             }
-            if (unleash.isEnabled("dp-rapportering-personregister-les-vedtak")) {
-                val vedtakHendelse =
-                    VedtakHendelse(
-                        ident,
-                        LocalDateTime.now(),
-                        virkningsdato.atStartOfDay(),
-                        behandlingId,
-                    )
+            val vedtakHendelse =
+                VedtakHendelse(
+                    ident,
+                    LocalDateTime.now(),
+                    virkningsdato.atStartOfDay(),
+                    behandlingId,
+                )
 
-                if (virkningsdato.isAfter(LocalDate.now())) {
-                    fremtidigHendelseMediator.behandle(vedtakHendelse)
-                } else {
-                    personMediator.behandle(vedtakHendelse)
-                }
+            if (virkningsdato.isAfter(LocalDate.now())) {
+                fremtidigHendelseMediator.behandle(vedtakHendelse)
             } else {
-                logger.info { "Lesing av vedtak er deaktivert i unleash" }
+                personMediator.behandle(vedtakHendelse)
             }
         }
     }

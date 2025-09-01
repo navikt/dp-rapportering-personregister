@@ -39,7 +39,15 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     private val meldepliktMediator =
         MeldepliktMediator(personRepository, personService, listOf(personObserver), meldepliktConnector, actionTimer)
     private val personMediator =
-        PersonMediator(personRepository, personService, arbeidssøkerMediator, listOf(personObserver), meldepliktMediator, actionTimer)
+        PersonMediator(
+            personRepository,
+            personService,
+            arbeidssøkerMediator,
+            listOf(personObserver),
+            meldepliktMediator,
+            actionTimer,
+            unleash,
+        )
 
     private val ident = "12345678910"
 
