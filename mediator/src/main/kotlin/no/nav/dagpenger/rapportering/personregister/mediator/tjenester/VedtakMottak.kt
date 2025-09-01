@@ -62,7 +62,7 @@ class VedtakMottak(
                 logger.error { "Person-ident må ha 11 sifre" }
                 return
             }
-            if (unleash.isEnabled("dp-rapportering-les-vedtak")) {
+            if (unleash.isEnabled("dp-rapportering-personregister-les-vedtak")) {
                 val vedtakHendelse =
                     VedtakHendelse(
                         ident,
