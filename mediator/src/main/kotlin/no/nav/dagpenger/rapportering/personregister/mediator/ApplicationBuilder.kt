@@ -171,6 +171,18 @@ internal class ApplicationBuilder(
             actionTimer,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
+    private val meldestatusMediator =
+        MeldestatusMediator(
+            personRepository,
+            meldepliktConnector,
+            meldepliktMediator,
+            personMediator,
+            fremtidigHendelseMediator,
+            meldepliktendringMetrikker,
+            meldegruppeendringMetrikker,
+            actionTimer,
+        )
+
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
 
@@ -224,7 +236,7 @@ internal class ApplicationBuilder(
                     )
                     MeldestatusMottak(
                         rapid,
-                        // meldestatusMediator,
+                        meldestatusMediator,
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)

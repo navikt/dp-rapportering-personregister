@@ -44,7 +44,8 @@ class MeldepliktConnector(
         }
 
     suspend fun hentMeldestatus(
-        ident: String,
+        arenaPersonId: Long? = null,
+        ident: String? = null,
         dato: LocalDate? = null,
     ): MeldestatusResponse =
         withContext(Dispatchers.IO) {
@@ -56,7 +57,7 @@ class MeldepliktConnector(
                         meldepliktAdapterTokenProvider.invoke()
                             ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "meldepliktadapter_hentMeldestatus",
-                    body = MeldestatusRequest(personident = ident, sokeDato = dato),
+                    body = MeldestatusRequest(arenaPersonId = arenaPersonId, personident = ident, sokeDato = dato),
                     parameters = mapOf(),
                     actionTimer = actionTimer,
                 ).also {

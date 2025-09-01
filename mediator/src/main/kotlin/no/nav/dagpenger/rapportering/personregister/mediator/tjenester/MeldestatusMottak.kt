@@ -8,13 +8,14 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 
 private val logger = KotlinLogging.logger {}
 
 class MeldestatusMottak(
     rapidsConnection: RapidsConnection,
-    // private val meldestatusMediator: MeldestatusMediator,
+    private val meldestatusMediator: MeldestatusMediator,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -42,7 +43,7 @@ class MeldestatusMottak(
 
         try {
             val hendelse = packet.tilHendelse()
-            // meldestatusMediator.behandle(hendelse)
+            meldestatusMediator.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldestatusendring" }
             throw e

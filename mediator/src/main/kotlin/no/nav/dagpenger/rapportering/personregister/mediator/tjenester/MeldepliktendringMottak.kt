@@ -17,6 +17,7 @@ import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
 
+// TODO: Må slettes?
 class MeldepliktendringMottak(
     rapidsConnection: RapidsConnection,
     private val meldepliktMediator: MeldepliktMediator,

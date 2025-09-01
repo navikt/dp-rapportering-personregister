@@ -48,11 +48,10 @@ class MeldepliktConnectorTest {
 
     @Test
     fun `Kan mappe respons fra hentMeldestatus`() {
-        val ident = "12345678901"
         val meldestatusResponse =
             MeldestatusResponse(
                 1L,
-                ident,
+                "12345678901",
                 "DAGP",
                 true,
                 listOf(
@@ -92,7 +91,7 @@ class MeldepliktConnectorTest {
                 meldepliktConnector(
                     defaultObjectMapper.writeValueAsString(meldestatusResponse),
                     200,
-                ).hentMeldestatus(ident)
+                ).hentMeldestatus(1L)
             }
 
         response shouldBe meldestatusResponse
@@ -102,7 +101,7 @@ class MeldepliktConnectorTest {
     fun `Feilstatus fra hentMeldestatus trigger RuntimeException`() {
         shouldThrow<RuntimeException> {
             runBlocking {
-                meldepliktConnector("false", 500).hentMeldestatus("12345678901")
+                meldepliktConnector("false", 500).hentMeldestatus(1L)
             }
         }
     }

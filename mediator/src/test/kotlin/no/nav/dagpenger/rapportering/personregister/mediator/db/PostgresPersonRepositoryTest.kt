@@ -106,7 +106,7 @@ class PostgresPersonRepositoryTest {
         }
 
     @Test
-    fun `kan lagre, hente og slette fremtidige hendeslser`() =
+    fun `kan lagre, hente og slette fremtidige hendelser`() =
         withMigratedDb {
             val person = Person(ident = ident)
             val meldepliktHendelse = meldepliktHendelse()
@@ -126,6 +126,34 @@ class PostgresPersonRepositoryTest {
             personRepository.slettFremtidigHendelse(meldegruppeHendelse.referanseId)
 
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+
+    @Test
+    fun `kan slette fremtidige Arena hendelser`() =
+        withMigratedDb {
+            val person = Person(ident = ident)
+            val meldepliktHendelse = meldepliktHendelse("MP123456789")
+            val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
+            val ikkeArenaHendelse = meldegruppeHendelse(meldegruppeKode = "ARBS")
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(meldepliktHendelse)
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+            personRepository.lagreFremtidigHendelse(ikkeArenaHendelse)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 3
+                any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
+                any { it.javaClass == DagpengerMeldegruppeHendelse::class.java } shouldBe true
+                any { it.javaClass == AnnenMeldegruppeHendelse::class.java } shouldBe true
+            }
+
+            personRepository.slettFremtidigeArenaHendelser(ident)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 1
+                any { it.javaClass == AnnenMeldegruppeHendelse::class.java } shouldBe true
+            }
         }
 
     @Test

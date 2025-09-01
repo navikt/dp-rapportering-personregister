@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.kotest.matchers.shouldBe
-import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.header
 import io.ktor.client.request.post

@@ -72,6 +72,10 @@ class InMemoryPersonRepository : PersonRepository {
         }
     }
 
+    override fun slettFremtidigeArenaHendelser(ident: String) {
+        fremtidigeHendelser.removeIf { (it.referanseId.startsWith("MP") || it.referanseId.startsWith("MG")) && it.ident == ident }
+    }
+
     override fun hentPersonerMedDagpenger(): List<String> =
         personList.values.filter { it.status == Status.DAGPENGERBRUKER }.map { it.ident }
 

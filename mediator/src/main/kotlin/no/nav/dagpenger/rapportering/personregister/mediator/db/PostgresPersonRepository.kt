@@ -295,6 +295,22 @@ class PostgresPersonRepository(
             }.validateRowsAffected()
         }
 
+    override fun slettFremtidigeArenaHendelser(ident: String) =
+        actionTimer.timedAction("db-slettFremtidigeArenaHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE (referanse_id LIKE 'MP%' OR referanse_id LIKE 'MG%') AND ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }.let { }
+        }
+
     override fun hentPersonerMedDagpenger(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(

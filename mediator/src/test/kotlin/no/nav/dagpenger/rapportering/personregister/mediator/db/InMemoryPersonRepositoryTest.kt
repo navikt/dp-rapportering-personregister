@@ -3,8 +3,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
+import java.util.UUID
 
 class InMemoryPersonRepositoryTest {
     private lateinit var personRepository: PersonRepository
@@ -37,5 +42,47 @@ class InMemoryPersonRepositoryTest {
     @Test
     fun `kan ikke finne en person som ikke er lagret`() {
         personRepository.hentPerson(person.ident) shouldBe null
+    }
+
+    @Test
+    fun `kan slette fremtidige Arena hendelser`() {
+        val meldepliktHendelse =
+            MeldepliktHendelse(
+                ident = person.ident,
+                referanseId = "MP123456789",
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now(),
+                sluttDato = null,
+                statusMeldeplikt = true,
+                harMeldtSeg = true,
+            )
+        val meldegruppeHendelse =
+            DagpengerMeldegruppeHendelse(
+                ident = person.ident,
+                referanseId = "MG123456789",
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now(),
+                sluttDato = null,
+                meldegruppeKode = "DAGP",
+                harMeldtSeg = true,
+            )
+        val ikkeArenaHendelse =
+            AnnenMeldegruppeHendelse(
+                ident = "12345678901",
+                referanseId = UUID.randomUUID().toString(),
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now(),
+                sluttDato = null,
+                meldegruppeKode = "ATTF",
+                harMeldtSeg = true,
+            )
+
+        personRepository.lagreFremtidigHendelse(meldepliktHendelse)
+        personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+        personRepository.lagreFremtidigHendelse(ikkeArenaHendelse)
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 3
+
+        personRepository.slettFremtidigeArenaHendelser(person.ident)
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
     }
 }
