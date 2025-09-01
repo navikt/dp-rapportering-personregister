@@ -213,6 +213,6 @@ val Person.oppfyllerKrav: Boolean get() =
             ) {
                 this.meldeplikt && this.meldegruppe == "DAGP"
             } else {
-                vedtak == VedtakType.INNVILGET
+                this.vedtak == VedtakType.INNVILGET
             }
         )
