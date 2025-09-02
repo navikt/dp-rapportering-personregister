@@ -49,7 +49,10 @@ class VedtakMottakTest {
               },
               "behandlingId": "$behandlingId",
               "ident": "$ident",
-              "virkningsdato": "$dato" 
+              "virkningsdato": "$dato" ,
+              "fastsatt": {
+                 "status": "Innvilget"
+                }
             }
             """.trimIndent()
 
@@ -76,7 +79,10 @@ class VedtakMottakTest {
                 "id": "321e4567-e89b-12d3-a456-426614174000"
               "behandlingId": "$behandlingId",
               "ident": "$ident",
-              "virkningsdato": "$dato" 
+              "virkningsdato": "$dato",
+               "fastsatt": {
+                 "status": "Innvilget"
+               }
             }
             """.trimIndent()
 
