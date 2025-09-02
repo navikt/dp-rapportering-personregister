@@ -15,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMe
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -65,8 +64,8 @@ class VedtakMottak(
             val ident = packet["ident"].asText()
             val dato = packet["@opprettet"].asLocalDateTime()
             val søknadId = packet["behandletHendelse"]["id"].asText()
-            val status = VedtakStatus.valueOf(packet["fastsatt"]["status"].asText())
             val virkningsdato = packet["virkningsdato"].asLocalDate()
+            val utfall = packet["fastsatt"]["utfall"].asBoolean()
             val referanseId = behandlingId
 
             if (!ident.matches(Regex("[0-9]{11}"))) {
@@ -80,7 +79,7 @@ class VedtakMottak(
                     startDato = virkningsdato.atStartOfDay(),
                     referanseId = referanseId,
                     søknadId = søknadId,
-                    status = status,
+                    utfall = utfall,
                 )
 
             if (virkningsdato.isAfter(LocalDate.now())) {

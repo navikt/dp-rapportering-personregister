@@ -27,7 +27,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -596,7 +595,7 @@ class PostgresPersonRepository(
 
                 is VedtakHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        VedtakExtra(søknadId = this.søknadId, status = this.status.name),
+                        VedtakExtra(søknadId = this.søknadId, utfall = this.utfall),
                     )
 
                 else -> null
@@ -770,7 +769,7 @@ class PostgresPersonRepository(
                     startDato = startDato ?: dato,
                     referanseId = referanseId,
                     søknadId = vedtakExtra.søknadId,
-                    status = VedtakStatus.valueOf(vedtakExtra.status),
+                    utfall = vedtakExtra.utfall,
                 )
             }
 
@@ -918,7 +917,7 @@ data class MeldesyklusErPassertExtra(
 
 data class VedtakExtra(
     val søknadId: String,
-    val status: String,
+    val utfall: Boolean,
 )
 
 class OptimisticLockingException(

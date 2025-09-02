@@ -13,7 +13,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Meldesyklus
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -234,8 +233,8 @@ class PersonTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         søknadId: String = "456",
-        status: VedtakStatus = VedtakStatus.Innvilget,
-    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId, status)
+        utfall: Boolean = true,
+    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
