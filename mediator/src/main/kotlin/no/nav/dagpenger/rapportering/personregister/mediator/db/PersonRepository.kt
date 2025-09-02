@@ -34,7 +34,7 @@ interface PersonRepository {
 
     fun slettFremtidigHendelse(referanseId: String)
 
-    fun slettFremtidigeArenaHendelser(ident: String)
+    fun slettFremtidigeArenaHendelser(ident: String): Int
 
     fun hentPersonerMedDagpenger(): List<String>
 

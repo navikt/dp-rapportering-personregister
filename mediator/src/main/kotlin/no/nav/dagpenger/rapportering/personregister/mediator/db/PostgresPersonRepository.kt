@@ -299,7 +299,7 @@ class PostgresPersonRepository(
             }.validateRowsAffected()
         }
 
-    override fun slettFremtidigeArenaHendelser(ident: String) =
+    override fun slettFremtidigeArenaHendelser(ident: String): Int =
         actionTimer.timedAction("db-slettFremtidigeArenaHendelser") {
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
@@ -312,7 +312,7 @@ class PostgresPersonRepository(
                         ).asUpdate,
                     )
                 }
-            }.let { }
+            }
         }
 
     override fun hentPersonerMedDagpenger(): List<String> =
