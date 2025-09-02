@@ -29,8 +29,8 @@ data class VedtakHendelse(
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)
 
         person.hendelser
-            .filter { it is SøknadHendelse }
-            .find { it.referanseId == søknadId }
+            .filterIsInstance<SøknadHendelse>()
+            .find { søknadHendelse -> søknadHendelse.referanseId == søknadId }
             ?.dato
             ?.let {
                 person.sendStartMeldingTilMeldekortregister(it)
