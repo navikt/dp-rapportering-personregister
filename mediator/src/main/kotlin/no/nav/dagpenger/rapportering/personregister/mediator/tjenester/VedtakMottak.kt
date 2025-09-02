@@ -27,6 +27,7 @@ class VedtakMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     init {
@@ -56,6 +57,8 @@ class VedtakMottak(
             "event_name" to "vedtak_fattet",
         ) {
             logger.info { "Mottok vedtak_fattet melding" }
+            sikkerlogg.info { "Mottok vedtak_fattet melding: ${packet.toJson()}" }
+
             vedtakMetrikker.vedtakMottatt.increment()
 
             val ident = packet["ident"].asText()
