@@ -51,7 +51,7 @@ class VedtakMottakTest {
               "ident": "$ident",
               "virkningsdato": "$dato" ,
               "fastsatt": {
-                 "status": "Innvilget"
+                 "utfall": true
                 }
             }
             """.trimIndent()
@@ -81,7 +81,7 @@ class VedtakMottakTest {
               "ident": "$ident",
               "virkningsdato": "$dato",
                "fastsatt": {
-                 "status": "Innvilget"
+                    "utfall": true,
                }
             }
             """.trimIndent()
