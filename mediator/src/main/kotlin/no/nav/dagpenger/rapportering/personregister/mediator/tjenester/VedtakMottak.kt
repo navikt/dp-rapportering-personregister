@@ -61,7 +61,6 @@ class VedtakMottak(
                 logger.error { "Person-ident må ha 11 sifre" }
                 return
             }
-
             val vedtakHendelse =
                 VedtakHendelse(
                     ident,

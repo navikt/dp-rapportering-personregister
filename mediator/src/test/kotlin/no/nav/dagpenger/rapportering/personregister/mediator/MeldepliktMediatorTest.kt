@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -54,6 +55,18 @@ class MeldepliktMediatorTest {
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
 
+    private val unleash = FakeUnleash()
+
+    init {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+        System.setProperty("UNLEASH_SERVER_API_URL", "http://localhost")
+        System.setProperty("UNLEASH_SERVER_API_TOKEN", "token")
+        System.setProperty("UNLEASH_SERVER_API_ENV", "development")
+    }
+
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
@@ -90,8 +103,10 @@ class MeldepliktMediatorTest {
                 listOf(personObserver, beslutningObserver),
                 meldepliktMediator,
                 actionTimer,
+                unleash,
             )
 
+        unleash.enableAll()
         every { pdlConnector.hentIdenter(ident) } returns listOf(Ident(ident, Ident.IdentGruppe.FOLKEREGISTERIDENT, false))
     }
 

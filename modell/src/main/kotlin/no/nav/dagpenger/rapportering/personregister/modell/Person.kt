@@ -21,12 +21,21 @@ enum class AnsvarligSystem {
     DP,
 }
 
+enum class VedtakType {
+    INGEN,
+    INNVILGET,
+    STANSET,
+    AVSLÅTT,
+}
+
 data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
     val versjon: Int = 1,
 ) {
+    private var _vedtak: VedtakType = VedtakType.INGEN
+
     private var _meldegruppe: String? = null
 
     private var _meldeplikt: Boolean = false
@@ -56,6 +65,13 @@ data class Person(
         if (nyStatus !== status) {
             statusHistorikk.put(LocalDateTime.now(), nyStatus)
         }
+    }
+
+    val vedtak: VedtakType
+        get() = _vedtak
+
+    fun setVedtak(value: VedtakType) {
+        _vedtak = value
     }
 
     val meldeplikt: Boolean
@@ -189,4 +205,14 @@ val Person.overtattBekreftelse: Boolean
 
 fun Person.vurderNyStatus() = if (this.oppfyllerKrav) DAGPENGERBRUKER else IKKE_DAGPENGERBRUKER
 
-val Person.oppfyllerKrav: Boolean get() = this.erArbeidssøker && this.meldeplikt && this.meldegruppe == "DAGP"
+val Person.oppfyllerKrav: Boolean get() =
+    this.erArbeidssøker && this.harRiktigMeldestatusEllerVedtak
+
+val Person.harRiktigMeldestatusEllerVedtak: Boolean get() =
+    if (this.ansvarligSystem ==
+        AnsvarligSystem.ARENA
+    ) {
+        this.meldeplikt && this.meldegruppe == "DAGP"
+    } else {
+        this.vedtak == VedtakType.INNVILGET
+    }
