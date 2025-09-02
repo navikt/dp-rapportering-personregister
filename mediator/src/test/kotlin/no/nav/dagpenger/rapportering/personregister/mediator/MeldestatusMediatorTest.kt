@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
@@ -50,6 +51,7 @@ class MeldestatusMediatorTest {
 
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private val unleash = FakeUnleash()
 
     @BeforeEach
     fun setup() {
@@ -94,6 +96,7 @@ class MeldestatusMediatorTest {
                 listOf(personObserver, beslutningObserver),
                 meldepliktMediator,
                 actionTimer,
+                unleash,
             )
         fremtidigHendelseMediator =
             FremtidigHendelseMediator(
