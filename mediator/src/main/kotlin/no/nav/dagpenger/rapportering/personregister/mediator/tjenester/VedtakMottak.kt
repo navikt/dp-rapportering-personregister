@@ -36,6 +36,7 @@ class VedtakMottak(
                 precondition {
                     it.requireValue("@event_name", "vedtak_fattet")
                     it.requireValue("behandletHendelse.type", "Søknad")
+                    it.requireKey("@opprettet")
                     it.requireKey("behandletHendelse")
                     it.requireKey("fastsatt")
                 }
