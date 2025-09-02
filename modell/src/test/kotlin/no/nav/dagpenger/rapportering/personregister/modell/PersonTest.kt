@@ -58,7 +58,9 @@ class PersonTest {
         @Test
         fun `behandler vedtak hendelse`() =
             arbeidssøker {
-                behandle(vedtakHendelse())
+                val søknadId = "456"
+                hendelser.add(søknadHendelse(referanseId = søknadId))
+                behandle(vedtakHendelse(søknadId = søknadId))
 
                 // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
                 ansvarligSystem shouldBe AnsvarligSystem.ARENA
