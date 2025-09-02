@@ -230,7 +230,8 @@ class PersonTest {
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = VedtakHendelse(ident, dato, dato, referanseId)
+        søknadId: String = "456",
+    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,

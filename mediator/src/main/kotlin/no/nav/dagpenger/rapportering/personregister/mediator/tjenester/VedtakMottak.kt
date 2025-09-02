@@ -33,6 +33,7 @@ class VedtakMottak(
                 precondition {
                     it.requireValue("@event_name", "vedtak_fattet")
                     it.requireValue("behandletHendelse.type", "Søknad")
+                    it.requireKey("behandletHendelse")
                 }
                 validate { it.requireKey("behandlingId", "ident", "virkningsdato") }
             }.register(this)
@@ -55,6 +56,7 @@ class VedtakMottak(
             vedtakMetrikker.vedtakMottatt.increment()
 
             val ident = packet["ident"].asText()
+            val søknadId = packet["behandletHendelse"]["id"].asText()
             val virkningsdato = packet["virkningsdato"].asLocalDate()
 
             if (!ident.matches(Regex("[0-9]{11}"))) {
@@ -67,6 +69,7 @@ class VedtakMottak(
                     LocalDateTime.now(),
                     virkningsdato.atStartOfDay(),
                     behandlingId,
+                    søknadId,
                 )
 
             if (virkningsdato.isAfter(LocalDate.now())) {

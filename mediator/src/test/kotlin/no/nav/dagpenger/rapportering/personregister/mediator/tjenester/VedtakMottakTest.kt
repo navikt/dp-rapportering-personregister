@@ -44,7 +44,8 @@ class VedtakMottakTest {
             {
               "@event_name": "vedtak_fattet",
               "behandletHendelse": {
-                "type": "Søknad"
+                "type": "Søknad",
+                "id": "321e4567-e89b-12d3-a456-426614174000"
               },
               "behandlingId": "$behandlingId",
               "ident": "$ident",
@@ -71,8 +72,8 @@ class VedtakMottakTest {
             {
               "@event_name": "vedtak_fattet",
               "behandletHendelse": {
-                "type": "Søknad"
-              },
+                "type": "Søknad", 
+                "id": "321e4567-e89b-12d3-a456-426614174000"
               "behandlingId": "$behandlingId",
               "ident": "$ident",
               "virkningsdato": "$dato" 

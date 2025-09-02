@@ -761,6 +761,7 @@ class PostgresPersonRepository(
                     dato = dato,
                     startDato = startDato ?: dato,
                     referanseId = referanseId,
+                    søknadId = "",
                 )
 
             else -> throw IllegalArgumentException("Unknown type: $type")
