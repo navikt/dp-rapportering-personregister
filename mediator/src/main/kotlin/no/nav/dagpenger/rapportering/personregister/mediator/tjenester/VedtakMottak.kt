@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers.River
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
@@ -14,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMe
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -25,6 +27,7 @@ class VedtakMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     init {
@@ -33,6 +36,8 @@ class VedtakMottak(
                 precondition {
                     it.requireValue("@event_name", "vedtak_fattet")
                     it.requireValue("behandletHendelse.type", "Søknad")
+                    it.requireKey("behandletHendelse")
+                    it.requireKey("fastsatt")
                 }
                 validate { it.requireKey("behandlingId", "ident", "virkningsdato") }
             }.register(this)
@@ -52,10 +57,16 @@ class VedtakMottak(
             "event_name" to "vedtak_fattet",
         ) {
             logger.info { "Mottok vedtak_fattet melding" }
+            sikkerlogg.info { "Mottok vedtak_fattet melding: ${packet.toJson()}" }
+
             vedtakMetrikker.vedtakMottatt.increment()
 
             val ident = packet["ident"].asText()
+            val dato = packet["@opprettet"].asLocalDateTime()
+            val søknadId = packet["behandletHendelse"]["id"].asText()
+            val status = VedtakStatus.valueOf(packet["fastsatt"]["status"].asText())
             val virkningsdato = packet["virkningsdato"].asLocalDate()
+            val referanseId = behandlingId
 
             if (!ident.matches(Regex("[0-9]{11}"))) {
                 logger.error { "Person-ident må ha 11 sifre" }
@@ -63,10 +74,12 @@ class VedtakMottak(
             }
             val vedtakHendelse =
                 VedtakHendelse(
-                    ident,
-                    LocalDateTime.now(),
-                    virkningsdato.atStartOfDay(),
-                    behandlingId,
+                    ident = ident,
+                    dato = dato,
+                    startDato = virkningsdato.atStartOfDay(),
+                    referanseId = referanseId,
+                    søknadId = søknadId,
+                    status = status,
                 )
 
             if (virkningsdato.isAfter(LocalDate.now())) {

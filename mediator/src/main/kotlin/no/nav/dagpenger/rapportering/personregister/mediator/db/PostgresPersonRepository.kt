@@ -27,6 +27,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
@@ -593,6 +594,11 @@ class PostgresPersonRepository(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
+                is VedtakHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        VedtakExtra(søknadId = this.søknadId, status = this.status.name),
+                    )
+
                 else -> null
             }
 
@@ -755,13 +761,18 @@ class PostgresPersonRepository(
                     startDato = dato,
                 )
 
-            "VedtakHendelse" ->
+            "VedtakHendelse" -> {
+                val vedtakExtra = defaultObjectMapper.readValue<VedtakExtra>(extra!!)
+
                 VedtakHendelse(
                     ident = ident,
                     dato = dato,
                     startDato = startDato ?: dato,
                     referanseId = referanseId,
+                    søknadId = vedtakExtra.søknadId,
+                    status = VedtakStatus.valueOf(vedtakExtra.status),
                 )
+            }
 
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
@@ -903,6 +914,11 @@ data class MeldesyklusErPassertExtra(
     val meldekortregisterPeriodeId: String,
     val periodeFraOgMed: LocalDate,
     val periodeTilOgMed: LocalDate,
+)
+
+data class VedtakExtra(
+    val søknadId: String,
+    val status: String,
 )
 
 class OptimisticLockingException(

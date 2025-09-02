@@ -26,6 +26,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -208,7 +209,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             personRepository
                 .hentPerson(ident)
                 ?.also { person ->
-                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref"))
+                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref", "123", VedtakStatus.Innvilget))
                     personRepository.oppdaterPerson(person)
                 }
 

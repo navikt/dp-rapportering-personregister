@@ -41,6 +41,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktH
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakStatus
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
@@ -454,7 +455,9 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = VedtakHendelse(ident, dato, startDato, referanseId)
+        søknadId: String = "456",
+        status: VedtakStatus = VedtakStatus.Innvilget,
+    ) = VedtakHendelse(ident, dato, startDato, referanseId, søknadId, status)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
