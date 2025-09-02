@@ -255,7 +255,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
+        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
     }
 }

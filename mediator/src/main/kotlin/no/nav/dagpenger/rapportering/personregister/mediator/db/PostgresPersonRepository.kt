@@ -276,6 +276,7 @@ class PostgresPersonRepository(
                         SELECT *
                         FROM fremtidig_hendelse
                         WHERE DATE(start_dato) <= current_date
+                        ORDER BY ident, start_dato
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
                         .asList,

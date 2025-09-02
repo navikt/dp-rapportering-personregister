@@ -70,7 +70,7 @@ class MeldestatusMediator(
                         startDato = it.meldepliktperiode.fom,
                         sluttDato = it.meldepliktperiode.tom,
                         statusMeldeplikt = it.meldeplikt,
-                        harMeldtSeg = meldestatus.harMeldtSeg, // TODO: Kan vi ha dette i fremtidige hendelser?
+                        harMeldtSeg = meldestatus.harMeldtSeg,
                     )
 
                 if (it.meldepliktperiode.fom.isAfter(LocalDateTime.now())) {
@@ -97,7 +97,7 @@ class MeldestatusMediator(
                             startDato = it.meldegruppeperiode.fom,
                             sluttDato = it.meldegruppeperiode.tom,
                             meldegruppeKode = it.meldegruppe,
-                            harMeldtSeg = meldestatus.harMeldtSeg, // TODO: Kan vi ha dette i fremtidige hendelser?
+                            harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
                     if (hendelse.startDato.isAfter(LocalDateTime.now())) {
@@ -116,7 +116,7 @@ class MeldestatusMediator(
                             startDato = it.meldegruppeperiode.fom,
                             sluttDato = it.meldegruppeperiode.tom,
                             meldegruppeKode = it.meldegruppe,
-                            harMeldtSeg = meldestatus.harMeldtSeg, // TODO: Kan vi ha dette i fremtidige hendelser?
+                            harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
                     if (hendelse.startDato.isAfter(LocalDateTime.now())) {
