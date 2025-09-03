@@ -14,14 +14,14 @@ data class MeldestatusResponse(
         val meldeplikt: Boolean,
         val meldepliktperiode: Periode? = null,
         val begrunnelse: String? = null,
-        val stemplingsdata: Endring,
+        val endringsdata: Endring? = null,
     )
 
     data class Meldegruppe(
         val meldegruppe: String,
         val meldegruppeperiode: Periode? = null,
         val begrunnelse: String? = null,
-        val stemplingsdata: Endring,
+        val endringsdata: Endring? = null,
     )
 
     data class Periode(

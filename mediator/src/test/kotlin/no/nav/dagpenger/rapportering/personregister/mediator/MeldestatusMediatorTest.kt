@@ -231,7 +231,7 @@ class MeldestatusMediatorTest {
                             tom = nå.plusDays(13),
                         ),
                     begrunnelse = "Vedtak",
-                    stemplingsdata =
+                    endringsdata =
                         MeldestatusResponse.Endring(
                             registrertAv = "R123456",
                             registreringsdato = nå,
@@ -251,7 +251,7 @@ class MeldestatusMediatorTest {
                         tom = null,
                     ),
                 begrunnelse = "Vedtak",
-                stemplingsdata =
+                endringsdata =
                     MeldestatusResponse.Endring(
                         registrertAv = "R123456",
                         registreringsdato = nå,
@@ -268,13 +268,7 @@ class MeldestatusMediatorTest {
                     meldegruppe = "DAGP",
                     meldegruppeperiode = null,
                     begrunnelse = "Vedtak",
-                    stemplingsdata =
-                        MeldestatusResponse.Endring(
-                            registrertAv = "R123456",
-                            registreringsdato = nå,
-                            endretAv = "E123456",
-                            endringsdato = nå,
-                        ),
+                    endringsdata = null,
                 ),
             )
         }
@@ -288,7 +282,7 @@ class MeldestatusMediatorTest {
                         tom = null,
                     ),
                 begrunnelse = "Vedtak",
-                stemplingsdata =
+                endringsdata =
                     MeldestatusResponse.Endring(
                         registrertAv = "R123456",
                         registreringsdato = nå,
