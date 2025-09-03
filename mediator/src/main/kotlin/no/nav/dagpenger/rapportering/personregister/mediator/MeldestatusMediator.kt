@@ -34,7 +34,7 @@ class MeldestatusMediator(
                     meldepliktConnector.hentMeldestatus(hendelse.personId)
                 }
 
-            // Det er veldig rart at vi ikke kan hente meldesttaus her fordi vi får data fra Arena, men for sikkerhetsskyld
+            // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi får data fra Arena, men for sikkerhetsskyld
             if (meldestatus == null) {
                 logger.error { "Kunne ikke hente meldestatus" }
                 sikkerLogg.error { "Kunne ikke hente meldestatus for person med personId ${hendelse.personId}" }

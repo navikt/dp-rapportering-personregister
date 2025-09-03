@@ -50,11 +50,13 @@ internal class MeldestatusJob(
                         val tidBrukt =
                             measureTime {
                                 antallPersoner =
-                                    oppdaterStatus(
-                                        personRepository,
-                                        meldepliktConnector,
-                                        meldestatusMediator,
-                                    )
+                                    runBlocking {
+                                        oppdaterStatus(
+                                            personRepository,
+                                            meldepliktConnector,
+                                            meldestatusMediator,
+                                        )
+                                    }
                             }
 
                         logger.info {
@@ -71,7 +73,7 @@ internal class MeldestatusJob(
         )
     }
 
-    fun oppdaterStatus(
+    suspend fun oppdaterStatus(
         personRepository: PersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
@@ -84,10 +86,7 @@ internal class MeldestatusJob(
             val person = personRepository.hentPerson(ident)
 
             if (person != null) {
-                val meldestatus =
-                    runBlocking {
-                        meldepliktConnector.hentMeldestatus(ident = person.ident)
-                    }
+                val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
 
                 if (meldestatus == null) {
                     logger.info { "Person finnes ikke i Arena. Hopper over" }

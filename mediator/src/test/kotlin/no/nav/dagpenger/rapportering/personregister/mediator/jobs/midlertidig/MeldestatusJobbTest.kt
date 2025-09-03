@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
@@ -28,11 +29,13 @@ class MeldestatusJobbTest {
         personRepository.lagrePerson(Person(ident3))
 
         val antallPersoner =
-            MeldestatusJob().oppdaterStatus(
-                personRepository,
-                meldepliktConnector,
-                meldestatusMediator,
-            )
+            runBlocking {
+                MeldestatusJob().oppdaterStatus(
+                    personRepository,
+                    meldepliktConnector,
+                    meldestatusMediator,
+                )
+            }
 
         antallPersoner shouldBe 3
 

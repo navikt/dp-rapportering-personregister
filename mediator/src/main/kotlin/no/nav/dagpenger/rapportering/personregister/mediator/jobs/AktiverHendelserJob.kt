@@ -94,7 +94,7 @@ internal class AktiverHendelserJob(
                         meldepliktConnector.hentMeldestatus(ident = it.ident)
                     }
 
-                // Det er veldig rart at vi ikke kan hente meldesttaus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
                 if (meldestatus == null) {
                     logger.error { "Kunne ikke hente meldestatus" }
                     sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${it.ident}" }
