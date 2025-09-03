@@ -55,9 +55,9 @@ class MeldestatusMediator(
         personRepository.slettFremtidigeArenaHendelser(person.ident)
 
         val meldepliktListe =
-            meldestatus.meldepliktListe?.sortedBy { it.meldepliktperiode.fom } ?: emptyList()
+            meldestatus.meldepliktListe?.sortedBy { it.meldepliktperiode?.fom } ?: emptyList()
         val meldegruppeListe =
-            meldestatus.meldegruppeListe?.sortedBy { it.meldegruppeperiode.fom } ?: emptyList()
+            meldestatus.meldegruppeListe?.sortedBy { it.meldegruppeperiode?.fom } ?: emptyList()
 
         var meldeplikt = person.meldeplikt
         meldepliktListe.forEachIndexed { index, it ->
@@ -67,13 +67,13 @@ class MeldestatusMediator(
                         ident = person.ident,
                         referanseId = "MP" + hendelse.meldestatusId.toString() + index,
                         dato = LocalDateTime.now(),
-                        startDato = it.meldepliktperiode.fom,
-                        sluttDato = it.meldepliktperiode.tom,
+                        startDato = it.meldepliktperiode?.fom ?: LocalDateTime.now(),
+                        sluttDato = it.meldepliktperiode?.tom,
                         statusMeldeplikt = it.meldeplikt,
                         harMeldtSeg = meldestatus.harMeldtSeg,
                     )
 
-                if (it.meldepliktperiode.fom.isAfter(LocalDateTime.now())) {
+                if (meldepliktHendelse.startDato.isAfter(LocalDateTime.now())) {
                     meldepliktendringMetrikker.fremtidigMeldepliktendringMottatt.increment()
                     fremtidigHendelseMediator.behandle(meldepliktHendelse)
                 } else {
@@ -89,42 +89,42 @@ class MeldestatusMediator(
         meldegruppeListe.forEachIndexed { index, it ->
             if (meldegruppe != it.meldegruppe) {
                 if (it.meldegruppe == "DAGP") {
-                    val hendelse =
+                    val dagpengerMeldegruppeHendelse =
                         DagpengerMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MG" + hendelse.meldestatusId.toString() + index,
                             dato = LocalDateTime.now(),
-                            startDato = it.meldegruppeperiode.fom,
-                            sluttDato = it.meldegruppeperiode.tom,
+                            startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
+                            sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                    if (dagpengerMeldegruppeHendelse.startDato.isAfter(LocalDateTime.now())) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
-                        fremtidigHendelseMediator.behandle(hendelse)
+                        fremtidigHendelseMediator.behandle(dagpengerMeldegruppeHendelse)
                     } else {
                         meldegruppeendringMetrikker.dagpengerMeldegruppeMottatt.increment()
-                        personMediator.behandle(hendelse)
+                        personMediator.behandle(dagpengerMeldegruppeHendelse)
                     }
                 } else {
-                    val hendelse =
+                    val annenMeldegruppeHendelse =
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MG" + hendelse.meldestatusId.toString() + index,
                             dato = LocalDateTime.now(),
-                            startDato = it.meldegruppeperiode.fom,
-                            sluttDato = it.meldegruppeperiode.tom,
+                            startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
+                            sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (hendelse.startDato.isAfter(LocalDateTime.now())) {
+                    if (annenMeldegruppeHendelse.startDato.isAfter(LocalDateTime.now())) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
-                        fremtidigHendelseMediator.behandle(hendelse)
+                        fremtidigHendelseMediator.behandle(annenMeldegruppeHendelse)
                     } else {
                         meldegruppeendringMetrikker.annenMeldegruppeMottatt.increment()
-                        personMediator.behandle(hendelse)
+                        personMediator.behandle(annenMeldegruppeHendelse)
                     }
                 }
 

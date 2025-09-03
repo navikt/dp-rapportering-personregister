@@ -266,11 +266,7 @@ class MeldestatusMediatorTest {
             meldegruppeListe.add(
                 MeldestatusResponse.Meldegruppe(
                     meldegruppe = "DAGP",
-                    meldegruppeperiode =
-                        MeldestatusResponse.Periode(
-                            fom = nå,
-                            tom = nå.plusDays(13),
-                        ),
+                    meldegruppeperiode = null,
                     begrunnelse = "Vedtak",
                     stemplingsdata =
                         MeldestatusResponse.Endring(
