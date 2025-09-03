@@ -19,6 +19,7 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.measureTime
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class AktiverHendelserJob(
     private val httpClient: HttpClient = createHttpClient(),
@@ -46,6 +47,7 @@ internal class AktiverHendelserJob(
                 try {
                     if (isLeader(httpClient, logger)) {
                         logger.info { "Starter jobb for å aktivere hendelser vi mottok med dato fram i tid" }
+
                         var antallHendelser: Int
                         val tidBrukt =
                             measureTime {
@@ -57,6 +59,7 @@ internal class AktiverHendelserJob(
                                         meldepliktConnector,
                                     )
                             }
+
                         logger.info {
                             "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
                                 "Aktiverte $antallHendelser på ${tidBrukt.inWholeSeconds} sekund(er)."
@@ -90,6 +93,14 @@ internal class AktiverHendelserJob(
                     runBlocking {
                         meldepliktConnector.hentMeldestatus(ident = it.ident)
                     }
+
+                // Det er veldig rart at vi ikke kan hente meldesttaus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                if (meldestatus == null) {
+                    logger.error { "Kunne ikke hente meldestatus" }
+                    sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${it.ident}" }
+                    throw RuntimeException("Kunne ikke hente meldestatus")
+                }
+
                 currentIdent = it.ident
                 currentStatus = meldestatus.harMeldtSeg
             }
