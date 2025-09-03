@@ -306,7 +306,7 @@ class PostgresPersonRepository(
                 session.transaction { tx ->
                     tx.run(
                         queryOf(
-                            "DELETE FROM fremtidig_hendelse WHERE (referanse_id LIKE 'MP%' OR referanse_id LIKE 'MG%') AND ident = :ident",
+                            "DELETE FROM fremtidig_hendelse WHERE kilde = 'Arena' AND ident = :ident",
                             mapOf(
                                 "ident" to ident,
                             ),

@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -134,7 +135,13 @@ class PostgresPersonRepositoryTest {
             val person = Person(ident = ident)
             val meldepliktHendelse = meldepliktHendelse("MP123456789")
             val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
-            val ikkeArenaHendelse = meldegruppeHendelse(meldegruppeKode = "ARBS")
+            val ikkeArenaHendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = LocalDateTime.now(),
+                    startDato = LocalDateTime.now(),
+                    referanseId = UUID.randomUUID().toString(),
+                )
 
             personRepository.lagrePerson(person)
             personRepository.lagreFremtidigHendelse(meldepliktHendelse)
@@ -145,14 +152,14 @@ class PostgresPersonRepositoryTest {
                 size shouldBe 3
                 any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
                 any { it.javaClass == DagpengerMeldegruppeHendelse::class.java } shouldBe true
-                any { it.javaClass == AnnenMeldegruppeHendelse::class.java } shouldBe true
+                any { it.javaClass == VedtakHendelse::class.java } shouldBe true
             }
 
             personRepository.slettFremtidigeArenaHendelser(ident)
 
             with(personRepository.hentHendelserSomSkalAktiveres()) {
                 size shouldBe 1
-                any { it.javaClass == AnnenMeldegruppeHendelse::class.java } shouldBe true
+                any { it.javaClass == VedtakHendelse::class.java } shouldBe true
             }
         }
 
