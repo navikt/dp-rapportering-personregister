@@ -11,6 +11,8 @@ data class VedtakHendelse(
     override val dato: LocalDateTime,
     override val startDato: LocalDateTime,
     override val referanseId: String,
+    val søknadId: String,
+    val utfall: Boolean,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ
 
@@ -18,7 +20,14 @@ data class VedtakHendelse(
         person.hendelser.add(this)
         // TODO: person.setAnsvarligSystem(AnsvarligSystem.DP) når vi har dp-meldekortregister
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)
-        person.sendStartMeldingTilMeldekortregister(startDato)
-        // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
+
+        person.hendelser
+            .filterIsInstance<SøknadHendelse>()
+            .find { søknadHendelse -> søknadHendelse.referanseId == søknadId }
+            ?.dato
+            ?.let {
+                person.sendStartMeldingTilMeldekortregister(it)
+                // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
+            }
     }
 }

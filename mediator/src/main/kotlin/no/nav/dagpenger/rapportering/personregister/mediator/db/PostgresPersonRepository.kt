@@ -610,6 +610,11 @@ class PostgresPersonRepository(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
 
+                is VedtakHendelse ->
+                    defaultObjectMapper.writeValueAsString(
+                        VedtakExtra(søknadId = this.søknadId, utfall = this.utfall),
+                    )
+
                 else -> null
             }
 
@@ -772,13 +777,18 @@ class PostgresPersonRepository(
                     startDato = dato,
                 )
 
-            "VedtakHendelse" ->
+            "VedtakHendelse" -> {
+                val vedtakExtra = defaultObjectMapper.readValue<VedtakExtra>(extra!!)
+
                 VedtakHendelse(
                     ident = ident,
                     dato = dato,
                     startDato = startDato ?: dato,
                     referanseId = referanseId,
+                    søknadId = vedtakExtra.søknadId,
+                    utfall = vedtakExtra.utfall,
                 )
+            }
 
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
@@ -920,6 +930,11 @@ data class MeldesyklusErPassertExtra(
     val meldekortregisterPeriodeId: String,
     val periodeFraOgMed: LocalDate,
     val periodeTilOgMed: LocalDate,
+)
+
+data class VedtakExtra(
+    val søknadId: String,
+    val utfall: Boolean,
 )
 
 class OptimisticLockingException(

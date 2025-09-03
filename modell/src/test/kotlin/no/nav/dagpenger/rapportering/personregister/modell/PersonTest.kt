@@ -57,7 +57,9 @@ class PersonTest {
         @Test
         fun `behandler vedtak hendelse`() =
             arbeidssøker {
-                behandle(vedtakHendelse())
+                val søknadId = "456"
+                hendelser.add(søknadHendelse(referanseId = søknadId))
+                behandle(vedtakHendelse(søknadId = søknadId))
 
                 // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
                 ansvarligSystem shouldBe AnsvarligSystem.ARENA
@@ -230,7 +232,9 @@ class PersonTest {
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = VedtakHendelse(ident, dato, dato, referanseId)
+        søknadId: String = "456",
+        utfall: Boolean = true,
+    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,

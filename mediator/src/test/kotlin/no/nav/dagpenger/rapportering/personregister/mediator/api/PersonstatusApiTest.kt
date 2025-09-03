@@ -208,7 +208,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             personRepository
                 .hentPerson(ident)
                 ?.also { person ->
-                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref"))
+                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref", "123", true))
                     personRepository.oppdaterPerson(person)
                 }
 
