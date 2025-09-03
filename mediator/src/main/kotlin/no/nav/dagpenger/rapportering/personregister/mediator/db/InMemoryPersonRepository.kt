@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
@@ -73,8 +74,8 @@ class InMemoryPersonRepository : PersonRepository {
     }
 
     override fun slettFremtidigeArenaHendelser(ident: String): Int {
-        val qty = fremtidigeHendelser.count { (it.referanseId.startsWith("MP") || it.referanseId.startsWith("MG")) && it.ident == ident }
-        fremtidigeHendelser.removeIf { (it.referanseId.startsWith("MP") || it.referanseId.startsWith("MG")) && it.ident == ident }
+        val qty = fremtidigeHendelser.count { it.kilde == Kildesystem.Arena && it.ident == ident }
+        fremtidigeHendelser.removeIf { it.kilde == Kildesystem.Arena && it.ident == ident }
         return qty
     }
 

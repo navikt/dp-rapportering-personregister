@@ -3,9 +3,9 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -66,23 +66,33 @@ class InMemoryPersonRepositoryTest {
                 meldegruppeKode = "DAGP",
                 harMeldtSeg = true,
             )
-        val ikkeArenaHendelse =
-            AnnenMeldegruppeHendelse(
-                ident = "12345678901",
-                referanseId = UUID.randomUUID().toString(),
+        val annenPersonHendelse =
+            DagpengerMeldegruppeHendelse(
+                ident = "12345678902",
+                referanseId = "MG123456780",
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now(),
                 sluttDato = null,
-                meldegruppeKode = "ATTF",
+                meldegruppeKode = "DAGP",
                 harMeldtSeg = true,
+            )
+        val ikkeArenaHendelse =
+            VedtakHendelse(
+                ident = person.ident,
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now(),
+                referanseId = UUID.randomUUID().toString(),
+                søknadId = UUID.randomUUID().toString(),
+                utfall = true,
             )
 
         personRepository.lagreFremtidigHendelse(meldepliktHendelse)
         personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+        personRepository.lagreFremtidigHendelse(annenPersonHendelse)
         personRepository.lagreFremtidigHendelse(ikkeArenaHendelse)
-        personRepository.hentAntallFremtidigeHendelser() shouldBe 3
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 4
 
         personRepository.slettFremtidigeArenaHendelser(person.ident)
-        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 2
     }
 }

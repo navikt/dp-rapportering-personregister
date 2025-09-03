@@ -110,7 +110,7 @@ class PostgresPersonRepositoryTest {
     fun `kan lagre, hente og slette fremtidige hendelser`() =
         withMigratedDb {
             val person = Person(ident = ident)
-            val meldepliktHendelse = meldepliktHendelse()
+            val meldepliktHendelse = meldepliktHendelse(ident)
             val meldegruppeHendelse = meldegruppeHendelse()
 
             personRepository.lagrePerson(person)
@@ -132,8 +132,12 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `kan slette fremtidige Arena hendelser`() =
         withMigratedDb {
-            val person = Person(ident = ident)
-            val meldepliktHendelse = meldepliktHendelse("MP123456789")
+            val ident2 = "12345678902"
+
+            val person1 = Person(ident = ident)
+            val person2 = Person(ident = ident2)
+
+            val meldepliktHendelse = meldepliktHendelse(ident, "MP123456789")
             val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
             val ikkeArenaHendelse =
                 VedtakHendelse(
@@ -145,13 +149,17 @@ class PostgresPersonRepositoryTest {
                     utfall = true,
                 )
 
-            personRepository.lagrePerson(person)
+            personRepository.lagrePerson(person1)
             personRepository.lagreFremtidigHendelse(meldepliktHendelse)
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
             personRepository.lagreFremtidigHendelse(ikkeArenaHendelse)
 
+            val meldepliktHendelse2 = meldepliktHendelse(ident2)
+            personRepository.lagrePerson(person2)
+            personRepository.lagreFremtidigHendelse(meldepliktHendelse2)
+
             with(personRepository.hentHendelserSomSkalAktiveres()) {
-                size shouldBe 3
+                size shouldBe 4
                 any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
                 any { it.javaClass == DagpengerMeldegruppeHendelse::class.java } shouldBe true
                 any { it.javaClass == VedtakHendelse::class.java } shouldBe true
@@ -159,9 +167,13 @@ class PostgresPersonRepositoryTest {
 
             personRepository.slettFremtidigeArenaHendelser(ident)
 
+            // Sjekker at vi har fortsatt ikke-arena hendelse og annen persons hendelse
             with(personRepository.hentHendelserSomSkalAktiveres()) {
-                size shouldBe 1
+                size shouldBe 2
                 any { it.javaClass == VedtakHendelse::class.java } shouldBe true
+                any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
+                any { it.ident == ident } shouldBe true
+                any { it.ident == ident2 } shouldBe true
             }
         }
 
@@ -171,7 +183,7 @@ class PostgresPersonRepositoryTest {
             val person = Person(ident)
             val referanseId = UUID.randomUUID().toString()
             val førsteHendelse = meldegruppeHendelse(referanseId)
-            val nyHendelse = meldepliktHendelse(referanseId)
+            val nyHendelse = meldepliktHendelse(ident, referanseId)
 
             personRepository.lagrePerson(person)
             personRepository.lagreFremtidigHendelse(førsteHendelse)
@@ -447,10 +459,11 @@ class PostgresPersonRepositoryTest {
     }
 
     private fun meldepliktHendelse(
+        ident: String,
         referanseId: String = UUID.randomUUID().toString(),
         harMeldtSeg: Boolean = false,
     ) = MeldepliktHendelse(
-        ident = "12345678901",
+        ident = ident,
         referanseId = referanseId,
         dato = LocalDateTime.now(),
         startDato = LocalDateTime.now(),
