@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
@@ -49,34 +50,56 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             unleash,
         )
 
-    private val ident = "12345678910"
+    private val ident1 = "12345678911"
+    private val ident2 = "12345678912"
 
     @Test
     fun `aktiverHendelser aktiverer hendelser og sletter dem fra tabellen`() {
         setUpTestApplication {
-            every { pdlConnector.hentIdenter(ident) } returns
+            every { pdlConnector.hentIdenter(ident1) } returns
                 listOf(
                     Ident(
-                        ident,
+                        ident1,
                         Ident.IdentGruppe.FOLKEREGISTERIDENT,
                         false,
                     ),
                 )
+            every { pdlConnector.hentIdenter(ident2) } returns
+                listOf(
+                    Ident(
+                        ident2,
+                        Ident.IdentGruppe.FOLKEREGISTERIDENT,
+                        false,
+                    ),
+                )
+
             val aktiverHendelserJob = AktiverHendelserJob(client)
             val nå = LocalDateTime.now()
-            val person =
-                Person(ident = ident).apply {
+
+            val person1 =
+                Person(ident = ident1).apply {
                     behandle(
                         StartetArbeidssøkerperiodeHendelse(
                             periodeId = UUID.randomUUID(),
-                            ident = ident,
+                            ident = ident1,
                             startet = nå.minusDays(1),
                         ),
                     )
                 }
+            val person2 =
+                Person(ident = ident2).apply {
+                    behandle(
+                        StartetArbeidssøkerperiodeHendelse(
+                            periodeId = UUID.randomUUID(),
+                            ident = ident2,
+                            startet = nå.minusDays(1),
+                        ),
+                    )
+                }
+
             val meldepliktHendelse =
                 MeldepliktHendelse(
-                    ident = ident,
+                    ident = ident1,
                     referanseId = "123",
                     dato = nå.minusDays(2),
                     startDato = nå,
@@ -86,7 +109,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 )
             val meldegruppeHendelse =
                 DagpengerMeldegruppeHendelse(
-                    ident = ident,
+                    ident = ident1,
                     referanseId = "321",
                     dato = nå.minusDays(1),
                     startDato = nå,
@@ -95,24 +118,63 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     harMeldtSeg = false,
                 )
 
-            personRepository.lagrePerson(person)
+            val meldegruppeHendelse2 =
+                DagpengerMeldegruppeHendelse(
+                    ident = ident2,
+                    referanseId = "322",
+                    dato = nå.minusDays(1),
+                    startDato = nå,
+                    sluttDato = null,
+                    meldegruppeKode = "DAGP",
+                    harMeldtSeg = true,
+                )
+
+            personRepository.lagrePerson(person1)
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
             personRepository.lagreFremtidigHendelse(meldepliktHendelse)
 
-            with(personRepository.hentPerson(ident)!!) {
+            personRepository.lagrePerson(person2)
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse2)
+
+            with(personRepository.hentPerson(ident1)!!) {
                 hendelser.size shouldBe 1
                 erArbeidssøker shouldBe true
                 oppfyllerKrav shouldBe false
             }
 
-            val antallHendelserAktivert = aktiverHendelserJob.aktivererHendelser(personRepository, personMediator, meldepliktMediator)
-            antallHendelserAktivert shouldBe 2
+            with(personRepository.hentPerson(ident2)!!) {
+                hendelser.size shouldBe 1
+                erArbeidssøker shouldBe true
+                oppfyllerKrav shouldBe false
+            }
+
+            val antallHendelserAktivert =
+                aktiverHendelserJob.aktivererHendelser(
+                    personRepository,
+                    personMediator,
+                    meldepliktMediator,
+                    meldepliktConnector,
+                )
+            antallHendelserAktivert shouldBe 3
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
-            with(personRepository.hentPerson(ident)!!) {
+
+            with(personRepository.hentPerson(ident1)!!) {
                 hendelser.size shouldBe 3
+                (hendelser[1] as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
+                (hendelser[2] as MeldepliktHendelse).harMeldtSeg shouldBe false
                 erArbeidssøker shouldBe true
                 oppfyllerKrav shouldBe true
             }
+            with(personRepository.hentPerson(ident2)!!) {
+                hendelser.size shouldBe 2
+                (hendelser[1] as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
+                erArbeidssøker shouldBe true
+                oppfyllerKrav shouldBe false
+            }
+
+            // hentMeldestatus må kalles kun én gang for hver bruker
+            coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident1), any()) }
+            coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident2), any()) }
         }
     }
 }

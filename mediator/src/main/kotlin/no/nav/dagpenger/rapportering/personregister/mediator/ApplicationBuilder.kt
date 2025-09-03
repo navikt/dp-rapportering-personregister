@@ -173,6 +173,18 @@ internal class ApplicationBuilder(
             unleash,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
+    private val meldestatusMediator =
+        MeldestatusMediator(
+            personRepository,
+            meldepliktConnector,
+            meldepliktMediator,
+            personMediator,
+            fremtidigHendelseMediator,
+            meldepliktendringMetrikker,
+            meldegruppeendringMetrikker,
+            actionTimer,
+        )
+
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
 
@@ -226,7 +238,7 @@ internal class ApplicationBuilder(
                     )
                     MeldestatusMottak(
                         rapid,
-                        // meldestatusMediator,
+                        meldestatusMediator,
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
@@ -243,7 +255,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator)
+        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
     }
 }

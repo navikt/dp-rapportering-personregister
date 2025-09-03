@@ -2,8 +2,10 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
@@ -32,6 +34,7 @@ internal class AktiverHendelserJob(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
         meldepliktMediator: MeldepliktMediator,
+        meldepliktConnector: MeldepliktConnector,
     ) {
         logger.info { "Tidspunkt for neste kjøring AktiverHendelserJob: $tidspunktForNesteKjoring" }
         fixedRateTimer(
@@ -46,7 +49,13 @@ internal class AktiverHendelserJob(
                         var antallHendelser: Int
                         val tidBrukt =
                             measureTime {
-                                antallHendelser = aktivererHendelser(personRepository, personMediator, meldepliktMediator)
+                                antallHendelser =
+                                    aktivererHendelser(
+                                        personRepository,
+                                        personMediator,
+                                        meldepliktMediator,
+                                        meldepliktConnector,
+                                    )
                             }
                         logger.info {
                             "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
@@ -66,13 +75,29 @@ internal class AktiverHendelserJob(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
         meldepliktMediator: MeldepliktMediator,
+        meldepliktConnector: MeldepliktConnector,
     ): Int {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
+        var currentIdent = ""
+        var currentStatus = false
+
         hendelser.forEach {
+            // Sjekk om bruker har meldt seg
+            // Hendelser er sortert etter ident
+            // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
+            if (it.ident != currentIdent) {
+                val meldestatus =
+                    runBlocking {
+                        meldepliktConnector.hentMeldestatus(ident = it.ident)
+                    }
+                currentIdent = it.ident
+                currentStatus = meldestatus.harMeldtSeg
+            }
+
             when (it) {
-                is DagpengerMeldegruppeHendelse -> personMediator.behandle(it)
-                is AnnenMeldegruppeHendelse -> personMediator.behandle(it)
-                is MeldepliktHendelse -> meldepliktMediator.behandle(it)
+                is DagpengerMeldegruppeHendelse -> personMediator.behandle(it.copy(harMeldtSeg = currentStatus))
+                is AnnenMeldegruppeHendelse -> personMediator.behandle(it.copy(harMeldtSeg = currentStatus))
+                is MeldepliktHendelse -> meldepliktMediator.behandle(it.copy(harMeldtSeg = currentStatus))
                 is VedtakHendelse -> personMediator.behandle(it)
                 else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
             }

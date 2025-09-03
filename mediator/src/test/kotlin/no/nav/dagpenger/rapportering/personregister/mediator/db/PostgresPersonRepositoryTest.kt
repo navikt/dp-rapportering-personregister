@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -106,7 +107,7 @@ class PostgresPersonRepositoryTest {
         }
 
     @Test
-    fun `kan lagre, hente og slette fremtidige hendeslser`() =
+    fun `kan lagre, hente og slette fremtidige hendelser`() =
         withMigratedDb {
             val person = Person(ident = ident)
             val meldepliktHendelse = meldepliktHendelse()
@@ -126,6 +127,42 @@ class PostgresPersonRepositoryTest {
             personRepository.slettFremtidigHendelse(meldegruppeHendelse.referanseId)
 
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+
+    @Test
+    fun `kan slette fremtidige Arena hendelser`() =
+        withMigratedDb {
+            val person = Person(ident = ident)
+            val meldepliktHendelse = meldepliktHendelse("MP123456789")
+            val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
+            val ikkeArenaHendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = LocalDateTime.now(),
+                    startDato = LocalDateTime.now(),
+                    referanseId = UUID.randomUUID().toString(),
+                    søknadId = UUID.randomUUID().toString(),
+                    utfall = true,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(meldepliktHendelse)
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+            personRepository.lagreFremtidigHendelse(ikkeArenaHendelse)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 3
+                any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
+                any { it.javaClass == DagpengerMeldegruppeHendelse::class.java } shouldBe true
+                any { it.javaClass == VedtakHendelse::class.java } shouldBe true
+            }
+
+            personRepository.slettFremtidigeArenaHendelser(ident)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 1
+                any { it.javaClass == VedtakHendelse::class.java } shouldBe true
+            }
         }
 
     @Test

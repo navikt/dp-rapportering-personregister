@@ -17,8 +17,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.text.get
 
+// TODO: Må slettes?
 class MeldegruppeendringMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,

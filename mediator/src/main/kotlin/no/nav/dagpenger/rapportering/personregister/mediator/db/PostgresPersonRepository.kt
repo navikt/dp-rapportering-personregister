@@ -276,6 +276,7 @@ class PostgresPersonRepository(
                         SELECT *
                         FROM fremtidig_hendelse
                         WHERE DATE(start_dato) <= current_date
+                        ORDER BY ident, start_dato
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
                         .asList,
@@ -297,6 +298,22 @@ class PostgresPersonRepository(
                     )
                 }
             }.validateRowsAffected()
+        }
+
+    override fun slettFremtidigeArenaHendelser(ident: String): Int =
+        actionTimer.timedAction("db-slettFremtidigeArenaHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE kilde = 'Arena' AND ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
         }
 
     override fun hentPersonerMedDagpenger(): List<String> =
