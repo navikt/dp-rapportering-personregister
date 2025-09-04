@@ -8,6 +8,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -32,6 +35,7 @@ internal class MeldestatusJob(
     @WithSpan
     internal fun start(
         personRepository: PersonRepository,
+        tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
     ) {
@@ -53,6 +57,7 @@ internal class MeldestatusJob(
                                     runBlocking {
                                         oppdaterStatus(
                                             personRepository,
+                                            tempPersonRepository,
                                             meldepliktConnector,
                                             meldestatusMediator,
                                         )
@@ -75,10 +80,16 @@ internal class MeldestatusJob(
 
     suspend fun oppdaterStatus(
         personRepository: PersonRepository,
+        tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
     ): Int {
-        val identer = personRepository.hentAlleIdenter()
+        // TODO: Husk å slette alt fra temp_person før første kjøring
+        if (tempPersonRepository.isEmpty()) {
+            tempPersonRepository.syncPersoner()
+        }
+
+        val identer = tempPersonRepository.hentAlleIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT)
 
         logger.info { "Hentet ${identer.size} identer for sjekking av meldestatus" }
 
@@ -86,16 +97,35 @@ internal class MeldestatusJob(
             val person = personRepository.hentPerson(ident)
 
             if (person != null) {
-                val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
+                try {
+                    val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
 
-                if (meldestatus == null) {
-                    logger.info { "Person finnes ikke i Arena. Hopper over" }
-                    sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
-                } else {
-                    meldestatusMediator.behandleHendelse(
-                        UUID.randomUUID().toString(),
-                        person,
-                        meldestatus,
+                    if (meldestatus == null) {
+                        logger.info { "Person finnes ikke i Arena. Hopper over" }
+                        sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                    } else {
+                        meldestatusMediator.behandleHendelse(
+                            UUID.randomUUID().toString(),
+                            person,
+                            meldestatus,
+                        )
+                    }
+
+                    tempPersonRepository.oppdaterPerson(
+                        TempPerson(
+                            ident,
+                            TempPersonStatus.FERDIGSTILT,
+                        ),
+                    )
+                } catch (e: Exception) {
+                    logger.error(e) { "Feil ved sjekking av meldestatus" }
+                    sikkerLogg.error(e) { "Feil ved sjekking av meldestatus for person med ident $ident" }
+
+                    tempPersonRepository.oppdaterPerson(
+                        TempPerson(
+                            ident,
+                            TempPersonStatus.AVVIK,
+                        ),
                     )
                 }
             }

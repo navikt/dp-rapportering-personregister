@@ -81,6 +81,15 @@ class PostgresTempPersonRepository(
             }
         }
 
+    override fun hentAlleIdenterMedStatus(status: TempPersonStatus): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                val query = queryOf("SELECT ident FROM temp_person WHERE status = ?", status.name)
+                val rowMapper: (Row) -> String = { row -> row.string("ident") }
+                tx.run(query.map(rowMapper).asList)
+            }
+        }
+
     override fun syncPersoner() {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -89,8 +98,7 @@ class PostgresTempPersonRepository(
                         """
                                 INSERT INTO temp_person (ident, status)
                                 SELECT ident, 'IKKE_PABEGYNT'
-                                FROM person
-                                LIMIT 90000;
+                                FROM person;
                 """,
                     )
                 val rowsAffected = tx.run(query.asUpdate)
