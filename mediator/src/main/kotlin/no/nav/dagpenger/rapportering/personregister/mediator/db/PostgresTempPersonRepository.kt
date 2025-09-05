@@ -81,6 +81,29 @@ class PostgresTempPersonRepository(
             }
         }
 
+    override fun hentIdenterMedStatus(
+        status: TempPersonStatus,
+        batchSize: Int,
+    ): List<String> =
+        using(sessionOf(dataSource)) { session ->
+            session.transaction { tx ->
+                val query = queryOf("SELECT ident FROM temp_person WHERE status = ? LIMIT ?", status.name, batchSize)
+                val rowMapper: (Row) -> String = { row -> row.string("ident") }
+                tx.run(query.map(rowMapper).asList)
+            }
+        }
+
+    override fun isEmpty(): Boolean =
+        using(sessionOf(dataSource)) { session ->
+            (
+                session.run(
+                    queryOf("SELECT COUNT(*) FROM temp_person")
+                        .map { it.int(1) }
+                        .asSingle,
+                ) ?: 0
+            ) == 0
+        }
+
     override fun syncPersoner() {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
@@ -89,8 +112,7 @@ class PostgresTempPersonRepository(
                         """
                                 INSERT INTO temp_person (ident, status)
                                 SELECT ident, 'IKKE_PABEGYNT'
-                                FROM person
-                                LIMIT 90000;
+                                FROM person;
                 """,
                     )
                 val rowsAffected = tx.run(query.asUpdate)

@@ -34,13 +34,20 @@ class MeldestatusMediator(
                     meldepliktConnector.hentMeldestatus(hendelse.personId)
                 }
 
+            // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi får data fra Arena, men for sikkerhetsskyld
+            if (meldestatus == null) {
+                logger.error { "Kunne ikke hente meldestatus" }
+                sikkerLogg.error { "Kunne ikke hente meldestatus for person med personId ${hendelse.personId}" }
+                throw RuntimeException("Kunne ikke hente meldestatus")
+            }
+
             personRepository.hentPerson(meldestatus.personIdent)?.let { person ->
-                behandleHendelse(hendelse, person, meldestatus)
+                behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
             }
         }
 
-    private fun behandleHendelse(
-        hendelse: MeldestatusHendelse,
+    fun behandleHendelse(
+        meldestatusId: String,
         person: Person,
         meldestatus: MeldestatusResponse,
     ) {
@@ -65,7 +72,7 @@ class MeldestatusMediator(
                 val meldepliktHendelse =
                     MeldepliktHendelse(
                         ident = person.ident,
-                        referanseId = "MSMP" + hendelse.meldestatusId.toString() + index,
+                        referanseId = "MSMP$meldestatusId-$index",
                         dato = LocalDateTime.now(),
                         startDato = it.meldepliktperiode?.fom ?: LocalDateTime.now(),
                         sluttDato = it.meldepliktperiode?.tom,
@@ -92,7 +99,7 @@ class MeldestatusMediator(
                     val dagpengerMeldegruppeHendelse =
                         DagpengerMeldegruppeHendelse(
                             ident = person.ident,
-                            referanseId = "MSMG" + hendelse.meldestatusId.toString() + index,
+                            referanseId = "MSMG$meldestatusId-$index",
                             dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
@@ -111,7 +118,7 @@ class MeldestatusMediator(
                     val annenMeldegruppeHendelse =
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
-                            referanseId = "MSMG" + hendelse.meldestatusId.toString() + index,
+                            referanseId = "MSMG$meldestatusId-$index",
                             dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
@@ -135,5 +142,6 @@ class MeldestatusMediator(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 }

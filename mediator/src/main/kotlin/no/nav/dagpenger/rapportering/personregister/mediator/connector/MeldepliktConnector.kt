@@ -47,7 +47,7 @@ class MeldepliktConnector(
         arenaPersonId: Long? = null,
         ident: String? = null,
         dato: LocalDate? = null,
-    ): MeldestatusResponse =
+    ): MeldestatusResponse? =
         withContext(Dispatchers.IO) {
             val result =
                 sendPostRequest(
@@ -63,12 +63,19 @@ class MeldepliktConnector(
                 ).also {
                     logger.info { "Kall til adapter for å hente meldestatus ga status ${it.status}" }
                 }
-            if (result.status != HttpStatusCode.OK) {
-                logger.warn { "Uforventet status ${result.status.value} ved henting av meldestatus fra adapter" }
-                throw RuntimeException("Uforventet status ${result.status.value} ved henting av meldestatus fra adapter")
-            }
 
-            defaultObjectMapper.readValue<MeldestatusResponse>(result.bodyAsText())
+            when (result.status) {
+                HttpStatusCode.OK -> {
+                    defaultObjectMapper.readValue<MeldestatusResponse>(result.bodyAsText())
+                }
+                HttpStatusCode.NoContent -> {
+                    null
+                }
+                else -> {
+                    logger.error { "Uforventet status ${result.status.value} ved henting av meldestatus fra adapter" }
+                    throw RuntimeException("Uforventet status ${result.status.value} ved henting av meldestatus fra adapter")
+                }
+            }
         }
 
     companion object {

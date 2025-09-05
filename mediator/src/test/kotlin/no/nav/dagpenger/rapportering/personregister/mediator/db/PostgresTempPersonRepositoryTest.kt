@@ -103,6 +103,26 @@ class PostgresTempPersonRepositoryTest {
         }
 
     @Test
+    fun `henter alle identer med oppgitt status`() =
+        withMigratedDb {
+            val person1 = TempPerson("12345678901", TempPersonStatus.IKKE_PABEGYNT)
+            val person2 = TempPerson("12345678904", TempPersonStatus.FERDIGSTILT)
+
+            repository.lagrePerson(person1)
+            repository.lagrePerson(person2)
+
+            repository.hentIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT) shouldBe
+                listOf(
+                    person1.ident,
+                )
+
+            repository.hentIdenterMedStatus(TempPersonStatus.FERDIGSTILT) shouldBe
+                listOf(
+                    person2.ident,
+                )
+        }
+
+    @Test
     fun `syncer personer fra person tabell`() =
         withMigratedDb {
             val person1 = Person("12345678901")
