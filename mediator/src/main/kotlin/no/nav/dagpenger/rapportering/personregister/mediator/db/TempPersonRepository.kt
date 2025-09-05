@@ -23,9 +23,12 @@ interface TempPersonRepository {
 
     fun hentAlleIdenter(): List<String>
 
-    fun hentAlleIdenterMedStatus(status: TempPersonStatus): List<String>
+    fun hentIdenterMedStatus(
+        status: TempPersonStatus,
+        batchSize: Int = 5000,
+    ): List<String>
 
-    fun isEmpty(): Boolean = hentAlleIdenter().isEmpty()
+    fun isEmpty(): Boolean
 
     fun syncPersoner()
 }

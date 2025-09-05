@@ -28,12 +28,12 @@ class MeldestatusJobbTest {
         val ident2 = "0102031232"
         val ident3 = "0102031233"
 
-        every { tempPersonRepository.hentAlleIdenterMedStatus(eq(TempPersonStatus.IKKE_PABEGYNT)) } returns
+        every { tempPersonRepository.hentIdenterMedStatus(eq(TempPersonStatus.IKKE_PABEGYNT)) } returns
             listOf(
                 ident1,
                 ident2,
                 ident3,
-            )
+            ) andThen emptyList()
         coEvery { meldepliktConnector.hentMeldestatus(any(), eq(ident3), any()) } returns null
 
         val behandletPersoner = mutableListOf<Person>()

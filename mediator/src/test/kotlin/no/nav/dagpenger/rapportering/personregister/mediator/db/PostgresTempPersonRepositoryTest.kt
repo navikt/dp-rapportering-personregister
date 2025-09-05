@@ -111,12 +111,12 @@ class PostgresTempPersonRepositoryTest {
             repository.lagrePerson(person1)
             repository.lagrePerson(person2)
 
-            repository.hentAlleIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT) shouldBe
+            repository.hentIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT) shouldBe
                 listOf(
                     person1.ident,
                 )
 
-            repository.hentAlleIdenterMedStatus(TempPersonStatus.FERDIGSTILT) shouldBe
+            repository.hentIdenterMedStatus(TempPersonStatus.FERDIGSTILT) shouldBe
                 listOf(
                     person2.ident,
                 )

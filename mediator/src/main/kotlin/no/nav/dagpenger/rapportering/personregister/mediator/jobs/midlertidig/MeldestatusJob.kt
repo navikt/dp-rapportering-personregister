@@ -88,48 +88,54 @@ internal class MeldestatusJob(
             tempPersonRepository.syncPersoner()
         }
 
-        val identer = tempPersonRepository.hentAlleIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT)
+        var antallPersoner = 0
 
-        logger.info { "Hentet ${identer.size} identer for sjekking av meldestatus" }
+        var identer = tempPersonRepository.hentIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT)
+        while (identer.isNotEmpty()) {
+            logger.info { "Hentet ${identer.size} identer for sjekking av meldestatus" }
+            antallPersoner += identer.size
 
-        identer.forEach { ident ->
-            val person = personRepository.hentPerson(ident)
+            identer.forEach { ident ->
+                val person = personRepository.hentPerson(ident)
 
-            if (person != null) {
-                try {
-                    val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
+                if (person != null) {
+                    try {
+                        val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
 
-                    if (meldestatus == null) {
-                        logger.info { "Person finnes ikke i Arena. Hopper over" }
-                        sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
-                    } else {
-                        meldestatusMediator.behandleHendelse(
-                            UUID.randomUUID().toString(),
-                            person,
-                            meldestatus,
+                        if (meldestatus == null) {
+                            logger.info { "Person finnes ikke i Arena. Hopper over" }
+                            sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                        } else {
+                            meldestatusMediator.behandleHendelse(
+                                UUID.randomUUID().toString(),
+                                person,
+                                meldestatus,
+                            )
+                        }
+
+                        tempPersonRepository.oppdaterPerson(
+                            TempPerson(
+                                ident,
+                                TempPersonStatus.FERDIGSTILT,
+                            ),
+                        )
+                    } catch (e: Exception) {
+                        logger.error(e) { "Feil ved sjekking av meldestatus" }
+                        sikkerLogg.error(e) { "Feil ved sjekking av meldestatus for person med ident $ident" }
+
+                        tempPersonRepository.oppdaterPerson(
+                            TempPerson(
+                                ident,
+                                TempPersonStatus.AVVIK,
+                            ),
                         )
                     }
-
-                    tempPersonRepository.oppdaterPerson(
-                        TempPerson(
-                            ident,
-                            TempPersonStatus.FERDIGSTILT,
-                        ),
-                    )
-                } catch (e: Exception) {
-                    logger.error(e) { "Feil ved sjekking av meldestatus" }
-                    sikkerLogg.error(e) { "Feil ved sjekking av meldestatus for person med ident $ident" }
-
-                    tempPersonRepository.oppdaterPerson(
-                        TempPerson(
-                            ident,
-                            TempPersonStatus.AVVIK,
-                        ),
-                    )
                 }
             }
+
+            identer = tempPersonRepository.hentIdenterMedStatus(TempPersonStatus.IKKE_PABEGYNT)
         }
 
-        return identer.size
+        return antallPersoner
     }
 }
