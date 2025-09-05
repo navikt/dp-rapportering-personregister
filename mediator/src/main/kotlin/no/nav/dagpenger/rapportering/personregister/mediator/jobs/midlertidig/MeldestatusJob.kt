@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.UUID
@@ -103,8 +104,14 @@ internal class MeldestatusJob(
                         val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
 
                         if (meldestatus == null) {
-                            logger.info { "Person finnes ikke i Arena. Hopper over" }
-                            sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                            if (person.status == Status.DAGPENGERBRUKER) {
+                                logger.error { "Person finnes ikke i Arena, men har status DAGPENGERBRUKER" }
+                                sikkerLogg.error { "Person med ident ${person.ident} finnes ikke i Arena, men har status DAGPENGERBRUKER" }
+                                throw RuntimeException("Person finnes ikke i Arena, men har status DAGPENGERBRUKER")
+                            } else {
+                                logger.info { "Person finnes ikke i Arena. Hopper over" }
+                                sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                            }
                         } else {
                             meldestatusMediator.behandleHendelse(
                                 UUID.randomUUID().toString(),
