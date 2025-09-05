@@ -72,7 +72,7 @@ class MeldestatusMediator(
                 val meldepliktHendelse =
                     MeldepliktHendelse(
                         ident = person.ident,
-                        referanseId = "MSMP$meldestatusId$index",
+                        referanseId = "MSMP$meldestatusId-$index",
                         dato = LocalDateTime.now(),
                         startDato = it.meldepliktperiode?.fom ?: LocalDateTime.now(),
                         sluttDato = it.meldepliktperiode?.tom,
@@ -99,7 +99,7 @@ class MeldestatusMediator(
                     val dagpengerMeldegruppeHendelse =
                         DagpengerMeldegruppeHendelse(
                             ident = person.ident,
-                            referanseId = "MSMG$meldestatusId$index",
+                            referanseId = "MSMG$meldestatusId-$index",
                             dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
@@ -118,7 +118,7 @@ class MeldestatusMediator(
                     val annenMeldegruppeHendelse =
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
-                            referanseId = "MSMG$meldestatusId$index",
+                            referanseId = "MSMG$meldestatusId-$index",
                             dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,

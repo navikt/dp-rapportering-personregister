@@ -84,7 +84,6 @@ internal class MeldestatusJob(
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
     ): Int {
-        // TODO: Husk å slette alt fra temp_person før første kjøring
         if (tempPersonRepository.isEmpty()) {
             tempPersonRepository.syncPersoner()
         }
