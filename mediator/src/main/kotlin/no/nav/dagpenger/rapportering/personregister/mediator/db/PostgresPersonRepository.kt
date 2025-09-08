@@ -27,7 +27,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -728,7 +727,6 @@ class PostgresPersonRepository(
             }
 
             "MeldesyklusErPassertHendelse" -> {
-                val extra = defaultObjectMapper.readValue<MeldesyklusErPassertExtra>(extra!!)
                 MeldesyklusErPassertHendelse(
                     ident = ident,
                     dato = dato,
@@ -924,12 +922,6 @@ data class MeldegruppeExtra(
 data class MeldepliktExtra(
     val statusMeldeplikt: Boolean,
     val harMeldtSeg: Boolean? = null,
-)
-
-data class MeldesyklusErPassertExtra(
-    val meldekortregisterPeriodeId: String,
-    val periodeFraOgMed: LocalDate,
-    val periodeTilOgMed: LocalDate,
 )
 
 data class VedtakExtra(
