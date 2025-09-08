@@ -69,7 +69,7 @@ spec:
         - host: "{{ PDL_API_HOST }}"
       rules:
         - application: dp-arena-meldeplikt-adapter
-        - application: paw-arbeidssoekerregisteret-api-oppslag
+        - application: paw-arbeidssoekerregisteret-api-oppslag-v2
           namespace: paw
           cluster: "{{ cluster }}"
         - application: paw-kafka-key-generator
