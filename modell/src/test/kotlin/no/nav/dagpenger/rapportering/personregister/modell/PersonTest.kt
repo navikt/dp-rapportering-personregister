@@ -55,15 +55,44 @@ class PersonTest {
     @Nested
     inner class VedtakHendelser {
         @Test
-        fun `behandler vedtak hendelse`() =
+        fun `behandler innvilget vedtak hendelse for arbeidssøker`() =
             arbeidssøker {
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
                 behandle(vedtakHendelse(søknadId = søknadId))
 
-                // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
-                ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                ansvarligSystem shouldBe AnsvarligSystem.DP
                 this skalHaSendtStartMeldingFor nå
+                arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
+                this.status shouldBe DAGPENGERBRUKER
+            }
+
+        @Test
+        fun `behandler avslag vedtak hendelse for arbeidssøker`() =
+            arbeidssøker {
+                val søknadId = "456"
+                hendelser.add(søknadHendelse(referanseId = søknadId))
+                behandle(vedtakHendelse(søknadId = søknadId, utfall = false))
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStoppMeldingFor nå
+                this.status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+            }
+
+        @Test
+        fun `behandler avslag vedtak hendelse for dagpengerbruker`() =
+            arbeidssøker(overtattBekreftelse = true) {
+                val søknadId = "456"
+                hendelser.add(søknadHendelse(referanseId = søknadId))
+                behandle(vedtakHendelse(søknadId = søknadId, utfall = true))
+
+                behandle(vedtakHendelse(søknadId = søknadId, utfall = false))
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStoppMeldingFor nå
+                this.status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
     }
 
@@ -272,4 +301,8 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
 
 infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
     verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato) }
+}
+
+infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato) }
 }

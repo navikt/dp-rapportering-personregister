@@ -222,8 +222,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["ident"].asText() shouldBe ident
                 obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe false
-                // TODO: obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value når vi har dp-meldekortregister
-                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.ARENA.value
+                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
             }
 
             // Oppdaterer Status og AnsvarligSystem

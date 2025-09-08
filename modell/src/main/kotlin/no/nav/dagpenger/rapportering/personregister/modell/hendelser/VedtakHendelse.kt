@@ -3,7 +3,14 @@ package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
+import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
+import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
+import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
+import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
+import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
+import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
 
 data class VedtakHendelse(
@@ -18,16 +25,43 @@ data class VedtakHendelse(
 
     override fun behandle(person: Person) {
         person.hendelser.add(this)
-        // TODO: person.setAnsvarligSystem(AnsvarligSystem.DP) når vi har dp-meldekortregister
-        person.setAnsvarligSystem(AnsvarligSystem.ARENA)
+        person.setAnsvarligSystem(AnsvarligSystem.DP)
 
-        person.hendelser
-            .filterIsInstance<SøknadHendelse>()
-            .find { søknadHendelse -> søknadHendelse.referanseId == søknadId }
-            ?.dato
-            ?.let {
-                person.sendStartMeldingTilMeldekortregister(it)
-                // TODO: Må vi gjøre noe annet her? Sette status til DAGPENGERBRUKER? erArbeidssøker = true? meldeplikt = true? meldegruppe = "DAGP"?
+        val søknadsdato =
+            person.hendelser
+                .filterIsInstance<SøknadHendelse>()
+                .find { it.referanseId == søknadId }
+                ?.dato
+                ?: throw RuntimeException("Finner ikke søknad med id $søknadId. Klarte ikke å behandle vedtak.")
+
+        // Starter eller stopper meldekortproduksjon bastert på vedtakets utfall
+        if (utfall) {
+            person.setVedtak(VedtakType.INNVILGET)
+            person.sendStartMeldingTilMeldekortregister(startDato = søknadsdato)
+        } else {
+            person.setVedtak(VedtakType.AVSLÅTT) // TODO: Her må vi egentlig sjekke status på vedtaket
+            person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
+        }
+
+        person
+            .vurderNyStatus()
+            .takeIf { it != person.status }
+            ?.let { status ->
+                person.setStatus(status)
+                if (person.oppfyllerKrav) {
+                    person.sendOvertakelsesmelding()
+                } else {
+                    // Sjekker om meldekortregisteret har meldt at bruker har brutt fristen for meldeplikten etter søknadsdato
+                    val fristBrutt =
+                        person.hendelser
+                            .filterIsInstance<MeldesyklusErPassertHendelse>()
+                            .any {
+                                it.dato.isAfter(søknadsdato)
+                            }
+
+                    person.arbeidssøkerperioder.gjeldende
+                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, fristBrutt = fristBrutt) }
+                }
             }
     }
 }

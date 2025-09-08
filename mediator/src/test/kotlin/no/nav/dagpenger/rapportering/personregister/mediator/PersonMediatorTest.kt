@@ -43,6 +43,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
+import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
+import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
@@ -171,30 +173,75 @@ class PersonMediatorTest {
     @Nested
     inner class VedtakHendelser {
         @Test
-        fun `vedtak for ny person`() {
+        fun `innvilget-vedtak for ny person`() {
+            personMediator.behandle(søknadHendelse(ident))
             personMediator.behandle(vedtakHendelse(ident))
 
             personRepository
                 .hentPerson(ident)
                 ?.apply {
                     ident shouldBe ident
-                    // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
-                    ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    status shouldBe IKKE_DAGPENGERBRUKER
                 }
         }
 
         @Test
-        fun `vedtak for eksisterende person`() {
-            testPerson {
-                personMediator.behandle(vedtakHendelse(ident))
+        fun `innvilget-vedtak for arbeidssøker`() {
+            arbeidssøker { }
 
-                personRepository
-                    .hentPerson(ident)
-                    ?.apply {
-                        ident shouldBe ident
-                        // TODO: ansvarligSystem shouldBe AnsvarligSystem.DP når vi har dp-meldekortregister
-                        ansvarligSystem shouldBe AnsvarligSystem.ARENA
-                    }
+            personMediator.behandle(søknadHendelse(ident))
+
+            val person = personRepository.hentPerson(ident)!!
+            every { personObserver.overtattArbeidssøkerbekreftelse(any(), periodeId) } answers {
+                person.merkPeriodeSomOvertatt(periodeId)
+            }
+
+            personMediator.behandle(vedtakHendelse(ident))
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ident shouldBe ident
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    status shouldBe DAGPENGERBRUKER
+                }
+
+            with(person) {
+                status shouldBe DAGPENGERBRUKER
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
+                personObserver skalHaSendtOvertakelseFor this
+                this skalHaSendtStartMeldingFor nå
+            }
+        }
+
+        @Test
+        fun `avslag-vedtak for dagpengerbruker`() {
+            arbeidssøker(overtattBekreftelse = true) {}
+            personMediator.behandle(søknadHendelse(ident))
+            personMediator.behandle(vedtakHendelse(ident, utfall = true))
+
+            val person = personRepository.hentPerson(ident)!!
+            every { personObserver.frasagtArbeidssøkerbekreftelse(any(), periodeId) } answers {
+                person.merkPeriodeSomIkkeOvertatt(periodeId)
+            }
+
+            personMediator.behandle(vedtakHendelse(ident, utfall = false))
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    ident shouldBe ident
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    status shouldBe IKKE_DAGPENGERBRUKER
+                }
+
+            with(person) {
+                status shouldBe IKKE_DAGPENGERBRUKER
+                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
+                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
+                personObserver skalHaFrasagtAnsvaretFor this
+                this skalHaSendtStoppMeldingFor nå
             }
         }
     }
@@ -453,8 +500,8 @@ class PersonMediatorTest {
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
-        referanseId: String = "123",
-        søknadId: String = "456",
+        referanseId: String = "456",
+        søknadId: String = "123",
         utfall: Boolean = true,
     ) = VedtakHendelse(ident, dato, startDato, referanseId, søknadId, utfall)
 
@@ -524,6 +571,14 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
+}
+
+infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato) }
+}
+
+infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato) }
 }
 
 class BeslutningObserver(

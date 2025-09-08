@@ -197,6 +197,19 @@ fun Person.sendStartMeldingTilMeldekortregister(startDato: LocalDateTime) {
     }
 }
 
+fun Person.sendStoppMeldingTilMeldekortregister(stoppDato: LocalDateTime) {
+    logger.info { "Sender Stopp-melding til Meldekortregister" }
+
+    try {
+        logger.info { "Antall observere: ${observers.size}" }
+        observers.forEach { observer -> observer.sendStoppMeldingTilMeldekortregister(this, stoppDato) }
+        logger.info { "Sendte Start-melding på observere uten feil" }
+    } catch (e: Exception) {
+        logger.error(e) { "Overtagelse feilet!" }
+        throw e
+    }
+}
+
 val Person.erArbeidssøker: Boolean
     get() = arbeidssøkerperioder.gjeldende != null
 

@@ -28,4 +28,9 @@ interface PersonObserver {
         person: Person,
         startDato: LocalDateTime,
     ) {}
+
+    fun sendStoppMeldingTilMeldekortregister(
+        person: Person,
+        stoppDato: LocalDateTime,
+    ) {}
 }
