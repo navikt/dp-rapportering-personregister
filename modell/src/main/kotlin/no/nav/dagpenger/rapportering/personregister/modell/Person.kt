@@ -203,7 +203,7 @@ fun Person.sendStoppMeldingTilMeldekortregister(stoppDato: LocalDateTime) {
     try {
         logger.info { "Antall observere: ${observers.size}" }
         observers.forEach { observer -> observer.sendStoppMeldingTilMeldekortregister(this, stoppDato) }
-        logger.info { "Sendte Start-melding på observere uten feil" }
+        logger.info { "Sendte Stopp-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }
         throw e
