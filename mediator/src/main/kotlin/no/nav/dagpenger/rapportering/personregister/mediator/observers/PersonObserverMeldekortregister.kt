@@ -39,4 +39,27 @@ class PersonObserverMeldekortregister(
         sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
         getRapidsConnection().publish(person.ident, message.toJson())
     }
+
+    override fun sendStoppMeldingTilMeldekortregister(
+        person: Person,
+        stoppDato: LocalDateTime,
+    ) {
+        logger.info { "Sender Stopp-melding til Meldekortregister for person" }
+        sikkerlogg.info { "Sender Stopp-melding til Meldekortregister for person ${person.ident}" }
+
+        val message =
+            JsonMessage.newMessage(
+                "meldekortoppretting",
+                mapOf(
+                    "personId" to (personRepository.hentPersonId(person.ident) ?: 0),
+                    "ident" to person.ident,
+                    "dato" to stoppDato,
+                    "handling" to "STOPP",
+                    "referanseId" to UUID.randomUUID().toString(),
+                ),
+            )
+
+        sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }
+        getRapidsConnection().publish(person.ident, message.toJson())
+    }
 }
