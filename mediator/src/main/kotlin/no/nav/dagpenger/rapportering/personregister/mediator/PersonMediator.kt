@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockin
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
@@ -84,19 +85,23 @@ class PersonMediator(
             } else {
                 hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
-                        person.behandle(hendelse)
-                        try {
-                            personRepository.oppdaterPerson(person)
-                        } catch (e: OptimisticLockingException) {
-                            logger.info(e) {
-                                "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                        if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
+                            person.behandle(hendelse)
+                            try {
+                                personRepository.oppdaterPerson(person)
+                            } catch (e: OptimisticLockingException) {
+                                logger.info(e) {
+                                    "Optimistisk låsing feilet ved oppdatering av person med periodeId ${hendelse.referanseId}. Counter: $counter"
+                                }
+                                behandle(hendelse, counter + 1)
                             }
-                            behandle(hendelse, counter + 1)
+                            if (!person.meldeplikt) {
+                                runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
+                            }
+                            arbeidssøkerMediator.behandle(hendelse.ident)
+                        } else {
+                            logger.info { "Behandler ikke DagpengerMeldegruppeHendelse, fordi Arena ikke er ansvarlig system" }
                         }
-                        if (!person.meldeplikt) {
-                            runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
-                        }
-                        arbeidssøkerMediator.behandle(hendelse.ident)
                     }
             }
         }
@@ -107,7 +112,15 @@ class PersonMediator(
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info { "AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
-                behandleHendelse(hendelse)
+                personService
+                    .hentPerson(hendelse.ident)
+                    ?.let {
+                        if (it.ansvarligSystem == AnsvarligSystem.ARENA) {
+                            behandleHendelse(hendelse)
+                        } else {
+                            logger.info { "Behandler ikke AnnenMeldegruppeHendelse, fordi Arena ikke er ansvarlig system" }
+                        }
+                    }
             }
         }
 

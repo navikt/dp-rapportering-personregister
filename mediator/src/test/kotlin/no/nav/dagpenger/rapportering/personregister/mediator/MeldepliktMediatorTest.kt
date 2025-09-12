@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -131,6 +132,16 @@ class MeldepliktMediatorTest {
     }
 
     @Test
+    fun `meldepliktendring for eksisterende person som har ansvarlig system DP blir ikke tatt til følge`() {
+        arbeidssøker(ansvarligSystem = AnsvarligSystem.DP) {
+            personMediator.behandle(dagpengerMeldegruppeHendelse())
+            meldepliktMediator.behandle(meldepliktHendelse(status = true))
+            status shouldBe IKKE_DAGPENGERBRUKER
+            personObserver skalIkkeHaSendtOvertakelseFor this
+        }
+    }
+
+    @Test
     fun `meldepliktendring for eksisterende person som oppfyller krav`() {
         arbeidssøker {
             personMediator.behandle(dagpengerMeldegruppeHendelse())
@@ -184,6 +195,7 @@ class MeldepliktMediatorTest {
 
     private fun arbeidssøker(
         overtattBekreftelse: Boolean = false,
+        ansvarligSystem: AnsvarligSystem = AnsvarligSystem.ARENA,
         block: Person.() -> Unit,
     ) {
         val person =
@@ -199,7 +211,7 @@ class MeldepliktMediatorTest {
                             overtattBekreftelse,
                         ),
                     ),
-            )
+            ).apply { setAnsvarligSystem(ansvarligSystem) }
         personRepository.lagrePerson(person)
         person.apply(block)
     }
