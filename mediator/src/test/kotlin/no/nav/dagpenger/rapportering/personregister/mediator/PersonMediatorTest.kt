@@ -286,7 +286,7 @@ class PersonMediatorTest {
         }
 
         @Test
-        fun `meldegruppeendring for person ved innvilget vedtak tas ikke høyde for`() {
+        fun `meldegruppeendring for person ved innvilget vedtak tas ikke hensyn til`() {
             arbeidssøker {}
             personMediator.behandle(søknadHendelse())
             personMediator.behandle(vedtakHendelse(ident))
