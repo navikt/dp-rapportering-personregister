@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockin
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
@@ -78,19 +79,23 @@ class MeldepliktMediator(
             personService
                 .hentPerson(hendelse.ident)
                 ?.let { person ->
-                    if (person.observers.isEmpty()) {
-                        personObservers.forEach { person.addObserver(it) }
-                    }
-                    person.behandle(hendelse)
-                    try {
-                        personRepository.oppdaterPerson(person)
-                    } catch (e: OptimisticLockingException) {
-                        logger.info(e) {
-                            "Optimistisk låsing feilet ved oppdatering for hendelse med refId ${hendelse.referanseId}. Counter: $counter"
+                    if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
+                        if (person.observers.isEmpty()) {
+                            personObservers.forEach { person.addObserver(it) }
                         }
-                        behandleHendelse(hendelse, counter + 1)
+                        person.behandle(hendelse)
+                        try {
+                            personRepository.oppdaterPerson(person)
+                        } catch (e: OptimisticLockingException) {
+                            logger.info(e) {
+                                "Optimistisk låsing feilet ved oppdatering for hendelse med refId ${hendelse.referanseId}. Counter: $counter"
+                            }
+                            behandleHendelse(hendelse, counter + 1)
+                        }
+                        logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
+                    } else {
+                        logger.info { "Behandler ikke Meldeplikthendelse, fordi Arena ikke er ansvarlig system" }
                     }
-                    logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }

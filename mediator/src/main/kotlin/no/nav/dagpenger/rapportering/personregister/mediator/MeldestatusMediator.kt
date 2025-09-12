@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -42,7 +43,14 @@ class MeldestatusMediator(
             }
 
             personRepository.hentPerson(meldestatus.personIdent)?.let { person ->
-                behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
+                if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
+                    behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
+                } else {
+                    logger.info { "Person har ikke Arena som ansvarlig system, meldepliktendringer fra Meldestatus ignoreres." }
+                    sikkerLogg.info {
+                        "Person med ident ${person.ident} har ikke Arena som ansvarlig system, meldepliktendringer fra Meldestatus ignoreres."
+                    }
+                }
             }
         }
 

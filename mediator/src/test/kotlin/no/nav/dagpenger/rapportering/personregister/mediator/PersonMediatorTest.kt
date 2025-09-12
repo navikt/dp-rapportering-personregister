@@ -286,6 +286,22 @@ class PersonMediatorTest {
         }
 
         @Test
+        fun `meldegruppeendring for person ved innvilget vedtak tas ikke høyde for`() {
+            arbeidssøker {}
+            personMediator.behandle(søknadHendelse())
+            personMediator.behandle(vedtakHendelse(ident))
+            personMediator.behandle(dagpengerMeldegruppeHendelse(startDato = nå))
+            personMediator.behandle(annenMeldegruppeHendelse(startDato = nå))
+
+            with(personRepository.hentPerson(ident)!!) {
+                this.status shouldBe DAGPENGERBRUKER
+                this.hendelser.size shouldBe 2
+                this.hendelser.first().javaClass shouldBe SøknadHendelse::class.java
+                this.hendelser.last().javaClass shouldBe VedtakHendelse::class.java
+            }
+        }
+
+        @Test
         fun `meldegruppendring for eksisterende person som oppfyller krav`() {
             arbeidssøker {}
 
@@ -446,16 +462,8 @@ class PersonMediatorTest {
     inner class MeldesyklusErPassert {
         @Test
         fun `send frasigelsesmelding når meldesyklus er passert`() {
-            val meldesyklusErPassertHendelse =
-                MeldesyklusErPassertHendelse(
-                    ident,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    UUID.randomUUID().toString(),
-                )
-
             arbeidssøker(overtattBekreftelse = true) {
-                personMediator.behandle(meldesyklusErPassertHendelse)
+                personMediator.behandle(meldesyklusErPassertHendelse())
                 personObserver skalHaFrasagtAnsvaretMedFristBruttFor this
             }
         }
@@ -488,6 +496,13 @@ class PersonMediatorTest {
         personRepository.lagrePerson(person)
         person.apply(block)
     }
+
+    private fun meldesyklusErPassertHendelse(
+        ident: String = this.ident,
+        dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
+        referanseId: String = "123",
+    ) = MeldesyklusErPassertHendelse(ident, dato, startDato, referanseId)
 
     private fun søknadHendelse(
         ident: String = this.ident,

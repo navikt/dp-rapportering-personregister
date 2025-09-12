@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -170,6 +171,29 @@ class MeldestatusMediatorTest {
     }
 
     @Test
+    fun `meldestatusHendelse for arbeidssøker med ansvarligSystem DP tas ikke til følge`() {
+        val arenaPersonId = 2L
+        val meldestatusResponse = meldestatusResponse(arenaPersonId)
+        coEvery { meldepliktConnector.hentMeldestatus(eq(arenaPersonId), any(), any()) } returns meldestatusResponse
+
+        arbeidssøker(ansvarligSystem = AnsvarligSystem.DP) {
+            meldestatusMediator.behandle(meldestatusHendelse(arenaPersonId))
+        }
+
+        with(personRepository.hentPerson(ident)!!) {
+            status shouldBe Status.IKKE_DAGPENGERBRUKER
+            ansvarligSystem shouldBe AnsvarligSystem.DP
+            meldeplikt shouldBe false
+            meldegruppe shouldBe null
+            hendelser.size shouldBe 0
+
+            personObserver skalIkkeHaSendtOvertakelseFor this.copy(versjon = 2)
+        }
+
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 0
+    }
+
+    @Test
     fun `meldestatusHendelse for ikke arbeidssøker`() {
         val arenaPersonId = 3L
         val meldestatusResponse = meldestatusResponse(arenaPersonId)
@@ -304,6 +328,7 @@ class MeldestatusMediatorTest {
 
     private fun arbeidssøker(
         overtattBekreftelse: Boolean = false,
+        ansvarligSystem: AnsvarligSystem = AnsvarligSystem.ARENA,
         block: Person.() -> Unit,
     ) {
         val person =
@@ -319,7 +344,7 @@ class MeldestatusMediatorTest {
                             overtattBekreftelse,
                         ),
                     ),
-            )
+            ).apply { setAnsvarligSystem(ansvarligSystem) }
         personRepository.lagrePerson(person)
         person.apply(block)
     }
