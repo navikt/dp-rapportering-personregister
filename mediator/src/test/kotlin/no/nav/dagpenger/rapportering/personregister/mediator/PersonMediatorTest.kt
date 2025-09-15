@@ -476,11 +476,6 @@ class PersonMediatorTest {
         @Test
         fun `sender stoppmelding og tilbakestiller ansvarlig system ved nødbrems`() {
             dagpengebrukerMedVedtak {
-                println("Person: $this")
-                println("Status: ${this.status}")
-                println("Vedtak: ${this.vedtak}")
-                println("Hendelser: ${this.hendelser}")
-
                 with(this) {
                     ansvarligSystem shouldBe AnsvarligSystem.DP
                     vedtak shouldBe VedtakType.INNVILGET

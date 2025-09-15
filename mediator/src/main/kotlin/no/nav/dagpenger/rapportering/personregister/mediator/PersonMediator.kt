@@ -62,7 +62,6 @@ class PersonMediator(
                     .also { person ->
                         person.behandle(vedtakHendelse)
                         try {
-                            println("Hva er vedtak etter behandling? ${person.vedtak}")
                             personRepository.oppdaterPerson(person)
                         } catch (e: OptimisticLockingException) {
                             logger.info(e) {
