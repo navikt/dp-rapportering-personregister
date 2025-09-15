@@ -8,10 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import kotlinx.datetime.LocalDate
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import java.time.LocalDateTime
 import java.util.UUID
