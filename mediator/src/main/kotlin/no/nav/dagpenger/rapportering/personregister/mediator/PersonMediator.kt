@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldeg
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
@@ -61,6 +62,7 @@ class PersonMediator(
                     .also { person ->
                         person.behandle(vedtakHendelse)
                         try {
+                            println("Hva er vedtak etter behandling? ${person.vedtak}")
                             personRepository.oppdaterPerson(person)
                         } catch (e: OptimisticLockingException) {
                             logger.info(e) {
@@ -185,6 +187,11 @@ class PersonMediator(
                     }
                 }
         }
+
+    fun behandle(nødbremsHendelse: NødbremsHendelse) {
+        logger.info { "Behandler nødbrems hendelse: ${nødbremsHendelse.referanseId}" }
+        behandleHendelse(nødbremsHendelse)
+    }
 
     private fun behandleHendelse(
         hendelse: Hendelse,
