@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
@@ -15,20 +16,24 @@ class InMemoryPersonRepository : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
     private val personList2 = mutableListOf<Person>()
     private val fremtidigeHendelser = mutableListOf<Hendelse>()
+    private val vedtakListe = mutableMapOf<String, VedtakType>()
 
-    override fun hentPerson(ident: String): Person? = personList[ident]
+    override fun hentPerson(ident: String): Person? = personList[ident]?.apply { this.setVedtak(vedtakListe[ident] ?: VedtakType.INGEN) }
 
     override fun finnesPerson(ident: String): Boolean = personList.containsKey(ident)
 
     override fun lagrePerson(person: Person) {
         personList[person.ident] = person
         personList2.add(person)
+        vedtakListe[person.ident] = person.vedtak
     }
 
     override fun oppdaterPerson(person: Person) {
         val nyPerson = person.deepCopy(versjon = person.versjon + 1)
         nyPerson.setAnsvarligSystem(person.ansvarligSystem)
+        nyPerson.setVedtak(person.vedtak)
         personList[person.ident] = nyPerson
+        vedtakListe[person.ident] = nyPerson.vedtak
     }
 
     override fun oppdaterIdent(
@@ -39,7 +44,9 @@ class InMemoryPersonRepository : PersonRepository {
             personList[person.ident]
                 ?: throw IllegalArgumentException("Person med ident ${person.ident} finnes ikke")
         personList.remove(funnetPerson.ident)
+        vedtakListe.remove(funnetPerson.ident)
         personList[nyIdent] = funnetPerson.copy(ident = nyIdent)
+        vedtakListe[nyIdent] = funnetPerson.vedtak
     }
 
     override fun hentAntallPersoner(): Int = personList.size

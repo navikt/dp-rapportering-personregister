@@ -34,11 +34,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
@@ -469,6 +471,28 @@ class PersonMediatorTest {
         }
     }
 
+    @Nested
+    inner class Nødbrems {
+        @Test
+        fun `sender stoppmelding og tilbakestiller ansvarlig system ved nødbrems`() {
+            dagpengebrukerMedVedtak {
+                with(this) {
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    vedtak shouldBe VedtakType.INNVILGET
+                    status shouldBe DAGPENGERBRUKER
+                }
+
+                personMediator.behandle(nødbremsHendelse())
+                with(this) {
+                    this skalHaSendtStoppMeldingFor nå
+                    ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                    vedtak shouldBe VedtakType.INGEN
+                    status shouldBe DAGPENGERBRUKER
+                }
+            }
+        }
+    }
+
     private fun testPerson(block: Person.() -> Unit) {
         val person = Person(ident = ident)
         personRepository.lagrePerson(person)
@@ -496,6 +520,34 @@ class PersonMediatorTest {
         personRepository.lagrePerson(person)
         person.apply(block)
     }
+
+    private fun dagpengebrukerMedVedtak(block: Person.() -> Unit) {
+        Person(
+            ident = ident,
+            arbeidssøkerperioder =
+                mutableListOf(
+                    Arbeidssøkerperiode(
+                        periodeId,
+                        ident,
+                        tidligere,
+                        null,
+                        true,
+                    ),
+                ),
+        ).apply { personRepository.lagrePerson(this) }
+        personMediator.behandle(søknadHendelse())
+        personMediator.behandle(vedtakHendelse())
+
+        val person = personRepository.hentPerson(ident)!!
+        person.apply(block)
+    }
+
+    private fun nødbremsHendelse(
+        ident: String = this.ident,
+        dato: LocalDateTime = nå,
+        startDato: LocalDateTime = nå,
+        referanseId: String = "321",
+    ) = NødbremsHendelse(ident, dato, startDato, referanseId)
 
     private fun meldesyklusErPassertHendelse(
         ident: String = this.ident,
