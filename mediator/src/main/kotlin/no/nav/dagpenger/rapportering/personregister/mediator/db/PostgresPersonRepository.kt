@@ -128,7 +128,8 @@ class PostgresPersonRepository(
                                         meldeplikt = :meldeplikt,
                                         meldegruppe = :meldegruppe,
                                         versjon = :ny_versjon,
-                                        ansvarlig_system = :ansvarlig_system
+                                        ansvarlig_system = :ansvarlig_system,
+                                        vedtak = :vedtak
                                     WHERE id = :id and versjon = :versjon
                                     """.trimIndent(),
                                     mapOf(
@@ -139,6 +140,7 @@ class PostgresPersonRepository(
                                         "versjon" to person.versjon,
                                         "ny_versjon" to person.versjon + 1,
                                         "ansvarlig_system" to person.ansvarligSystem?.name,
+                                        "vedtak" to person.vedtak.name,
                                     ),
                                 ).asUpdate,
                             )
