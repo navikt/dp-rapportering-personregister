@@ -128,7 +128,7 @@ class PostgresPersonRepository(
                                         meldeplikt = :meldeplikt,
                                         meldegruppe = :meldegruppe,
                                         versjon = :ny_versjon,
-                                        ansvarlig_system = :ansvarlig_system
+                                        ansvarlig_system = :ansvarlig_system,
                                         vedtak = :vedtak
                                     WHERE id = :id and versjon = :versjon
                                     """.trimIndent(),

@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -383,6 +384,29 @@ class PostgresPersonRepositoryTest {
                 .hentPerson(ident)
                 ?.apply {
                     ansvarligSystem shouldBe AnsvarligSystem.DP
+                }
+        }
+    }
+
+    @Test
+    fun `kan oppdatere persons vedtak`() {
+        withMigratedDb {
+            val person = testPerson()
+            personRepository.lagrePerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    vedtak shouldBe VedtakType.INGEN
+                }
+
+            person.setVedtak(VedtakType.INNVILGET)
+            personRepository.oppdaterPerson(person)
+
+            personRepository
+                .hentPerson(ident)
+                ?.apply {
+                    vedtak shouldBe VedtakType.INNVILGET
                 }
         }
     }
