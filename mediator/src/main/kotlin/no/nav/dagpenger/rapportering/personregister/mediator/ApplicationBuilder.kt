@@ -51,6 +51,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -243,6 +244,7 @@ internal class ApplicationBuilder(
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
                     VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
+                    NødbremsMottak(rapid, personMediator)
                 }
 
         rapidsConnection.register(this)
