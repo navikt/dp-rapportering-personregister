@@ -22,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
@@ -581,6 +582,7 @@ class PostgresPersonRepository(
             is PersonSynkroniseringHendelse -> this.startDato
             is StartetArbeidssøkerperiodeHendelse -> this.startet
             is VedtakHendelse -> this.startDato
+            is NødbremsHendelse -> this.startDato
             else -> null
         }
 
@@ -789,6 +791,14 @@ class PostgresPersonRepository(
                     utfall = vedtakExtra.utfall,
                 )
             }
+
+            "NødbremsHendelse" ->
+                NødbremsHendelse(
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    startDato = dato,
+                )
 
             else -> throw IllegalArgumentException("Unknown type: $type")
         }
