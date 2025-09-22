@@ -19,12 +19,14 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.confi
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
+import no.nav.dagpenger.rapportering.personregister.mediator.api.behandlingApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
@@ -53,6 +55,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Meldestat
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakFattetUtenforArenaMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
@@ -97,6 +100,8 @@ internal class ApplicationBuilder(
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
+    private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
+
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
 
@@ -222,6 +227,7 @@ internal class ApplicationBuilder(
                         internalApi(meterRegistry)
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                         personApi(personService)
+                        behandlingApi(behandlingRepository)
                     }
 
                     MeldegruppeendringMottak(
@@ -244,6 +250,7 @@ internal class ApplicationBuilder(
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
                     VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
+                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository)
                     NødbremsMottak(rapid, personMediator)
                 }
 

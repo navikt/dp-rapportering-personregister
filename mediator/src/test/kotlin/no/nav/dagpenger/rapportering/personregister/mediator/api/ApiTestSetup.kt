@@ -22,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -51,6 +52,7 @@ open class ApiTestSetup {
     val personObserver = mockk<PersonObserver>(relaxed = true)
     val pdlConnector = mockk<PdlConnector>()
     val unleash = mockk<Unleash>()
+    lateinit var behandlingRepository: BehandlingRepositoryPostgres
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -87,6 +89,8 @@ open class ApiTestSetup {
         clean()
 
         testApplication {
+            behandlingRepository = BehandlingRepositoryPostgres(dataSource)
+
             every { unleash.isEnabled(any()) } returns true
             val meterRegistry =
                 PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
@@ -161,6 +165,7 @@ open class ApiTestSetup {
                 internalApi(meterRegistry)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService)
+                behandlingApi(behandlingRepository)
             }
 
             block()
