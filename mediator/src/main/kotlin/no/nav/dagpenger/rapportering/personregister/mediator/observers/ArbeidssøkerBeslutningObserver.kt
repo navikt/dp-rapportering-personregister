@@ -25,8 +25,9 @@ class ArbeidssøkerBeslutningObserver(
                         Handling.OVERTATT,
                         begrunnelse =
                             "Oppfyller krav: arbedissøker, " +
-                                "meldeplikt=${person.meldeplikt} " +
-                                "og gruppe=${person.meldegruppe}",
+                                "meldeplikt=${person.meldeplikt}," +
+                                " gruppe=${person.meldegruppe}," +
+                                " og vedtak=${person.vedtak.name}",
                     )
 
                 arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
@@ -47,8 +48,9 @@ class ArbeidssøkerBeslutningObserver(
                         begrunnelse =
                             "Oppfyller ikke krav: " +
                                 "arbedissøker: ${person.erArbeidssøker}," +
-                                "meldeplikt=${person.meldeplikt} " +
-                                "og gruppe=${person.meldegruppe}",
+                                " meldeplikt=${person.meldeplikt}," +
+                                " gruppe=${person.meldegruppe}" +
+                                " og vedtak=${person.vedtak.name}",
                     )
 
                 arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
