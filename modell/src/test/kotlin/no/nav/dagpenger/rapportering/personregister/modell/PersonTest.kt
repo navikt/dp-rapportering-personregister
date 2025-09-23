@@ -74,8 +74,8 @@ class PersonTest {
                 hendelser.add(søknadHendelse(referanseId = søknadId))
                 behandle(vedtakHendelse(søknadId = søknadId, utfall = false))
 
-                ansvarligSystem shouldBe AnsvarligSystem.DP
-                this skalHaSendtStoppMeldingFor nå
+                ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                this skalIkkeHaSendtStoppMeldingFor nå
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
             }
@@ -305,4 +305,8 @@ infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
 
 infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
     verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato) }
+}
+
+infix fun Person.skalIkkeHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
+    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(stoppDato) }
 }
