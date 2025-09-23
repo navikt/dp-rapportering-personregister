@@ -25,22 +25,24 @@ data class VedtakHendelse(
 
     override fun behandle(person: Person) {
         person.hendelser.add(this)
-        person.setAnsvarligSystem(AnsvarligSystem.DP)
-
-        val søknadsdato =
-            person.hendelser
-                .filterIsInstance<SøknadHendelse>()
-                .find { it.referanseId == søknadId }
-                ?.dato
-                ?: throw RuntimeException("Finner ikke søknad med id $søknadId. Klarte ikke å behandle vedtak.")
 
         // Starter eller stopper meldekortproduksjon bastert på vedtakets utfall
         if (utfall) {
+            person.setAnsvarligSystem(AnsvarligSystem.DP)
+            val søknadsdato =
+                person.hendelser
+                    .filterIsInstance<SøknadHendelse>()
+                    .find { it.referanseId == søknadId }
+                    ?.dato
+                    ?: throw RuntimeException("Finner ikke søknad med id $søknadId. Klarte ikke å behandle vedtak.")
+
             person.setVedtak(VedtakType.INNVILGET)
             person.sendStartMeldingTilMeldekortregister(startDato = søknadsdato)
         } else {
             person.setVedtak(VedtakType.AVSLÅTT) // TODO: Her må vi egentlig sjekke status på vedtaket
-            person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
+            if (person.ansvarligSystem == AnsvarligSystem.DP) {
+                person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
+            }
         }
 
         person
