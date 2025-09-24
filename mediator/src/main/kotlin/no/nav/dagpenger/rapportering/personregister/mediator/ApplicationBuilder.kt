@@ -51,7 +51,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
@@ -243,10 +242,12 @@ internal class ApplicationBuilder(
                         fremtidigHendelseMediator,
                         meldepliktendringMetrikker,
                     )
-                    MeldestatusMottak(
-                        rapid,
-                        meldestatusMediator,
-                    )
+                    /*
+                        MeldestatusMottak(
+                            rapid,
+                            meldestatusMediator,
+                        )
+                     */
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
                     VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
