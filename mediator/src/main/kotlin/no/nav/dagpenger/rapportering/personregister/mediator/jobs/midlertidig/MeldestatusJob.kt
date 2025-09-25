@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -100,40 +101,56 @@ internal class MeldestatusJob(
                 val person = personRepository.hentPerson(ident)
 
                 if (person != null) {
-                    try {
-                        val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
+                    if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
+                        try {
+                            val meldestatus = meldepliktConnector.hentMeldestatus(ident = person.ident)
 
-                        if (meldestatus == null) {
-                            if (person.status == Status.DAGPENGERBRUKER) {
-                                logger.error { "Person finnes ikke i Arena, men har status DAGPENGERBRUKER" }
-                                sikkerLogg.error { "Person med ident ${person.ident} finnes ikke i Arena, men har status DAGPENGERBRUKER" }
-                                throw RuntimeException("Person finnes ikke i Arena, men har status DAGPENGERBRUKER")
+                            if (meldestatus == null) {
+                                if (person.status == Status.DAGPENGERBRUKER) {
+                                    logger.error { "Person finnes ikke i Arena, men har status DAGPENGERBRUKER" }
+                                    sikkerLogg.error {
+                                        "Person med ident ${person.ident} finnes ikke i Arena, men har status DAGPENGERBRUKER"
+                                    }
+                                    throw RuntimeException("Person finnes ikke i Arena, men har status DAGPENGERBRUKER")
+                                } else {
+                                    logger.info { "Person finnes ikke i Arena. Hopper over" }
+                                    sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                                }
                             } else {
-                                logger.info { "Person finnes ikke i Arena. Hopper over" }
-                                sikkerLogg.info { "Person med ident ${person.ident} finnes ikke i Arena. Hopper over" }
+                                meldestatusMediator.behandleHendelse(
+                                    UUID.randomUUID().toString(),
+                                    person,
+                                    meldestatus,
+                                )
                             }
-                        } else {
-                            meldestatusMediator.behandleHendelse(
-                                UUID.randomUUID().toString(),
-                                person,
-                                meldestatus,
+
+                            tempPersonRepository.oppdaterPerson(
+                                TempPerson(
+                                    ident,
+                                    TempPersonStatus.FERDIGSTILT,
+                                ),
                             )
+                        } catch (e: Exception) {
+                            logger.error(e) { "Feil ved sjekking av meldestatus" }
+                            sikkerLogg.error(e) { "Feil ved sjekking av meldestatus for person med ident $ident" }
+
+                            tempPersonRepository.oppdaterPerson(
+                                TempPerson(
+                                    ident,
+                                    TempPersonStatus.AVVIK,
+                                ),
+                            )
+                        }
+                    } else {
+                        logger.info { "Person har ikke Arena som ansvarlig system. Henter ikke meldepliktendringer." }
+                        sikkerLogg.info {
+                            "Person med ident ${person.ident} har ikke Arena som ansvarlig system. Henter ikke meldepliktendringer."
                         }
 
                         tempPersonRepository.oppdaterPerson(
                             TempPerson(
                                 ident,
                                 TempPersonStatus.FERDIGSTILT,
-                            ),
-                        )
-                    } catch (e: Exception) {
-                        logger.error(e) { "Feil ved sjekking av meldestatus" }
-                        sikkerLogg.error(e) { "Feil ved sjekking av meldestatus for person med ident $ident" }
-
-                        tempPersonRepository.oppdaterPerson(
-                            TempPerson(
-                                ident,
-                                TempPersonStatus.AVVIK,
                             ),
                         )
                     }

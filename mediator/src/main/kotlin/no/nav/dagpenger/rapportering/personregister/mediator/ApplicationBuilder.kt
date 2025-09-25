@@ -30,8 +30,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingReposi
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -48,9 +50,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldegruppeendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldepliktendringMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
@@ -99,6 +99,7 @@ internal class ApplicationBuilder(
             .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
 
@@ -196,6 +197,7 @@ internal class ApplicationBuilder(
 
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
+    private val meldestatusJob = MeldestatusJob()
 
     private val kafkaContext =
         KafkaContext(
@@ -266,6 +268,7 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
+        meldestatusJob.start(personRepository, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }
 }
 
