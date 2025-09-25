@@ -18,7 +18,7 @@ PDL_API_HOST: pdl-api-q1.dev-fss-pub.nais.io
 PDL_AUDIENCE: dev-fss:pdl:pdl-api
 PDL_API_SCOPE: api://dev-fss.pdl.pdl-api-q1/.default
 
-KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldegruppeendret-v1-q1,teamarenanais.aapen-arena-meldepliktendret-v1-q1,teamarenanais.aapen-arena-meldestatusendret-v1-q1
+KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-q1
 
 additionalInbounds:
   - application: meldekort-api-q1
