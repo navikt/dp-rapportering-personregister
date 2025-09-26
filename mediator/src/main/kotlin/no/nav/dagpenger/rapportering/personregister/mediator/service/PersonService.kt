@@ -38,12 +38,22 @@ class PersonService(
         }
     }
 
-    fun hentPerson(ident: String): Person? =
-        personRepository.hentPerson(ident).also { person ->
-            if (person != null && person.observers.isEmpty()) {
-                personObservers.forEach { observer -> person.addObserver(observer) }
-            }
-        }
+    fun hentPerson(ident: String): Person? {
+        // Henter alle personens identer fra PDL
+        val pdlIdenter = hentAlleIdenterForPerson(ident)
+
+        val personer =
+            hentPersoner(
+                identer =
+                    if (pdlIdenter.isEmpty()) {
+                        listOf(ident)
+                    } else {
+                        // Fjerner aktorId siden denne ikke brukes av oss
+                        pdlIdenter.filterNot { it.gruppe == Ident.IdentGruppe.AKTORID }.map { it.ident }
+                    },
+            )
+        return ryddOppPersoner(pdlIdenter, personer)
+    }
 
     fun hentPersonId(ident: String): Long? = personRepository.hentPersonId(ident)
 
@@ -51,7 +61,7 @@ class PersonService(
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
 
-    fun hentPersonFraDB(identer: List<String>): List<Person> =
+    fun hentPersoner(identer: List<String>): List<Person> =
         identer.mapNotNull { ident ->
             personRepository.hentPerson(ident).also { person ->
                 if (person != null && person.observers.isEmpty()) {
