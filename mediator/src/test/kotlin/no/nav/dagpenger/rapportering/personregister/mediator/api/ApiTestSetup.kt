@@ -20,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
@@ -51,6 +52,7 @@ open class ApiTestSetup {
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val personObserver = mockk<PersonObserver>(relaxed = true)
     val pdlConnector = mockk<PdlConnector>()
+    val meldekortregisterConnector = mockk<MeldekortregisterConnector>()
     val unleash = mockk<Unleash>()
     lateinit var behandlingRepository: BehandlingRepositoryPostgres
 
@@ -117,6 +119,7 @@ open class ApiTestSetup {
                     personRepository = personRepository,
                     personObservers = listOf(personObserver),
                     cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
+                    meldekortregisterConnector = meldekortregisterConnector,
                 )
             val meldepliktMediator =
                 MeldepliktMediator(

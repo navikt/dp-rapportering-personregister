@@ -34,6 +34,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             personRepository = personRepository,
             personObservers = listOf(personObserver),
             cache = Caffeine.newBuilder().build(),
+            meldekortregisterConnector = meldekortregisterConnector,
         )
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)

@@ -55,6 +55,10 @@ internal object Configuration {
         properties[Key("MELDEPLIKT_ADAPTER_HOST", stringType)].formatUrl()
     }
 
+    val meldekortregisterUrl by lazy {
+        properties[Key("MELDEKORTREGISTER_HOST", stringType)].formatUrl()
+    }
+
     private val azureAdConfig by lazy { AzureAd(properties) }
     private val azureAdClient by lazy {
         CachedOauth2Client(
@@ -85,6 +89,15 @@ internal object Configuration {
             runBlocking {
                 azureAdClient
                     .clientCredentials(properties[Key("MELDEPLIKT_ADAPTER_SCOPE", stringType)])
+                    .access_token ?: throw RuntimeException("Failed to get token")
+            }
+        }
+    }
+    val meldekortregisterTokenProvider: () -> String by lazy {
+        {
+            runBlocking {
+                azureAdClient
+                    .clientCredentials(properties[Key("MELDEKORTREGISTER_SCOPE", stringType)])
                     .access_token ?: throw RuntimeException("Failed to get token")
             }
         }

@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
@@ -53,6 +54,8 @@ class MeldepliktMediatorTest {
 
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
+
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
 
@@ -78,6 +81,7 @@ class MeldepliktMediatorTest {
                 personRepository = personRepository,
                 personObservers = listOf(personObserver),
                 cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
+                meldekortregisterConnector = meldekortregisterConnector,
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
