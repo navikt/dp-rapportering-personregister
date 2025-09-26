@@ -167,6 +167,15 @@ class PostgresPersonRepository(
     ) = actionTimer.timedAction("db-oppdaterIdent") {
         using(sessionOf(dataSource)) { session ->
             session.transaction { tx ->
+                tx.run(
+                    queryOf(
+                        "UPDATE fremtidig_hendelse SET ident = :nyIdent WHERE ident = :ident",
+                        mapOf(
+                            "ident" to person.ident,
+                            "nyIdent" to nyIdent,
+                        ),
+                    ).asUpdate,
+                )
                 tx
                     .run(
                         queryOf(
@@ -387,6 +396,14 @@ class PostgresPersonRepository(
             using(sessionOf(dataSource)) { session ->
                 session.transaction { tx ->
                     val personId = hentPersonId(ident)
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
                     tx.run(
                         queryOf(
                             "DELETE FROM status_historikk WHERE person_id = :person_id",
