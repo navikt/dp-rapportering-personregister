@@ -2,15 +2,20 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -20,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -48,6 +54,18 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             meldepliktMediator,
             actionTimer,
             unleash,
+        )
+    private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
+    private val meldestatusMediator =
+        MeldestatusMediator(
+            personRepository = personRepository,
+            meldepliktConnector = meldepliktConnector,
+            meldepliktMediator = meldepliktMediator,
+            personMediator = personMediator,
+            fremtidigHendelseMediator = fremtidigHendelseMediator,
+            meldepliktendringMetrikker = mockk<MeldepliktendringMetrikker>(relaxed = true),
+            meldegruppeendringMetrikker = mockk<MeldegruppeendringMetrikker>(relaxed = true),
+            actionTimer = actionTimer,
         )
 
     private val ident1 = "12345678911"
@@ -136,6 +154,71 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             personRepository.lagrePerson(person2)
             personRepository.lagreFremtidigHendelse(meldegruppeHendelse2)
 
+            coEvery { meldepliktConnector.hentMeldestatus(ident = person1.ident) } returns
+                MeldestatusResponse(
+                    arenaPersonId = 1L,
+                    personIdent = person1.ident,
+                    formidlingsgruppe = "Formidling",
+                    harMeldtSeg = false,
+                    meldepliktListe =
+                        listOf(
+                            MeldestatusResponse.Meldeplikt(
+                                meldeplikt = meldepliktHendelse.statusMeldeplikt,
+                                meldepliktperiode =
+                                    MeldestatusResponse.Periode(
+                                        LocalDateTime.now().minusDays(2),
+                                    ),
+                                begrunnelse = null,
+                                endringsdata =
+                                    MeldestatusResponse.Endring(
+                                        "R123456",
+                                        LocalDateTime.now().minusDays(7),
+                                        "E654321",
+                                        LocalDateTime.now(),
+                                    ),
+                            ),
+                        ),
+                    meldegruppeListe =
+                        listOf(
+                            MeldestatusResponse.Meldegruppe(
+                                meldegruppe = meldegruppeHendelse.meldegruppeKode,
+                                meldegruppeperiode =
+                                    MeldestatusResponse.Periode(
+                                        LocalDateTime.now(),
+                                    ),
+                                begrunnelse = null,
+                                endringsdata =
+                                    MeldestatusResponse.Endring(
+                                        "R123456",
+                                        LocalDateTime.now().minusDays(7),
+                                        "E654321",
+                                        LocalDateTime.now(),
+                                    ),
+                            ),
+                        ),
+                )
+
+            coEvery { meldepliktConnector.hentMeldestatus(ident = person2.ident) } returns
+                MeldestatusResponse(
+                    arenaPersonId = 2L,
+                    personIdent = person2.ident,
+                    formidlingsgruppe = "Formidling",
+                    harMeldtSeg = false,
+                    meldepliktListe = listOf(),
+                    meldegruppeListe =
+                        listOf(
+                            MeldestatusResponse.Meldegruppe(
+                                meldegruppe = meldegruppeHendelse.meldegruppeKode,
+                                meldegruppeperiode =
+                                    MeldestatusResponse.Periode(
+                                        LocalDateTime.now().minusDays(1),
+                                    ),
+                                begrunnelse = null,
+                                endringsdata = null,
+                            ),
+                        ),
+                )
+
             with(personRepository.hentPerson(ident1)!!) {
                 hendelser.size shouldBe 1
                 erArbeidssøker shouldBe true
@@ -152,7 +235,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 aktiverHendelserJob.aktivererHendelser(
                     personRepository,
                     personMediator,
-                    meldepliktMediator,
+                    meldestatusMediator,
                     meldepliktConnector,
                 )
             antallHendelserAktivert shouldBe 3
@@ -160,8 +243,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
 
             with(personRepository.hentPerson(ident1)!!) {
                 hendelser.size shouldBe 3
-                (hendelser[1] as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
-                (hendelser[2] as MeldepliktHendelse).harMeldtSeg shouldBe false
+                (hendelser[1] as MeldepliktHendelse).harMeldtSeg shouldBe false
+                (hendelser[2] as DagpengerMeldegruppeHendelse).harMeldtSeg shouldBe false
                 erArbeidssøker shouldBe true
                 oppfyllerKrav shouldBe true
             }

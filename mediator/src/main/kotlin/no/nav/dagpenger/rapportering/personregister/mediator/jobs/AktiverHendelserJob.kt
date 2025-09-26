@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
@@ -12,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldeg
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import kotlin.concurrent.fixedRateTimer
@@ -35,7 +37,7 @@ class AktiverHendelserJob(
     internal fun start(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
-        meldepliktMediator: MeldepliktMediator,
+        meldestatusMediator: MeldestatusMediator,
         meldepliktConnector: MeldepliktConnector,
     ) {
         logger.info { "Tidspunkt for neste kjøring AktiverHendelserJob: $tidspunktForNesteKjoring" }
@@ -56,7 +58,7 @@ class AktiverHendelserJob(
                                     aktivererHendelser(
                                         personRepository,
                                         personMediator,
-                                        meldepliktMediator,
+                                        meldestatusMediator,
                                         meldepliktConnector,
                                     )
                             }
@@ -78,42 +80,48 @@ class AktiverHendelserJob(
     fun aktivererHendelser(
         personRepository: PersonRepository,
         personMediator: PersonMediator,
-        meldepliktMediator: MeldepliktMediator,
+        meldestatusMediator: MeldestatusMediator,
         meldepliktConnector: MeldepliktConnector,
     ): Int {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
         var currentIdent = ""
-        var currentStatus = false
-
+        var currentMeldestatus: MeldestatusResponse? = null
         hendelser.forEach { hendelse ->
+            val person = personRepository.hentPerson(hendelse.ident)
             try {
-                if (personRepository.finnesPerson(hendelse.ident)) {
-                    // Sjekk om bruker har meldt seg
-                    // Hendelser er sortert etter ident
-                    // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
-                    if (hendelse.ident != currentIdent) {
-                        val meldestatus =
-                            runBlocking {
-                                meldepliktConnector.hentMeldestatus(ident = hendelse.ident)
+                if (person != null) {
+                    when (hendelse) {
+                        is DagpengerMeldegruppeHendelse, is AnnenMeldegruppeHendelse, is MeldepliktHendelse -> {
+                            // Sjekk om bruker har meldt seg
+                            // Hendelser er sortert etter ident
+                            // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
+                            if (hendelse.ident != currentIdent || currentMeldestatus == null) {
+                                val meldestatus =
+                                    runBlocking {
+                                        meldepliktConnector.hentMeldestatus(ident = hendelse.ident)
+                                    }
+
+                                // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                                if (meldestatus == null) {
+                                    logger.error { "Kunne ikke hente meldestatus" }
+                                    sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${hendelse.ident}" }
+                                    throw RuntimeException("Kunne ikke hente meldestatus")
+                                }
+
+                                currentIdent = hendelse.ident
+                                currentMeldestatus = meldestatus
                             }
 
-                        // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
-                        if (meldestatus == null) {
-                            logger.error { "Kunne ikke hente meldestatus" }
-                            sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${hendelse.ident}" }
-                            throw RuntimeException("Kunne ikke hente meldestatus")
+                            meldestatusMediator.behandleHendelse(hendelse.referanseId, person, currentMeldestatus)
                         }
 
-                        currentIdent = hendelse.ident
-                        currentStatus = meldestatus.harMeldtSeg
-                    }
+                        is VedtakHendelse -> {
+                            personMediator.behandle(hendelse)
+                        }
 
-                    when (hendelse) {
-                        is DagpengerMeldegruppeHendelse -> personMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
-                        is AnnenMeldegruppeHendelse -> personMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
-                        is MeldepliktHendelse -> meldepliktMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
-                        is VedtakHendelse -> personMediator.behandle(hendelse)
-                        else -> logger.warn { "Fant ukjent fremtidig hendelsetype $hendelse" }
+                        else -> {
+                            logger.warn { "Fant ukjent fremtidig hendelsetype $hendelse" }
+                        }
                     }
                 } else {
                     logger.warn { "Fant ikke person. Kan ikke aktivere hendelse." }
