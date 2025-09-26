@@ -226,25 +226,20 @@ internal class ApplicationBuilder(
 
                     with(engine.application) {
                         pluginConfiguration(meterRegistry, kafkaContext)
-                        internalApi(meterRegistry)
+                        internalApi(
+                            meterRegistry,
+                            aktiverHendelserJob,
+                            personRepository,
+                            personMediator,
+                            meldepliktMediator,
+                            meldepliktConnector,
+                        )
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                         personApi(personService)
                         behandlingApi(behandlingRepository)
                     }
 
-                    /*MeldegruppeendringMottak(
-                        rapid,
-                        personMediator,
-                        fremtidigHendelseMediator,
-                        meldegruppeendringMetrikker,
-                    )*/
                     MeldekortTestdataMottak(rapid)
-                    /*MeldepliktendringMottak(
-                        rapid,
-                        meldepliktMediator,
-                        fremtidigHendelseMediator,
-                        meldepliktendringMetrikker,
-                    )*/
                     MeldestatusMottak(
                         rapid,
                         meldestatusMediator,

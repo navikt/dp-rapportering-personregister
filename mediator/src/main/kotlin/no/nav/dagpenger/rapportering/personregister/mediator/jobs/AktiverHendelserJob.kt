@@ -21,7 +21,8 @@ import kotlin.time.measureTime
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal class AktiverHendelserJob(
+// TODO: Lagg til internal
+class AktiverHendelserJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
     private val tidspunktForKjoring = LocalTime.of(0, 1)

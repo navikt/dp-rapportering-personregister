@@ -27,6 +27,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.databas
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -162,7 +163,14 @@ open class ApiTestSetup {
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
-                internalApi(meterRegistry)
+                internalApi(
+                    meterRegistry,
+                    AktiverHendelserJob(),
+                    personRepository,
+                    personMediator,
+                    meldepliktMediator,
+                    meldepliktConnector,
+                )
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService)
                 behandlingApi(behandlingRepository)
