@@ -21,7 +21,8 @@ import kotlin.time.measureTime
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-internal class AktiverHendelserJob(
+// internal
+class AktiverHendelserJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
     private val tidspunktForKjoring = LocalTime.of(0, 1)
@@ -84,35 +85,45 @@ internal class AktiverHendelserJob(
         var currentIdent = ""
         var currentStatus = false
 
-        hendelser.forEach {
-            // Sjekk om bruker har meldt seg
-            // Hendelser er sortert etter ident
-            // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
-            if (it.ident != currentIdent) {
-                val meldestatus =
-                    runBlocking {
-                        meldepliktConnector.hentMeldestatus(ident = it.ident)
+        hendelser.forEach { hendelse ->
+            try {
+                if (personRepository.finnesPerson(hendelse.ident)) {
+                    // Sjekk om bruker har meldt seg
+                    // Hendelser er sortert etter ident
+                    // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
+                    if (hendelse.ident != currentIdent) {
+                        val meldestatus =
+                            runBlocking {
+                                meldepliktConnector.hentMeldestatus(ident = hendelse.ident)
+                            }
+
+                        // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                        if (meldestatus == null) {
+                            logger.error { "Kunne ikke hente meldestatus" }
+                            sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${hendelse.ident}" }
+                            throw RuntimeException("Kunne ikke hente meldestatus")
+                        }
+
+                        currentIdent = hendelse.ident
+                        currentStatus = meldestatus.harMeldtSeg
                     }
 
-                // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
-                if (meldestatus == null) {
-                    logger.error { "Kunne ikke hente meldestatus" }
-                    sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${it.ident}" }
-                    throw RuntimeException("Kunne ikke hente meldestatus")
+                    when (hendelse) {
+                        is DagpengerMeldegruppeHendelse -> personMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
+                        is AnnenMeldegruppeHendelse -> personMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
+                        is MeldepliktHendelse -> meldepliktMediator.behandle(hendelse.copy(harMeldtSeg = currentStatus))
+                        is VedtakHendelse -> personMediator.behandle(hendelse)
+                        else -> logger.warn { "Fant ukjent fremtidig hendelsetype $hendelse" }
+                    }
+                } else {
+                    logger.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
+                    sikkerLogg.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
                 }
-
-                currentIdent = it.ident
-                currentStatus = meldestatus.harMeldtSeg
+                personRepository.slettFremtidigHendelse(hendelse.referanseId)
+            } catch (e: Exception) {
+                logger.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
+                sikkerLogg.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
             }
-
-            when (it) {
-                is DagpengerMeldegruppeHendelse -> personMediator.behandle(it.copy(harMeldtSeg = currentStatus))
-                is AnnenMeldegruppeHendelse -> personMediator.behandle(it.copy(harMeldtSeg = currentStatus))
-                is MeldepliktHendelse -> meldepliktMediator.behandle(it.copy(harMeldtSeg = currentStatus))
-                is VedtakHendelse -> personMediator.behandle(it)
-                else -> logger.warn { "Fant ukjent fremtidig hendelsetype $it" }
-            }
-            personRepository.slettFremtidigHendelse(it.referanseId)
         }
         return hendelser.size
     }
