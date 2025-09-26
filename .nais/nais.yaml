@@ -69,6 +69,7 @@ spec:
         - host: "{{ PDL_API_HOST }}"
       rules:
         - application: dp-arena-meldeplikt-adapter
+        - application: dp-meldekortregister
         - application: paw-arbeidssoekerregisteret-api-oppslag-v2
           namespace: paw
           cluster: "{{ cluster }}"

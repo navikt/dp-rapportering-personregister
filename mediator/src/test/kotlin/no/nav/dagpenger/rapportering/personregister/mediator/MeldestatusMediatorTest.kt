@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
@@ -52,6 +53,7 @@ class MeldestatusMediatorTest {
 
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
+    private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
     private val unleash = FakeUnleash()
 
     @BeforeEach
@@ -64,6 +66,7 @@ class MeldestatusMediatorTest {
                 personRepository = personRepository,
                 personObservers = listOf(personObserver),
                 cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
+                meldekortregisterConnector = meldekortregisterConnector,
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()

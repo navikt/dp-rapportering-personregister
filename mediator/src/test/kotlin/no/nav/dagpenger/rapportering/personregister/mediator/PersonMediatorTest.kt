@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
@@ -70,11 +71,12 @@ class PersonMediatorTest {
     private lateinit var arbeidssøkerMediator: ArbeidssøkerMediator
     private lateinit var meldepliktMediator: MeldepliktMediator
     private lateinit var meldepliktConnector: MeldepliktConnector
+    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
+    private lateinit var beslutningObserver: BeslutningObserver
 
     private val pdlConnector = mockk<PdlConnector>()
-    private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private val personObserver = mockk<PersonObserver>(relaxed = true)
-    private lateinit var beslutningObserver: BeslutningObserver
+    private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
 
     private val unleash = FakeUnleash()
 
@@ -100,6 +102,7 @@ class PersonMediatorTest {
                 personRepository = personRepository,
                 personObservers = listOf(personObserver, beslutningObserver),
                 cache = Caffeine.newBuilder().build(),
+                meldekortregisterConnector = meldekortregisterConnector,
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()

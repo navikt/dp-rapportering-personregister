@@ -2,6 +2,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import com.github.benmanes.caffeine.cache.Cache
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
@@ -17,6 +19,7 @@ class PersonService(
     private val personRepository: PersonRepository,
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
+    private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
     // testing
     fun triggerFrasigelse(periodeList: List<UUID>) {
@@ -82,6 +85,11 @@ class PersonService(
             if (gjeldendeIdent != null && person.ident != gjeldendeIdent) {
                 sikkerLogg.info { "Oppdaterer ident fra ${person.ident} til $gjeldendeIdent" }
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
+
+                runBlocking {
+                    meldekortregisterConnector.oppdaterIdent(person.ident, gjeldendeIdent)
+                }
+
                 return person.copy(ident = gjeldendeIdent)
             } else {
                 return person
@@ -97,6 +105,9 @@ class PersonService(
                 if (pdlIdentliste.size > 1) {
                     pdlIdentliste.konsoliderPersonerTilGjeldendePerson(gjeldendePerson, personer)
                     konsoliderArbeidssøkerperioderForGjeldendePerson(gjeldendePerson, personer)
+                    runBlocking {
+                        meldekortregisterConnector.konsoliderIdenter(gjeldendePerson.ident, personer.map { it.ident })
+                    }
                 }
                 gjeldendePerson.setStatus(gjeldendePerson.vurderNyStatus())
                 if (personRepository.finnesPerson(gjeldendePerson.ident)) {
