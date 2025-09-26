@@ -231,7 +231,7 @@ internal class ApplicationBuilder(
                             aktiverHendelserJob,
                             personRepository,
                             personMediator,
-                            meldepliktMediator,
+                            meldestatusMediator,
                             meldepliktConnector,
                         )
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
@@ -261,7 +261,7 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator, meldepliktMediator, meldepliktConnector)
+        aktiverHendelserJob.start(personRepository, personMediator, meldestatusMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
         meldestatusJob.start(personRepository, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }

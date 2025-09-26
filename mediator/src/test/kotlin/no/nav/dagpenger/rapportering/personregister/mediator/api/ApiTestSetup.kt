@@ -16,8 +16,10 @@ import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -28,6 +30,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -161,6 +165,20 @@ open class ApiTestSetup {
                     unleash,
                 )
 
+            val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
+
+            val meldestatusMediator =
+                MeldestatusMediator(
+                    personRepository = personRepository,
+                    meldepliktConnector = meldepliktConnector,
+                    meldepliktMediator = meldepliktMediator,
+                    personMediator = personMediator,
+                    fremtidigHendelseMediator = fremtidigHendelseMediator,
+                    meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry),
+                    meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry),
+                    actionTimer = actionTimer,
+                )
+
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
                 internalApi(
@@ -168,7 +186,7 @@ open class ApiTestSetup {
                     AktiverHendelserJob(),
                     personRepository,
                     personMediator,
-                    meldepliktMediator,
+                    meldestatusMediator,
                     meldepliktConnector,
                 )
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
