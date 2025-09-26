@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -23,8 +22,7 @@ import kotlin.time.measureTime
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
-// TODO: Lagg til internal
-class AktiverHendelserJob(
+internal class AktiverHendelserJob(
     private val httpClient: HttpClient = createHttpClient(),
 ) {
     private val tidspunktForKjoring = LocalTime.of(0, 1)

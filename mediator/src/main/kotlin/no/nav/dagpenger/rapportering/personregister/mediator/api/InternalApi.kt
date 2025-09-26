@@ -7,21 +7,8 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 
-fun Application.internalApi(
-    meterRegistry: PrometheusMeterRegistry,
-    aktiverHendelserJob: AktiverHendelserJob,
-    personRepository: PersonRepository,
-    personMediator: PersonMediator,
-    meldestatusMediator: MeldestatusMediator,
-    meldepliktConnector: MeldepliktConnector,
-) {
+fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
     routing {
         get("/") {
             call.respond(HttpStatusCode.OK)
@@ -34,10 +21,6 @@ fun Application.internalApi(
         }
         get("/metrics") {
             call.respondText(meterRegistry.scrape())
-        }
-        get("/aktiver") {
-            aktiverHendelserJob.aktivererHendelser(personRepository, personMediator, meldestatusMediator, meldepliktConnector)
-            call.respond(HttpStatusCode.OK)
         }
     }
 }
