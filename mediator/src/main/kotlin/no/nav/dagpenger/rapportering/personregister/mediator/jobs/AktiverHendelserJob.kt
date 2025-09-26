@@ -116,7 +116,7 @@ class AktiverHendelserJob(
                         else -> logger.warn { "Fant ukjent fremtidig hendelsetype $hendelse" }
                     }
                 } else {
-                    logger.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
+                    logger.warn { "Fant ikke person. Kan ikke aktivere hendelse." }
                     sikkerLogg.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
                 }
                 personRepository.slettFremtidigHendelse(hendelse.referanseId)
