@@ -11,6 +11,7 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -95,15 +96,20 @@ class PersonServiceTest {
 
     @Test
     fun `hentPerson som har historisk ident i DB blir oppdatert med ny ident`() {
+        val personId = 123456789L
         val nyIdent = "10987654321"
+        val repositoryPerson = Person(ident = ident)
+        repositoryPerson.setAnsvarligSystem(AnsvarligSystem.DP)
+
         every { pdlConnector.hentIdenter(any()) } returns
             listOf(
                 Ident(ident = "123456", gruppe = Ident.IdentGruppe.AKTORID, historisk = false),
                 Ident(ident = ident, gruppe = Ident.IdentGruppe.FOLKEREGISTERIDENT, historisk = true),
                 Ident(ident = nyIdent, gruppe = Ident.IdentGruppe.FOLKEREGISTERIDENT, historisk = false),
             )
-        every { personRepository.hentPerson(ident) } returns Person(ident = ident)
+        every { personRepository.hentPerson(ident) } returns repositoryPerson
         every { personRepository.hentPerson(nyIdent) } returns null
+        every { personRepository.hentPersonId(ident) } returns personId
         justRun { personRepository.oppdaterIdent(any(), nyIdent) }
 
         val person = personService.hentPerson(ident)!!
@@ -114,13 +120,17 @@ class PersonServiceTest {
         verify(exactly = 1) { personRepository.oppdaterIdent(any(), nyIdent) }
         verify(exactly = 0) { personRepository.slettPerson(any()) }
         verify(exactly = 0) { personRepository.lagrePerson(any()) }
-        coVerify(exactly = 1) { meldekortregisterConnector.oppdaterIdent(eq(ident), eq(nyIdent)) }
+        coVerify(exactly = 1) { meldekortregisterConnector.oppdaterIdent(eq(personId), eq(ident), eq(nyIdent)) }
     }
 
     @Test
     fun `hentPerson der flere personer har blitt merget til én i pdl returnerer merget person`() {
+        val personId = 123456789L
         val nyIdent = "10987654321"
         val aktorId = "123456"
+        val repositoryPerson = Person(ident = nyIdent)
+        repositoryPerson.setAnsvarligSystem(AnsvarligSystem.DP)
+
         every { pdlConnector.hentIdenter(any()) } returns
             listOf(
                 Ident(ident = aktorId, gruppe = Ident.IdentGruppe.AKTORID, historisk = false),
@@ -128,7 +138,8 @@ class PersonServiceTest {
                 Ident(ident = nyIdent, gruppe = Ident.IdentGruppe.FOLKEREGISTERIDENT, historisk = false),
             )
         every { personRepository.hentPerson(ident) } returns Person(ident = ident)
-        every { personRepository.hentPerson(nyIdent) } returns Person(ident = nyIdent)
+        every { personRepository.hentPerson(nyIdent) } returns repositoryPerson
+        every { personRepository.hentPersonId(nyIdent) } returns personId
         every { personRepository.finnesPerson(nyIdent) } returns true
         justRun { personRepository.slettPerson(ident) }
         justRun { personRepository.slettPerson(aktorId) }
@@ -143,7 +154,7 @@ class PersonServiceTest {
         verify(exactly = 1) { personRepository.finnesPerson(any()) }
         verify(exactly = 1) { personRepository.oppdaterPerson(any()) }
         verify(exactly = 0) { personRepository.oppdaterIdent(any(), any()) }
-        coVerify(exactly = 1) { meldekortregisterConnector.konsoliderIdenter(eq(nyIdent), any()) }
+        coVerify(exactly = 1) { meldekortregisterConnector.konsoliderIdenter(eq(personId), eq(nyIdent), any()) }
     }
 
     @Disabled

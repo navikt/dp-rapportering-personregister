@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -86,8 +87,13 @@ class PersonService(
                 sikkerLogg.info { "Oppdaterer ident fra ${person.ident} til $gjeldendeIdent" }
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
 
-                runBlocking {
-                    meldekortregisterConnector.oppdaterIdent(person.ident, gjeldendeIdent)
+                if (person.ansvarligSystem == AnsvarligSystem.DP) {
+                    runBlocking {
+                        val personId =
+                            personRepository.hentPersonId(person.ident)
+                                ?: throw IllegalStateException("Person finnes ikke")
+                        meldekortregisterConnector.oppdaterIdent(personId, person.ident, gjeldendeIdent)
+                    }
                 }
 
                 return person.copy(ident = gjeldendeIdent)
@@ -105,8 +111,18 @@ class PersonService(
                 if (pdlIdentliste.size > 1) {
                     pdlIdentliste.konsoliderPersonerTilGjeldendePerson(gjeldendePerson, personer)
                     konsoliderArbeidssøkerperioderForGjeldendePerson(gjeldendePerson, personer)
-                    runBlocking {
-                        meldekortregisterConnector.konsoliderIdenter(gjeldendePerson.ident, personer.map { it.ident })
+
+                    if (gjeldendePerson.ansvarligSystem == AnsvarligSystem.DP) {
+                        runBlocking {
+                            val personId =
+                                personRepository.hentPersonId(gjeldendePerson.ident)
+                                    ?: throw IllegalStateException("Person finnes ikke")
+                            meldekortregisterConnector.konsoliderIdenter(
+                                personId,
+                                gjeldendePerson.ident,
+                                personer.map { it.ident },
+                            )
+                        }
                     }
                 }
                 gjeldendePerson.setStatus(gjeldendePerson.vurderNyStatus())

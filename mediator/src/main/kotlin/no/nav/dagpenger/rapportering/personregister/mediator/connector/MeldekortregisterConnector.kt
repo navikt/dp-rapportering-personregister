@@ -15,6 +15,7 @@ class MeldekortregisterConnector(
     private val actionTimer: ActionTimer,
 ) {
     suspend fun oppdaterIdent(
+        personId: Long,
         ident: String,
         nyIdent: String,
     ) = withContext(Dispatchers.IO) {
@@ -26,7 +27,7 @@ class MeldekortregisterConnector(
                     meldekortregisterTokenProvider.invoke()
                         ?: throw RuntimeException("Klarte ikke å hente token"),
                 metrikkNavn = "meldekortregister_oppdaterIdent",
-                body = OppdaterIdentRequest(ident, nyIdent),
+                body = OppdaterIdentRequest(personId, ident, nyIdent),
                 parameters = mapOf(),
                 actionTimer = actionTimer,
             ).also {
@@ -35,11 +36,13 @@ class MeldekortregisterConnector(
 
         if (result.status != HttpStatusCode.OK) {
             logger.error { "Uforventet status ${result.status.value} ved oppdatering av ident i meldekortregister" }
+            sikkerLogg.error { "Uforventet status ved oppdatering av ident i meldekortregister. Response: $result" }
             throw RuntimeException("Uforventet status ${result.status.value} ved oppdatering av ident i meldekortregister")
         }
     }
 
     suspend fun konsoliderIdenter(
+        personId: Long,
         gjeldendeIdent: String,
         identer: List<String>,
     ) = withContext(Dispatchers.IO) {
@@ -51,7 +54,7 @@ class MeldekortregisterConnector(
                     meldekortregisterTokenProvider.invoke()
                         ?: throw RuntimeException("Klarte ikke å hente token"),
                 metrikkNavn = "meldekortregister_konsoliderIdenter",
-                body = KonsoliderIdenterRequest(gjeldendeIdent, identer),
+                body = KonsoliderIdenterRequest(personId, gjeldendeIdent, identer),
                 parameters = mapOf(),
                 actionTimer = actionTimer,
             ).also {
@@ -60,20 +63,24 @@ class MeldekortregisterConnector(
 
         if (result.status != HttpStatusCode.OK) {
             logger.error { "Uforventet status ${result.status.value} ved konsolidering av identer i meldekortregister" }
+            sikkerLogg.error { "Uforventet status ved konsolidering av identer i meldekortregister. Response: $result" }
             throw RuntimeException("Uforventet status ${result.status.value} ved konsolidering av identer i meldekortregister")
         }
     }
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall.MeldekortregisterConnector")
     }
 
     data class OppdaterIdentRequest(
+        val personId: Long,
         val ident: String,
         val nyIdent: String,
     )
 
     data class KonsoliderIdenterRequest(
+        val personId: Long,
         val gjeldendeIdent: String,
         val identer: List<String>,
     )
