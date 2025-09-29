@@ -222,7 +222,7 @@ internal class ApplicationBuilder(
 
                     with(engine.application) {
                         pluginConfiguration(meterRegistry, kafkaContext)
-                        internalApi(meterRegistry, arbeidssøkerService)
+                        internalApi(meterRegistry)
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                         personApi(personService)
                         behandlingApi(behandlingRepository)
