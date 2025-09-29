@@ -26,7 +26,8 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
             .takeIf { it != person.status }
             ?.let {
                 person.setStatus(it)
-                person.merkPeriodeSomIkkeOvertatt(periodeId)
             }
+        // Perioden er avsluttet, så den må markeres som ikke overtatt
+        person.merkPeriodeSomIkkeOvertatt(periodeId)
     }
 }
