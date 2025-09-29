@@ -226,7 +226,7 @@ internal class ApplicationBuilder(
 
                     with(engine.application) {
                         pluginConfiguration(meterRegistry, kafkaContext)
-                        internalApi(meterRegistry, personService)
+                        internalApi(meterRegistry)
                         personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                         personApi(personService)
                         behandlingApi(behandlingRepository)
@@ -256,6 +256,7 @@ internal class ApplicationBuilder(
         databaseMetrikker.startRapporteringJobb(personRepository)
         aktiverHendelserJob.start(personRepository, personMediator, meldestatusMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
+        meldestatusJob.start(personRepository, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }
 }
 

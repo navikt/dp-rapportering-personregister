@@ -79,7 +79,7 @@ class PersonService(
     ): Person? {
         val gjeldendeIdent = pdlIdentliste.hentGjeldendeIdent()
         if (personer.isEmpty()) {
-            logger.info { "Personen finnes i databasen." }
+            logger.info { "Personen finnes ikke databasen." }
             return null
         } else if (personer.size == 1) {
             logger.info { "Personen funnes kun 1 gang i databasen. Sjekker om gjeldende ident må oppdateres." }
