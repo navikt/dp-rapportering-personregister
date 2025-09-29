@@ -162,7 +162,7 @@ open class ApiTestSetup {
 
             application {
                 pluginConfiguration(meterRegistry, kafkaContext)
-                internalApi(meterRegistry)
+                internalApi(meterRegistry, personService)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService)
                 behandlingApi(behandlingRepository)

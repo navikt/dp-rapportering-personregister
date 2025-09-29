@@ -2,13 +2,19 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 
-fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
+fun Application.internalApi(
+    meterRegistry: PrometheusMeterRegistry,
+    personService: PersonService,
+) {
     routing {
         get("/") {
             call.respond(HttpStatusCode.OK)
@@ -21,6 +27,11 @@ fun Application.internalApi(meterRegistry: PrometheusMeterRegistry) {
         }
         get("/metrics") {
             call.respondText(meterRegistry.scrape())
+        }
+        post("/sjekk") {
+            val request = call.receive<IdentBody>()
+            personService.hentPerson(request.ident)
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

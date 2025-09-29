@@ -39,8 +39,10 @@ class PersonService(
     }
 
     fun hentPerson(ident: String): Person? {
+        logger.info { "Henter person" }
         // Henter alle personens identer fra PDL
         val pdlIdenter = hentAlleIdenterForPerson(ident)
+        logger.info { "Personen har ${pdlIdenter.size} identer i PDL" }
 
         val personer =
             hentPersoner(
@@ -52,6 +54,7 @@ class PersonService(
                         pdlIdenter.filterNot { it.gruppe == Ident.IdentGruppe.AKTORID }.map { it.ident }
                     },
             )
+        logger.info { "Personen finnes ${personer.size} ganger i databasen" }
         return ryddOppPersoner(pdlIdenter, personer)
     }
 
@@ -76,10 +79,13 @@ class PersonService(
     ): Person? {
         val gjeldendeIdent = pdlIdentliste.hentGjeldendeIdent()
         if (personer.isEmpty()) {
+            logger.info { "Personen finnes i databasen." }
             return null
         } else if (personer.size == 1) {
+            logger.info { "Personen funnes kun 1 gang i databasen. Sjekker om gjeldende ident må oppdateres." }
             val person = personer.first()
             if (gjeldendeIdent != null && person.ident != gjeldendeIdent) {
+                logger.info { "Oppdaterer ident for person" }
                 sikkerLogg.info { "Oppdaterer ident fra ${person.ident} til $gjeldendeIdent" }
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
                 return person.copy(ident = gjeldendeIdent)
