@@ -110,6 +110,10 @@ spec:
       value: "{{ MELDEPLIKT_ADAPTER_HOST }}"
     - name: MELDEPLIKT_ADAPTER_SCOPE
       value: "{{ MELDEPLIKT_ADAPTER_SCOPE }}"
+    - name: MELDEKORTREGISTER_HOST
+      value: "{{ MELDEKORTREGISTER_HOST }}"
+    - name: MELDEKORTREGISTER_SCOPE
+      value: "{{ MELDEKORTREGISTER_SCOPE }}"
     - name: KAFKA_EXTRA_TOPIC
       value: "{{ KAFKA_EXTRA_TOPIC }}"
     - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner

@@ -14,6 +14,8 @@ ARBEIDSSOKERPERIODER_TOPIC: paw.arbeidssokerperioder-v1
 BEKREFTELSE_PAA_VEGNE_AV_TOPIC: paw.arbeidssoker-bekreftelse-paavegneav-teamdagpenger-v2
 MELDEPLIKT_ADAPTER_HOST: http://dp-arena-meldeplikt-adapter.teamdagpenger
 MELDEPLIKT_ADAPTER_SCOPE: api://prod-gcp.teamdagpenger.dp-arena-meldeplikt-adapter/.default
+MELDEKORTREGISTER_HOST: http://dp-meldekortregister.teamdagpenger
+MELDEKORTREGISTER_SCOPE: api://prod-gcp.teamdagpenger.dp-meldekortregister/.default
 PDL_API_HOST: pdl-api.prod-fss-pub.nais.io
 PDL_AUDIENCE: prod-fss:pdl:pdl-api
 PDL_API_SCOPE: api://prod-fss.pdl.pdl-api/.default
