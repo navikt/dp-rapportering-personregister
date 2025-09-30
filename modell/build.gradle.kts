@@ -17,8 +17,8 @@ dependencies {
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.mockk)
 
-    testApi("org.junit.platform:junit-platform-suite-api:1.13.4")
-    testImplementation("org.junit.platform:junit-platform-suite-engine:1.13.4")
+    testApi("org.junit.platform:junit-platform-suite-api:1.14.0")
+    testImplementation("org.junit.platform:junit-platform-suite-engine:1.14.0")
     testImplementation("io.cucumber:cucumber-java8:7.29.0")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.29.0")
 }
