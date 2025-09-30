@@ -74,31 +74,31 @@ paths:
       security:
         - azureAd: []
 
-  /arbeidssokerperioder:
-      get:
-        responses:
-          200:
-            description: OK
-            content:
-              application/json:
-                schema:
-                    type: array
-                    items:
-                        $ref: '#/components/schemas/Arbeidssokerperiode'
-          404:
-            description: Not Found
-        summary: Hent arbeidssøkerperioder for en person
-        description: Hent alle arbeidssøkerperioder for en person basert på personId
-        operationId: get-arbeidssokerperioder
-        parameters:
-          - in: query
-            name: personId
-            schema:
-              type: string
-            required: true
-            description: personId til personen du vil hente arbeidssøkerperioder for
-        security:
-          - azureAd: []
+  /arbeidssokerperioder/{personId}:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Arbeidssokerperiode'
+        404:
+          description: Not Found
+      summary: Hent arbeidssøkerperioder for en person
+      description: Hent alle arbeidssøkerperioder for en person basert på personId
+      operationId: get-arbeidssokerperioder
+      parameters:
+        - in: path
+          name: personId
+          schema:
+            type: string
+          required: true
+          description: personId til personen du vil hente arbeidssøkerperioder for
+      security:
+        - azureAd: []
 
 
 components:
