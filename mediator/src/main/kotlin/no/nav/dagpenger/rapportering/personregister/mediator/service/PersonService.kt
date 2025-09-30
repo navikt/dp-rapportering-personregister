@@ -2,9 +2,12 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import com.github.benmanes.caffeine.cache.Cache
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -17,6 +20,7 @@ class PersonService(
     private val personRepository: PersonRepository,
     private val personObservers: List<PersonObserver>,
     private val cache: Cache<String, List<Ident>>,
+    private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
     // testing
     fun triggerFrasigelse(periodeList: List<UUID>) {
@@ -88,6 +92,16 @@ class PersonService(
                 logger.info { "Oppdaterer ident for person" }
                 sikkerLogg.info { "Oppdaterer ident fra ${person.ident} til $gjeldendeIdent" }
                 personRepository.oppdaterIdent(person, gjeldendeIdent)
+
+                if (person.ansvarligSystem == AnsvarligSystem.DP) {
+                    runBlocking {
+                        val personId =
+                            personRepository.hentPersonId(person.ident)
+                                ?: throw IllegalStateException("Person finnes ikke")
+                        meldekortregisterConnector.oppdaterIdent(personId, person.ident, gjeldendeIdent)
+                    }
+                }
+
                 return person.copy(ident = gjeldendeIdent)
             } else {
                 return person
@@ -103,6 +117,19 @@ class PersonService(
                 if (pdlIdentliste.size > 1) {
                     pdlIdentliste.konsoliderPersonerTilGjeldendePerson(gjeldendePerson, personer)
                     konsoliderArbeidssøkerperioderForGjeldendePerson(gjeldendePerson, personer)
+
+                    if (gjeldendePerson.ansvarligSystem == AnsvarligSystem.DP) {
+                        runBlocking {
+                            val personId =
+                                personRepository.hentPersonId(gjeldendePerson.ident)
+                                    ?: throw IllegalStateException("Person finnes ikke")
+                            meldekortregisterConnector.konsoliderIdenter(
+                                personId,
+                                gjeldendePerson.ident,
+                                personer.map { it.ident },
+                            )
+                        }
+                    }
                 }
                 gjeldendePerson.setStatus(gjeldendePerson.vurderNyStatus())
                 if (personRepository.finnesPerson(gjeldendePerson.ident)) {

@@ -24,6 +24,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
@@ -102,6 +103,7 @@ internal class ApplicationBuilder(
 
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
+    private val meldekortregisterConnector = MeldekortregisterConnector(actionTimer = actionTimer)
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
@@ -148,6 +150,7 @@ internal class ApplicationBuilder(
             personRepository,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
             pdlIdentCache,
+            meldekortregisterConnector,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
     private val arbeidssøkerMediator =
