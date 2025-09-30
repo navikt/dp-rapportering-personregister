@@ -163,7 +163,7 @@ components:
         sluttDato:
           type: string
           format: date-time
-          description: Sluttdato for arbeidssokerperioden, kan være null hvis perioden er aktiv
+          description: Sluttdato for arbeidssøkerperioden, kan være null hvis perioden er aktiv
         status:
           type: string
           enum:

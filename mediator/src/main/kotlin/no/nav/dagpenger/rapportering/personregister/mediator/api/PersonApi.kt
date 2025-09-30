@@ -112,7 +112,7 @@ internal fun Application.personApi(personService: PersonService) {
 
                     personService
                         .hentArbeidssokerperioder(personId)
-                        ?.also { perioder ->
+                        .also { perioder ->
                             call
                                 .respond(
                                     HttpStatusCode.OK,
@@ -126,15 +126,14 @@ internal fun Application.personApi(personService: PersonService) {
                                                 if (periode.avsluttet ==
                                                     null
                                                 ) {
-                                                    ArbeidssokerperiodeResponse.Status.valueOf("Startet")
+                                                    ArbeidssokerperiodeResponse.Status.Startet
                                                 } else {
-                                                    ArbeidssokerperiodeResponse.Status.valueOf("Avsluttet")
+                                                    ArbeidssokerperiodeResponse.Status.Avsluttet
                                                 },
                                         )
                                     },
                                 )
                         }
-                        ?: throw PersonNotFoundException()
                 }
             }
         }
