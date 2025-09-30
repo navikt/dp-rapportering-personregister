@@ -74,6 +74,33 @@ paths:
       security:
         - azureAd: []
 
+  /arbeidssokerperioder/{personId}:
+    get:
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Arbeidssokerperiode'
+        404:
+          description: Not Found
+      summary: Hent arbeidssøkerperioder for en person
+      description: Hent alle arbeidssøkerperioder for en person basert på personId
+      operationId: get-arbeidssokerperioder
+      parameters:
+        - in: path
+          name: personId
+          schema:
+            type: string
+          required: true
+          description: personId til personen du vil hente arbeidssøkerperioder for
+      security:
+        - azureAd: []
+
+
 components:
   schemas:
     IdentBody:
@@ -115,6 +142,34 @@ components:
       enum:
         - ARENA
         - DP
+    Arbeidssokerperiode:
+      required:
+        - periodeId
+        - ident
+        - startDato
+        - status
+      type: object
+      properties:
+        periodeId:
+          type: string
+          description: Unik ID for arbeidssøkerperioden
+        ident:
+          type: string
+          description: Ident til personen arbeidssøkerperioden tilhører
+        startDato:
+          type: string
+          format: date-time
+          description: Startdato for arbeidssøkerperioden
+        sluttDato:
+          type: string
+          format: date-time
+          description: Sluttdato for arbeidssøkerperioden, kan være null hvis perioden er aktiv
+        status:
+          type: string
+          enum:
+            - Startet
+            - Avsluttet
+          description: Status for arbeidssøkerperioden
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)

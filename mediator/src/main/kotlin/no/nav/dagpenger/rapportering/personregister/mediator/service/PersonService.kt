@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnec
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
@@ -39,6 +40,20 @@ class PersonService(
             } else {
                 logger.warn { "Fant ikke person med periodeId $periodeId" }
             }
+        }
+    }
+
+    fun hentArbeidssokerperioder(personId: Long): List<Arbeidssøkerperiode> {
+        logger.info { "Henter arbeidssøkerperioder for $personId" }
+
+        try {
+            val ident = personRepository.hentIdent(personId) ?: throw IllegalArgumentException("Fant ikke person med id $personId")
+            val person = hentPerson(ident) ?: throw IllegalArgumentException("Fant ikke person")
+
+            return person.arbeidssøkerperioder
+        } catch (e: Exception) {
+            sikkerLogg.error(e) { "Feil ved henting av arbeidssøkerperioder for personId $personId" }
+            throw e
         }
     }
 
