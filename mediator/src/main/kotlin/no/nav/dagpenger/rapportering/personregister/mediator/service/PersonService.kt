@@ -46,10 +46,15 @@ class PersonService(
     fun hentArbeidssokerperioder(personId: Long): List<Arbeidssøkerperiode> {
         logger.info { "Henter arbeidssøkerperioder for $personId" }
 
-        val ident = personRepository.hentIdent(personId) ?: throw IllegalArgumentException("Fant ikke person med id $personId")
-        val person = hentPerson(ident) ?: throw IllegalArgumentException("Fant ikke person med ident $ident")
+        try {
+            val ident = personRepository.hentIdent(personId) ?: throw IllegalArgumentException("Fant ikke person med id $personId")
+            val person = hentPerson(ident) ?: throw IllegalArgumentException("Fant ikke person")
 
-        return person.arbeidssøkerperioder
+            return person.arbeidssøkerperioder
+        } catch (e: Exception) {
+            sikkerLogg.error(e) { "Feil ved henting av arbeidssøkerperioder for personId $personId" }
+            throw e
+        }
     }
 
     fun hentPerson(ident: String): Person? {
