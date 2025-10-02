@@ -80,6 +80,7 @@ spec:
       rules:
         - application: dp-rapportering
         - application: dp-meldekortregister
+        - application: dp-saksbehandling-frontend
         - application: dp-rapportering-saksbehandling-frontend
         - application: azure-token-generator
           namespace: nais
