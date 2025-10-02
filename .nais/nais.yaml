@@ -80,7 +80,7 @@ spec:
       rules:
         - application: dp-rapportering
         - application: dp-meldekortregister
-        - application: dp-saksbehandling-frontend
+        - application: dp-rapportering-saksbehandling-frontend
         {{#each additionalInbounds}}
         - application: "{{application}}"
           namespace: "{{namespace}}"
