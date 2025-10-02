@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldeg
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -83,6 +84,12 @@ class InMemoryPersonRepository : PersonRepository {
     override fun slettFremtidigeArenaHendelser(ident: String): Int {
         val qty = fremtidigeHendelser.count { it.kilde == Kildesystem.Arena && it.ident == ident }
         fremtidigeHendelser.removeIf { it.kilde == Kildesystem.Arena && it.ident == ident }
+        return qty
+    }
+
+    override fun slettFremtidigeVedtakHendelser(ident: String): Int {
+        val qty = fremtidigeHendelser.count { it is VedtakHendelse && it.ident == ident }
+        fremtidigeHendelser.removeIf { it is VedtakHendelse && it.ident == ident }
         return qty
     }
 

@@ -9,4 +9,6 @@ interface BehandlingRepository {
     )
 
     fun hentSisteSakId(ident: String): String?
+
+    fun hentSøknadIdForBehandlingId(behandlingId: String): String?
 }

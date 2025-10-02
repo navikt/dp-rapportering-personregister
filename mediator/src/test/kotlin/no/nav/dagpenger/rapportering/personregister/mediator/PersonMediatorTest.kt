@@ -573,7 +573,7 @@ class PersonMediatorTest {
         referanseId: String = "456",
         søknadId: String = "123",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, søknadId, utfall)
+    ) = VedtakHendelse(ident, dato, startDato, referanseId, startDato.plusDays(10), søknadId, utfall)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,

@@ -327,6 +327,22 @@ class PostgresPersonRepository(
             }
         }
 
+    override fun slettFremtidigeVedtakHendelser(ident: String): Int =
+        actionTimer.timedAction("db-slettFremtidigeVedtakHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE type = 'VedtakHendelse' AND ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
+        }
+
     override fun hentPersonerMedDagpenger(): List<String> =
         using(sessionOf(dataSource)) { session ->
             session.run(
@@ -609,6 +625,7 @@ class PostgresPersonRepository(
             is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
             is DagpengerMeldegruppeHendelse -> this.sluttDato
             is MeldepliktHendelse -> this.sluttDato
+            is VedtakHendelse -> this.sluttDato
             else -> null
         }
 

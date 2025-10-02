@@ -18,6 +18,7 @@ data class VedtakHendelse(
     override val dato: LocalDateTime,
     override val startDato: LocalDateTime,
     override val referanseId: String,
+    val sluttDato: LocalDateTime? = null,
     val søknadId: String,
     val utfall: Boolean,
 ) : Hendelse {
@@ -40,7 +41,7 @@ data class VedtakHendelse(
             person.setVedtak(VedtakType.INNVILGET)
             person.sendStartMeldingTilMeldekortregister(startDato = søknadsdato)
         } else {
-            person.setVedtak(VedtakType.AVSLÅTT) // TODO: Her må vi egentlig sjekke status på vedtaket
+            person.setVedtak(VedtakType.AVSLÅTT) // TODO: harRett=true/false. Da er det INNVILGET/STANSET?
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
             }
