@@ -43,4 +43,19 @@ class BehandlingRepositoryPostgres(
                 }.asSingle,
             )
         }
+
+    override fun hentSøknadIdForBehandlingId(behandlingId: String): String? =
+        using(sessionOf(dataSource)) { session ->
+            session.run(
+                queryOf(
+                    "SELECT soknad_id " +
+                        "FROM behandling " +
+                        "WHERE behandling_id = ? " +
+                        "LIMIT 1",
+                    behandlingId,
+                ).map {
+                    it.string("soknad_id")
+                }.asSingle,
+            )
+        }
 }

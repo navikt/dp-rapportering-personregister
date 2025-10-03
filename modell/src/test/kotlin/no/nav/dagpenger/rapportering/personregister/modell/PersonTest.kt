@@ -263,7 +263,7 @@ class PersonTest {
         referanseId: String = "123",
         søknadId: String = "456",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId, utfall)
+    ) = VedtakHendelse(ident, dato, dato, referanseId, dato.plusDays(10), søknadId, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
