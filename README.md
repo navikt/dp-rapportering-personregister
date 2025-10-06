@@ -78,7 +78,7 @@ Hostes [her](https://navikt.github.io/dp-rapportering-personregister/) via Githu
 ## Integrasjoner
 | System / Tjeneste | Formål                                                     |
 |-------------------|------------------------------------------------------------|
-| Arbeidssøkerregister | Arbeidssøkererioder / record key                           |
+| Arbeidssøkerregister | Arbeidssøkerperioder / record key                           |
 | Meldeplikt-adapter | Hente meldestatus (meldegruppe/harMeldtSeg/meldeplikt)     |
 | Meldekortregister | Start / Stopp / Overtakelse / Frasigelse av bekreftelsesansvar |
 | PDL | Ident-historikk og personoppslag                           |
