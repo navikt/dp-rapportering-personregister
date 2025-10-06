@@ -2,7 +2,7 @@
 Personregister over dagpengebrukere som sender meldekort.
 
 ## Appens ansvar
-- Registeret holder i dagpengerbrukernes status basert på innsendt søknad, arbeidssøkerstatus og vedtak i Arena.
+- Registeret holder i dagpengerbrukernes status basert på innsendt søknad, arbeidssøkerstatus og vedtak i Arena eller DP-Sak.
 - Meldekort-frontend bruker registeret for å sjekke hvilke meldekortbrukere som skal videresendes til dp-rapportering-frontend.
 - Registeret har ansvar for at dagpenger-meldekort blir opprettet for brukere (når arena ikke lenger oppretter meldekort).
 
@@ -16,135 +16,151 @@ Personregister over dagpengebrukere som sender meldekort.
 - JUnit
 - OpenAPI
 
-## Integrasjoner
-- dp-soknad: Bruker innsending av søknad for å opprette brukere i registeret. Innsending av søknad er et krav for å kunne sende meldekort.
-- dp-arbeidssokeregister-adapter: Brukes for å hente arbeidssøkerstatus og perioder fra arbeidssøkerregisteret, samt å overta/frasi ansvaret for å bekrefte brukers arbeidssøkerperioder.
-- arena: Bruker endring i vedtak i arena for å oppdatere brukerens status i registeret.
+## Formål
+Systemet samler og eksponerer et nå-bilde av om en person er dagpengerbruker ("DAGPENGERBRUKER") eller ikke. Tjenesten:
+- Konsoliderer hendelser fra flere kilder (søknad, arbeidssøkerregister, vedtak/behandlingsresultat (DP-Sak), meldeplikt/meldegruppe (Arena)).
+- Holder historikk (status, hendelser, perioder) på person.
+- Produserer Kafka-meldinger (på vegne av) for å overta eller frasi ansvar for brukers arbeidssøkerperiode.
+- Sender start/stopp-meldinger til Meldekortregister for å starte eller stoppe meldekortproduksjonen for bruker.
+- Eksponerer API-er for bruk internt og av saksbehandler.
 
-## App-arkitektur
+## Statusbestemmelse
+En person anses som DAGPENGERBRUKER når:
+1. Personen er arbeidssøker (har en aktiv arbeidssøkerperiode) OG
+2. (Arena-regime) meldeplikt = true OG meldegruppe = DAGP
+   ELLER (DP-regime) vedtak = INNVILGET
 
-### API
+Ellers: IKKE_DAGPENGERBRUKER.
+AnsvarligSystem settes default til Arena. Hvis bruker får et positivt vedtak fra DP-Sak settes DP som ansvarlig system.
 
-Appen bruker OpenAPI for å definere og dokumentere API-et. OpenAPI-spesifikasjonen ligger i [personstatus-api.yaml](openapi/src/main/resources/personstatus-api.yaml).
+## Viktige komponenter
+### Mediatorer
+Mediator-laget brukes for orkestrering og domenelogikk, og sørger for at sideeffekter (lagring, observatører, eksterne kall) samles ett sted.
+- `PersonMediator` – sentral koordinering av personrelaterte hendelser (søknad, vedtak, meldegruppe, synkronisering, meldesyklus passert).
+- `ArbeidssøkerMediator` – håndterer arbeidssøkerperioder og overtakelse/frasigelse.
+- `MeldepliktMediator` – håndterer meldepliktendringer.
+- `MeldestatusMediator` – prosesserer meldeplikt/meldegruppe ved melding om meldestatusendring fra Arena.
+- `FremtidigHendelseMediator` – lagrer hendelser med startdato i fremtiden i egen databasetabell.
 
-### Connectors
+### Observers
+Observere reagerer på endringer i Person og produserer sideeffekter:
+- `PersonObserverKafka` – produserer Kafka-meldinger (bl.a. bekreftelse på vegne av).
+- `ArbeidssøkerBeslutningObserver` – persisterer beslutninger knyttet til arbeidssøkerstatus.
+- `PersonObserverMeldekortregister` – interaksjon med Meldekortregister (start/stopp av meldekortproduksjon).
 
-#### ArbeidssøkerConnector
-
-> Henter siste arbeidssøkerperiode og record key fra Arbeidssøkerregister for en gitt bruker
+### Connectors (eksterne avhengigheter)
+- `ArbeidssøkerConnector` – henter perioder / record key fra arbeidssøkerregisteret.
+- `MeldepliktConnector` – henter meldestatus og meldeplikt fra meldeplikt-adapter.
+- `MeldekortregisterConnector` – oppdaterer meldekortregister ved oppdatering og konsolidering av identer på bakgrunn av endringer i PDL.
+- `PdlConnector` – henter identhistorikk/fødselsnummer fra PDL.
 
 ### Repository
+- `PostgresPersonRepository` – persisterer person, hendelser, fremtidige hendelser, arbeidssøkerperioder og statushistorikk.
 
-#### PersonRepository
+### Jobber
+- `AktiverHendelserJob` (daglig ~00:01) – aktiverer fremtidige hendelser (meldeplikt/meldegruppe/vedtak) som starter i dag.
+- `ResendPåVegneAvMelding` (hvert 40. minutt) – re-produserer meldinger om overtakelse/frasigelse på Kafka ved behov.
 
-> Alle kall til databasen som har med noe å gjøre med personer, hendelser og fremtidige hendelser er her. Dette innebærer lagring, henting, oppdatering og sletting.
+## Hendelsesstrøm / Mottak
+Systemet lytter på Rapid (Rapids & Rivers) og Kafka.
+Mottaksklasser konverterer innkommende meldinger til domenespesifikke hendelser:
+- `SøknadMottak` – søknad innsending -> `SøknadHendelse`.
+- `BehandlinsresultatMottak` / `VedtakFattetUtenforArenaMottak` – vedtak -> `VedtakHendelse`
+- `MeldestatusMottak` – tar i mot endringemeldinger fra Arena.
+- `MeldesyklusErPassertMottak` - varsler om at en meldekortsyklus til en bruker er passert.
+- `NødbremsMottak` – styrer midlertidig stopp.
+- `ArbeidssøkerMottak` & `ArbeidssøkerperiodeOvertakelseMottak` – endringer i perioder og "kvittering" for meldinger om overtakelse/frasigelse.
 
-### Service
+## API
+OpenAPI-spesifikasjon: `openapi/src/main/resources/personstatus-api.yaml`.
+Hostes [her](https://navikt.github.io/dp-rapportering-personregister/) via Github Pages.
 
-#### ArbeidssøkerService
+Autentisering:
+- TokenX (sluttbruker/innlogget bruker) for `/personstatus` (GET/POST).
+- Azure AD for saksbehandler-endepunkter `/hentPersonId`, `/hentIdent`.
 
-> Service som brukes for å utføre operasjoner mot Arbeidssøkerregister. Denne serviceklassen er en mellomklasse mellom ArbeidssøkerMediator og ArbeidssøkerConnector.
+## Integrasjoner
+| System / Tjeneste | Formål                                                     |
+|--------------------|------------------------------------------------------------|
+| Arbeidssøkerregister | Arbeidssøkererioder / record key                           |
+| Meldeplikt-adapter | Hente meldestatus (meldegruppe/harMeldtSeg/meldeplikt)     |
+| Meldekortregister | Start / Stopp / Overtakelse / Frasigelse av bekreftelsesansvar |
+| PDL (GraphQL) | Ident-historikk og personoppslag                           |
+| Rapid & Rivers | Hendelsesbus for dagpengerdomene                           |
+| Kafka (topics for arbeidssøkerperioder & bekreftelse-på-vegne-av) | Produksjon og konsumpsjon av strukturert avro-data         |
+| Azure AD / TokenX | Autentisering / autorisasjon                               |
+| Unleash | Feature toggles                                            |
+| Postgres | Lagring av domene- og historikkdata                        |
 
-### Mottak
+## Datamodell (forenklet begrepsoversikt)
+- Person(ident, statusHistorikk, arbeidssøkerperioder, vedtak, meldeplikt, meldegruppe, ansvarligSystem, hendelser)
+- Arbeidssøkerperiode(periodeId, startet, avsluttet, overtattBekreftelse)
+- Hendelser (SøknadHendelse, VedtakHendelse, Startet/AvsluttetArbeidssøkerperiodeHendelse, (Annen|Dagpenger)MeldegruppeHendelse, MeldepliktHendelse, Person(Synkronisering|IkkeDagpengerSynkronisering)Hendelse, MeldesyklusErPassertHendelse, NødbremsHendelse)
+- Fremtidige hendelser (lagres separat til aktiveringstidspunkt)
 
-#### ArbeidssøkerMottak
+## Viktige miljøvariabler
+Obligatoriske (eksempler – se `Configuration.kt`):
+- `BEKREFTELSE_PAA_VEGNE_AV_TOPIC`
+- `ARBEIDSSOKERPERIODER_TOPIC`
+- `KAFKA_BROKERS`, `KAFKA_SCHEMA_REGISTRY`, `KAFKA_SCHEMA_REGISTRY_USER`, `KAFKA_SCHEMA_REGISTRY_PASSWORD`
+- `ARBEIDSSOKERREGISTER_OPPSLAG_HOST`, `ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE`
+- `ARBEIDSSOKERREGISTER_RECORD_KEY_HOST`, `ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE`
+- `MELDEPLIKT_ADAPTER_HOST`, `MELDEPLIKT_ADAPTER_SCOPE`
+- `MELDEKORTREGISTER_HOST`, `MELDEKORTREGISTER_SCOPE`
+- `PDL_API_HOST`, `PDL_API_SCOPE`
+- `UNLEASH_SERVER_API_URL`, `UNLEASH_SERVER_API_TOKEN`, `UNLEASH_SERVER_API_ENV`
+- Azure AD klientkonfig (client id/secret via standard NAIS env)
 
-> Mottar meldinger om Arbeidssøkerperioder og sender til ArbeidssøkerMediator for behandling.
+Optional / defaulted:
+- `KAFKA_RESET_POLICY` (default `earliest`)
+- `KAFKA_CONSUMER_GROUP_ID` (default settes i kode)
 
-#### MeldegruppeendringMottak
+## Kjøring lokalt (forenklet)
+1. Start avhengigheter (Postgres + evt. lokal Kafka) – i dag forventes NAIS miljø normalt; for lokal debugging kan Testcontainers brukes via eksisterende tester.
+2. Sett nødvendige miljøvariabler / .env.
+3. Bygg:
+```bash
+./gradlew clean build
+```
+4. Kjør mediator-app (shadow jar):
+```bash
+./gradlew :mediator:run
+# eller
+java -jar mediator/build/libs/mediator-all.jar
+```
+(Autentisering lokalt krever gyldige tokens; bruk interne testverktøy.)
 
-> Mottar meldinger om meldegruppeendringer, konverterer til hendelser og sender til PersonMediator for behandling eller til FremtidigHendelseMediator hvis hendelses startdato ligger i fremtiden.
+## Logging og metrikker
+- Prometheus-endepunkt: `/metrics`
+- Standard liveness/readiness: `/isAlive`, `/isReady`
+- Domene-metrikker (arbeidssøkerperioder, vedtak, meldeplikt, synkronisering, database) publiseres med prefiks definert i `Metrikker`.
 
-#### MeldepliktendringMottak
+## Sikkerhet
+- TokenX for sluttbruker-endepunkt (personstatus) – aud må være `cluster:teamdagpenger:dp-rapportering-personregister`.
+- Azure AD for saksbehandler-endepunkter – krever korrekt scope.
+- All kommunikasjon mot eksterne tjenester skjer med klient-legitimasjon (client credentials flow) via gjenbrukt cachet Oauth2-klient.
 
-> Mottar meldinger om meldepliktendringer, konverterer til hendelser og sender til PersonMediator for behandling eller til FremtidigHendelseMediator hvis hendelses startdato ligger i fremtiden.
+## Teknologier
+- Kotlin (JVM 21)
+- Ktor (server + CIO/Netty modulbruk)
+- Kafka (Avro + Schema Registry)
+- Rapids & Rivers
+- Postgres (Kotliquery)
+- Micrometer + Prometheus
+- OpenAPI 3
+- Unleash
+- OAuth2 / TokenX / Azure AD
 
-#### SøknadMottak
+## Videre forbedringer (ideer)
+- Ekstern cache (Valkey) for PDL ident-cache (TODO i kode).
+- Aggregerte historikkendepunkter (ikke bare nåværende status).
+- Eksplicit dokumentasjon av Kafka-skjema og topics.
+- Evt. re-introduksjon av slettejobb om datavolum krever det.
 
-> Mottar meldinger om innsendte søknader, konverterer til SøknadHendelse og sender til PersonMediator for behandling.
+## Henvendelser
+Spørsmål om løsningen:
+- Slack: `#dagpenger`
+- Team: `#team-dagpenger-rapportering`
 
-### Jobber som kjører regelmessig
-
-#### AktiverHendelserJob
-
-> Denne jobben kjører hver dag ved midnatt. Den aktiverer fremtidige hendelser, dvs. prosesserer fremtidige hendelser som har en startdato lik dagens dato.
-
-#### SlettPersonerJob
-
-> Denne jobben kjører hver dag kl. 01:00 og sletter fra Personregister personer som Personregister ikke er interresert i, dvs. personer som ikke er dagpengerbrukere og ikke har hendelser i de siste 60 dagene og ikke har relevante fremtidige hendelser.
-
-## Domene
-
-### Person
-
-Person-klassen representerer en bruker i DP-systemet og har ansvaret for å holde oversikt over dagpengerbrukernes status basert på innsendte søknader, arbeidssøkerstatus og vedtak i Arena.
-Klassen inneholder:
-- **ident:** personens fødselsnummer.
-- **statushistorikk:** en tidslinje med statusendringer (DAGPENGERBRUKER eller IKKE_DAGPENGERBRUKER).
-- **arbeidssøkerperioder:** en liste over perioder personen har vært arbeidssøker.
-- **meldegruppe og meldeplikt:** tilleggsinformasjon om rapporteringsstatus.
-- **hendelser:** en logg over hendelser knyttet til personen, som kan behandles.
-- **observatører:** objekter som varsles ved visse endringer, f.eks. når en bekreftelse overtas.
-- **Metoder for statusendring:** inkluderer funksjoner som tillater endring av personens status og oppdatering av tilhørende informasjon basert på nye hendelser eller data.
-- **Metoder for arbeidssøker bekreftelse:** inkluderer funksjoner for å overta eller frasi arbeidssøker bekreftelse.
-- **Metoder for å prosessere hendelser:** inkluderer funksjoner for å prosessere hendelse om nye arbeidssøkerperioder.
-
-### Arbeidssøkerperiode
-
-Arbeidssøkerperiode-klassen representerer en periode der en person er registrert som arbeidssøker.
-Klassen inneholder:
-- **periodeId:** et unikt ID (UUID)
-- **ident:** personens fødselsnummer
-- **startet:** starttidspunkt for perioden
-- **avsluttet:** eventuell sluttdato (kan være null)
-- **overtattBekreftelse:** om bekreftelse er overtatt (kan være null)
-- **Metoder:** inkluderer funksjoner for å sjekke at en periode er aktiv (dvs. ikke avsluttet) og finne første aktiv periode
-
-Det finnes også to tilknyttede hendelsesklasser:
-- **StartetArbeidssøkerperiodeHendelse:** registrerer starten på en periode, oppdaterer personens status og overtar arbeidssøker bekreftelse.
-- **AvsluttetArbeidssøkerperiodeHendelse:** registrerer slutten på en periode, oppdaterer personens status og frasier seg arbeidssøker bekreftelse.
-
-Disse klassene utvider ArbeidssøkerperiodeHendelse-abstraktklassen som i sin tur implementerer Hendelse-grensesnitt.
-I tillegg til alle feltene i Hendelse-grensesnittet inneholder ArbeidssøkerperiodeHendelser:
-- **periodeId:** et unikt ID (UUID)
-- **startet:** starttidspunkt for perioden
-- **avsluttet:** sluttdato for perioden (kun i AvsluttetArbeidssøkerperiodeHendelse)
-
-### Hendelse
-
-Hendelse er et grensesnitt som definerer en felles kontrakt for ulike hendelsestyper knyttet til en person i systemet.
-Den inneholder:
-- **ident:** hvilken person hendelsen gjelder (fødselsnummer)
-- **dato:** når hendelsen skjedde
-- **kilde:** hvilket system hendelsen kommer fra
-- **referanseId:** en unik identifikator for hendelsen
-- **behandle():** en funksjon som iverksetter effekter på en Person.
-
-Konkrete implementasjoner inkluderer:
-- AnnenMeldegruppeHendelse
-- AvsluttetArbeidssøkerperiodeHendelse
-- DagpengerMeldegruppeHendelse
-- MeldepliktHendelse
-- MeldesyklusErPassertHendelse
-- PersonIkkeDagpengerSynkroniseringHendelse
-- PersonSynkroniseringHendelse
-- StartetArbeidssøkerperiodeHendelse
-- SøknadHendelse
-- VedtakHendelse
-
-Kildesystem kan være:
-- Søknad
-- Arena
-- Arbeidssokerregisteret
-- Dagpenger
-
-# Henvendelser
-
-Spørsmål knyttet til koden eller prosjektet kan rettes mot:
-
-* André Roaldseth, andre.roaldseth@nav.no
-* Eller en annen måte for omverden å kontakte teamet på
-
-## For NAV-ansatte
-
-Interne henvendelser kan sendes via Slack i kanalen #dagpenger.
+## Lisens
+Se `LICENSE.md`.
