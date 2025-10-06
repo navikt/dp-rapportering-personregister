@@ -75,92 +75,20 @@ Mottaksklasser konverterer innkommende meldinger til domenespesifikke hendelser:
 OpenAPI-spesifikasjon: `openapi/src/main/resources/personstatus-api.yaml`.
 Hostes [her](https://navikt.github.io/dp-rapportering-personregister/) via Github Pages.
 
-Autentisering:
-- TokenX (sluttbruker/innlogget bruker) for `/personstatus` (GET/POST).
-- Azure AD for saksbehandler-endepunkter `/hentPersonId`, `/hentIdent`.
-
 ## Integrasjoner
 | System / Tjeneste | Formål                                                     |
-|--------------------|------------------------------------------------------------|
+|-------------------|------------------------------------------------------------|
 | Arbeidssøkerregister | Arbeidssøkererioder / record key                           |
 | Meldeplikt-adapter | Hente meldestatus (meldegruppe/harMeldtSeg/meldeplikt)     |
 | Meldekortregister | Start / Stopp / Overtakelse / Frasigelse av bekreftelsesansvar |
-| PDL (GraphQL) | Ident-historikk og personoppslag                           |
-| Rapid & Rivers | Hendelsesbus for dagpengerdomene                           |
-| Kafka (topics for arbeidssøkerperioder & bekreftelse-på-vegne-av) | Produksjon og konsumpsjon av strukturert avro-data         |
-| Azure AD / TokenX | Autentisering / autorisasjon                               |
-| Unleash | Feature toggles                                            |
-| Postgres | Lagring av domene- og historikkdata                        |
+| PDL | Ident-historikk og personoppslag                           |
 
-## Datamodell (forenklet begrepsoversikt)
-- Person(ident, statusHistorikk, arbeidssøkerperioder, vedtak, meldeplikt, meldegruppe, ansvarligSystem, hendelser)
-- Arbeidssøkerperiode(periodeId, startet, avsluttet, overtattBekreftelse)
-- Hendelser (SøknadHendelse, VedtakHendelse, Startet/AvsluttetArbeidssøkerperiodeHendelse, (Annen|Dagpenger)MeldegruppeHendelse, MeldepliktHendelse, Person(Synkronisering|IkkeDagpengerSynkronisering)Hendelse, MeldesyklusErPassertHendelse, NødbremsHendelse)
-- Fremtidige hendelser (lagres separat til aktiveringstidspunkt)
+# Henvendelser
 
-## Viktige miljøvariabler
-Obligatoriske (eksempler – se `Configuration.kt`):
-- `BEKREFTELSE_PAA_VEGNE_AV_TOPIC`
-- `ARBEIDSSOKERPERIODER_TOPIC`
-- `KAFKA_BROKERS`, `KAFKA_SCHEMA_REGISTRY`, `KAFKA_SCHEMA_REGISTRY_USER`, `KAFKA_SCHEMA_REGISTRY_PASSWORD`
-- `ARBEIDSSOKERREGISTER_OPPSLAG_HOST`, `ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE`
-- `ARBEIDSSOKERREGISTER_RECORD_KEY_HOST`, `ARBEIDSSOKERREGISTER_RECORD_KEY_SCOPE`
-- `MELDEPLIKT_ADAPTER_HOST`, `MELDEPLIKT_ADAPTER_SCOPE`
-- `MELDEKORTREGISTER_HOST`, `MELDEKORTREGISTER_SCOPE`
-- `PDL_API_HOST`, `PDL_API_SCOPE`
-- `UNLEASH_SERVER_API_URL`, `UNLEASH_SERVER_API_TOKEN`, `UNLEASH_SERVER_API_ENV`
-- Azure AD klientkonfig (client id/secret via standard NAIS env)
+Spørsmål knyttet til koden eller prosjektet kan rettes mot:
 
-Optional / defaulted:
-- `KAFKA_RESET_POLICY` (default `earliest`)
-- `KAFKA_CONSUMER_GROUP_ID` (default settes i kode)
+* André Roaldseth, andre.roaldseth@nav.no
 
-## Kjøring lokalt (forenklet)
-1. Start avhengigheter (Postgres + evt. lokal Kafka) – i dag forventes NAIS miljø normalt; for lokal debugging kan Testcontainers brukes via eksisterende tester.
-2. Sett nødvendige miljøvariabler / .env.
-3. Bygg:
-```bash
-./gradlew clean build
-```
-4. Kjør mediator-app (shadow jar):
-```bash
-./gradlew :mediator:run
-# eller
-java -jar mediator/build/libs/mediator-all.jar
-```
-(Autentisering lokalt krever gyldige tokens; bruk interne testverktøy.)
+## For NAV-ansatte
 
-## Logging og metrikker
-- Prometheus-endepunkt: `/metrics`
-- Standard liveness/readiness: `/isAlive`, `/isReady`
-- Domene-metrikker (arbeidssøkerperioder, vedtak, meldeplikt, synkronisering, database) publiseres med prefiks definert i `Metrikker`.
-
-## Sikkerhet
-- TokenX for sluttbruker-endepunkt (personstatus) – aud må være `cluster:teamdagpenger:dp-rapportering-personregister`.
-- Azure AD for saksbehandler-endepunkter – krever korrekt scope.
-- All kommunikasjon mot eksterne tjenester skjer med klient-legitimasjon (client credentials flow) via gjenbrukt cachet Oauth2-klient.
-
-## Teknologier
-- Kotlin (JVM 21)
-- Ktor (server + CIO/Netty modulbruk)
-- Kafka (Avro + Schema Registry)
-- Rapids & Rivers
-- Postgres (Kotliquery)
-- Micrometer + Prometheus
-- OpenAPI 3
-- Unleash
-- OAuth2 / TokenX / Azure AD
-
-## Videre forbedringer (ideer)
-- Ekstern cache (Valkey) for PDL ident-cache (TODO i kode).
-- Aggregerte historikkendepunkter (ikke bare nåværende status).
-- Eksplicit dokumentasjon av Kafka-skjema og topics.
-- Evt. re-introduksjon av slettejobb om datavolum krever det.
-
-## Henvendelser
-Spørsmål om løsningen:
-- Slack: `#dagpenger`
-- Team: `#team-dagpenger-rapportering`
-
-## Lisens
-Se `LICENSE.md`.
+Interne henvendelser kan sendes via Slack i kanalen #dagpenger.
