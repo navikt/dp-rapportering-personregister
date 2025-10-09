@@ -18,6 +18,7 @@ import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.measureTime
 
@@ -46,7 +47,7 @@ internal class MeldestatusJob(
             name = "Sjekk meldestatus",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 3.hours.inWholeMilliseconds,
+            period = 7.days.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
