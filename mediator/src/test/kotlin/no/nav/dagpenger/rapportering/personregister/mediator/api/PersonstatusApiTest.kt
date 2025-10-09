@@ -38,7 +38,14 @@ class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
 
     init {
-        every { pdlConnector.hentIdenter(ident) } returns listOf(Ident(ident, Ident.IdentGruppe.FOLKEREGISTERIDENT, false))
+        every { pdlConnector.hentIdenter(ident) } returns
+            listOf(
+                Ident(
+                    ident,
+                    Ident.IdentGruppe.FOLKEREGISTERIDENT,
+                    false,
+                ),
+            )
     }
 
     @Test
@@ -208,7 +215,16 @@ class PersonstatusApiTest : ApiTestSetup() {
             personRepository
                 .hentPerson(ident)
                 ?.also { person ->
-                    person.behandle(VedtakHendelse(ident, LocalDateTime.now(), LocalDateTime.now(), "ref", "123", true))
+                    person.behandle(
+                        VedtakHendelse(
+                            ident,
+                            LocalDateTime.now(),
+                            LocalDateTime.now(),
+                            "ref",
+                            LocalDateTime.now(),
+                            true,
+                        ),
+                    )
                     personRepository.oppdaterPerson(person)
                 }
 

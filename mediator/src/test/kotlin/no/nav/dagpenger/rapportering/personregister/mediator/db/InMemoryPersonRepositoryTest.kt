@@ -82,7 +82,6 @@ class InMemoryPersonRepositoryTest {
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now(),
                 referanseId = UUID.randomUUID().toString(),
-                søknadId = UUID.randomUUID().toString(),
                 utfall = true,
             )
 

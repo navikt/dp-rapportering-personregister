@@ -36,12 +36,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendels
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
@@ -49,13 +49,13 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehandlingsresultatMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakFattetUtenforArenaMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -81,7 +81,7 @@ internal class ApplicationBuilder(
     private val meterRegistry =
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
-    private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
+    private val behandlingsresultatMetrikker = BehandlingsresultatMetrikker(meterRegistry)
     private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
@@ -238,7 +238,13 @@ internal class ApplicationBuilder(
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
-                    VedtakMottak(rapid, personMediator, fremtidigHendelseMediator, vedtakMetrikker)
+                    BehandlingsresultatMottak(
+                        rapid,
+                        personRepository,
+                        personMediator,
+                        fremtidigHendelseMediator,
+                        behandlingsresultatMetrikker,
+                    )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository)
                     NødbremsMottak(rapid, personMediator)
                 }
