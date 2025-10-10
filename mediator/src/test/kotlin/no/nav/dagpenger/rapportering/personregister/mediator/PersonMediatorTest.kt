@@ -571,9 +571,8 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "456",
-        søknadId: String = "123",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, søknadId, utfall)
+    ) = VedtakHendelse(ident, dato, startDato, referanseId, startDato.plusDays(10), utfall)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
@@ -679,7 +678,7 @@ class BeslutningObserver(
         val beslutning =
             ArbeidssøkerBeslutning(
                 person.ident,
-                periodeId!!,
+                periodeId,
                 Handling.FRASAGT,
                 begrunnelse = "Ikke opppfyller krav",
             )

@@ -59,7 +59,7 @@ class PersonTest {
             arbeidssøker {
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse(søknadId = søknadId))
+                behandle(vedtakHendelse())
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
                 this skalHaSendtStartMeldingFor nå
@@ -72,7 +72,7 @@ class PersonTest {
             arbeidssøker {
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse(søknadId = søknadId, utfall = false))
+                behandle(vedtakHendelse(utfall = false))
 
                 ansvarligSystem shouldBe AnsvarligSystem.ARENA
                 this skalIkkeHaSendtStoppMeldingFor nå
@@ -85,9 +85,9 @@ class PersonTest {
             arbeidssøker(overtattBekreftelse = true) {
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse(søknadId = søknadId, utfall = true))
+                behandle(vedtakHendelse(utfall = true))
 
-                behandle(vedtakHendelse(søknadId = søknadId, utfall = false))
+                behandle(vedtakHendelse(utfall = false))
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
                 this skalHaSendtStoppMeldingFor nå
@@ -261,9 +261,8 @@ class PersonTest {
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-        søknadId: String = "456",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, dato, referanseId, søknadId, utfall)
+    ) = VedtakHendelse(ident, dato, dato, referanseId, dato.plusDays(10), utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
