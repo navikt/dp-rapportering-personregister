@@ -101,7 +101,7 @@ class PersonService(
             logger.info { "Personen finnes ikke databasen." }
             return null
         } else if (personer.size == 1) {
-            logger.info { "Personen funnes kun 1 gang i databasen. Sjekker om gjeldende ident må oppdateres." }
+            logger.info { "Personen finnes kun 1 gang i databasen. Sjekker om gjeldende ident må oppdateres." }
             val person = personer.first()
             if (gjeldendeIdent != null && person.ident != gjeldendeIdent) {
                 logger.info { "Oppdaterer ident for person" }
