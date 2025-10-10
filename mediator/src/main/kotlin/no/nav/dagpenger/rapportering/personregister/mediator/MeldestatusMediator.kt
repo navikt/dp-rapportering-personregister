@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
@@ -18,6 +19,7 @@ import java.time.LocalDateTime
 
 class MeldestatusMediator(
     private val personRepository: PersonRepository,
+    private val personService: PersonService,
     private val meldepliktConnector: MeldepliktConnector,
     private val meldepliktMediator: MeldepliktMediator,
     private val personMediator: PersonMediator,
@@ -42,7 +44,7 @@ class MeldestatusMediator(
                 throw RuntimeException("Kunne ikke hente meldestatus")
             }
 
-            personRepository.hentPerson(meldestatus.personIdent)?.let { person ->
+            personService.hentPerson(meldestatus.personIdent)?.let { person ->
                 if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
                     behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
                 } else {

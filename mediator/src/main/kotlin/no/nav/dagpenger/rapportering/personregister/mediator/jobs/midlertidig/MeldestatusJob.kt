@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
@@ -37,7 +38,7 @@ internal class MeldestatusJob(
 
     @WithSpan
     internal fun start(
-        personRepository: PersonRepository,
+        personService: PersonService,
         tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
@@ -59,7 +60,7 @@ internal class MeldestatusJob(
                                 antallPersoner =
                                     runBlocking {
                                         oppdaterStatus(
-                                            personRepository,
+                                            personService,
                                             tempPersonRepository,
                                             meldepliktConnector,
                                             meldestatusMediator,
@@ -82,7 +83,7 @@ internal class MeldestatusJob(
     }
 
     suspend fun oppdaterStatus(
-        personRepository: PersonRepository,
+        personService: PersonService,
         tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
@@ -99,7 +100,7 @@ internal class MeldestatusJob(
             antallPersoner += identer.size
 
             identer.forEach { ident ->
-                val person = personRepository.hentPerson(ident)
+                val person = personService.hentPerson(ident)
 
                 if (person != null) {
                     if (person.ansvarligSystem == AnsvarligSystem.ARENA) {

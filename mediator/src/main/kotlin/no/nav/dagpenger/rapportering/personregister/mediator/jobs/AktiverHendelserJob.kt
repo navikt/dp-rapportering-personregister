@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
@@ -34,6 +35,7 @@ internal class AktiverHendelserJob(
 
     internal fun start(
         personRepository: PersonRepository,
+        personService: PersonService,
         personMediator: PersonMediator,
         meldestatusMediator: MeldestatusMediator,
         meldepliktConnector: MeldepliktConnector,
@@ -55,6 +57,7 @@ internal class AktiverHendelserJob(
                                 antallHendelser =
                                     aktivererHendelser(
                                         personRepository,
+                                        personService,
                                         personMediator,
                                         meldestatusMediator,
                                         meldepliktConnector,
@@ -77,6 +80,7 @@ internal class AktiverHendelserJob(
 
     fun aktivererHendelser(
         personRepository: PersonRepository,
+        personService: PersonService,
         personMediator: PersonMediator,
         meldestatusMediator: MeldestatusMediator,
         meldepliktConnector: MeldepliktConnector,
@@ -85,7 +89,7 @@ internal class AktiverHendelserJob(
         var currentIdent = ""
         var currentMeldestatus: MeldestatusResponse? = null
         hendelser.forEach { hendelse ->
-            val person = personRepository.hentPerson(hendelse.ident)
+            val person = personService.hentPerson(hendelse.ident)
             try {
                 if (person != null) {
                     when (hendelse) {

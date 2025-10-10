@@ -188,6 +188,7 @@ internal class ApplicationBuilder(
     private val meldestatusMediator =
         MeldestatusMediator(
             personRepository,
+            personService,
             meldepliktConnector,
             meldepliktMediator,
             personMediator,
@@ -259,9 +260,9 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator, meldestatusMediator, meldepliktConnector)
+        aktiverHendelserJob.start(personRepository, personService, personMediator, meldestatusMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
-        meldestatusJob.start(personRepository, tempPersonRepository, meldepliktConnector, meldestatusMediator)
+        meldestatusJob.start(personService, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }
 }
 

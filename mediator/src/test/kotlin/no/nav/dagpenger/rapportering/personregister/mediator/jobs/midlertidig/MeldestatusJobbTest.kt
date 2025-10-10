@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
@@ -22,6 +23,7 @@ import java.time.LocalDateTime
 
 class MeldestatusJobbTest {
     val personRepository = InMemoryPersonRepository()
+    val personService = mockk<PersonService>()
     val tempPersonRepository = mockk<TempPersonRepository>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val meldestatusMediator = mockk<MeldestatusMediator>(relaxed = true)
@@ -58,10 +60,15 @@ class MeldestatusJobbTest {
         statusHistorikk.put(LocalDateTime.now(), Status.DAGPENGERBRUKER)
         personRepository.lagrePerson(Person(ident4, statusHistorikk))
 
+        every { personService.hentPerson(ident1) } returns personRepository.hentPerson(ident1)
+        every { personService.hentPerson(ident2) } returns personRepository.hentPerson(ident2)
+        every { personService.hentPerson(ident3) } returns personRepository.hentPerson(ident3)
+        every { personService.hentPerson(ident4) } returns personRepository.hentPerson(ident4)
+
         val antallPersoner =
             runBlocking {
                 MeldestatusJob().oppdaterStatus(
-                    personRepository,
+                    personService,
                     tempPersonRepository,
                     meldepliktConnector,
                     meldestatusMediator,

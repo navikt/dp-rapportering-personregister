@@ -60,6 +60,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     private val meldestatusMediator =
         MeldestatusMediator(
             personRepository = personRepository,
+            personService = personService,
             meldepliktConnector = meldepliktConnector,
             meldepliktMediator = meldepliktMediator,
             personMediator = personMediator,
@@ -235,6 +236,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             val antallHendelserAktivert =
                 aktiverHendelserJob.aktivererHendelser(
                     personRepository,
+                    personService,
                     personMediator,
                     meldestatusMediator,
                     meldepliktConnector,
