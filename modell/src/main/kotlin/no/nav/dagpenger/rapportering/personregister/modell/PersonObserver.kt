@@ -27,6 +27,7 @@ interface PersonObserver {
     fun sendStartMeldingTilMeldekortregister(
         person: Person,
         startDato: LocalDateTime,
+        skalMigreres: Boolean,
     ) {}
 
     fun sendStoppMeldingTilMeldekortregister(

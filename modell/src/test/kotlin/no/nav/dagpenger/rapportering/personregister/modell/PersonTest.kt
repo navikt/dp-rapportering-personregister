@@ -300,7 +300,7 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
