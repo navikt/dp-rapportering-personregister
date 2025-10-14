@@ -42,6 +42,6 @@ class PersonObserverMeldekortregisterTest {
         message["dato"].asLocalDateTime() shouldBe startDato
         message["handling"].asText() shouldBe "START"
         message["referanseId"].asText() shouldNotBe null
-        message["skalMigreres"].asText() shouldBe true
+        message["skalMigreres"].asBoolean() shouldBe true
     }
 }
