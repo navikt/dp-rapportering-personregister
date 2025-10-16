@@ -20,6 +20,7 @@ class PersonObserverMeldekortregister(
     override fun sendStartMeldingTilMeldekortregister(
         person: Person,
         startDato: LocalDateTime,
+        skalMigreres: Boolean,
     ) {
         logger.info { "Sender Start-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Start-melding til Meldekortregister for person ${person.ident}" }
@@ -33,6 +34,7 @@ class PersonObserverMeldekortregister(
                     "dato" to startDato,
                     "handling" to "START",
                     "referanseId" to UUID.randomUUID().toString(),
+                    "skalMigreres" to skalMigreres,
                 ),
             )
 
@@ -56,6 +58,7 @@ class PersonObserverMeldekortregister(
                     "dato" to stoppDato,
                     "handling" to "STOPP",
                     "referanseId" to UUID.randomUUID().toString(),
+                    "skalMigreres" to false,
                 ),
             )
 

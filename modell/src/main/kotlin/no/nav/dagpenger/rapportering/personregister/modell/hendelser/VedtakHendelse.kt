@@ -28,10 +28,11 @@ data class VedtakHendelse(
 
         // Starter eller stopper meldekortproduksjon basert på vedtakets utfall
         if (utfall) {
+            val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
             person.setVedtak(VedtakType.INNVILGET)
-            person.sendStartMeldingTilMeldekortregister(startDato = startDato)
+            person.sendStartMeldingTilMeldekortregister(startDato = startDato, skalMigreres = skalMigreres)
         } else {
             person.setVedtak(VedtakType.STANSET)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {

@@ -9,11 +9,14 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
+import no.nav.dagpenger.rapportering.personregister.api.models.ArbeidssokerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import java.net.URI
+import java.time.ZoneOffset
 
 private val logger = KotlinLogging.logger {}
 
@@ -98,6 +101,39 @@ internal fun Application.personApi(personService: PersonService) {
                             )
                         }
                         ?: throw PersonNotFoundException()
+                }
+            }
+
+            route("/arbeidssokerperioder/{personId}") {
+                get {
+                    val personId =
+                        call.parameters["personId"]?.toLongOrNull()
+                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+
+                    personService
+                        .hentArbeidssokerperioder(personId)
+                        .also { perioder ->
+                            call
+                                .respond(
+                                    HttpStatusCode.OK,
+                                    perioder.map { periode ->
+                                        ArbeidssokerperiodeResponse(
+                                            periodeId = periode.periodeId.toString(),
+                                            ident = periode.ident,
+                                            startDato = periode.startet.atOffset(ZoneOffset.UTC),
+                                            sluttDato = periode.avsluttet?.atOffset(ZoneOffset.UTC),
+                                            status =
+                                                if (periode.avsluttet ==
+                                                    null
+                                                ) {
+                                                    ArbeidssokerperiodeResponse.Status.Startet
+                                                } else {
+                                                    ArbeidssokerperiodeResponse.Status.Avsluttet
+                                                },
+                                        )
+                                    },
+                                )
+                        }
                 }
             }
         }

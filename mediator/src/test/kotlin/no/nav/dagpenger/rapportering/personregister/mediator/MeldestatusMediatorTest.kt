@@ -111,6 +111,7 @@ class MeldestatusMediatorTest {
         meldestatusMediator =
             MeldestatusMediator(
                 personRepository,
+                personService,
                 meldepliktConnector,
                 meldepliktMediator,
                 personMediator,

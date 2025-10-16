@@ -12,12 +12,14 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
 import java.util.UUID
 import kotlin.concurrent.fixedRateTimer
+import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.measureTime
 
@@ -36,7 +38,7 @@ internal class MeldestatusJob(
 
     @WithSpan
     internal fun start(
-        personRepository: PersonRepository,
+        personService: PersonService,
         tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
@@ -46,7 +48,7 @@ internal class MeldestatusJob(
             name = "Sjekk meldestatus",
             daemon = true,
             initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 3.hours.inWholeMilliseconds,
+            period = 7.days.inWholeMilliseconds,
             action = {
                 try {
                     if (isLeader(httpClient, logger)) {
@@ -58,7 +60,7 @@ internal class MeldestatusJob(
                                 antallPersoner =
                                     runBlocking {
                                         oppdaterStatus(
-                                            personRepository,
+                                            personService,
                                             tempPersonRepository,
                                             meldepliktConnector,
                                             meldestatusMediator,
@@ -81,7 +83,7 @@ internal class MeldestatusJob(
     }
 
     suspend fun oppdaterStatus(
-        personRepository: PersonRepository,
+        personService: PersonService,
         tempPersonRepository: TempPersonRepository,
         meldepliktConnector: MeldepliktConnector,
         meldestatusMediator: MeldestatusMediator,
@@ -98,7 +100,7 @@ internal class MeldestatusJob(
             antallPersoner += identer.size
 
             identer.forEach { ident ->
-                val person = personRepository.hentPerson(ident)
+                val person = personService.hentPerson(ident)
 
                 if (person != null) {
                     if (person.ansvarligSystem == AnsvarligSystem.ARENA) {

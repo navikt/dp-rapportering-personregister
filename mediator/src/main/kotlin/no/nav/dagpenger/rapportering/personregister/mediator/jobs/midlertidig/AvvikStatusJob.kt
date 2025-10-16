@@ -6,6 +6,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
+import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -28,6 +29,7 @@ internal class AvvikStatusJob(
     @WithSpan
     fun start(
         personRepository: PersonRepository,
+        personService: PersonService,
         observerList: List<PersonObserver>,
     ) {
         logger.info { "Tidspunkt for neste kjøring av AvvikStatusJob: $tidspunktForNesteKjoring" }
@@ -47,7 +49,7 @@ internal class AvvikStatusJob(
 
                         identer.forEach { ident ->
                             val person =
-                                personRepository.hentPerson(ident)?.apply {
+                                personService.hentPerson(ident)?.apply {
                                     if (this.observers.isEmpty()) {
                                         observerList.forEach { observer -> this.addObserver(observer) }
                                     }

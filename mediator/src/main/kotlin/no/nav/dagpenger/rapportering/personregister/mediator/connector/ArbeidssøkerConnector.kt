@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,8 +36,9 @@ class ArbeidssøkerConnector(
                 }
 
             if (result.status != HttpStatusCode.OK) {
+                val body = result.bodyAsText()
                 logger.warn {
-                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident."
+                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident. $body"
                 }
                 throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode")
             }

@@ -31,8 +31,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingReposi
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -100,6 +103,8 @@ internal class ApplicationBuilder(
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
     private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
+
+    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
 
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)
@@ -183,6 +188,7 @@ internal class ApplicationBuilder(
     private val meldestatusMediator =
         MeldestatusMediator(
             personRepository,
+            personService,
             meldepliktConnector,
             meldepliktMediator,
             personMediator,
@@ -197,6 +203,7 @@ internal class ApplicationBuilder(
 
     private val aktiverHendelserJob = AktiverHendelserJob()
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
+    private val meldestatusJob = MeldestatusJob()
 
     private val kafkaContext =
         KafkaContext(
@@ -259,8 +266,9 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personMediator, meldestatusMediator, meldepliktConnector)
+        aktiverHendelserJob.start(personRepository, personService, personMediator, meldestatusMediator, meldepliktConnector)
         resendPaaVegneAvJob.start(personRepository, personService)
+        meldestatusJob.start(personService, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }
 }
 

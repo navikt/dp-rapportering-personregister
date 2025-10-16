@@ -17,9 +17,9 @@ val mainavroSchema by configurations.creating {
 }
 
 dependencies {
-    api("io.confluent:kafka-avro-serializer:8.0.1")
-    api("io.confluent:kafka-schema-registry:8.0.1")
-    api("io.confluent:kafka-streams-avro-serde:8.0.1")
+    api("io.confluent:kafka-avro-serializer:8.0.2")
+    api("io.confluent:kafka-schema-registry:8.0.2")
+    api("io.confluent:kafka-streams-avro-serde:8.0.2")
     api("org.apache.avro:avro:1.12.0")
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
@@ -27,7 +27,7 @@ dependencies {
     paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:1.25.03.26.32-1")
     mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.13764081353.1-2")
 
-    testImplementation(platform("org.junit:junit-bom:5.14.0"))
+    testImplementation(platform("org.junit:junit-bom:6.0.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
