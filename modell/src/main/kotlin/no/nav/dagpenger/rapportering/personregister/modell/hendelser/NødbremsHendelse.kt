@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import java.time.LocalDateTime
 
@@ -17,7 +16,7 @@ data class NødbremsHendelse(
     override fun behandle(person: Person) {
         person.hendelser.add(this)
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)
-        person.setVedtak(VedtakType.INGEN)
+        person.setHarRettTilDp(false)
 
         person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
     }

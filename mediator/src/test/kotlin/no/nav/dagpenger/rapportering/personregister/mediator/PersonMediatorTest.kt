@@ -35,7 +35,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -481,7 +480,7 @@ class PersonMediatorTest {
             dagpengebrukerMedVedtak {
                 with(this) {
                     ansvarligSystem shouldBe AnsvarligSystem.DP
-                    vedtak shouldBe VedtakType.INNVILGET
+                    harRettTilDp shouldBe true
                     status shouldBe DAGPENGERBRUKER
                 }
 
@@ -489,7 +488,7 @@ class PersonMediatorTest {
                 with(this) {
                     this skalHaSendtStoppMeldingFor nå
                     ansvarligSystem shouldBe AnsvarligSystem.ARENA
-                    vedtak shouldBe VedtakType.INGEN
+                    harRettTilDp shouldBe false
                     status shouldBe DAGPENGERBRUKER
                 }
             }

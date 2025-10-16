@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
@@ -17,24 +16,24 @@ class InMemoryPersonRepository : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
     private val personList2 = mutableListOf<Person>()
     private val fremtidigeHendelser = mutableListOf<Hendelse>()
-    private val vedtakListe = mutableMapOf<String, VedtakType>()
+    private val vedtakListe = mutableMapOf<String, Boolean>()
 
-    override fun hentPerson(ident: String): Person? = personList[ident]?.apply { this.setVedtak(vedtakListe[ident] ?: VedtakType.INGEN) }
+    override fun hentPerson(ident: String): Person? = personList[ident]?.apply { this.setHarRettTilDp(vedtakListe[ident] ?: false) }
 
     override fun finnesPerson(ident: String): Boolean = personList.containsKey(ident)
 
     override fun lagrePerson(person: Person) {
         personList[person.ident] = person
         personList2.add(person)
-        vedtakListe[person.ident] = person.vedtak
+        vedtakListe[person.ident] = person.harRettTilDp
     }
 
     override fun oppdaterPerson(person: Person) {
         val nyPerson = person.deepCopy(versjon = person.versjon + 1)
         nyPerson.setAnsvarligSystem(person.ansvarligSystem)
-        nyPerson.setVedtak(person.vedtak)
+        nyPerson.setHarRettTilDp(person.harRettTilDp)
         personList[person.ident] = nyPerson
-        vedtakListe[person.ident] = nyPerson.vedtak
+        vedtakListe[person.ident] = nyPerson.harRettTilDp
     }
 
     override fun oppdaterIdent(
@@ -47,7 +46,7 @@ class InMemoryPersonRepository : PersonRepository {
         personList.remove(funnetPerson.ident)
         vedtakListe.remove(funnetPerson.ident)
         personList[nyIdent] = funnetPerson.copy(ident = nyIdent)
-        vedtakListe[nyIdent] = funnetPerson.vedtak
+        vedtakListe[nyIdent] = funnetPerson.harRettTilDp
     }
 
     override fun hentAntallPersoner(): Int = personList.size

@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
@@ -31,10 +30,10 @@ data class VedtakHendelse(
             val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
-            person.setVedtak(VedtakType.INNVILGET)
+            person.setHarRettTilDp(true)
             person.sendStartMeldingTilMeldekortregister(startDato = startDato, skalMigreres = skalMigreres)
         } else {
-            person.setVedtak(VedtakType.STANSET)
+            person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
             }

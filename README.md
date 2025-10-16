@@ -28,7 +28,7 @@ Systemet samler og eksponerer et nå-bilde av om en person er dagpengerbruker ("
 En person anses som DAGPENGERBRUKER når:
 1. Personen er arbeidssøker (har en aktiv arbeidssøkerperiode) OG
 2. (Arena-regime) meldeplikt = true OG meldegruppe = DAGP
-   ELLER (DP-regime) vedtak = INNVILGET
+   ELLER (DP-regime) harRettTilDp = true
 
 Ellers: IKKE_DAGPENGERBRUKER.
 AnsvarligSystem settes default til Arena. Hvis bruker får et positivt vedtak fra DP-Sak settes DP som ansvarlig system.
