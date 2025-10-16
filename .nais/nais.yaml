@@ -58,10 +58,12 @@ spec:
           - name: dp-rapportering-personregister
             envVarPrefix: DB
         flags:
-            - name: cloudsql.enable_pgaudit
-              value: "on"
-            - name: pgaudit.log
-              value: 'write'
+          - name: "cloudsql.enable_pgaudit"
+            value: "on"
+          - name: "pgaudit.log"
+            value: "write,ddl,role"
+          - name: "pgaudit.log_parameter"
+            value: "on"
   accessPolicy:
     outbound:
       external:
