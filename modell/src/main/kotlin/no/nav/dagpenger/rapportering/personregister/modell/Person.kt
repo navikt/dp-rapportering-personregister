@@ -21,20 +21,13 @@ enum class AnsvarligSystem {
     DP,
 }
 
-enum class VedtakType {
-    INGEN,
-    INNVILGET,
-    STANSET,
-    AVSLÅTT,
-}
-
 data class Person(
     val ident: String,
     val statusHistorikk: TemporalCollection<Status> = TemporalCollection(),
     val arbeidssøkerperioder: MutableList<Arbeidssøkerperiode> = mutableListOf(),
     val versjon: Int = 1,
 ) {
-    private var _vedtak: VedtakType = VedtakType.INGEN
+    private var _harRettTilDp: Boolean = false
 
     private var _meldegruppe: String? = null
 
@@ -67,11 +60,11 @@ data class Person(
         }
     }
 
-    val vedtak: VedtakType
-        get() = _vedtak
+    val harRettTilDp: Boolean
+        get() = _harRettTilDp
 
-    fun setVedtak(value: VedtakType) {
-        _vedtak = value
+    fun setHarRettTilDp(value: Boolean) {
+        _harRettTilDp = value
     }
 
     val meldeplikt: Boolean
@@ -230,5 +223,5 @@ val Person.harRiktigMeldestatusEllerVedtak: Boolean get() =
     ) {
         this.meldeplikt && this.meldegruppe == "DAGP"
     } else {
-        this.vedtak == VedtakType.INNVILGET
+        this.harRettTilDp
     }

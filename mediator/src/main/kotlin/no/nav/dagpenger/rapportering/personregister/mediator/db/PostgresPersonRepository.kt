@@ -15,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
-import no.nav.dagpenger.rapportering.personregister.modell.VedtakType
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -45,7 +44,7 @@ class PostgresPersonRepository(
                     val arbeidssøkerperioder = hentArbeidssøkerperioder(personId, ident, tx)
                     val versjon = hentVersjon(ident, tx) ?: return@transaction null
 
-                    val vedtak = hentVedtak(ident, tx)
+                    val vedtak = hentHarRettTilDp(ident, tx)
                     val meldeplikt = hentMeldeplikt(ident, tx)
                     val meldegruppe = hentMeldegruppe(ident, tx)
                     val ansvarligSystem = hentAnsvarligSystem(ident, tx)?.let { AnsvarligSystem.valueOf(it) }
@@ -57,7 +56,7 @@ class PostgresPersonRepository(
                         arbeidssøkerperioder = arbeidssøkerperioder.toMutableList(),
                         versjon = versjon,
                     ).apply {
-                        setVedtak(vedtak)
+                        setHarRettTilDp(vedtak)
                         setMeldeplikt(meldeplikt)
                         setMeldegruppe(meldegruppe)
                         setAnsvarligSystem(ansvarligSystem)
@@ -86,8 +85,8 @@ class PostgresPersonRepository(
                         tx.run(
                             queryOf(
                                 """
-                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon, ansvarlig_system, vedtak) 
-                                VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon, :ansvarlig_system, :vedtak) 
+                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon, ansvarlig_system, har_rett_til_dp) 
+                                VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon, :ansvarlig_system, :har_rett_til_dp) 
                                 RETURNING id
                                 """.trimIndent(),
                                 mapOf(
@@ -97,7 +96,7 @@ class PostgresPersonRepository(
                                     "meldegruppe" to person.meldegruppe,
                                     "versjon" to person.versjon,
                                     "ansvarlig_system" to person.ansvarligSystem?.name,
-                                    "vedtak" to person.vedtak.name,
+                                    "har_rett_til_dp" to person.harRettTilDp,
                                 ),
                             ).map { row -> row.long("id") }
                                 .asSingle,
@@ -130,7 +129,7 @@ class PostgresPersonRepository(
                                         meldegruppe = :meldegruppe,
                                         versjon = :ny_versjon,
                                         ansvarlig_system = :ansvarlig_system,
-                                        vedtak = :vedtak
+                                        har_rett_til_dp = :har_rett_til_dp
                                     WHERE id = :id and versjon = :versjon
                                     """.trimIndent(),
                                     mapOf(
@@ -141,7 +140,7 @@ class PostgresPersonRepository(
                                         "versjon" to person.versjon,
                                         "ny_versjon" to person.versjon + 1,
                                         "ansvarlig_system" to person.ansvarligSystem?.name,
-                                        "vedtak" to person.vedtak.name,
+                                        "har_rett_til_dp" to person.harRettTilDp,
                                     ),
                                 ).asUpdate,
                             )
@@ -318,6 +317,22 @@ class PostgresPersonRepository(
                     tx.run(
                         queryOf(
                             "DELETE FROM fremtidig_hendelse WHERE kilde = 'Arena' AND ident = :ident",
+                            mapOf(
+                                "ident" to ident,
+                            ),
+                        ).asUpdate,
+                    )
+                }
+            }
+        }
+
+    override fun slettFremtidigeVedtakHendelser(ident: String): Int =
+        actionTimer.timedAction("db-slettFremtidigeVedtakHendelser") {
+            using(sessionOf(dataSource)) { session ->
+                session.transaction { tx ->
+                    tx.run(
+                        queryOf(
+                            "DELETE FROM fremtidig_hendelse WHERE type = 'VedtakHendelse' AND ident = :ident",
                             mapOf(
                                 "ident" to ident,
                             ),
@@ -609,6 +624,7 @@ class PostgresPersonRepository(
             is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
             is DagpengerMeldegruppeHendelse -> this.sluttDato
             is MeldepliktHendelse -> this.sluttDato
+            is VedtakHendelse -> this.sluttDato
             else -> null
         }
 
@@ -632,7 +648,7 @@ class PostgresPersonRepository(
 
                 is VedtakHendelse ->
                     defaultObjectMapper.writeValueAsString(
-                        VedtakExtra(søknadId = this.søknadId, utfall = this.utfall),
+                        VedtakExtra(utfall = this.utfall),
                     )
 
                 else -> null
@@ -641,16 +657,16 @@ class PostgresPersonRepository(
         return test
     }
 
-    private fun hentVedtak(
+    private fun hentHarRettTilDp(
         ident: String,
         tx: TransactionalSession,
-    ): VedtakType =
+    ): Boolean =
         tx
             .run(
-                queryOf("SELECT vedtak FROM person WHERE ident = :ident", mapOf("ident" to ident))
-                    .map { row -> row.string("vedtak") }
+                queryOf("SELECT har_rett_til_dp FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                    .map { row -> row.boolean("har_rett_til_dp") }
                     .asSingle,
-            )?.let { VedtakType.valueOf(it) } ?: throw IllegalStateException("Klarte ikke å hente vedtak")
+            ) ?: throw IllegalStateException("Klarte ikke å hente vedtak")
 
     private fun hentMeldegruppe(
         ident: String,
@@ -804,7 +820,6 @@ class PostgresPersonRepository(
                     dato = dato,
                     startDato = startDato ?: dato,
                     referanseId = referanseId,
-                    søknadId = vedtakExtra.søknadId,
                     utfall = vedtakExtra.utfall,
                 )
             }
@@ -954,7 +969,6 @@ data class MeldepliktExtra(
 )
 
 data class VedtakExtra(
-    val søknadId: String,
     val utfall: Boolean,
 )
 

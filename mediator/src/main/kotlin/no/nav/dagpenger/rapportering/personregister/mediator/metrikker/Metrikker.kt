@@ -29,13 +29,13 @@ class SoknadMetrikker(
             .register(meterRegistry)
 }
 
-class VedtakMetrikker(
+class BehandlingsresultatMetrikker(
     meterRegistry: MeterRegistry,
 ) {
-    val vedtakMottatt: Counter =
+    val behandlingsresultatMottatt: Counter =
         Counter
-            .builder("${NAMESPACE}_vedtak_mottatt_total")
-            .description("Indikerer antall mottatte vedtak")
+            .builder("${NAMESPACE}_behandlingsresultat_mottatt_total")
+            .description("Indikerer antall mottatte behandlingsresultater")
             .register(meterRegistry)
 }
 

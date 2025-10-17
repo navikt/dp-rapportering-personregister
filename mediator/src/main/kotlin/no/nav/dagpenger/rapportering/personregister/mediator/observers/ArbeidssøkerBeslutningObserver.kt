@@ -27,7 +27,7 @@ class ArbeidssøkerBeslutningObserver(
                             "Oppfyller krav: arbedissøker, " +
                                 "meldeplikt=${person.meldeplikt}," +
                                 " gruppe=${person.meldegruppe}," +
-                                " og vedtak=${person.vedtak.name}",
+                                " og harRettTilDp=${person.harRettTilDp}",
                     )
 
                 arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
@@ -50,7 +50,7 @@ class ArbeidssøkerBeslutningObserver(
                                 "arbedissøker: ${person.erArbeidssøker}," +
                                 " meldeplikt=${person.meldeplikt}," +
                                 " gruppe=${person.meldegruppe}" +
-                                " og vedtak=${person.vedtak.name}",
+                                " og harRettTilDp=${person.harRettTilDp}",
                     )
 
                 arbeidssøkerBeslutningRepository.lagreBeslutning(beslutning)
