@@ -26,25 +26,28 @@ class PersonObserverMeldekortregister(
         logger.info { "Sender Start-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Start-melding til Meldekortregister for person ${person.ident}" }
 
-        val message =
-            JsonMessage.newMessage(
-                "meldekortoppretting",
-                buildMap {
-                    put(
-                        "personId",
-                        personRepository.hentPersonId(person.ident) ?: throw IllegalArgumentException("Finner ikke personId"),
-                    )
-                    put("ident", person.ident)
-                    put("fraOgMed", fraOgMed)
-                    tilOgMed?.let { put("tilOgMed", it) }
-                    put("handling", "START")
-                    put("referanseId", UUID.randomUUID().toString())
-                    put("skalMigreres", skalMigreres)
-                },
-            )
+        try {
+            val message =
+                JsonMessage.newMessage(
+                    "meldekortoppretting",
+                    buildMap {
+                        put("personId", person.hentPersonId())
+                        put("ident", person.ident)
+                        put("fraOgMed", fraOgMed)
+                        tilOgMed?.let { put("tilOgMed", it) }
+                        put("handling", "START")
+                        put("referanseId", UUID.randomUUID().toString())
+                        put("skalMigreres", skalMigreres)
+                    },
+                )
 
-        sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
-        getRapidsConnection().publish(person.ident, message.toJson())
+            sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
+            getRapidsConnection().publish(person.ident, message.toJson())
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved sending av Start-melding til Meldekortregister" }
+            sikkerlogg.error(e) { "Feil ved sending av Start-melding til Meldekortregister for person ${person.ident}" }
+            throw e
+        }
     }
 
     override fun sendStoppMeldingTilMeldekortregister(
@@ -55,24 +58,31 @@ class PersonObserverMeldekortregister(
         logger.info { "Sender Stopp-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Stopp-melding til Meldekortregister for person ${person.ident}" }
 
-        val message =
-            JsonMessage.newMessage(
-                "meldekortoppretting",
-                buildMap {
-                    put(
-                        "personId",
-                        personRepository.hentPersonId(person.ident) ?: throw IllegalArgumentException("Finner ikke personId"),
-                    )
-                    put("ident", person.ident)
-                    put("fraOgMed", fraOgMed)
-                    tilOgMed?.let { put("tilOgMed", it) }
-                    put("handling", "STOPP")
-                    put("referanseId", UUID.randomUUID().toString())
-                    put("skalMigreres", false)
-                },
-            )
+        try {
+            val message =
+                JsonMessage.newMessage(
+                    "meldekortoppretting",
+                    buildMap {
+                        put("personId", person.hentPersonId())
+                        put("ident", person.ident)
+                        put("fraOgMed", fraOgMed)
+                        tilOgMed?.let { put("tilOgMed", it) }
+                        put("handling", "STOPP")
+                        put("referanseId", UUID.randomUUID().toString())
+                        put("skalMigreres", false)
+                    },
+                )
 
-        sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }
-        getRapidsConnection().publish(person.ident, message.toJson())
+            sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }
+            getRapidsConnection().publish(person.ident, message.toJson())
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister" }
+            sikkerlogg.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister for person ${person.ident}" }
+            throw e
+        }
     }
+
+    private fun Person.hentPersonId(): Long =
+        personRepository.hentPersonId(ident)
+            ?: throw IllegalArgumentException("Finner ikke personId for ident $ident")
 }
