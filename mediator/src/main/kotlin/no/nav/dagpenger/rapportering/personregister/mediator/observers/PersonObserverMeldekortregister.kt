@@ -19,7 +19,8 @@ class PersonObserverMeldekortregister(
 
     override fun sendStartMeldingTilMeldekortregister(
         person: Person,
-        startDato: LocalDateTime,
+        fraOgMed: LocalDateTime,
+        tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
     ) {
         logger.info { "Sender Start-melding til Meldekortregister for person" }
@@ -28,14 +29,18 @@ class PersonObserverMeldekortregister(
         val message =
             JsonMessage.newMessage(
                 "meldekortoppretting",
-                mapOf(
-                    "personId" to (personRepository.hentPersonId(person.ident) ?: 0),
-                    "ident" to person.ident,
-                    "dato" to startDato,
-                    "handling" to "START",
-                    "referanseId" to UUID.randomUUID().toString(),
-                    "skalMigreres" to skalMigreres,
-                ),
+                buildMap {
+                    put(
+                        "personId",
+                        personRepository.hentPersonId(person.ident) ?: throw IllegalArgumentException("Finner ikke personId"),
+                    )
+                    put("ident", person.ident)
+                    put("fraOgMed", fraOgMed)
+                    tilOgMed?.let { put("tilOgMed", it) }
+                    put("handling", "START")
+                    put("referanseId", UUID.randomUUID().toString())
+                    put("skalMigreres", skalMigreres)
+                },
             )
 
         sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
@@ -44,7 +49,8 @@ class PersonObserverMeldekortregister(
 
     override fun sendStoppMeldingTilMeldekortregister(
         person: Person,
-        stoppDato: LocalDateTime,
+        fraOgMed: LocalDateTime,
+        tilOgMed: LocalDateTime?,
     ) {
         logger.info { "Sender Stopp-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Stopp-melding til Meldekortregister for person ${person.ident}" }
@@ -52,14 +58,18 @@ class PersonObserverMeldekortregister(
         val message =
             JsonMessage.newMessage(
                 "meldekortoppretting",
-                mapOf(
-                    "personId" to (personRepository.hentPersonId(person.ident) ?: 0),
-                    "ident" to person.ident,
-                    "dato" to stoppDato,
-                    "handling" to "STOPP",
-                    "referanseId" to UUID.randomUUID().toString(),
-                    "skalMigreres" to false,
-                ),
+                buildMap {
+                    put(
+                        "personId",
+                        personRepository.hentPersonId(person.ident) ?: throw IllegalArgumentException("Finner ikke personId"),
+                    )
+                    put("ident", person.ident)
+                    put("fraOgMed", fraOgMed)
+                    tilOgMed?.let { put("tilOgMed", it) }
+                    put("handling", "STOPP")
+                    put("referanseId", UUID.randomUUID().toString())
+                    put("skalMigreres", false)
+                },
             )
 
         sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }

@@ -31,7 +31,7 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, true)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, true)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -39,7 +39,8 @@ class PersonObserverMeldekortregisterTest {
         message["@event_name"].asText() shouldBe "meldekortoppretting"
         message["personId"].asLong() shouldBe personId
         message["ident"].asText() shouldBe ident
-        message["dato"].asLocalDateTime() shouldBe startDato
+        message["fraOgMed"].asLocalDateTime() shouldBe startDato
+        message["tilOgMed"] shouldBe null
         message["handling"].asText() shouldBe "START"
         message["referanseId"].asText() shouldNotBe null
         message["skalMigreres"].asBoolean() shouldBe true

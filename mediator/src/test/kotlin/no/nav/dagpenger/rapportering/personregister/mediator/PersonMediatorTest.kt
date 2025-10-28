@@ -642,11 +642,11 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato, any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato, any(), any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato) }
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato, any()) }
 }
 
 class BeslutningObserver(
