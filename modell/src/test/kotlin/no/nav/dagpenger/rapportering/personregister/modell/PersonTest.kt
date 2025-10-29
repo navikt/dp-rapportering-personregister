@@ -59,10 +59,11 @@ class PersonTest {
             arbeidssøker {
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse())
+                val vedtakHendelse = vedtakHendelse()
+                behandle(vedtakHendelse)
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
-                this skalHaSendtStartMeldingFor nå
+                this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
                 this.status shouldBe DAGPENGERBRUKER
             }
@@ -75,7 +76,7 @@ class PersonTest {
                 behandle(vedtakHendelse(utfall = false))
 
                 ansvarligSystem shouldBe AnsvarligSystem.ARENA
-                this skalIkkeHaSendtStoppMeldingFor nå
+                this skalIkkeHaSendtStoppMeldingFor Periode(nå)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
             }
@@ -87,10 +88,11 @@ class PersonTest {
                 hendelser.add(søknadHendelse(referanseId = søknadId))
                 behandle(vedtakHendelse(utfall = true))
 
-                behandle(vedtakHendelse(utfall = false))
+                val stansVedtak = vedtakHendelse(utfall = false)
+                behandle(stansVedtak)
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
-                this skalHaSendtStoppMeldingFor nå
+                this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
@@ -298,14 +300,19 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
 }
 
-infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato, any(), any()) }
+infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
 }
 
-infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato, any()) }
+infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato) }
 }
 
-infix fun Person.skalIkkeHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
-    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(stoppDato) }
+infix fun Person.skalIkkeHaSendtStoppMeldingFor(periode: Periode) {
+    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato) }
 }
+
+data class Periode(
+    val startDato: LocalDateTime,
+    val sluttDato: LocalDateTime? = null,
+)
