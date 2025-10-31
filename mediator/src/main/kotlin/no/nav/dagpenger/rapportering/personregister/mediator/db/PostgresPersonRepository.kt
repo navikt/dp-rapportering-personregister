@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.time.LocalDate
 import kotliquery.Row
 import kotliquery.TransactionalSession
 import kotliquery.queryOf
@@ -28,10 +27,11 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import org.postgresql.util.PGobject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
-import org.postgresql.util.PGobject
 
 class PostgresPersonRepository(
     private val dataSource: DataSource,
@@ -702,7 +702,6 @@ class PostgresPersonRepository(
                 .asList,
         )
 
-
     private fun tilHendelse(
         row: Row,
         ident: String,
@@ -950,8 +949,6 @@ class PostgresPersonRepository(
                 .map { row -> row.stringOrNull("ansvarlig_system") }
                 .asSingle,
         )
-
-
 
     private fun LocalDateTime.tilPostgresqlTimestamp() =
         when {
