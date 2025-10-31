@@ -27,7 +27,6 @@ class TaskExecutorTest {
         val meldepliktConnector = mockk<MeldepliktConnector>()
 
         coEvery { personRepository.hentHendelserSomSkalAktiveres() } returns emptyList()
-        coEvery { personRepository.hentHendelserSomSkalAktiveres() } returns emptyList()
 
         val aktiverHendelserJob =
             AktiverHendelserJob(

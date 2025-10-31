@@ -7,8 +7,6 @@ import io.kotest.matchers.date.after
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
-import java.time.LocalDate
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import kotliquery.using
@@ -32,6 +30,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -429,9 +428,10 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `kan lagre grenseverdier for datoer`() {
         withMigratedDb {
-            val person = testPerson(
-                hendelser = mutableListOf(vedtakHendelse(fraOgMed = LocalDate.MIN, tilOgMed = LocalDate.MAX)),
-            )
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(vedtakHendelse(fraOgMed = LocalDate.MIN, tilOgMed = LocalDate.MAX)),
+                )
             personRepository.lagrePerson(person)
             val rehydrertPerson = personRepository.hentPerson(ident)
             rehydrertPerson.shouldNotBeNull()
@@ -457,16 +457,15 @@ class PostgresPersonRepositoryTest {
     private fun vedtakHendelse(
         fraOgMed: LocalDate = LocalDate.now(),
         tilOgMed: LocalDate? = null,
-        harRett: Boolean = false
-    ) =
-        VedtakHendelse(
-            ident = ident,
-            dato = LocalDateTime.now(),
-            startDato = fraOgMed.atStartOfDay(),
-            sluttDato = tilOgMed?.atStartOfDay(),
-            referanseId = UUID.randomUUID().toString(),
-            utfall = harRett,
-        )
+        harRett: Boolean = false,
+    ) = VedtakHendelse(
+        ident = ident,
+        dato = LocalDateTime.now(),
+        startDato = fraOgMed.atStartOfDay(),
+        sluttDato = tilOgMed?.atStartOfDay(),
+        referanseId = UUID.randomUUID().toString(),
+        utfall = harRett,
+    )
 
     private fun søknadHendelse() =
         SøknadHendelse(
