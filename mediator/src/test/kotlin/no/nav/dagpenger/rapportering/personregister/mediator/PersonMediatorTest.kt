@@ -172,6 +172,27 @@ class PersonMediatorTest {
                     }
             }
         }
+
+        @Test
+        fun `søknad for eksisterende arbeidssøker med ansvarlig system DP`() {
+            arbeidssøker { }
+            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse()
+
+            val person = personRepository.hentPerson(ident)!!
+            person.setAnsvarligSystem(AnsvarligSystem.DP)
+            personRepository.oppdaterPerson(person)
+
+            val oppdatertPerson = personRepository.hentPerson(ident)!!
+            val søknadHendelse = søknadHendelse(ident)
+            personMediator.behandle(søknadHendelse)
+
+            oppdatertPerson.apply {
+                ident shouldBe ident
+                status shouldBe DAGPENGERBRUKER
+                this skalHaSendtStartMeldingFor søknadHendelse.startDato
+                personObserver skalHaSendtOvertakelseFor this
+            }
+        }
     }
 
     @Nested
