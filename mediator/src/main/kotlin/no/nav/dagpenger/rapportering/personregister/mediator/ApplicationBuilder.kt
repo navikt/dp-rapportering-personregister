@@ -33,8 +33,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ScheduledTask
+import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
@@ -201,7 +202,22 @@ internal class ApplicationBuilder(
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
 
-    private val aktiverHendelserJob = AktiverHendelserJob()
+    private val aktiverHendelserJob =
+        AktiverHendelserJob(
+            personRepository,
+            personService,
+            personMediator,
+            meldestatusMediator,
+            meldepliktConnector,
+        )
+    private val taskExecutor =
+        TaskExecutor(
+            listOf(
+                ScheduledTask(aktiverHendelserJob, 0, 1),
+            ),
+        )
+
+    // Midlertidige
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
     private val meldestatusJob = MeldestatusJob()
 
@@ -266,7 +282,9 @@ internal class ApplicationBuilder(
     override fun onStartup(rapidsConnection: RapidsConnection) {
         runMigration()
         databaseMetrikker.startRapporteringJobb(personRepository)
-        aktiverHendelserJob.start(personRepository, personService, personMediator, meldestatusMediator, meldepliktConnector)
+        taskExecutor.startExecution()
+
+        // Midlertidige
         resendPaaVegneAvJob.start(personRepository, personService)
         meldestatusJob.start(personService, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }

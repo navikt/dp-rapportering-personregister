@@ -14,71 +14,50 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
-import java.time.LocalTime
-import java.time.ZonedDateTime
-import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration.Companion.days
 import kotlin.time.measureTime
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal class AktiverHendelserJob(
+    private val personRepository: PersonRepository,
+    private val personService: PersonService,
+    private val personMediator: PersonMediator,
+    private val meldestatusMediator: MeldestatusMediator,
+    private val meldepliktConnector: MeldepliktConnector,
     private val httpClient: HttpClient = createHttpClient(),
-) {
-    private val tidspunktForKjoring = LocalTime.of(0, 1)
-    private val nå = ZonedDateTime.now()
-    private val tidspunktForNesteKjoring = nå.with(tidspunktForKjoring).plusDays(1)
-    private val millisekunderTilNesteKjoring =
-        tidspunktForNesteKjoring.toInstant().toEpochMilli() -
-            nå.toInstant().toEpochMilli() // differansen i millisekunder mellom de to tidspunktene
+) : Task {
+    override fun execute() {
+        try {
+            if (isLeader(httpClient, logger)) {
+                logger.info { "Starter jobb for å aktivere hendelser vi mottok med dato fram i tid" }
 
-    internal fun start(
-        personRepository: PersonRepository,
-        personService: PersonService,
-        personMediator: PersonMediator,
-        meldestatusMediator: MeldestatusMediator,
-        meldepliktConnector: MeldepliktConnector,
-    ) {
-        logger.info { "Tidspunkt for neste kjøring AktiverHendelserJob: $tidspunktForNesteKjoring" }
-        fixedRateTimer(
-            name = "Aktiver hendelser med dato fram i tid",
-            daemon = true,
-            initialDelay = millisekunderTilNesteKjoring.coerceAtLeast(0),
-            period = 1.days.inWholeMilliseconds,
-            action = {
-                try {
-                    if (isLeader(httpClient, logger)) {
-                        logger.info { "Starter jobb for å aktivere hendelser vi mottok med dato fram i tid" }
-
-                        var antallHendelser: Int
-                        val tidBrukt =
-                            measureTime {
-                                antallHendelser =
-                                    aktivererHendelser(
-                                        personRepository,
-                                        personService,
-                                        personMediator,
-                                        meldestatusMediator,
-                                        meldepliktConnector,
-                                    )
-                            }
-
-                        logger.info {
-                            "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
-                                "Aktiverte $antallHendelser på ${tidBrukt.inWholeSeconds} sekund(er)."
-                        }
-                    } else {
-                        logger.info { "Pod er ikke leader, så jobb for å aktivere fremtidige hendelser startes ikke" }
+                var antallHendelser: Int
+                val tidBrukt =
+                    measureTime {
+                        antallHendelser =
+                            aktivererHendelser(
+                                personRepository,
+                                personService,
+                                personMediator,
+                                meldestatusMediator,
+                                meldepliktConnector,
+                            )
                     }
-                } catch (e: Exception) {
-                    logger.error(e) { "Jobb for å aktivere hendelser mottatt med dato fram i tid feilet" }
+
+                logger.info {
+                    "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
+                        "Aktiverte $antallHendelser på ${tidBrukt.inWholeSeconds} sekund(er)."
                 }
-            },
-        )
+            } else {
+                logger.info { "Pod er ikke leader, så jobb for å aktivere fremtidige hendelser startes ikke" }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Jobb for å aktivere hendelser mottatt med dato fram i tid feilet" }
+        }
     }
 
-    fun aktivererHendelser(
+    private fun aktivererHendelser(
         personRepository: PersonRepository,
         personService: PersonService,
         personMediator: PersonMediator,
