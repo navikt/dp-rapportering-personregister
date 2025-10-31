@@ -178,14 +178,15 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
 }
 
 fun Person.sendStartMeldingTilMeldekortregister(
-    startDato: LocalDateTime,
+    fraOgMed: LocalDateTime,
+    tilOgMed: LocalDateTime? = null,
     skalMigreres: Boolean,
 ) {
     logger.info { "Sender Start-melding til Meldekortregister" }
 
     try {
         logger.info { "Antall observere: ${observers.size}" }
-        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, startDato, skalMigreres) }
+        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, skalMigreres) }
         logger.info { "Sendte Start-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }
@@ -193,12 +194,15 @@ fun Person.sendStartMeldingTilMeldekortregister(
     }
 }
 
-fun Person.sendStoppMeldingTilMeldekortregister(stoppDato: LocalDateTime) {
+fun Person.sendStoppMeldingTilMeldekortregister(
+    fraOgMed: LocalDateTime,
+    tilOgMed: LocalDateTime? = null,
+) {
     logger.info { "Sender Stopp-melding til Meldekortregister" }
 
     try {
         logger.info { "Antall observere: ${observers.size}" }
-        observers.forEach { observer -> observer.sendStoppMeldingTilMeldekortregister(this, stoppDato) }
+        observers.forEach { observer -> observer.sendStoppMeldingTilMeldekortregister(this, fraOgMed, tilOgMed) }
         logger.info { "Sendte Stopp-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Stopp-melding feilet!" }
