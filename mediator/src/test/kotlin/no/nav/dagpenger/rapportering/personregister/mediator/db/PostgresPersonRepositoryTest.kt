@@ -9,7 +9,6 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
@@ -220,7 +219,7 @@ class PostgresPersonRepositoryTest {
             personRepository.lagrePerson(person)
             val hendelse = meldegruppeHendelse(meldegruppeKode = "ARBS")
 
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 val personId =
                     session.run(
                         queryOf("select id from person where ident = ?", ident).map { it.int("id") }.asSingle,
@@ -324,7 +323,7 @@ class PostgresPersonRepositoryTest {
             personRepository.lagrePerson(person)
 
             val originalTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
@@ -338,7 +337,7 @@ class PostgresPersonRepositoryTest {
             personRepository.oppdaterPerson(person)
 
             val oppdatertTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
@@ -353,7 +352,7 @@ class PostgresPersonRepositoryTest {
             personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
             val avsluttetTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
