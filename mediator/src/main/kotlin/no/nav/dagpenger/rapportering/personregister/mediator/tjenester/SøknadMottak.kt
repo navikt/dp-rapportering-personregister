@@ -34,6 +34,7 @@ class SøknadMottak(
         meterRegistry: MeterRegistry,
     ) {
         logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
+        sikkerlogg.info { "Mottok søknad_innsendt_varsel melding: ${packet.toJson()}" }
         soknadMetrikker.soknaderMottatt.increment()
 
         try {
@@ -45,6 +46,7 @@ class SøknadMottak(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall.SøknadMottak")
     }
 }
 

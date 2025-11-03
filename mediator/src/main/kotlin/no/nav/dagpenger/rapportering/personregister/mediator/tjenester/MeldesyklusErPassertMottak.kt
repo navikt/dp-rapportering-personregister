@@ -18,6 +18,7 @@ class MeldesyklusErPassertMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall.MeldesyklusErPassertMottak")
     }
 
     init {
@@ -44,6 +45,7 @@ class MeldesyklusErPassertMottak(
         meterRegistry: MeterRegistry,
     ) {
         logger.info { "Mottok meldesyklus_er_passert melding" }
+        sikkerlogg.info { "Mottok meldesyklus_er_passert melding: ${packet.toJson()}" }
 
         val ident = packet["ident"].asText()
         val referanseId = packet["referanseId"].asText()
