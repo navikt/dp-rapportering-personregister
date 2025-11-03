@@ -192,7 +192,7 @@ open class ApiTestSetup {
 
     private fun clean() {
         println("Cleaning database")
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",

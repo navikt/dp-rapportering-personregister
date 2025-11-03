@@ -13,7 +13,7 @@ class PostgresTempPersonRepository(
     private val dataSource: DataSource,
 ) : TempPersonRepository {
     override fun hentPerson(ident: String): TempPerson? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query = queryOf("SELECT ident, status FROM temp_person WHERE ident = ?", ident)
                 val rowMapper: (Row) -> TempPerson? = { row ->
@@ -31,7 +31,7 @@ class PostgresTempPersonRepository(
             logger.warn { "Personen eksiterer allerede" }
             return
         }
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query =
                     queryOf(
@@ -45,7 +45,7 @@ class PostgresTempPersonRepository(
     }
 
     override fun oppdaterPerson(person: TempPerson): TempPerson? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query =
                     queryOf(
@@ -64,7 +64,7 @@ class PostgresTempPersonRepository(
         }
 
     override fun slettPerson(ident: String) {
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query = queryOf("DELETE FROM temp_person WHERE ident = ?", ident)
                 tx.run(query.asUpdate)
@@ -73,7 +73,7 @@ class PostgresTempPersonRepository(
     }
 
     override fun hentAlleIdenter(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query = queryOf("SELECT ident FROM temp_person")
                 val rowMapper: (Row) -> String = { row -> row.string("ident") }
@@ -85,7 +85,7 @@ class PostgresTempPersonRepository(
         status: TempPersonStatus,
         batchSize: Int,
     ): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query = queryOf("SELECT ident FROM temp_person WHERE status = ? LIMIT ?", status.name, batchSize)
                 val rowMapper: (Row) -> String = { row -> row.string("ident") }
@@ -94,7 +94,7 @@ class PostgresTempPersonRepository(
         }
 
     override fun isEmpty(): Boolean =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             (
                 session.run(
                     queryOf("SELECT COUNT(*) FROM temp_person")
@@ -105,7 +105,7 @@ class PostgresTempPersonRepository(
         }
 
     override fun syncPersoner() {
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 val query =
                     queryOf(

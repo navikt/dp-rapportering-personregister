@@ -15,7 +15,7 @@ class PostgressArbeidssøkerBeslutningRepository(
 ) : ArbeidssøkerBeslutningRepository {
     override fun hentBeslutning(id: String) =
         actionTimer.timedAction("db-hentBeslutning") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 val personId = hentPersonId(id)
 
                 session.run(
@@ -33,7 +33,7 @@ class PostgressArbeidssøkerBeslutningRepository(
 
     override fun lagreBeslutning(beslutning: ArbeidssøkerBeslutning) {
         actionTimer.timedAction("db-lagreBeslutning") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 val personId = hentPersonId(beslutning.ident)
 
                 session.transaction { tx ->
@@ -56,7 +56,7 @@ class PostgressArbeidssøkerBeslutningRepository(
 
     override fun hentBeslutninger(ident: String): List<ArbeidssøkerBeslutning> =
         actionTimer.timedAction("db-hentBeslutninger") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 val personId = hentPersonId(ident)
 
                 session.run(
@@ -73,7 +73,7 @@ class PostgressArbeidssøkerBeslutningRepository(
         }
 
     private fun hentPersonId(ident: String): Long =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf("SELECT id FROM person WHERE ident = ?", ident)
                     .map { it.long("id") }

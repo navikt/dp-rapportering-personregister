@@ -29,7 +29,7 @@ class BehandlingRepositoryPostgres(
     }.let { if (it == 0) throw Exception("Lagring av behandling feilet") }
 
     override fun hentSisteSakId(ident: String): String? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     "SELECT sak_id " +

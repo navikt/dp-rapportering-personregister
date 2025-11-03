@@ -39,7 +39,7 @@ class PostgresPersonRepository(
 ) : PersonRepository {
     override fun hentPerson(ident: String): Person? =
         actionTimer.timedAction("db-hentPerson") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     val personId = hentPersonId(ident) ?: return@transaction null
                     val statusHistorikk = hentStatusHistorikk(personId, tx)
@@ -70,7 +70,7 @@ class PostgresPersonRepository(
 
     override fun finnesPerson(ident: String): Boolean =
         actionTimer.timedAction("db-finnesPerson") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT EXISTS(SELECT 1 FROM person WHERE ident = :ident)", mapOf("ident" to ident))
                         .map { it.boolean(1) }
@@ -81,7 +81,7 @@ class PostgresPersonRepository(
 
     override fun lagrePerson(person: Person) =
         actionTimer.timedAction("db-lagrePerson") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     val personId =
                         tx.run(
@@ -117,7 +117,7 @@ class PostgresPersonRepository(
 
     override fun oppdaterPerson(person: Person) =
         actionTimer.timedAction("db-oppdaterPerson") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     val personId = hentPersonId(person.ident) ?: throw IllegalStateException("Person finnes ikke")
                     val updateRows =
@@ -166,7 +166,7 @@ class PostgresPersonRepository(
         person: Person,
         nyIdent: String,
     ) = actionTimer.timedAction("db-oppdaterIdent") {
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.transaction { tx ->
                 tx.run(
                     queryOf(
@@ -193,7 +193,7 @@ class PostgresPersonRepository(
 
     override fun hentAntallPersoner(): Int =
         actionTimer.timedAction("db-hentAntallPersoner") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM person")
                         .map { it.int(1) }
@@ -204,7 +204,7 @@ class PostgresPersonRepository(
 
     override fun hentAntallHendelser(): Int =
         actionTimer.timedAction("db-hentAntallHendelser") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM hendelse")
                         .map { it.int(1) }
@@ -215,7 +215,7 @@ class PostgresPersonRepository(
 
     override fun hentAntallFremtidigeHendelser(): Int =
         actionTimer.timedAction("db-hentAntallFremtidigeHendelser") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM fremtidig_hendelse")
                         .map { it.int(1) }
@@ -226,7 +226,7 @@ class PostgresPersonRepository(
 
     override fun hentAntallDagpengebrukere(): Int =
         actionTimer.timedAction("db-hentAntallDagpengebrukere") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM person WHERE status = 'DAGPENGERBRUKER'")
                         .map { it.int(1) }
@@ -237,7 +237,7 @@ class PostgresPersonRepository(
 
     override fun hentAntallOvetagelser(): Int =
         actionTimer.timedAction("db-hentAntallOvertagelser") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf("SELECT COUNT(*) FROM arbeidssoker WHERE overtatt_bekreftelse = true")
                         .map { it.int(1) }
@@ -248,11 +248,12 @@ class PostgresPersonRepository(
 
     override fun lagreFremtidigHendelse(hendelse: Hendelse) =
         actionTimer.timedAction("db-lagreFremtidigHendelse") {
-            using(sessionOf(dataSource)) { session ->
-                session.transaction { tx ->
-                    tx.run(
-                        queryOf(
-                            """
+            sessionOf(dataSource)
+                .use { session ->
+                    session.transaction { tx ->
+                        tx.run(
+                            queryOf(
+                                """
                 INSERT INTO fremtidig_hendelse (ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
@@ -265,23 +266,23 @@ class PostgresPersonRepository(
                     type = EXCLUDED.type,
                     extra = EXCLUDED.extra
                 """,
-                            hendelse.ident,
-                            hendelse.dato,
-                            hendelse.hentStartDato(),
-                            hendelse.hentSluttDato(),
-                            hendelse.kilde.name,
-                            hendelse.referanseId,
-                            hendelse::class.simpleName,
-                            hendelse.hentEkstrafelter(),
-                        ).asUpdate,
-                    )
-                }
-            }.validateRowsAffected()
+                                hendelse.ident,
+                                hendelse.dato,
+                                hendelse.hentStartDato(),
+                                hendelse.hentSluttDato(),
+                                hendelse.kilde.name,
+                                hendelse.referanseId,
+                                hendelse::class.simpleName,
+                                hendelse.hentEkstrafelter(),
+                            ).asUpdate,
+                        )
+                    }
+                }.validateRowsAffected()
         }
 
     override fun hentHendelserSomSkalAktiveres(): List<Hendelse> =
         actionTimer.timedAction("db-hentHendelserSomSkalAktiveres") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.run(
                     queryOf(
                         """
@@ -298,23 +299,24 @@ class PostgresPersonRepository(
 
     override fun slettFremtidigHendelse(referanseId: String) =
         actionTimer.timedAction("db-slettFremtidigHendelse") {
-            using(sessionOf(dataSource)) { session ->
-                session.transaction { tx ->
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM fremtidig_hendelse WHERE referanse_id = :referanse_id",
-                            mapOf(
-                                "referanse_id" to referanseId,
-                            ),
-                        ).asUpdate,
-                    )
-                }
-            }.validateRowsAffected()
+            sessionOf(dataSource)
+                .use { session ->
+                    session.transaction { tx ->
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM fremtidig_hendelse WHERE referanse_id = :referanse_id",
+                                mapOf(
+                                    "referanse_id" to referanseId,
+                                ),
+                            ).asUpdate,
+                        )
+                    }
+                }.validateRowsAffected()
         }
 
     override fun slettFremtidigeArenaHendelser(ident: String): Int =
         actionTimer.timedAction("db-slettFremtidigeArenaHendelser") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     tx.run(
                         queryOf(
@@ -330,7 +332,7 @@ class PostgresPersonRepository(
 
     override fun slettFremtidigeVedtakHendelser(ident: String): Int =
         actionTimer.timedAction("db-slettFremtidigeVedtakHendelser") {
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     tx.run(
                         queryOf(
@@ -345,7 +347,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonerMedDagpenger(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -359,7 +361,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonerMedDagpengerOgAktivPerioode(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -373,7 +375,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonerMedDagpengerUtenArbeidssokerperiode(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -388,7 +390,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonerSomKanSlettes(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -410,65 +412,66 @@ class PostgresPersonRepository(
 
     override fun slettPerson(ident: String) =
         actionTimer.timedAction("db-slettPerson") {
-            using(sessionOf(dataSource)) { session ->
-                session.transaction { tx ->
-                    val personId = hentPersonId(ident)
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM fremtidig_hendelse WHERE ident = :ident",
-                            mapOf(
-                                "ident" to ident,
-                            ),
-                        ).asUpdate,
-                    )
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM status_historikk WHERE person_id = :person_id",
-                            mapOf(
-                                "person_id" to personId,
-                            ),
-                        ).asUpdate,
-                    )
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM hendelse WHERE person_id = :person_id",
-                            mapOf(
-                                "person_id" to personId,
-                            ),
-                        ).asUpdate,
-                    )
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM arbeidssoker WHERE person_id = :person_id",
-                            mapOf(
-                                "person_id" to personId,
-                            ),
-                        ).asUpdate,
-                    )
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM arbeidssoker_beslutning WHERE person_id = :person_id",
-                            mapOf(
-                                "person_id" to personId,
-                            ),
-                        ).asUpdate,
-                    )
-                    tx.run(
-                        queryOf(
-                            "DELETE FROM person WHERE ident = :ident",
-                            mapOf(
-                                "ident" to ident,
-                            ),
-                        ).asUpdate,
-                    )
-                }
-            }.validateRowsAffected()
+            sessionOf(dataSource)
+                .use { session ->
+                    session.transaction { tx ->
+                        val personId = hentPersonId(ident)
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM fremtidig_hendelse WHERE ident = :ident",
+                                mapOf(
+                                    "ident" to ident,
+                                ),
+                            ).asUpdate,
+                        )
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM status_historikk WHERE person_id = :person_id",
+                                mapOf(
+                                    "person_id" to personId,
+                                ),
+                            ).asUpdate,
+                        )
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM hendelse WHERE person_id = :person_id",
+                                mapOf(
+                                    "person_id" to personId,
+                                ),
+                            ).asUpdate,
+                        )
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM arbeidssoker WHERE person_id = :person_id",
+                                mapOf(
+                                    "person_id" to personId,
+                                ),
+                            ).asUpdate,
+                        )
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM arbeidssoker_beslutning WHERE person_id = :person_id",
+                                mapOf(
+                                    "person_id" to personId,
+                                ),
+                            ).asUpdate,
+                        )
+                        tx.run(
+                            queryOf(
+                                "DELETE FROM person WHERE ident = :ident",
+                                mapOf(
+                                    "ident" to ident,
+                                ),
+                            ).asUpdate,
+                        )
+                    }
+                }.validateRowsAffected()
         }
 
     override fun hentPersonMedPeriodeId(periodeId: UUID): Person? {
         val ident =
             try {
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             """
@@ -495,7 +498,7 @@ class PostgresPersonRepository(
     }
 
     override fun hentPersonerMedDagpengerMedAvvikBekreftelse() =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -510,7 +513,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonerUtenDagpengerMedAvvikBekreftelse() =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -525,7 +528,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentAlleIdenter(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf("SELECT ident FROM person")
                     .map { it.string("ident") }
@@ -534,7 +537,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentIdenterMedAvvik(): List<String> =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
@@ -546,7 +549,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentPersonId(ident: String): Long? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf("SELECT id FROM person WHERE ident = :ident", mapOf("ident" to ident))
                     .map { row -> row.long("id") }
@@ -555,7 +558,7 @@ class PostgresPersonRepository(
         }
 
     override fun hentIdent(personId: Long): String? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf("SELECT ident FROM person WHERE id = :id", mapOf("id" to personId))
                     .map { row -> row.string("ident") }
