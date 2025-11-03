@@ -44,6 +44,7 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
 kotlin {
     jvmToolchain(21)

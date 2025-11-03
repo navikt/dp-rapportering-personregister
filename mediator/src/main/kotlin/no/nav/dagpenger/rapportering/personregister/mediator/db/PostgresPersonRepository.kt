@@ -27,6 +27,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import org.postgresql.util.PGobject
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
@@ -578,6 +580,7 @@ class PostgresPersonRepository(
     ) = actionTimer.timedAction("db-lagreHendelse") {
         tx.run(
             queryOf(
+                // language=PostgreSQL
                 """
                 INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
@@ -593,8 +596,8 @@ class PostgresPersonRepository(
                 """,
                 personId,
                 hendelse.dato,
-                hendelse.hentStartDato(),
-                hendelse.hentSluttDato(),
+                hendelse.hentStartDato()?.tilPostgresqlTimestamp(),
+                hendelse.hentSluttDato()?.tilPostgresqlTimestamp(),
                 hendelse.kilde.name,
                 hendelse.referanseId,
                 hendelse::class.simpleName,
@@ -705,8 +708,8 @@ class PostgresPersonRepository(
     ): Hendelse {
         val type = row.string("type")
         val dato = row.localDateTime("dato")
-        val startDato = row.localDateTimeOrNull("start_dato")
-        val sluttDato = row.localDateTimeOrNull("slutt_dato")
+        val startDato = row.fraPostgresqlTimestamp("start_dato")
+        val sluttDato = row.fraPostgresqlTimestamp("slutt_dato")
         val referanseId = row.string("referanse_id")
         val extra = row.stringOrNull("extra")
         val kilde = row.string("kilde")
@@ -946,6 +949,30 @@ class PostgresPersonRepository(
                 .map { row -> row.stringOrNull("ansvarlig_system") }
                 .asSingle,
         )
+
+    private fun LocalDateTime.tilPostgresqlTimestamp() =
+        when {
+            this.toLocalDate().isEqual(LocalDate.MIN) ->
+                PGobject().apply {
+                    type = "timestamp"
+                    value = "-infinity"
+                }
+
+            this.toLocalDate().isEqual(LocalDate.MAX) ->
+                PGobject().apply {
+                    type = "timestamp"
+                    value = "infinity"
+                }
+
+            else -> this
+        }
+
+    private fun Row.fraPostgresqlTimestamp(kolonneNavn: String): LocalDateTime? =
+        when (this.stringOrNull(kolonneNavn)) {
+            "-infinity" -> LocalDateTime.MIN
+            "infinity" -> LocalDateTime.MAX
+            else -> this.localDateTimeOrNull(kolonneNavn)
+        }
 
     companion object {
         val logger = KotlinLogging.logger {}

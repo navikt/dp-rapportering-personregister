@@ -2,7 +2,9 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.date.after
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotliquery.queryOf
@@ -28,6 +30,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -422,6 +425,25 @@ class PostgresPersonRepositoryTest {
         }
     }
 
+    @Test
+    fun `kan lagre grenseverdier for datoer`() {
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(vedtakHendelse(fraOgMed = LocalDate.MIN, tilOgMed = LocalDate.MAX)),
+                )
+            personRepository.lagrePerson(person)
+            val rehydrertPerson = personRepository.hentPerson(ident)
+            rehydrertPerson.shouldNotBeNull()
+            rehydrertPerson.hendelser.shouldNotBeEmpty()
+            rehydrertPerson.hendelser.first().also {
+                (it is VedtakHendelse) shouldBe true
+                val vedtakHendelse = it as VedtakHendelse
+                vedtakHendelse.startDato shouldBe LocalDateTime.MIN
+            }
+        }
+    }
+
     private fun testPerson(
         hendelser: MutableList<Hendelse> = mutableListOf(),
         arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),
@@ -431,6 +453,19 @@ class PostgresPersonRepositoryTest {
         statusHistorikk = statusHistorikk(mapOf(nå to status)),
         arbeidssøkerperioder = arbeidssøkerperiode,
     ).apply { this.hendelser.addAll(hendelser) }
+
+    private fun vedtakHendelse(
+        fraOgMed: LocalDate = LocalDate.now(),
+        tilOgMed: LocalDate? = null,
+        harRett: Boolean = false,
+    ) = VedtakHendelse(
+        ident = ident,
+        dato = LocalDateTime.now(),
+        startDato = fraOgMed.atStartOfDay(),
+        sluttDato = tilOgMed?.atStartOfDay(),
+        referanseId = UUID.randomUUID().toString(),
+        utfall = harRett,
+    )
 
     private fun søknadHendelse() =
         SøknadHendelse(
