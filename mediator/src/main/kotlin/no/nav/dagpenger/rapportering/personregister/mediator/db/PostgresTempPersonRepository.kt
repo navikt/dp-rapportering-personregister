@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}

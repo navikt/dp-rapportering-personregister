@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import kotliquery.Row
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling

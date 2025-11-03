@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
