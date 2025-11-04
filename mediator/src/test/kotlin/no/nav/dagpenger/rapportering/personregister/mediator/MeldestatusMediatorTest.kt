@@ -137,22 +137,6 @@ class MeldestatusMediatorTest {
     private val periodeId = UUID.randomUUID()
 
     @Test
-    fun `meldestatusHendelse for ikke eksisterende person`() {
-        val arenaPersonId = 1L
-        val meldestatusResponse =
-            MeldestatusResponse(
-                arenaPersonId = arenaPersonId,
-                personIdent = ident,
-                formidlingsgruppe = "DAGP",
-                harMeldtSeg = true,
-            )
-        coEvery { meldepliktConnector.hentMeldestatus(eq(arenaPersonId), any(), any()) } returns meldestatusResponse
-
-        meldestatusMediator.behandle(meldestatusHendelse())
-        personRepository.hentPerson(ident) shouldBe null
-    }
-
-    @Test
     fun `meldestatusHendelse for arbeidssøker`() {
         val arenaPersonId = 2L
         val meldestatusResponse = meldestatusResponse(arenaPersonId)

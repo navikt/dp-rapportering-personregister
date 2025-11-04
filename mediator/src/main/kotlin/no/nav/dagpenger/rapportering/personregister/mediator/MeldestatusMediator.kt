@@ -44,7 +44,7 @@ class MeldestatusMediator(
                 throw RuntimeException("Kunne ikke hente meldestatus")
             }
 
-            personService.hentPerson(meldestatus.personIdent)?.let { person ->
+            personService.hentEllerOpprettPerson(meldestatus.personIdent).let { person ->
                 if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
                     behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
                 } else {

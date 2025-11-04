@@ -57,6 +57,15 @@ class PersonService(
         }
     }
 
+    fun hentEllerOpprettPerson(ident: String): Person =
+        hentPerson(ident) ?: Person(ident)
+            .also { person ->
+                if (person.observers.isEmpty()) {
+                    personObservers.forEach { observer -> person.addObserver(observer) }
+                }
+                personRepository.lagrePerson(person)
+            }
+
     fun hentPerson(ident: String): Person? {
         logger.info { "Henter person" }
         // Henter alle personens identer fra PDL
