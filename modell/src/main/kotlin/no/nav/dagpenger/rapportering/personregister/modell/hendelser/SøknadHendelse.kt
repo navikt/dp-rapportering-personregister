@@ -22,7 +22,7 @@ data class SøknadHendelse(
 
         if (person.ansvarligSystem == AnsvarligSystem.DP) {
             person.setHarRettTilDp(true)
-            person.sendStartMeldingTilMeldekortregister(startDato = startDato, skalMigreres = false)
+            person.sendStartMeldingTilMeldekortregister(fraOgMed = startDato, skalMigreres = false)
         }
 
         person

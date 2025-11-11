@@ -189,7 +189,7 @@ class PersonMediatorTest {
             oppdatertPerson.apply {
                 ident shouldBe ident
                 status shouldBe DAGPENGERBRUKER
-                this skalHaSendtStartMeldingFor søknadHendelse.startDato
+                this skalHaSendtStartMeldingFor Periode(søknadHendelse.startDato)
                 personObserver skalHaSendtOvertakelseFor this
             }
         }
