@@ -31,11 +31,11 @@ data class VedtakHendelse(
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
             person.setHarRettTilDp(true)
-            person.sendStartMeldingTilMeldekortregister(startDato = startDato, skalMigreres = skalMigreres)
+            person.sendStartMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, skalMigreres = skalMigreres)
         } else {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
-                person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
+                person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
             }
         }
 

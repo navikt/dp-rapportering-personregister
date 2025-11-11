@@ -93,7 +93,15 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     ),
                 )
 
-            val aktiverHendelserJob = AktiverHendelserJob(client)
+            val aktiverHendelserJob =
+                AktiverHendelserJob(
+                    personRepository,
+                    personService,
+                    personMediator,
+                    meldestatusMediator,
+                    meldepliktConnector,
+                    client,
+                )
             val nå = LocalDateTime.now()
 
             val person1 =
@@ -233,15 +241,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 oppfyllerKrav shouldBe false
             }
 
-            val antallHendelserAktivert =
-                aktiverHendelserJob.aktivererHendelser(
-                    personRepository,
-                    personService,
-                    personMediator,
-                    meldestatusMediator,
-                    meldepliktConnector,
-                )
-            antallHendelserAktivert shouldBe 3
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 3
+            aktiverHendelserJob.execute()
             personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
 
             with(personRepository.hentPerson(ident1)!!) {

@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall.MeldestatusMottak")
 
 class MeldestatusMottak(
     rapidsConnection: RapidsConnection,
@@ -40,6 +41,7 @@ class MeldestatusMottak(
         meterRegistry: MeterRegistry,
     ) {
         logger.info { "Mottok ny meldestatusendring" }
+        sikkerlogg.info { "Mottok ny meldestatusendring: ${packet.toJson()}" }
 
         try {
             val hendelse = packet.tilHendelse()

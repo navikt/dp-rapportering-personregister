@@ -222,7 +222,9 @@ class PersonMediatorTest {
                 person.merkPeriodeSomOvertatt(periodeId)
             }
 
-            personMediator.behandle(vedtakHendelse(ident))
+            val vedtakHendelse = vedtakHendelse(ident)
+
+            personMediator.behandle(vedtakHendelse)
 
             personRepository
                 .hentPerson(ident)
@@ -237,7 +239,7 @@ class PersonMediatorTest {
                 runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
-                this skalHaSendtStartMeldingFor nå
+                this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
             }
         }
 
@@ -252,7 +254,9 @@ class PersonMediatorTest {
                 person.merkPeriodeSomIkkeOvertatt(periodeId)
             }
 
-            personMediator.behandle(vedtakHendelse(ident, utfall = false))
+            val vedtakHendelse = vedtakHendelse(ident, utfall = false)
+
+            personMediator.behandle(vedtakHendelse)
             personRepository
                 .hentPerson(ident)
                 ?.apply {
@@ -266,7 +270,7 @@ class PersonMediatorTest {
                 runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 personObserver skalHaFrasagtAnsvaretFor this
-                this skalHaSendtStoppMeldingFor nå
+                this skalHaSendtStoppMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
             }
         }
     }
@@ -507,7 +511,7 @@ class PersonMediatorTest {
 
                 personMediator.behandle(nødbremsHendelse())
                 with(this) {
-                    this skalHaSendtStoppMeldingFor nå
+                    this skalHaSendtStoppMeldingFor Periode(nå)
                     ansvarligSystem shouldBe AnsvarligSystem.ARENA
                     harRettTilDp shouldBe false
                     status shouldBe DAGPENGERBRUKER
@@ -590,9 +594,10 @@ class PersonMediatorTest {
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
+        sluttDato: LocalDateTime = startDato.plusDays(10),
         referanseId: String = "456",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, startDato.plusDays(10), utfall)
+    ) = VedtakHendelse(ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
@@ -662,12 +667,12 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
     verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
 }
 
-infix fun Person.skalHaSendtStartMeldingFor(startDato: LocalDateTime) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(startDato, any()) }
+infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
 }
 
-infix fun Person.skalHaSendtStoppMeldingFor(stoppDato: LocalDateTime) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(stoppDato) }
+infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed) }
 }
 
 class BeslutningObserver(
@@ -718,3 +723,8 @@ class ArbeidssøkerBeslutningRepositoryFaker : ArbeidssøkerBeslutningRepository
 
     override fun hentBeslutninger(ident: String) = beslutninger.filter { it.ident == ident }
 }
+
+data class Periode(
+    val fraOgMed: LocalDateTime,
+    val tilOgMed: LocalDateTime? = null,
+)

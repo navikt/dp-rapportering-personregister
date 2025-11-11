@@ -11,18 +11,32 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
-import java.time.OffsetDateTime
+import java.time.LocalDateTime
+import java.util.UUID
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val personStatusMediator: PersonMediator,
     private val soknadMetrikker: SoknadMetrikker,
 ) : River.PacketListener {
+    private val quizSøknadIdNøkkel = "søknadsData.søknad_uuid"
+    private val legacySøknadIdNøkkel = "søknadsData.brukerBehandlingId"
+
     init {
         River(rapidsConnection)
             .apply {
-                validate { it.requireValue("@event_name", "søknad_innsendt_varsel") }
-                validate { it.requireKey("@id", "ident", "søknadId", "søknadstidspunkt") }
+                precondition { it.requireValue("@event_name", "innsending_ferdigstilt") }
+                validate {
+                    it.requireKey(
+                        "fødselsnummer",
+                        "datoRegistrert",
+                    )
+                    it.requireAny("type", listOf("NySøknad", "Gjenopptak"))
+                    it.interestedIn(
+                        quizSøknadIdNøkkel,
+                        legacySøknadIdNøkkel,
+                    )
+                }
             }.register(this)
     }
 
@@ -33,7 +47,8 @@ class SøknadMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok søknad innsendt hendelse for søknad ${packet["søknadId"]}" }
+        logger.info { "Mottok innsending_ferdigstilt melding" }
+        sikkerlogg.info { "Mottok innsending_ferdigstilt melding: ${packet.toJson()}" }
         soknadMetrikker.soknaderMottatt.increment()
 
         try {
@@ -45,14 +60,22 @@ class SøknadMottak(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall.SøknadMottak")
     }
-}
 
-private fun JsonMessage.tilHendelse(): SøknadHendelse {
-    val ident = this["ident"].asText()
-    val referanseId = this["søknadId"].asText()
-    val datoString = this["søknadstidspunkt"].asText()
-    val dato = OffsetDateTime.parse(datoString).toLocalDateTime()
+    private fun JsonMessage.tilHendelse(): SøknadHendelse {
+        val ident = this["fødselsnummer"].asText()
+        val dato = LocalDateTime.parse(this["datoRegistrert"].asText())
 
-    return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
+        val referanseId =
+            if (!this[quizSøknadIdNøkkel].isMissingNode) {
+                this[quizSøknadIdNøkkel].asText()
+            } else if (!this[legacySøknadIdNøkkel].isMissingNode) {
+                this[legacySøknadIdNøkkel].asText()
+            } else {
+                UUID.randomUUID().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
+            }
+
+        return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
+    }
 }

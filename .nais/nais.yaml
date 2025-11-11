@@ -84,9 +84,6 @@ spec:
         - application: dp-meldekortregister
         - application: dp-saksbehandling-frontend
         - application: dp-rapportering-saksbehandling-frontend
-        - application: azure-token-generator
-          namespace: nais
-          cluster: dev-gcp
         {{#each additionalInbounds}}
         - application: "{{application}}"
           namespace: "{{namespace}}"

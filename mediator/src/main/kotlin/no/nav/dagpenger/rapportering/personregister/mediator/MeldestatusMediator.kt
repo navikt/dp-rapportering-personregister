@@ -44,6 +44,24 @@ class MeldestatusMediator(
                 throw RuntimeException("Kunne ikke hente meldestatus")
             }
 
+            // Sjekker om det finnes nåværende eller fremtidige DAGP-meldegrupper
+            val skalOpprette =
+                meldestatus.meldegruppeListe?.any {
+                    it.meldegruppe == "DAGP" &&
+                        (
+                            it.meldegruppeperiode == null ||
+                                (
+                                    LocalDateTime.now() >= it.meldegruppeperiode?.fom &&
+                                        (it.meldegruppeperiode?.tom == null || LocalDateTime.now() <= it.meldegruppeperiode?.tom) ||
+                                        LocalDateTime.now() <= it.meldegruppeperiode?.fom
+                                )
+                        )
+                }
+
+            if (skalOpprette == true) {
+                personService.hentEllerOpprettPerson(meldestatus.personIdent)
+            }
+
             personService.hentPerson(meldestatus.personIdent)?.let { person ->
                 if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
                     behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)

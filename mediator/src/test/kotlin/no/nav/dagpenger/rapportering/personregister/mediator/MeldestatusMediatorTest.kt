@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -137,15 +138,19 @@ class MeldestatusMediatorTest {
     private val periodeId = UUID.randomUUID()
 
     @Test
-    fun `meldestatusHendelse for ikke eksisterende person`() {
+    fun `meldestatusHendelse for ikke eksisterende person med DAGP`() {
         val arenaPersonId = 1L
-        val meldestatusResponse =
-            MeldestatusResponse(
-                arenaPersonId = arenaPersonId,
-                personIdent = ident,
-                formidlingsgruppe = "DAGP",
-                harMeldtSeg = true,
-            )
+        val meldestatusResponse = meldestatusResponse(arenaPersonId)
+        coEvery { meldepliktConnector.hentMeldestatus(eq(arenaPersonId), any(), any()) } returns meldestatusResponse
+
+        meldestatusMediator.behandle(meldestatusHendelse())
+        personRepository.hentPerson(ident) shouldNotBe null
+    }
+
+    @Test
+    fun `meldestatusHendelse for ikke eksisterende person uten DAGP`() {
+        val arenaPersonId = 1L
+        val meldestatusResponse = meldestatusResponse(arenaPersonId, medGjeldende = false)
         coEvery { meldepliktConnector.hentMeldestatus(eq(arenaPersonId), any(), any()) } returns meldestatusResponse
 
         meldestatusMediator.behandle(meldestatusHendelse())

@@ -2,7 +2,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import javax.sql.DataSource
 
 class BehandlingRepositoryPostgres(
@@ -13,23 +12,24 @@ class BehandlingRepositoryPostgres(
         søknadId: String,
         ident: String,
         sakId: String,
-    ) = using(sessionOf(dataSource, true)) { session ->
-        session
-            .run(
-                queryOf(
-                    "INSERT INTO behandling " +
-                        "(behandling_id, soknad_id, ident, sak_id) " +
-                        "VALUES (?, ?, ?, ?)",
-                    behandlingId,
-                    søknadId,
-                    ident,
-                    sakId,
-                ).asUpdate,
-            )
-    }.let { if (it == 0) throw Exception("Lagring av behandling feilet") }
+    ) = sessionOf(dataSource)
+        .use { session ->
+            session
+                .run(
+                    queryOf(
+                        "INSERT INTO behandling " +
+                            "(behandling_id, soknad_id, ident, sak_id) " +
+                            "VALUES (?, ?, ?, ?)",
+                        behandlingId,
+                        søknadId,
+                        ident,
+                        sakId,
+                    ).asUpdate,
+                )
+        }.let { if (it == 0) throw Exception("Lagring av behandling feilet") }
 
     override fun hentSisteSakId(ident: String): String? =
-        using(sessionOf(dataSource)) { session ->
+        sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     "SELECT sak_id " +

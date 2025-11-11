@@ -36,7 +36,8 @@ class PersonMediator(
     ): Unit =
         actionTimer.timedAction("behandle_SoknadHendelse") {
             logger.info { "Behandler søknadshendelse: ${søknadHendelse.referanseId}" }
-            hentEllerOpprettPerson(søknadHendelse.ident)
+            personService
+                .hentEllerOpprettPerson(søknadHendelse.ident)
                 .also { person ->
                     person.behandle(søknadHendelse)
                     try {
@@ -58,7 +59,8 @@ class PersonMediator(
         actionTimer.timedAction("behandle_VedtakHendelse") {
             logger.info { "Behandler vedtakshendelse: ${vedtakHendelse.referanseId}" }
             if (unleash.isEnabled("dp-rapportering-personregister-les-vedtak")) {
-                hentEllerOpprettPerson(vedtakHendelse.ident)
+                personService
+                    .hentEllerOpprettPerson(vedtakHendelse.ident)
                     .also { person ->
                         person.behandle(vedtakHendelse)
                         try {
@@ -84,7 +86,8 @@ class PersonMediator(
             if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
                 logger.info { "DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
-                hentEllerOpprettPerson(hendelse.ident)
+                personService
+                    .hentEllerOpprettPerson(hendelse.ident)
                     .also { person ->
                         if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
                             person.behandle(hendelse)
@@ -131,7 +134,8 @@ class PersonMediator(
     ): Unit =
         actionTimer.coTimedAction("behandle_PersonSynkroniseringHendelse") {
             logger.info { "Behandler PersonSynkroniseringHendelse: ${hendelse.referanseId}" }
-            hentEllerOpprettPerson(hendelse.ident)
+            personService
+                .hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
                     person.behandle(hendelse)
                     try {
@@ -152,7 +156,8 @@ class PersonMediator(
     ): Unit =
         actionTimer.coTimedAction("behandle_PersonIkkeDagpengerSynkroniseringHendelse") {
             logger.info { "Behandler PersonIkkeDagpengerSynkroniseringHendelse: ${hendelse.referanseId}" }
-            hentEllerOpprettPerson(hendelse.ident)
+            personService
+                .hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
                     person.behandle(hendelse)
                     try {
@@ -173,7 +178,8 @@ class PersonMediator(
     ): Unit =
         actionTimer.timedAction("behandle_MeldesyklusErPassertHendelse") {
             logger.info { "Behandler MeldesyklusErPassertHendelse: ${hendelse.referanseId}" }
-            hentEllerOpprettPerson(hendelse.ident)
+            personService
+                .hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
                     person.behandle(hendelse)
                     try {
@@ -218,16 +224,6 @@ class PersonMediator(
             logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
         }
     }
-
-    private fun hentEllerOpprettPerson(ident: String): Person =
-        personService
-            .hentPerson(ident) ?: Person(ident)
-            .also { person ->
-                if (person.observers.isEmpty()) {
-                    personObservers.forEach { observer -> person.addObserver(observer) }
-                }
-                personRepository.lagrePerson(person)
-            }
 
     companion object {
         private val logger = KotlinLogging.logger {}

@@ -7,11 +7,8 @@ import io.kotest.matchers.date.after
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
-import io.kotest.matchers.types.shouldBeSameInstanceAs
-import java.time.LocalDate
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import kotliquery.using
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
@@ -32,6 +29,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -221,7 +219,7 @@ class PostgresPersonRepositoryTest {
             personRepository.lagrePerson(person)
             val hendelse = meldegruppeHendelse(meldegruppeKode = "ARBS")
 
-            using(sessionOf(dataSource)) { session ->
+            sessionOf(dataSource).use { session ->
                 val personId =
                     session.run(
                         queryOf("select id from person where ident = ?", ident).map { it.int("id") }.asSingle,
@@ -325,7 +323,7 @@ class PostgresPersonRepositoryTest {
             personRepository.lagrePerson(person)
 
             val originalTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
@@ -339,7 +337,7 @@ class PostgresPersonRepositoryTest {
             personRepository.oppdaterPerson(person)
 
             val oppdatertTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
@@ -354,7 +352,7 @@ class PostgresPersonRepositoryTest {
             personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
             val avsluttetTimestamp =
-                using(sessionOf(dataSource)) { session ->
+                sessionOf(dataSource).use { session ->
                     session.run(
                         queryOf(
                             "SELECT sist_endret FROM arbeidssoker WHERE periode_id = ?",
@@ -429,9 +427,10 @@ class PostgresPersonRepositoryTest {
     @Test
     fun `kan lagre grenseverdier for datoer`() {
         withMigratedDb {
-            val person = testPerson(
-                hendelser = mutableListOf(vedtakHendelse(fraOgMed = LocalDate.MIN, tilOgMed = LocalDate.MAX)),
-            )
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(vedtakHendelse(fraOgMed = LocalDate.MIN, tilOgMed = LocalDate.MAX)),
+                )
             personRepository.lagrePerson(person)
             val rehydrertPerson = personRepository.hentPerson(ident)
             rehydrertPerson.shouldNotBeNull()
@@ -457,16 +456,15 @@ class PostgresPersonRepositoryTest {
     private fun vedtakHendelse(
         fraOgMed: LocalDate = LocalDate.now(),
         tilOgMed: LocalDate? = null,
-        harRett: Boolean = false
-    ) =
-        VedtakHendelse(
-            ident = ident,
-            dato = LocalDateTime.now(),
-            startDato = fraOgMed.atStartOfDay(),
-            sluttDato = tilOgMed?.atStartOfDay(),
-            referanseId = UUID.randomUUID().toString(),
-            utfall = harRett,
-        )
+        harRett: Boolean = false,
+    ) = VedtakHendelse(
+        ident = ident,
+        dato = LocalDateTime.now(),
+        startDato = fraOgMed.atStartOfDay(),
+        sluttDato = tilOgMed?.atStartOfDay(),
+        referanseId = UUID.randomUUID().toString(),
+        utfall = harRett,
+    )
 
     private fun søknadHendelse() =
         SøknadHendelse(

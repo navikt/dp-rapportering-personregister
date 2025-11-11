@@ -18,6 +18,6 @@ data class NødbremsHendelse(
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)
         person.setHarRettTilDp(false)
 
-        person.sendStoppMeldingTilMeldekortregister(stoppDato = startDato)
+        person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato)
     }
 }
