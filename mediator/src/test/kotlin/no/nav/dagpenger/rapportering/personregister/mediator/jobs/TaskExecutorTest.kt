@@ -47,7 +47,7 @@ class TaskExecutorTest {
                 ),
             )
 
-        val mockedTime = LocalTime.of(1, 59, 57)
+        val mockedTime = LocalTime.of(1, 59, 58)
         val mockedDateTime = ZonedDateTime.now().with(mockedTime)
         mockkStatic(ZonedDateTime::class)
         every { ZonedDateTime.of(any(), any()) } returns mockedDateTime
