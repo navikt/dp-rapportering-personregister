@@ -11,7 +11,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
@@ -70,7 +69,7 @@ internal class AktiverHendelserJob(
         var currentMeldestatus: MeldestatusResponse? = null
         val slettedeHendelser = mutableListOf<String>()
         hendelser.forEach { hendelse ->
-            if (slettedeHendelser.any { hendelse.referanseId == it }) {
+            if (slettedeHendelser.contains(hendelse.referanseId)) {
                 logger.info { "Hendelse med referanseId ${hendelse.referanseId} er allerede slettet" }
                 return@forEach
             }
