@@ -64,6 +64,9 @@ class MeldestatusMediator(
 
             personService.hentPerson(meldestatus.personIdent)?.let { person ->
                 if (person.ansvarligSystem == AnsvarligSystem.ARENA) {
+                    // Vi sletter eksisterende fremtidige Arena-hendelser i tilfelle vi får endringer FØR fremtidige hendelsene blir prosessert
+                    // Slik har vi kun den siste versjonen av sannheten
+                    personRepository.slettFremtidigeArenaHendelser(person.ident)
                     behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
                 } else {
                     logger.info { "Person har ikke Arena som ansvarlig system, meldepliktendringer fra Meldestatus ignoreres." }
@@ -84,10 +87,6 @@ class MeldestatusMediator(
         // En liste over aktiv(e) meldegruppeperiode(r) basert på det som gjelder på søkedato og framover i tid
         // Hvis ingen dato er angitt, vil dagens dato blir brukt
         // Dvs. vi har lister fra i dag og framover
-
-        // Vi sletter eksisterende fremtidige Arena-hendelser i tilfelle vi får endringer FØR fremtidige hendelsene blir prosessert
-        // Slik har vi kun den siste versjonen av sannheten
-        personRepository.slettFremtidigeArenaHendelser(person.ident)
 
         val meldepliktListe =
             meldestatus.meldepliktListe?.sortedBy { it.meldepliktperiode?.fom } ?: emptyList()
