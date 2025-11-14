@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
@@ -67,7 +68,12 @@ internal class AktiverHendelserJob(
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
         var currentIdent = ""
         var currentMeldestatus: MeldestatusResponse? = null
+        val slettedeHendelser = mutableListOf<String>()
         hendelser.forEach { hendelse ->
+            if (slettedeHendelser.any { hendelse.referanseId == it }) {
+                logger.info { "Hendelse med referanseId ${hendelse.referanseId} er allerede slettet" }
+                return@forEach
+            }
             val person = personService.hentPerson(hendelse.ident)
             try {
                 if (person != null) {
@@ -108,11 +114,16 @@ internal class AktiverHendelserJob(
                     logger.warn { "Fant ikke person. Kan ikke aktivere hendelse." }
                     sikkerLogg.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
                 }
+                logger.info { "Sletter hendelse med referanseId ${hendelse.referanseId}" }
                 personRepository.slettFremtidigHendelse(hendelse.referanseId)
+                slettedeHendelser.add(hendelse.referanseId)
             } catch (e: Exception) {
                 logger.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
                 sikkerLogg.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
             }
+        }
+        logger.info {
+            "AktiverHendelserJob ferdig. Fant ${hendelser.size} hendelser som skulle aktiveres. Slettet faktisk ${slettedeHendelser.size} hendelser."
         }
         return hendelser.size
     }
