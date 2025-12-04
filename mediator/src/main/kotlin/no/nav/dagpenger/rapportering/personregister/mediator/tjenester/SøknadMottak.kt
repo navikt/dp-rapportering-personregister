@@ -54,7 +54,9 @@ class SøknadMottak(
         try {
             personStatusMediator.behandle(packet.tilHendelse())
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av søknad $e" }
+            logger.error(e) { "Feil ved behandling av søknad" }
+            sikkerlogg.error(e) { "Feil ved behandling av søknad: ${packet.toJson()}" }
+            throw e
         }
     }
 
