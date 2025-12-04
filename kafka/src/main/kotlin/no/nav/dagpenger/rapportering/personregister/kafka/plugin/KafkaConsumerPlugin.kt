@@ -13,8 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.NoopConsumerRebalanceListener
-import no.nav.dagpenger.rapportering.personregister.kafka.utils.defaultErrorFunction
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.defaultSuccessFunction
+import org.apache.kafka.clients.consumer.CloseOptions
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import org.apache.kafka.clients.consumer.KafkaConsumer
@@ -27,7 +27,6 @@ private val logger = KotlinLogging.logger {}
 class KafkaConsumerPluginConfig<K, V> {
     var consumeFunction: ((ConsumerRecords<K, V>) -> Unit)? = null
     var successFunction: ((ConsumerRecords<K, V>) -> Unit)? = null
-    var errorFunction: ((throwable: Throwable) -> Unit)? = null
     var kafkaConsumer: KafkaConsumer<K, V>? = null
     var kafkaTopics: Collection<String>? = null
     var pollTimeout: Duration? = null
@@ -46,13 +45,13 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
         val kafkaConsumer = requireNotNull(pluginConfig.kafkaConsumer) { "KafkaConsumer er null" }
         val consumeFunction = requireNotNull(pluginConfig.consumeFunction) { "ConsumeFunction er null" }
         val successFunction = pluginConfig.successFunction ?: kafkaConsumer::defaultSuccessFunction
-        val errorFunction = pluginConfig.errorFunction ?: ::defaultErrorFunction
         val pollTimeout = pluginConfig.pollTimeout ?: Duration.ofMillis(100)
         val closeTimeout = pluginConfig.closeTimeout ?: Duration.ofSeconds(1)
         val rebalanceListener = pluginConfig.rebalanceListener ?: NoopConsumerRebalanceListener()
         val coroutineDispatcher = pluginConfig.coroutineDispatcher ?: Dispatchers.IO
         val shutdownFlag = pluginConfig.shutdownFlag ?: AtomicBoolean(false)
         var consumeJob: Job? = null
+        val closeOptions = CloseOptions.timeout(closeTimeout)
 
         on(MonitoringEvent(ApplicationStarted)) { application ->
             logger.info { "Klargjør $pluginInstance Kafka Consumer" }
@@ -67,15 +66,12 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
                             consumeFunction(records)
                             successFunction(records)
                         } catch (throwable: Throwable) {
-                            kafkaConsumer.unsubscribe()
-                            kafkaConsumer.close(closeTimeout)
-                            shutdownFlag.set(true)
-                            errorFunction(throwable)
-                            // TODO: Sette isAlive/isReady til unhealthy
+                            logger.error(throwable) { "$pluginInstance Kafka Consumer feilet" }
+
+                            application.engine.stop()
                         }
                     }
                     logger.info { "Stoppet $pluginInstance Kafka Consumer" }
-                    consumeJob?.cancel()
                 }
         }
 
@@ -84,7 +80,7 @@ fun <K, V> KafkaConsumerPlugin(pluginInstance: Any): ApplicationPlugin<KafkaCons
             shutdownFlag.set(true)
             consumeJob?.cancel()
             kafkaConsumer.unsubscribe()
-            kafkaConsumer.close(closeTimeout)
+            kafkaConsumer.close(closeOptions)
         }
     }
 }

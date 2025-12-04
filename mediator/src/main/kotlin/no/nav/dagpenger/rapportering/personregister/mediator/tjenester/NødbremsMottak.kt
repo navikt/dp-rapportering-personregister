@@ -41,13 +41,20 @@ class NødbremsMottak(
 
         logger.info { "Mottok melding om at nødbrems aktiveres" }
         sikkerLogg.info { "Mottok melding om at nødbrems aktiveres for $ident" }
-        personMediator.behandle(
-            NødbremsHendelse(
-                ident = ident,
-                dato = LocalDateTime.now(),
-                startDato = LocalDateTime.now(),
-                referanseId = UUID.randomUUID().toString(),
-            ),
-        )
+
+        try {
+            personMediator.behandle(
+                NødbremsHendelse(
+                    ident = ident,
+                    dato = LocalDateTime.now(),
+                    startDato = LocalDateTime.now(),
+                    referanseId = UUID.randomUUID().toString(),
+                ),
+            )
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av nødbrems" }
+            sikkerLogg.error(e) { "Feil ved behandling av nødbrems: ${packet.toJson()}" }
+            throw e
+        }
     }
 }

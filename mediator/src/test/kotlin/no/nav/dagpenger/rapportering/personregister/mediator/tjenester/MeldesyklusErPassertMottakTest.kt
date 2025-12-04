@@ -7,11 +7,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
-import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
 import java.util.UUID
 
@@ -62,7 +62,7 @@ class MeldesyklusErPassertMottakTest {
     }
 
     @Test
-    fun `skal hoppe over meldinger med feil ident`() {
+    fun `skal kaste Exception ved feil i ident`() {
         val ident = "12345"
         val dato = LocalDate.now()
         val referanseId = UUID.randomUUID().toString()
@@ -83,8 +83,6 @@ class MeldesyklusErPassertMottakTest {
             }
             """.trimIndent()
 
-        testRapid.sendTestMessage(melding)
-
-        verify(exactly = 0) { personMediator.behandle(any<MeldesyklusErPassertHendelse>()) }
+        assertThrows<IllegalArgumentException>({ testRapid.sendTestMessage(melding) })
     }
 }
