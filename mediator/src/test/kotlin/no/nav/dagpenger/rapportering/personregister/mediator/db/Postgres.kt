@@ -2,7 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import com.zaxxer.hikari.HikariDataSource
 import org.flywaydb.core.Flyway
-import org.testcontainers.containers.PostgreSQLContainer
+import org.testcontainers.postgresql.PostgreSQLContainer
 import javax.sql.DataSource
 
 internal object Postgres {
