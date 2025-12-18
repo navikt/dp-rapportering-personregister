@@ -2,9 +2,10 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.navikt.tbd_libs.naisful.naisApp
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.server.engine.embeddedServer
+import io.ktor.server.application.ApplicationStopped
 import io.micrometer.core.instrument.Clock
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -68,8 +69,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
-import io.ktor.server.cio.CIO as CIOEngine
 
 private val logger = KotlinLogging.logger {}
 
@@ -238,21 +239,33 @@ internal class ApplicationBuilder(
                 .create(
                     env = configuration,
                     builder = {
-                        this.withKtor(
-                            embeddedServer(CIOEngine, port = 8080, module = {}),
-                        )
+                        withKtor { preStopHook, rapid ->
+                            naisApp(
+                                meterRegistry = meterRegistry,
+                                objectMapper = Configuration.defaultObjectMapper,
+                                applicationLogger = LoggerFactory.getLogger("ApplicationLogger"),
+                                callLogger = LoggerFactory.getLogger("CallLogger"),
+                                aliveCheck = rapid::isReady,
+                                readyCheck = rapid::isReady,
+                                preStopHook = preStopHook::handlePreStopRequest,
+                            ) {
+                                monitor.subscribe(ApplicationStopped) {
+                                    logger.info { "Forsøker å lukke datasource..." }
+                                    dataSource.close()
+                                    logger.info { "Lukket datasource" }
+                                }
+
+                                pluginConfiguration(kafkaContext)
+                                internalApi(meterRegistry)
+                                personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
+                                personApi(personService)
+                                behandlingApi(behandlingRepository)
+                            }
+                        }
                     },
                 ) { engine, rapid ->
                     logger.info { "Starter rapid with" }
                     logger.info { "config: $config" }
-
-                    with(engine.application) {
-                        pluginConfiguration(meterRegistry, kafkaContext)
-                        internalApi(meterRegistry)
-                        personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
-                        personApi(personService)
-                        behandlingApi(behandlingRepository)
-                    }
 
                     MeldekortTestdataMottak(rapid)
                     MeldestatusMottak(

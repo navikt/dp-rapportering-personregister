@@ -1,7 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.fasterxml.jackson.module.kotlin.KotlinFeature
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.getunleash.Unleash
+import io.ktor.http.ContentType
+import io.ktor.serialization.jackson.JacksonConverter
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
 import io.micrometer.core.instrument.Clock
@@ -15,6 +21,7 @@ import kotliquery.sessionOf
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
@@ -40,6 +47,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKaf
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
+import no.nav.security.mock.oauth2.http.objectMapper
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
@@ -163,7 +171,10 @@ open class ApiTestSetup {
                 )
 
             application {
-                pluginConfiguration(meterRegistry, kafkaContext)
+                install(ContentNegotiation) {
+                    register(ContentType.Application.Json, JacksonConverter(Configuration.defaultObjectMapper))
+                }
+                pluginConfiguration(kafkaContext)
                 internalApi(meterRegistry)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService)

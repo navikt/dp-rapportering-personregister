@@ -29,6 +29,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.22.0")
     implementation("io.opentelemetry:opentelemetry-api:1.56.0")
     implementation("io.getunleash:unleash-client-java:11.1.1")
+    implementation("com.github.navikt.tbd-libs:naisful-app:2025.11.04-10.54-c831038e")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
