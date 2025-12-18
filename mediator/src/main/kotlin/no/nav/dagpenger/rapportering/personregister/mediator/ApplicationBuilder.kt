@@ -248,6 +248,7 @@ internal class ApplicationBuilder(
                                 aliveCheck = rapid::isReady,
                                 readyCheck = rapid::isReady,
                                 preStopHook = preStopHook::handlePreStopRequest,
+                                statusPagesConfig = { statusPagesConfig() },
                             ) {
                                 monitor.subscribe(ApplicationStopped) {
                                     logger.info { "Forsøker å lukke datasource..." }
