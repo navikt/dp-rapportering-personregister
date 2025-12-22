@@ -3,10 +3,8 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
-import io.ktor.server.application.install
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
-import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
@@ -21,47 +19,6 @@ import java.time.ZoneOffset
 private val logger = KotlinLogging.logger {}
 
 internal fun Application.personApi(personService: PersonService) {
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            when (cause) {
-                is PersonNotFoundException -> {
-                    logger.warn { "Finner ikke person" }
-                    call.respond(
-                        HttpStatusCode.NotFound,
-                        HttpProblem(
-                            title = "Not Found",
-                            status = 404,
-                            detail = cause.message,
-                        ),
-                    )
-                }
-
-                is BadRequestException -> {
-                    logger.error { "Bad Request: ${cause.message}" }
-                    call.respond(
-                        HttpStatusCode.BadRequest,
-                        HttpProblem(
-                            title = "Bad Request",
-                            status = 400,
-                            detail = cause.message,
-                        ),
-                    )
-                }
-
-                else -> {
-                    logger.error(cause) { "Kunne ikke hente person" }
-                    call.respond(
-                        HttpStatusCode.InternalServerError,
-                        HttpProblem(
-                            title = "Internal Server Error",
-                            status = 500,
-                            detail = cause.message,
-                        ),
-                    )
-                }
-            }
-        }
-    }
     routing {
         authenticate("azureAd") {
             route("/hentPersonId") {
