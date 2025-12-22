@@ -22,7 +22,6 @@ import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserialize
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
-import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -37,6 +36,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRe
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -191,7 +191,10 @@ open class ApiTestSetup {
         System.setProperty("DB_JDBC_URL", "${database.jdbcUrl}&user=${database.username}&password=${database.password}")
         System.setProperty("token-x.client-id", TOKENX_ISSUER_ID)
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
-        System.setProperty("azure-app.well-known-url", mockOAuth2Server.wellKnownUrl(AZURE_OPENID_CONFIG_ISSUER).toString())
+        System.setProperty(
+            "azure-app.well-known-url",
+            mockOAuth2Server.wellKnownUrl(AZURE_OPENID_CONFIG_ISSUER).toString(),
+        )
         System.setProperty("azure-app.client-id", AZURE_APP_CLIENT_ID)
         System.setProperty("GITHUB_SHA", "some_sha")
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")

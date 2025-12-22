@@ -152,7 +152,6 @@ internal object Configuration {
             )
             disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            enable(SerializationFeature.INDENT_OUTPUT)
         }
 
     private val unleashConfig by lazy {
