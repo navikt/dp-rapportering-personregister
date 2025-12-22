@@ -29,7 +29,6 @@ fun Application.pluginConfiguration(
 
     install(KafkaConsumerPlugin<Long, Periode>("Arbeidssøkerperioder")) {
         this.consumeFunction = kafkaContext.arbeidssøkerMottak::consume
-        // this.errorFunction = kafkaContext.kafkaConsumerExceptionHandler::handleException
         this.kafkaConsumer = kafkaContext.arbeidssøkerperioderKafkaConsumer
         this.kafkaTopics = listOf(kafkaContext.arbeidssøkerperioderTopic)
     }

@@ -48,6 +48,7 @@ class MeldestatusMottak(
             meldestatusMediator.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldestatusendring" }
+            sikkerlogg.error(e) { "Feil ved behandling av meldestatusendring: ${packet.toJson()}" }
             throw e
         }
     }

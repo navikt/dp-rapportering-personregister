@@ -47,22 +47,27 @@ class MeldesyklusErPassertMottak(
         logger.info { "Mottok meldesyklus_er_passert melding" }
         sikkerlogg.info { "Mottok meldesyklus_er_passert melding: ${packet.toJson()}" }
 
-        val ident = packet["ident"].asText()
-        val referanseId = packet["referanseId"].asText()
+        try {
+            val ident = packet["ident"].asText()
+            val referanseId = packet["referanseId"].asText()
 
-        if (!ident.matches(Regex("[0-9]{11}"))) {
-            logger.error { "Person-ident må ha 11 sifre" }
-            return
+            if (!ident.matches(Regex("[0-9]{11}"))) {
+                throw IllegalArgumentException("Person-ident må ha 11 sifre")
+            }
+
+            val meldesyklusErPassertHendelse =
+                MeldesyklusErPassertHendelse(
+                    ident,
+                    LocalDateTime.now(),
+                    LocalDateTime.now(),
+                    referanseId,
+                )
+
+            personMediator.behandle(meldesyklusErPassertHendelse)
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert" }
+            sikkerlogg.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert: ${packet.toJson()}" }
+            throw e
         }
-
-        val meldesyklusErPassertHendelse =
-            MeldesyklusErPassertHendelse(
-                ident,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                referanseId,
-            )
-
-        personMediator.behandle(meldesyklusErPassertHendelse)
     }
 }

@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     application
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.gradleup.shadow") version "9.3.0"
     kotlin
 }
 
@@ -21,14 +21,14 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
-    implementation("no.nav.dagpenger:pdl-klient:2025.08.20-08.53.9250ac7fbd99")
-    implementation("no.nav.dagpenger:oauth2-klient:2025.08.20-08.53.9250ac7fbd99")
+    implementation("no.nav.dagpenger:pdl-klient:2025.12.19-08.15.2e150cd55270")
+    implementation("no.nav.dagpenger:oauth2-klient:2025.12.19-08.15.2e150cd55270")
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.22.0")
-    implementation("io.opentelemetry:opentelemetry-api:1.56.0")
-    implementation("io.getunleash:unleash-client-java:11.1.1")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.23.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.57.0")
+    implementation("io.getunleash:unleash-client-java:11.2.0")
     implementation("com.github.navikt.tbd-libs:naisful-app:2025.11.04-10.54-c831038e")
 
     testImplementation(kotlin("test"))

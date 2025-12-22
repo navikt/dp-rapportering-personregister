@@ -67,44 +67,49 @@ class BehandlingsresultatMottak(
 
             behandlingsresultatMetrikker.behandlingsresultatMottatt.increment()
 
-            val ident = packet["ident"].asText()
+            try {
+                val ident = packet["ident"].asText()
 
-            if (!ident.matches(Regex("[0-9]{11}"))) {
-                logger.error { "Person-ident må ha 11 sifre" }
-                return
-            }
-
-            // Slett fremtidige VedtakHendelser
-            personRepository.slettFremtidigeVedtakHendelser(ident)
-
-            packet["rettighetsperioder"]
-                .toList()
-                .sortedBy { it["fraOgMed"].asLocalDate() }
-                .forEachIndexed { index, rettighetsperiode ->
-                    //  Vi sletter ikke eksisterende VedtahHendelser. Da kan vi ha hele vedtak-historikken i databasen
-                    //  Vi prosesserer alle rettighetsperioder fordi det er mulig at DP er innvilget før søknadsdato
-                    //  Vi oppretter VedtakHendelse for hver rettighetsperiode slik at personregister kan vurdere ny status iht til den siste versjonen av sannheten fra PJ
-                    //  Dvs. det spiller ingen rolle om det er en ny rettighetsperiode eller en endring. Bare opprett nye VedtakHendelser for alle perioder og la personregister bestemme
-                    val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
-                    val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
-                    val harRett = rettighetsperiode["harRett"].asBoolean()
-
-                    val vedtakHendelse =
-                        VedtakHendelse(
-                            ident = ident,
-                            dato = LocalDateTime.now(),
-                            startDato = fraOgMed.atStartOfDay(),
-                            sluttDato = tilOgMed?.atStartOfDay(),
-                            referanseId = "$behandlingId-$index",
-                            utfall = harRett,
-                        )
-
-                    if (fraOgMed.isAfter(LocalDate.now())) {
-                        fremtidigHendelseMediator.behandle(vedtakHendelse)
-                    } else {
-                        personMediator.behandle(vedtakHendelse)
-                    }
+                if (!ident.matches(Regex("[0-9]{11}"))) {
+                    throw IllegalArgumentException("Person-ident må ha 11 sifre")
                 }
+
+                // Slett fremtidige VedtakHendelser
+                personRepository.slettFremtidigeVedtakHendelser(ident)
+
+                packet["rettighetsperioder"]
+                    .toList()
+                    .sortedBy { it["fraOgMed"].asLocalDate() }
+                    .forEachIndexed { index, rettighetsperiode ->
+                        //  Vi sletter ikke eksisterende VedtahHendelser. Da kan vi ha hele vedtak-historikken i databasen
+                        //  Vi prosesserer alle rettighetsperioder fordi det er mulig at DP er innvilget før søknadsdato
+                        //  Vi oppretter VedtakHendelse for hver rettighetsperiode slik at personregister kan vurdere ny status iht til den siste versjonen av sannheten fra PJ
+                        //  Dvs. det spiller ingen rolle om det er en ny rettighetsperiode eller en endring. Bare opprett nye VedtakHendelser for alle perioder og la personregister bestemme
+                        val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
+                        val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
+                        val harRett = rettighetsperiode["harRett"].asBoolean()
+
+                        val vedtakHendelse =
+                            VedtakHendelse(
+                                ident = ident,
+                                dato = LocalDateTime.now(),
+                                startDato = fraOgMed.atStartOfDay(),
+                                sluttDato = tilOgMed?.atStartOfDay(),
+                                referanseId = "$behandlingId-$index",
+                                utfall = harRett,
+                            )
+
+                        if (fraOgMed.isAfter(LocalDate.now())) {
+                            fremtidigHendelseMediator.behandle(vedtakHendelse)
+                        } else {
+                            personMediator.behandle(vedtakHendelse)
+                        }
+                    }
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved behandling av behandlingsresultat" }
+                sikkerlogg.error(e) { "Feil ved behandling av behandlingsresultat: ${packet.toJson()}" }
+                throw e
+            }
         }
     }
 }

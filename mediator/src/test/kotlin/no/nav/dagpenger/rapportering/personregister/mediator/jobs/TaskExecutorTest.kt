@@ -7,8 +7,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -54,21 +52,11 @@ class TaskExecutorTest {
 
         taskExecutor.startExecution()
 
-        // Venter på taskExecutor
-        runBlocking {
-            delay(4000)
-        }
+        // hentHendelserSomSkalAktiveres må kalles én gang etter et par sekunder
+        coVerify(exactly = 1, timeout = 10000) { personRepository.hentHendelserSomSkalAktiveres() }
 
-        // hentHendelserSomSkalAktiveres må kalles én gang etter 4 sekunder
-        coVerify(exactly = 1) { personRepository.hentHendelserSomSkalAktiveres() }
-
-        // Venter på taskExecutor
-        runBlocking {
-            delay(4000)
-        }
-
-        // hentHendelserSomSkalAktiveres må kalles én gang til etter 4 sekunder fordi vi har mocked ZonedDateTime
-        coVerify(exactly = 2) { personRepository.hentHendelserSomSkalAktiveres() }
+        // hentHendelserSomSkalAktiveres må kalles én gang til etter et par sekunder fordi vi har mocked ZonedDateTime
+        coVerify(exactly = 2, timeout = 10000) { personRepository.hentHendelserSomSkalAktiveres() }
 
         clearStaticMockk(ZonedDateTime::class)
     }

@@ -15,11 +15,6 @@ fun <K, V> KafkaConsumer<K, V>.defaultSuccessFunction(records: ConsumerRecords<K
     }
 }
 
-fun defaultErrorFunction(throwable: Throwable) {
-    logger.error(throwable) { "Kafka Consumer failed" }
-    throw throwable
-}
-
 class NoopConsumerRebalanceListener : ConsumerRebalanceListener {
     override fun onPartitionsRevoked(partitions: MutableCollection<TopicPartition>?) {}
 
