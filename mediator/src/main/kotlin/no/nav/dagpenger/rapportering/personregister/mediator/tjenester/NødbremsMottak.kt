@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
-private val sikkerLogg = KotlinLogging.logger("tjenestekall.NødbremsMottak")
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 class NødbremsMottak(
     val rapidsConnection: RapidsConnection,

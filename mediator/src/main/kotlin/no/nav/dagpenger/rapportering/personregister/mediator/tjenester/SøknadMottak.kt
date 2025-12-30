@@ -62,7 +62,7 @@ class SøknadMottak(
 
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall.SøknadMottak")
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     private fun JsonMessage.tilHendelse(): SøknadHendelse {

@@ -10,7 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
 
 private val logger = KotlinLogging.logger {}
-private val sikkerLogg = KotlinLogging.logger("tjenestekall.VedtakFattetUtenforArenaMottak")
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 class VedtakFattetUtenforArenaMottak(
     rapidsConnection: RapidsConnection,

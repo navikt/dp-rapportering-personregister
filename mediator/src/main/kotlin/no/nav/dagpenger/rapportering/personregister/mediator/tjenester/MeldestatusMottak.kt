@@ -12,7 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 
 private val logger = KotlinLogging.logger {}
-private val sikkerlogg = KotlinLogging.logger("tjenestekall.MeldestatusMottak")
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class MeldestatusMottak(
     rapidsConnection: RapidsConnection,
