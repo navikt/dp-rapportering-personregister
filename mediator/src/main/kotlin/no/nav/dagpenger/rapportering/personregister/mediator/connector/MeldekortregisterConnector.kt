@@ -70,7 +70,7 @@ class MeldekortregisterConnector(
 
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerLogg = KotlinLogging.logger("tjenestekall.MeldekortregisterConnector")
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 
     data class OppdaterIdentRequest(

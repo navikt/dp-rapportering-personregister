@@ -24,8 +24,6 @@ spec:
     requests:
       cpu: 200m
       memory: 256Mi
-  secureLogs:
-    enabled: true
   tokenx:
     enabled: true
   azure:
@@ -70,6 +68,8 @@ spec:
         - host: dagpenger-unleash-api.nav.cloud.nais.io
         - host: "{{ PDL_API_HOST }}"
       rules:
+        - application: logging
+          namespace: nais-system
         - application: dp-arena-meldeplikt-adapter
         - application: dp-meldekortregister
         - application: paw-arbeidssoekerregisteret-api-oppslag-v2

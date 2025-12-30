@@ -39,6 +39,6 @@ class PdlConnector(
 
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerLogg = KotlinLogging.logger("tjenestekall.Pdl")
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 }

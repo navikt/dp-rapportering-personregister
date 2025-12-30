@@ -18,7 +18,7 @@ class MeldesyklusErPassertMottak(
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall.MeldesyklusErPassertMottak")
+        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     init {
