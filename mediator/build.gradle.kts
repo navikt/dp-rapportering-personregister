@@ -37,7 +37,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.ktor.client.mock)
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.0.2")
     testImplementation("io.ktor:ktor-server-test-host-jvm:${libs.versions.ktor.get()}")
     testImplementation(libs.rapids.and.rivers.test)
     testImplementation("org.testcontainers:kafka:1.21.4")
