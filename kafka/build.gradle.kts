@@ -24,7 +24,7 @@ dependencies {
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
-    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:1.25.03.26.32-1")
+    paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:1.26.01.09.34-1")
     mainavroSchema("no.nav.paw.arbeidssokerregisteret.api:main-avro-schema:1.13764081353.1-2")
 
     testImplementation(platform("org.junit:junit-bom:6.0.2"))
