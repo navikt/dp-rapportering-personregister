@@ -98,8 +98,8 @@ internal class ApplicationBuilder(
     private val pdlIdentCache: Cache<String, List<Ident>> =
         Caffeine
             .newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .maximumSize(1000)
+            .expireAfterWrite(15, TimeUnit.MINUTES)
+            .maximumSize(10000)
             .build()
 
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
