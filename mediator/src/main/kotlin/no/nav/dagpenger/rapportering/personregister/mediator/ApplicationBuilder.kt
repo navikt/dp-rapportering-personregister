@@ -150,7 +150,7 @@ internal class ApplicationBuilder(
         )
     private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
-    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl))
+    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl), actionTimer)
     private val personService =
         PersonService(
             pdlConnector,
