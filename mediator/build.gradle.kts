@@ -31,6 +31,8 @@ dependencies {
     implementation("io.getunleash:unleash-client-java:11.2.1")
     implementation("com.github.navikt.tbd-libs:naisful-app:2025.11.04-10.54-c831038e")
 
+    implementation("com.fasterxml.uuid:java-uuid-generator:5.1.0")
+
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
     testImplementation(libs.bundles.kotest.assertions)

@@ -8,12 +8,12 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.LocalDate
-import java.util.UUID
 
 class MeldesyklusErPassertMottakTest {
     private val testRapid = TestRapid()
@@ -35,8 +35,8 @@ class MeldesyklusErPassertMottakTest {
 
         val ident = "12345678903"
         val dato = LocalDate.now()
-        val referanseId = UUID.randomUUID().toString()
-        val meldekortregisterPeriodeId = UUID.randomUUID().toString()
+        val referanseId = UUIDv7.newUuid().toString()
+        val meldekortregisterPeriodeId = UUIDv7.newUuid().toString()
         val periodeFraOgMed = LocalDate.now().minusDays(35)
         val periodeTilOgMed = LocalDate.now().minusDays(21)
 
@@ -65,8 +65,8 @@ class MeldesyklusErPassertMottakTest {
     fun `skal kaste Exception ved feil i ident`() {
         val ident = "12345"
         val dato = LocalDate.now()
-        val referanseId = UUID.randomUUID().toString()
-        val meldekortregisterPeriodeId = UUID.randomUUID().toString()
+        val referanseId = UUIDv7.newUuid().toString()
+        val meldekortregisterPeriodeId = UUIDv7.newUuid().toString()
         val periodeFraOgMed = LocalDate.now().minusDays(35)
         val periodeTilOgMed = LocalDate.now().minusDays(21)
 

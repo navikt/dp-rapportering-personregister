@@ -8,9 +8,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMig
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 class PostgressArbeidssøkerBeslutningRepositoryTest {
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -24,7 +24,7 @@ class PostgressArbeidssøkerBeslutningRepositoryTest {
             val beslutning =
                 ArbeidssøkerBeslutning(
                     ident = person.ident,
-                    periodeId = UUID.randomUUID(),
+                    periodeId = UUIDv7.newUuid(),
                     handling = Handling.OVERTATT,
                     begrunnelse = "Test begrunnelse",
                 )
@@ -42,14 +42,14 @@ class PostgressArbeidssøkerBeslutningRepositoryTest {
             val overtattArbeidssøkerBeslutning =
                 ArbeidssøkerBeslutning(
                     ident = person.ident,
-                    periodeId = UUID.randomUUID(),
+                    periodeId = UUIDv7.newUuid(),
                     handling = Handling.OVERTATT,
                     begrunnelse = "Test begrunnelse",
                 )
             val frasagtArbeidssøkerBeslutning =
                 ArbeidssøkerBeslutning(
                     ident = person.ident,
-                    periodeId = UUID.randomUUID(),
+                    periodeId = UUIDv7.newUuid(),
                     handling = Handling.FRASAGT,
                     begrunnelse = "Test begrunnelse",
                 )

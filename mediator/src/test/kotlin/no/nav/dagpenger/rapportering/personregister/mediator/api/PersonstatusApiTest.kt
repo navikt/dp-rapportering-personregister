@@ -18,6 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataR
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -32,7 +33,6 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 
 class PersonstatusApiTest : ApiTestSetup() {
     private val ident = "12345678910"
@@ -62,7 +62,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
                 listOf(
                     ArbeidssøkerperiodeResponse(
-                        UUID.randomUUID(),
+                        UUIDv7.newUuid(),
                         MetadataResponse(
                             OffsetDateTime.now(ZoneOffset.UTC),
                             BrukerResponse("", ""),
@@ -108,7 +108,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
                 listOf(
                     ArbeidssøkerperiodeResponse(
-                        UUID.randomUUID(),
+                        UUIDv7.newUuid(),
                         MetadataResponse(
                             OffsetDateTime.now(ZoneOffset.UTC),
                             BrukerResponse("", ""),
@@ -248,7 +248,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                     TemporalCollection<Status>().also { it.put(LocalDateTime.now(), Status.DAGPENGERBRUKER) },
                     mutableListOf(
                         Arbeidssøkerperiode(
-                            UUID.randomUUID(),
+                            UUIDv7.newUuid(),
                             ident,
                             LocalDateTime.now(),
                             null,
