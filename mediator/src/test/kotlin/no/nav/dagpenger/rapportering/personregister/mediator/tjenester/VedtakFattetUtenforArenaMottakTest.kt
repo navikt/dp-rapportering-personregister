@@ -4,9 +4,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 class VedtakFattetUtenforArenaMottakTest {
     private val testRapid = TestRapid()
@@ -23,10 +23,10 @@ class VedtakFattetUtenforArenaMottakTest {
 
     @Test
     fun `skal OpprettMeldekortJob`() {
-        val behandlingId = UUID.randomUUID().toString()
-        val søknadId = UUID.randomUUID().toString()
+        val behandlingId = UUIDv7.newUuid().toString()
+        val søknadId = UUIDv7.newUuid().toString()
         val ident = "01020312345"
-        val sakId = UUID.randomUUID().toString()
+        val sakId = UUIDv7.newUuid().toString()
 
         testRapid.sendTestMessage(
             """

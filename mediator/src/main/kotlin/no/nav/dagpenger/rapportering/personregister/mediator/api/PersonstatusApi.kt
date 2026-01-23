@@ -18,11 +18,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.auth.ident
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -52,7 +52,7 @@ internal fun Application.personstatusApi(
                                 ident = ident,
                                 dato = LocalDateTime.now(),
                                 startDato = LocalDateTime.now(),
-                                referanseId = UUID.randomUUID().toString(),
+                                referanseId = UUIDv7.newUuid().toString(),
                             ),
                         )
                     } else {
@@ -61,7 +61,7 @@ internal fun Application.personstatusApi(
                                 ident = ident,
                                 dato = LocalDateTime.now(),
                                 startDato = LocalDateTime.now(),
-                                referanseId = UUID.randomUUID().toString(),
+                                referanseId = UUIDv7.newUuid().toString(),
                             ),
                         )
                     }

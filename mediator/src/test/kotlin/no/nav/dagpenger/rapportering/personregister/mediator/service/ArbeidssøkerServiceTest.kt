@@ -6,10 +6,10 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import org.junit.jupiter.api.Test
 import java.time.ZoneId
-import java.util.UUID
 
 class ArbeidssøkerServiceTest {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
@@ -19,7 +19,7 @@ class ArbeidssøkerServiceTest {
 
     @Test
     fun `kan hente siste arbeidssøkerperiode`() {
-        val response = arbeidssøkerResponse(UUID.randomUUID())
+        val response = arbeidssøkerResponse(UUIDv7.newUuid())
         coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident) } returns listOf(response)
 
         val periode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }

@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -31,7 +32,6 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PostgresPersonRepositoryTest {
     private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
@@ -146,7 +146,7 @@ class PostgresPersonRepositoryTest {
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),
-                    referanseId = UUID.randomUUID().toString(),
+                    referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
                 )
 
@@ -182,7 +182,7 @@ class PostgresPersonRepositoryTest {
     fun `hendelser med samme referanse overskriver hverandre`() =
         withMigratedDb {
             val person = Person(ident)
-            val referanseId = UUID.randomUUID().toString()
+            val referanseId = UUIDv7.newUuid().toString()
             val førsteHendelse = meldegruppeHendelse(referanseId)
             val nyHendelse = meldepliktHendelse(ident, referanseId)
 
@@ -462,14 +462,14 @@ class PostgresPersonRepositoryTest {
         dato = LocalDateTime.now(),
         startDato = fraOgMed.atStartOfDay(),
         sluttDato = tilOgMed?.atStartOfDay(),
-        referanseId = UUID.randomUUID().toString(),
+        referanseId = UUIDv7.newUuid().toString(),
         utfall = harRett,
     )
 
     private fun søknadHendelse() =
         SøknadHendelse(
             ident = "12345678901",
-            referanseId = UUID.randomUUID().toString(),
+            referanseId = UUIDv7.newUuid().toString(),
             dato = LocalDateTime.now(),
             startDato = LocalDateTime.now(),
         )
@@ -477,7 +477,7 @@ class PostgresPersonRepositoryTest {
     private fun arbeidssøkerperiode() =
         Arbeidssøkerperiode(
             ident = "12345678901",
-            periodeId = UUID.randomUUID(),
+            periodeId = UUIDv7.newUuid(),
             startet = LocalDateTime.now(),
             avsluttet = null,
             overtattBekreftelse = false,
@@ -489,7 +489,7 @@ class PostgresPersonRepositoryTest {
         }
 
     private fun meldegruppeHendelse(
-        referanseId: String = UUID.randomUUID().toString(),
+        referanseId: String = UUIDv7.newUuid().toString(),
         meldegruppeKode: String = "DAGP",
         harMeldtSeg: Boolean = false,
     ) = if (meldegruppeKode == "DAGP") {
@@ -516,7 +516,7 @@ class PostgresPersonRepositoryTest {
 
     private fun meldepliktHendelse(
         ident: String,
-        referanseId: String = UUID.randomUUID().toString(),
+        referanseId: String = UUIDv7.newUuid().toString(),
         harMeldtSeg: Boolean = false,
     ) = MeldepliktHendelse(
         ident = ident,

@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -9,7 +10,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHende
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class InMemoryPersonRepositoryTest {
     private lateinit var personRepository: PersonRepository
@@ -81,7 +81,7 @@ class InMemoryPersonRepositoryTest {
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now(),
-                referanseId = UUID.randomUUID().toString(),
+                referanseId = UUIDv7.newUuid().toString(),
                 utfall = true,
             )
 

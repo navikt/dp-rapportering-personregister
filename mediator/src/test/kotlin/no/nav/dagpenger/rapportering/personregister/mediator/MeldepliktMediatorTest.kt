@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -37,7 +38,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class MeldepliktMediatorTest {
@@ -118,7 +118,7 @@ class MeldepliktMediatorTest {
     private val ident = "12345678910"
     private val nå = LocalDateTime.now()
     private val tidligere = nå.minusDays(1)
-    private val periodeId = UUID.randomUUID()
+    private val periodeId = UUIDv7.newUuid()
 
     @Test
     fun `meldepliktendring for ny person`() {

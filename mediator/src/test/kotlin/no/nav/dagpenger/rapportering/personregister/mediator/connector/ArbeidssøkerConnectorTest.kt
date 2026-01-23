@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import org.junit.jupiter.api.Test
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -38,7 +39,7 @@ class ArbeidssøkerConnectorTest {
 
     @Test
     fun `Oppslag - Kan mappe fult objekt`() {
-        val periodeId = UUID.randomUUID()
+        val periodeId = UUIDv7.newUuid()
         val response =
             runBlocking {
                 arbeidssøkerConnector(arbeidssøkerResponse(periodeId), 200).hentSisteArbeidssøkerperiode("12345678901")
@@ -53,7 +54,7 @@ class ArbeidssøkerConnectorTest {
 
     @Test
     fun `Oppslag - Kan mappe objekt uten avsluttet`() {
-        val periodeId = UUID.randomUUID()
+        val periodeId = UUIDv7.newUuid()
         val response =
             runBlocking {
                 arbeidssøkerConnector(

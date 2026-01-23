@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
@@ -29,7 +30,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.Meldestat
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class AktiverHendelserJobTest : ApiTestSetup() {
     private val arbeidssøkerService = mockk<ArbeidssøkerService>()
@@ -108,7 +108,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 Person(ident = ident1).apply {
                     behandle(
                         StartetArbeidssøkerperiodeHendelse(
-                            periodeId = UUID.randomUUID(),
+                            periodeId = UUIDv7.newUuid(),
                             ident = ident1,
                             startet = nå.minusDays(1),
                         ),
@@ -118,7 +118,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 Person(ident = ident2).apply {
                     behandle(
                         StartetArbeidssøkerperiodeHendelse(
-                            periodeId = UUID.randomUUID(),
+                            periodeId = UUIDv7.newUuid(),
                             ident = ident2,
                             startet = nå.minusDays(1),
                         ),
