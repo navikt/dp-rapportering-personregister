@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - 'main'
-      - 'feature/migrer-til-unleash-7'
     paths:
       - '.github/workflows/unleash-apitoken.yml'
       - '.nais/unleash-apitoken.yaml'
