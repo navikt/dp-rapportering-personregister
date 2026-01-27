@@ -10,9 +10,9 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import java.time.LocalDateTime
-import java.util.UUID
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
@@ -75,7 +75,7 @@ class SøknadMottak(
             } else if (!this[legacySøknadIdNøkkel].isMissingNode) {
                 this[legacySøknadIdNøkkel].asText()
             } else {
-                UUID.randomUUID().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
+                UUIDv7.newUuid().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
             }
 
         return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)

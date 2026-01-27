@@ -20,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonServi
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldepliktendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -33,7 +34,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 class MeldestatusMediatorTest {
@@ -135,7 +135,7 @@ class MeldestatusMediatorTest {
     private val ident = "12345678910"
     private val nå = LocalDateTime.now()
     private val tidligere = nå.minusDays(1)
-    private val periodeId = UUID.randomUUID()
+    private val periodeId = UUIDv7.newUuid()
 
     @Test
     fun `meldestatusHendelse for ikke eksisterende person med DAGP`() {

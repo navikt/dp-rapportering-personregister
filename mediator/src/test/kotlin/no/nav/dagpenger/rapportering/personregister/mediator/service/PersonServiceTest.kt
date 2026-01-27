@@ -11,6 +11,7 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -164,8 +165,8 @@ class PersonServiceTest {
         val aktorId = "123456"
         val gammelIdent1 = "12345678901"
         val gammelIdent2 = "12345678902"
-        val periodeId1 = UUID.randomUUID()
-        val periodeId2 = UUID.randomUUID()
+        val periodeId1 = UUIDv7.newUuid()
+        val periodeId2 = UUIDv7.newUuid()
         val person1 =
             person(
                 ident = gammelIdent1,
@@ -210,7 +211,7 @@ class PersonServiceTest {
     @Test
     fun `hentPerson returnerer person fra databasen selv om pdl returnerer tom liste`() {
         every { pdlConnector.hentIdenter(any()) } returns emptyList()
-        every { personRepository.hentPerson(ident) } returns person(ident, UUID.randomUUID())
+        every { personRepository.hentPerson(ident) } returns person(ident, UUIDv7.newUuid())
 
         val person = personService.hentPerson(ident)!!
         person.ident shouldBe ident
@@ -259,14 +260,14 @@ private fun person(
     this.setMeldegruppe(meldegruppe)
     hendelser.addAll(
         listOf(
-            SøknadHendelse(ident, startet.plusHours(1), startet.plusHours(1), UUID.randomUUID().toString()),
+            SøknadHendelse(ident, startet.plusHours(1), startet.plusHours(1), UUIDv7.newUuid().toString()),
             if (meldegruppe ==
                 "DAGP"
             ) {
                 DagpengerMeldegruppeHendelse(
                     ident,
                     startet.plusHours(1),
-                    UUID.randomUUID().toString(),
+                    UUIDv7.newUuid().toString(),
                     startet.plusHours(1),
                     null,
                     "DAGP",
@@ -276,7 +277,7 @@ private fun person(
                 AnnenMeldegruppeHendelse(
                     ident,
                     startet.plusHours(1),
-                    UUID.randomUUID().toString(),
+                    UUIDv7.newUuid().toString(),
                     startet.plusHours(1),
                     null,
                     "ARBS",
@@ -286,7 +287,7 @@ private fun person(
             MeldepliktHendelse(
                 ident,
                 startet.plusHours(1),
-                UUID.randomUUID().toString(),
+                UUIDv7.newUuid().toString(),
                 startet.plusHours(1),
                 null,
                 meldeplikt,

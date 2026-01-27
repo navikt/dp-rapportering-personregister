@@ -12,11 +12,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.behandlingsresultatMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.util.UUID
 
 class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
@@ -43,8 +43,8 @@ class BehandlingsresultatMottakTest {
     @Test
     fun `skal motta behandlingsresultat og opprette hendelser`() {
         val ident = "12345678903"
-        val behandlingId = UUID.randomUUID().toString()
-        val søknadId = UUID.randomUUID().toString()
+        val behandlingId = UUIDv7.newUuid().toString()
+        val søknadId = UUIDv7.newUuid().toString()
         val fraOgMed1 = LocalDate.now().minusDays(10)
         val tilOgMed1 = LocalDate.now()
         val fraOgMed2 = LocalDate.now().plusDays(1)
@@ -108,8 +108,8 @@ class BehandlingsresultatMottakTest {
     @Test
     fun `skal hente søknadId fra behandletHendelse når type er Søknad`() {
         val ident = "12345678903"
-        val behandlingId = UUID.randomUUID().toString()
-        val søknadId = UUID.randomUUID().toString()
+        val behandlingId = UUIDv7.newUuid().toString()
+        val søknadId = UUIDv7.newUuid().toString()
         val fraOgMed = LocalDate.now().minusDays(10)
 
         val hendelser = mutableListOf<VedtakHendelse>()

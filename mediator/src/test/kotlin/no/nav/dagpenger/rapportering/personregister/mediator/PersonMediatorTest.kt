@@ -27,6 +27,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonServi
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -141,7 +142,7 @@ class PersonMediatorTest {
     private val ident = "12345678910"
     private val nå = LocalDateTime.now()
     private val tidligere = nå.minusDays(1)
-    private val periodeId = UUID.randomUUID()
+    private val periodeId = UUIDv7.newUuid()
 
     @Nested
     inner class SøknadHendelser {
@@ -629,7 +630,7 @@ class PersonMediatorTest {
     )
 
     private fun arbeidssøkerperiodeResponse(
-        periodeId: UUID = UUID.randomUUID(),
+        periodeId: UUID = UUIDv7.newUuid(),
         startet: OffsetDateTime = OffsetDateTime.now(),
     ) = listOf(
         ArbeidssøkerperiodeResponse(

@@ -65,7 +65,7 @@ spec:
   accessPolicy:
     outbound:
       external:
-        - host: dagpenger-unleash-api.nav.cloud.nais.io
+        - host: teamdagpenger-unleash-api.nav.cloud.nais.io
         - host: "{{ PDL_API_HOST }}"
       rules:
         - application: logging
@@ -117,8 +117,6 @@ spec:
       value: "{{ MELDEKORTREGISTER_HOST }}"
     - name: MELDEKORTREGISTER_SCOPE
       value: "{{ MELDEKORTREGISTER_SCOPE }}"
-    - name: KAFKA_EXTRA_TOPIC
-      value: "{{ KAFKA_EXTRA_TOPIC }}"
     - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner
       value: -XX:+UseParallelGC -XX:ActiveProcessorCount=4
     - name: GRUPPER_SAKSBEHANDLER

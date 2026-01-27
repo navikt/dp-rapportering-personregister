@@ -6,6 +6,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -14,7 +15,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class PersonObserverKafkaTest {
     private lateinit var producer: MockKafkaProducer<PaaVegneAv>
@@ -61,7 +61,7 @@ class PersonObserverKafkaTest {
 
     private fun lagPersonMedArbeidssøkerperiode(): Person {
         val ident = "12345678910"
-        val periodeId = UUID.randomUUID()
+        val periodeId = UUIDv7.newUuid()
         return Person(
             ident = ident,
             arbeidssøkerperioder =

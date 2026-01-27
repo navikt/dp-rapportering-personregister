@@ -7,20 +7,18 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
-import java.util.UUID
 import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.measureTime
 
 private val logger = KotlinLogging.logger {}
@@ -120,7 +118,7 @@ internal class MeldestatusJob(
                                 }
                             } else {
                                 meldestatusMediator.behandleHendelse(
-                                    UUID.randomUUID().toString(),
+                                    UUIDv7.newUuid().toString(),
                                     person,
                                     meldestatus,
                                 )

@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig
 
 import io.kotest.matchers.equals.shouldNotBeEqual
 import io.kotest.matchers.shouldBe
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
@@ -14,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class RettPersonStatusUtilsTest {
     val ident = "12345678903"
@@ -374,7 +374,7 @@ class RettPersonStatusUtilsTest {
                         hendelse1,
                         hendelse2,
                         StartetArbeidssøkerperiodeHendelse(
-                            UUID.randomUUID(),
+                            UUIDv7.newUuid(),
                             "12345678903",
                             nå.minusDays(2),
                         ),
@@ -506,7 +506,7 @@ private fun arbeidssøker(
         .apply {
             arbeidssøkerperioder.add(
                 Arbeidssøkerperiode(
-                    UUID.randomUUID(),
+                    UUIDv7.newUuid(),
                     ident,
                     LocalDateTime.now(),
                     null,

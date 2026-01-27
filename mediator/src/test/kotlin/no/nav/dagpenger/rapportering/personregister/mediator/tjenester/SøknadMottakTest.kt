@@ -5,11 +5,11 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.UUID
 
 class SøknadMottakTest {
     private val testRapid = TestRapid()
@@ -27,7 +27,7 @@ class SøknadMottakTest {
     @Test
     fun `skal motta Quiz-søknad`() {
         val ident = "12345678901"
-        val søknadId = UUID.randomUUID().toString()
+        val søknadId = UUIDv7.newUuid().toString()
         val søknadsData = "\"søknad_uuid\": \"$søknadId\""
         val dato = "2025-09-23T00:00:00"
 
@@ -47,7 +47,7 @@ class SøknadMottakTest {
     @Test
     fun `skal motta Legacy-søknad`() {
         val ident = "12345678902"
-        val søknadId = UUID.randomUUID().toString()
+        val søknadId = UUIDv7.newUuid().toString()
         val søknadsData = "\"brukerBehandlingId\": \"$søknadId\""
         val dato = "2025-09-24T00:00:00"
 

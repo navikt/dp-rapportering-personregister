@@ -19,8 +19,8 @@ import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import java.time.ZoneId
-import java.util.UUID
 
 val ZONE_ID: ZoneId = ZoneId.of("Europe/Oslo")
 
@@ -33,7 +33,8 @@ internal object Configuration {
                 "RAPID_APP_NAME" to APP_NAME,
                 "KAFKA_CONSUMER_GROUP_ID" to "dp-rapportering-personregister-v1",
                 "KAFKA_RAPID_TOPIC" to "teamdagpenger.rapid.v1",
-                "KAFKA_RESET_POLICY" to "earliest",
+                "KAFKA_EXTRA_TOPIC" to "teamdagpenger.journalforing.v1",
+                "KAFKA_RESET_POLICY" to "latest",
             ),
         )
 
@@ -158,8 +159,8 @@ internal object Configuration {
         UnleashConfig
             .builder()
             .fetchTogglesInterval(5)
-            .appName(properties.getOrElse(Key("NAIS_APP_NAME", stringType), UUID.randomUUID().toString()))
-            .instanceId(properties.getOrElse(Key("NAIS_CLIENT_ID", stringType), UUID.randomUUID().toString()))
+            .appName(properties.getOrElse(Key("NAIS_APP_NAME", stringType), UUIDv7.newUuid().toString()))
+            .instanceId(properties.getOrElse(Key("NAIS_CLIENT_ID", stringType), UUIDv7.newUuid().toString()))
             .unleashAPI(properties[Key("UNLEASH_SERVER_API_URL", stringType)] + "/api")
             .apiKey(properties[Key("UNLEASH_SERVER_API_TOKEN", stringType)])
             .environment(properties[Key("UNLEASH_SERVER_API_ENV", stringType)])

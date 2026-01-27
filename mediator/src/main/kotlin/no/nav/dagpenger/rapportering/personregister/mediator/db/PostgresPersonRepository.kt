@@ -8,6 +8,7 @@ import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
@@ -779,7 +780,7 @@ class PostgresPersonRepository(
 
             "StartetArbeidssøkerperiodeHendelse" ->
                 StartetArbeidssøkerperiodeHendelse(
-                    periodeId = UUID.fromString(referanseId),
+                    periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
                     startet =
                         startDato ?: throw IllegalStateException(
@@ -789,7 +790,7 @@ class PostgresPersonRepository(
 
             "AvsluttetArbeidssøkerperiodeHendelse" ->
                 AvsluttetArbeidssøkerperiodeHendelse(
-                    periodeId = UUID.fromString(referanseId),
+                    periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
                     startet =
                         startDato ?: throw IllegalStateException(

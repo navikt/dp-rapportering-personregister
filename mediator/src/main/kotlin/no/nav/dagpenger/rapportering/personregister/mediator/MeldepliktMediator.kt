@@ -8,12 +8,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockin
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import java.time.LocalDateTime
-import java.util.UUID
 
 class MeldepliktMediator(
     private val personRepository: PersonRepository,
@@ -53,7 +53,7 @@ class MeldepliktMediator(
                             if (person.meldeplikt != meldeplikt) {
                                 MeldepliktHendelse(
                                     ident = person.ident,
-                                    referanseId = UUID.randomUUID().toString(),
+                                    referanseId = UUIDv7.newUuid().toString(),
                                     dato = LocalDateTime.now(),
                                     startDato = LocalDateTime.now(),
                                     sluttDato = null,

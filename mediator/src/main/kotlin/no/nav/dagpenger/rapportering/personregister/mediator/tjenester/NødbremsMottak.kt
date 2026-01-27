@@ -9,9 +9,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import java.time.LocalDateTime
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -48,7 +48,7 @@ class NødbremsMottak(
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),
-                    referanseId = UUID.randomUUID().toString(),
+                    referanseId = UUIDv7.newUuid().toString(),
                 ),
             )
         } catch (e: Exception) {

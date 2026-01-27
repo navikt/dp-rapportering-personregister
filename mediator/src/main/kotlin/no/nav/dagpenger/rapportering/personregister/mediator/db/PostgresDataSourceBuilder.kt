@@ -14,7 +14,7 @@ internal object PostgresDataSourceBuilder {
     val dataSource by lazy {
         HikariDataSource().apply {
             jdbcUrl = getOrThrow(DB_URL_KEY)
-            maximumPoolSize = 40
+            maximumPoolSize = 80
             minimumIdle = 1
             idleTimeout = 10000 // 10s
             connectionTimeout = 5000 // 5s
