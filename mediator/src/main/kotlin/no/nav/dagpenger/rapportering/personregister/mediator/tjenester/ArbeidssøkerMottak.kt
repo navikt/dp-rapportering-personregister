@@ -18,6 +18,14 @@ class ArbeidssøkerMottak(
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach { record ->
             logger.info { "Behandler periode med key: ${record.key()}" }
+
+            teamLogg.info {
+                "Behandler periode med key: ${record.key()}. " +
+                    "Avsluttet.kilde: ${record.value().avsluttet?.kilde}. " +
+                    "Avsluttet.aarsak: ${record.value().avsluttet?.aarsak}. " +
+                    "Avsluttet.utfoertAv.id: ${record.value().avsluttet?.utfoertAv?.id}. " +
+                    "Avsluttet.utfoertAv.id: ${record.value().avsluttet?.utfoertAv?.type?.name}"
+            }
             arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
             Arbeidssøkerperiode(
                 ident = record.value().identitetsnummer,
@@ -30,5 +38,6 @@ class ArbeidssøkerMottak(
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val teamLogg = KotlinLogging.logger("tjenestekall")
     }
 }
