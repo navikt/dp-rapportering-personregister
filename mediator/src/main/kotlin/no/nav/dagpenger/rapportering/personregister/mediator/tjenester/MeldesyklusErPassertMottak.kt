@@ -7,6 +7,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
@@ -54,6 +55,8 @@ class MeldesyklusErPassertMottak(
             if (!ident.matches(Regex("[0-9]{11}"))) {
                 throw IllegalArgumentException("Person-ident må ha 11 sifre")
             }
+
+            Span.current().spanContext.traceId
 
             val meldesyklusErPassertHendelse =
                 MeldesyklusErPassertHendelse(

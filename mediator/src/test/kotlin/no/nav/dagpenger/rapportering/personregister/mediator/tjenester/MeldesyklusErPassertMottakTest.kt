@@ -53,6 +53,8 @@ class MeldesyklusErPassertMottakTest {
             }
             """.trimIndent()
 
+        println(melding)
+
         testRapid.sendTestMessage(melding)
 
         hendelseSlot.captured.ident shouldBe ident
