@@ -20,6 +20,8 @@ PDL_API_HOST: pdl-api.prod-fss-pub.nais.io
 PDL_AUDIENCE: prod-fss:pdl:pdl-api
 PDL_API_SCOPE: api://prod-fss.pdl.pdl-api/.default
 
+KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-p,teamdagpenger.journalforing.v1
+
 additionalInbounds:
   - application: meldekort-api
     namespace: meldekort
