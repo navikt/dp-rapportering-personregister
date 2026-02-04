@@ -39,6 +39,8 @@ class PersonMediator(
             personService
                 .hentEllerOpprettPerson(søknadHendelse.ident)
                 .also { person ->
+                    if (person.hendelser.any { it.referanseId == søknadHendelse.referanseId }) return@timedAction
+
                     person.behandle(søknadHendelse)
                     try {
                         personRepository.oppdaterPerson(person)
