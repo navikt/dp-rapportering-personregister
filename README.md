@@ -59,7 +59,6 @@ Observere reagerer på endringer i Person og produserer sideeffekter:
 
 ### Jobber
 - `AktiverHendelserJob` (daglig ~00:01) – aktiverer fremtidige hendelser (meldeplikt/meldegruppe/vedtak) som starter i dag.
-- `ResendPåVegneAvMelding` (hvert 40. minutt) – re-produserer meldinger om overtakelse/frasigelse på Kafka ved behov.
 
 #### Midlertidige jobber
 - `AvvikPersonsynkroniseringJob` – sjekker og logger avvik i personsynkronisering (f.eks. feil meldegruppe i forhold til status) for alle personer. Jobben logger kun avvik; Denne jobben ble brukt når vi hadde problemer med sync mot Arena og brukes ikke lenger.
