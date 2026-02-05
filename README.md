@@ -59,7 +59,12 @@ Observere reagerer på endringer i Person og produserer sideeffekter:
 
 ### Jobber
 - `AktiverHendelserJob` (daglig ~00:01) – aktiverer fremtidige hendelser (meldeplikt/meldegruppe/vedtak) som starter i dag.
-- `ResendPåVegneAvMelding` (hvert 40. minutt) – re-produserer meldinger om overtakelse/frasigelse på Kafka ved behov.
+
+#### Midlertidige jobber
+- `AvvikPersonsynkroniseringJob` – sjekker og logger avvik i personsynkronisering (f.eks. feil meldegruppe i forhold til status) for alle personer. Jobben logger kun avvik. Denne jobben ble brukt når vi hadde problemer med sync mot Arena og brukes ikke lenger.
+- `AvvikStatusJob` – beregner «riktig» personstatus ut fra hendelser og arbeidssøkerperioder og retter opp personer med statusavvik; Denne jobben ble brukt når vi hadde problemer med sync mot Arena og brukes ikke lenger.
+- `MeldestatusJob` – henter meldestatus fra Arena for personer som ligger i `temp_person`-tabellen og oppdaterer status via `MeldestatusMediator`. Denne jobben ble brukt for å synce personer mot Arena. Jobben er aktiv og vil aktivt plukke personer fra `temp_person`-tabellen.
+- `ResendPåVegneAvMelding` – finner personer med avvik i bekreftelsesansvar og re-sender overtakelses-/frasigelsesmeldinger på Kafka til alt er i synk. Jobben er aktiv og kjører periodisk.
 
 ## Hendelsesstrøm / Mottak
 Systemet lytter på Rapid (Rapids & Rivers) og Kafka.
