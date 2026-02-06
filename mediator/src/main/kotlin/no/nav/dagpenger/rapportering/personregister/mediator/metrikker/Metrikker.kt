@@ -17,7 +17,9 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.measureTime
 
 private val logger = KotlinLogging.logger {}
+
 private const val NAMESPACE = "dp_rapportering_personregister"
+private const val ACTION_TIMER_DESCRIPTION = "Indikerer hvor lang tid en funksjon brukte"
 
 class SoknadMetrikker(
     meterRegistry: MeterRegistry,
@@ -39,8 +41,23 @@ class BehandlingsresultatMetrikker(
             .register(meterRegistry)
 }
 
+class MeldestatusMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val meldestatusMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldestatus_mottatt_total")
+            .description("Indikerer antall mottatte meldestatus-meldinger fra Arena")
+            .register(meterRegistry)
+    val meldestatusFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldestatus_feilet_total")
+            .description("Indikerer antall feilede meldestatus-meldinger fra Arena")
+            .register(meterRegistry)
+}
+
 class MeldegruppeendringMetrikker(
-    private val meterRegistry: MeterRegistry,
+    meterRegistry: MeterRegistry,
 ) {
     val dagpengerMeldegruppeMottatt: Counter =
         Counter
@@ -62,7 +79,7 @@ class MeldegruppeendringMetrikker(
 }
 
 class MeldepliktendringMetrikker(
-    private val meterRegistry: MeterRegistry,
+    meterRegistry: MeterRegistry,
 ) {
     val meldepliktendringMottatt: Counter =
         Counter
@@ -78,7 +95,7 @@ class MeldepliktendringMetrikker(
 }
 
 class ArbeidssøkerperiodeMetrikker(
-    private val meterRegistry: MeterRegistry,
+    meterRegistry: MeterRegistry,
 ) {
     val arbeidssøkerperiodeMottatt: Counter =
         Counter
@@ -88,7 +105,7 @@ class ArbeidssøkerperiodeMetrikker(
 }
 
 class SynkroniserPersonMetrikker(
-    private val meterRegistry: MeterRegistry,
+    meterRegistry: MeterRegistry,
 ) {
     val personSynkronisert: Counter =
         Counter
@@ -116,8 +133,9 @@ class DatabaseMetrikker(
             .description("Antall lagrede hendelser i databasen")
             .register(meterRegistry)
         Gauge
-            .builder("${NAMESPACE}_lagrede_fremtidige_hendelser_total", lagredeFremtidigeHendelser) { it.get().toDouble() }
-            .description("Antall lagrede fremtidige hendelser i databasen")
+            .builder("${NAMESPACE}_lagrede_fremtidige_hendelser_total", lagredeFremtidigeHendelser) {
+                it.get().toDouble()
+            }.description("Antall lagrede fremtidige hendelser i databasen")
             .register(meterRegistry)
         Gauge
             .builder("${NAMESPACE}_antall_dagpengebrukere_total", antallDagpengebrukere) { it.get().toDouble() }
@@ -173,7 +191,7 @@ class ActionTimer(
         Timer
             .builder("${NAMESPACE}_timer")
             .tag("navn", navn)
-            .description("Indikerer hvor lang tid en funksjon brukte")
+            .description(ACTION_TIMER_DESCRIPTION)
             .register(meterRegistry)
             .record(tidBrukt.inWholeMilliseconds, MILLISECONDS)
 
@@ -192,7 +210,7 @@ class ActionTimer(
         Timer
             .builder("${NAMESPACE}_timer")
             .tag("navn", navn)
-            .description("Indikerer hvor lang tid en funksjon brukte")
+            .description(ACTION_TIMER_DESCRIPTION)
             .register(meterRegistry)
             .record(tidBrukt.inWholeMilliseconds, MILLISECONDS)
 
@@ -209,7 +227,7 @@ class ActionTimer(
         .tag("navn", navn)
         .tag("status", statusCode.value.toString())
         .tag("method", method.value)
-        .description("Indikerer hvor lang tid en funksjon brukte")
+        .description(ACTION_TIMER_DESCRIPTION)
         .register(meterRegistry)
         .record(durationSeconds.toLong(), SECONDS)
 }
