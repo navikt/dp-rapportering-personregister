@@ -3,11 +3,12 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldestatusMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test
 class MeldestatusMottakTest {
     private val testRapid = TestRapid()
     private val meldestatusMediator = mockk<MeldestatusMediator>(relaxed = true)
+    private val meldestatusMetrikker = MeldestatusMetrikker(SimpleMeterRegistry())
 
     init {
         MeldestatusMottak(testRapid, meldestatusMediator, meldestatusMetrikker)
@@ -27,6 +29,8 @@ class MeldestatusMottakTest {
 
     @Test
     fun `onPacket konsumerer meldestatusendring og inkrementerer mottakmetrikk`() {
+        val countBefore = meldestatusMetrikker.meldestatusMottatt.count()
+        
         testRapid.sendTestMessage(lagMeldestatusEndringEvent())
 
         val forventetHendelse =
@@ -36,12 +40,14 @@ class MeldestatusMottakTest {
                 hendelseId = 95,
             )
 
-        meldestatusMetrikker.meldestatusMottatt.count() shouldBe 1
+        meldestatusMetrikker.meldestatusMottatt.count() shouldBe countBefore + 1
         verify(exactly = 1) { meldestatusMediator.behandle(forventetHendelse) }
     }
 
     @Test
     fun `onPacket kaster exception inkrementerer feilmetrikk hvis behandling av meldestatus fra Arena feiler`() {
+        val countBefore = meldestatusMetrikker.meldestatusFeilet.count()
+        
         every { meldestatusMediator.behandle(any()) } throws RuntimeException("kaboom")
 
         val exception =
@@ -50,7 +56,7 @@ class MeldestatusMottakTest {
             }
 
         exception.message shouldBe "kaboom"
-        meldestatusMetrikker.meldestatusFeilet.count() shouldBe 1
+        meldestatusMetrikker.meldestatusFeilet.count() shouldBe countBefore + 1
     }
 }
 
