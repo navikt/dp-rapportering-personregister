@@ -9,6 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 
 private val logger = KotlinLogging.logger {}
@@ -17,6 +18,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class MeldestatusMottak(
     rapidsConnection: RapidsConnection,
     private val meldestatusMediator: MeldestatusMediator,
+    private val meldestatusMetrikker: MeldestatusMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -40,15 +42,17 @@ class MeldestatusMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok ny meldestatusendring" }
-        sikkerlogg.info { "Mottok ny meldestatusendring: ${packet.toJson()}" }
+        logger.info { "Mottok ny meldestatus fra Arena" }
+        sikkerlogg.info { "Mottok ny meldestatus fra Arena: ${packet.toJson()}" }
+        meldestatusMetrikker.meldestatusMottatt.increment()
 
         try {
             val hendelse = packet.tilHendelse()
             meldestatusMediator.behandle(hendelse)
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av meldestatusendring" }
-            sikkerlogg.error(e) { "Feil ved behandling av meldestatusendring: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av meldestatus fra Arena" }
+            sikkerlogg.error(e) { "Feil ved behandling av meldestatus fra Arena: ${packet.toJson()}" }
+            meldestatusMetrikker.meldestatusFeilet.increment()
             throw e
         }
     }

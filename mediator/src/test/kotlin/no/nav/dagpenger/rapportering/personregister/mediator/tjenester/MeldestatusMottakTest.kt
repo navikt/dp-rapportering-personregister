@@ -1,24 +1,32 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.mockk.justRun
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class MeldestatusMottakTest {
     private val testRapid = TestRapid()
-    private val meldestatusMediator = mockk<MeldestatusMediator>()
+    private val meldestatusMediator = mockk<MeldestatusMediator>(relaxed = true)
 
     init {
-        MeldestatusMottak(testRapid, meldestatusMediator)
+        MeldestatusMottak(testRapid, meldestatusMediator, meldestatusMetrikker)
+    }
+
+    @BeforeEach
+    fun setUp() {
+        testRapid.reset()
     }
 
     @Test
-    fun `kan ta imot meldestatusendring`() {
-        justRun { meldestatusMediator.behandle(any()) }
+    fun `onPacket konsumerer meldestatusendring og inkrementerer mottakmetrikk`() {
         testRapid.sendTestMessage(lagMeldestatusEndringEvent())
 
         val forventetHendelse =
@@ -28,7 +36,21 @@ class MeldestatusMottakTest {
                 hendelseId = 95,
             )
 
+        meldestatusMetrikker.meldestatusMottatt.count() shouldBe 1
         verify(exactly = 1) { meldestatusMediator.behandle(forventetHendelse) }
+    }
+
+    @Test
+    fun `onPacket kaster exception inkrementerer feilmetrikk hvis behandling av meldestatus fra Arena feiler`() {
+        every { meldestatusMediator.behandle(any()) } throws RuntimeException("kaboom")
+
+        val exception =
+            shouldThrow<RuntimeException> {
+                testRapid.sendTestMessage(lagMeldestatusEndringEvent())
+            }
+
+        exception.message shouldBe "kaboom"
+        meldestatusMetrikker.meldestatusFeilet.count() shouldBe 1
     }
 }
 
