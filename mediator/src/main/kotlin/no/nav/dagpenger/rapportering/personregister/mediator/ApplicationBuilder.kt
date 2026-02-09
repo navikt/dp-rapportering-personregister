@@ -45,6 +45,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Behandlin
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
@@ -87,6 +88,7 @@ internal class ApplicationBuilder(
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
     private val soknadMetrikker = SoknadMetrikker(meterRegistry)
     private val behandlingsresultatMetrikker = BehandlingsresultatMetrikker(meterRegistry)
+    private val meldestatusMetrikker = MeldestatusMetrikker(meterRegistry)
     private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
@@ -264,7 +266,7 @@ internal class ApplicationBuilder(
                             }
                         }
                     },
-                ) { engine, rapid ->
+                ) { _, rapid ->
                     logger.info { "Starter rapid with" }
                     logger.info { "config: $config" }
 
@@ -272,6 +274,7 @@ internal class ApplicationBuilder(
                     MeldestatusMottak(
                         rapid,
                         meldestatusMediator,
+                        meldestatusMetrikker,
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator)
                     SøknadMottak(rapid, personMediator, soknadMetrikker)
