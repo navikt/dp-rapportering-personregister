@@ -13,5 +13,5 @@ fun MeldegruppeHendelse.gjelderTilbakeITid(person: Person) =
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldegruppeHendelse ->
             this.startDato.isBefore(sisteMeldegruppeHendelse.startDato) &&
-                (this.sluttDato != null && this.sluttDato?.isBefore(LocalDateTime.now()) ?: false)
+                (this.sluttDato?.isBefore(LocalDateTime.now()) == true)
         } ?: false
