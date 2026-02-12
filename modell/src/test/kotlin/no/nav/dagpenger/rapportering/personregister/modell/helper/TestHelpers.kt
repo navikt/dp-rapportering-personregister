@@ -40,20 +40,23 @@ fun arbeidssøker(
 fun dagpengerMeldegruppeHendelse(
     dato: LocalDateTime = nå,
     startDato: LocalDateTime = nå,
+    sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "DAGP", true)
+) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato, sluttDato, "DAGP", true)
 
 fun annenMeldegruppeHendelse(
     dato: LocalDateTime = nå,
     startDato: LocalDateTime = nå,
+    sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "ARBS", true)
+) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, sluttDato, "ARBS", true)
 
 fun meldepliktHendelse(
     dato: LocalDateTime = nå,
     startDato: LocalDateTime = nå,
+    sluttDato: LocalDateTime? = null,
     status: Boolean = false,
-) = MeldepliktHendelse(ident, dato, "123", startDato, null, status, true)
+) = MeldepliktHendelse(ident, dato, "123", startDato, sluttDato, status, true)
 
 fun startetArbeidssøkerperiodeHendelse(
     periodeId: UUID = UUID.randomUUID(),

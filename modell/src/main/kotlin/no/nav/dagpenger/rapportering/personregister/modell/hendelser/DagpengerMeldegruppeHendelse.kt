@@ -15,7 +15,7 @@ data class DagpengerMeldegruppeHendelse(
     override val dato: LocalDateTime,
     override val referanseId: String,
     override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
+    override val sluttDato: LocalDateTime?,
     val meldegruppeKode: String,
     val harMeldtSeg: Boolean,
     override val kilde: Kildesystem = Kildesystem.Arena,
