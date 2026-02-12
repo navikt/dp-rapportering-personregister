@@ -1,0 +1,23 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+    name: dp-rapportering-personregister-alerts
+    namespace: teamdagpenger
+    labels:
+        team: teamdagpenger
+spec:
+    groups:
+        -   name: dp-rapportering-personregister-kafka
+            rules:
+                -   alert: Ikke mottatt meldestatus-melding siste 3 timer
+                    expr: |
+                        sum(dp_rapportering_personregister_meldestatus_mottatt_total - dp_rapportering_personregister_meldestatus_mottatt_total offset 3h) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 3 timer siden dp-rapportering-personregister mottok forrige meldestatus-melding fra Arena'
+                        consequence: 'Arena og dp-rapportering-personregister er kanskje ikke i synk'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt hos Arena, i Kafka eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
