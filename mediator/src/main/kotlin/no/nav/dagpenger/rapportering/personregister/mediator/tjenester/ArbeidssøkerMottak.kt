@@ -10,6 +10,9 @@ import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import java.time.LocalDateTime
 
+private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
+
 class ArbeidssøkerMottak(
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
@@ -17,18 +20,28 @@ class ArbeidssøkerMottak(
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach { record ->
-            logger.info { "Behandler periode med key: ${record.key()}" }
-            arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
-            Arbeidssøkerperiode(
-                ident = record.value().identitetsnummer,
-                periodeId = record.value().id,
-                startet = LocalDateTime.ofInstant(record.value().startet.tidspunkt, ZONE_ID),
-                avsluttet = record.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
-                overtattBekreftelse = null,
-            ).also(arbeidssøkerMediator::behandle)
-        }
+            try {
+                logger.info { "Behandler periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id}" }
+                arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
 
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
+                Arbeidssøkerperiode(
+                    ident = record.value().identitetsnummer,
+                    periodeId = record.value().id,
+                    startet = LocalDateTime.ofInstant(record.value().startet.tidspunkt, ZONE_ID),
+                    avsluttet = record.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
+                    overtattBekreftelse = null,
+                ).also(arbeidssøkerMediator::behandle)
+            } catch (e: Exception) {
+                logger.error(
+                    e,
+                ) { "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id}" }
+                sikkerLogg.error(
+                    e,
+                ) {
+                    "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id} for ident ${record.value().identitetsnummer}"
+                }
+                arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeFeilet.increment()
+                throw e
+            }
+        }
 }

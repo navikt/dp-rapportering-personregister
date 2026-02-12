@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.just
@@ -9,7 +10,6 @@ import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.behandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -21,7 +21,6 @@ import java.time.LocalDate
 class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
     private val personRepository = mockk<PersonRepository>(relaxed = true)
-    private val behandlingRepository = mockk<BehandlingRepository>(relaxed = true)
     private val personMediator = mockk<PersonMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
@@ -41,7 +40,8 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `skal motta behandlingsresultat og opprette hendelser`() {
+    fun `onPacket behandler melding og inkrementerer metrikk`() {
+        val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatMottatt.count()
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
@@ -103,6 +103,8 @@ class BehandlingsresultatMottakTest {
         fremtidigeHendelser[0].sluttDato shouldBe null
         fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-1"
         fremtidigeHendelser[0].utfall shouldBe false
+
+        behandlingsresultatMetrikker.behandlingsresultatMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
@@ -150,5 +152,42 @@ class BehandlingsresultatMottakTest {
         hendelser[0].sluttDato shouldBe null
         hendelser[0].referanseId shouldBe "$behandlingId-0"
         hendelser[0].utfall shouldBe true
+    }
+
+    @Test
+    fun `onPacket kaster exception og inkrementerer metrikk hvis behandling av melding feiler`() {
+        val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatFeilet.count()
+        every { personMediator.behandle(any<VedtakHendelse>()) } throws RuntimeException("kaboom")
+
+        val exception =
+            shouldThrow<RuntimeException> {
+                testRapid.sendTestMessage(
+                    """
+                    {
+                      "@event_name": "behandlingsresultat",
+                      "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+                      "behandletHendelse": {
+                        "datatype": "string",
+                        "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                        "type": "Søknad"
+                      },
+                      "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                      "automatisk": true,
+                      "ident": "27298194126",
+                      "opplysninger": [ ],
+                      "rettighetsperioder": [
+                        {
+                          "fraOgMed": "2020-01-01",
+                          "harRett": true,
+                          "opprinnelse": "Ny"
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                )
+            }
+
+        exception.message shouldBe "kaboom"
+        behandlingsresultatMetrikker.behandlingsresultatFeilet.count() shouldBe metrikkCount + 1
     }
 }

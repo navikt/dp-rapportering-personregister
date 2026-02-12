@@ -9,15 +9,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import java.time.LocalDateTime
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val personStatusMediator: PersonMediator,
-    private val soknadMetrikker: SoknadMetrikker,
+    private val personMediator: PersonMediator,
+    private val søknadMetrikker: SøknadMetrikker,
 ) : River.PacketListener {
     private val quizSøknadIdNøkkel = "søknadsData.søknad_uuid"
     private val legacySøknadIdNøkkel = "søknadsData.brukerBehandlingId"
@@ -49,13 +49,14 @@ class SøknadMottak(
     ) {
         logger.info { "Mottok innsending_ferdigstilt melding" }
         sikkerlogg.info { "Mottok innsending_ferdigstilt melding: ${packet.toJson()}" }
-        soknadMetrikker.soknaderMottatt.increment()
+        søknadMetrikker.søknaderMottatt.increment()
 
         try {
-            personStatusMediator.behandle(packet.tilHendelse())
+            personMediator.behandle(packet.tilHendelse())
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av søknad" }
             sikkerlogg.error(e) { "Feil ved behandling av søknad: ${packet.toJson()}" }
+            søknadMetrikker.søknaderFeilet.increment()
             throw e
         }
     }

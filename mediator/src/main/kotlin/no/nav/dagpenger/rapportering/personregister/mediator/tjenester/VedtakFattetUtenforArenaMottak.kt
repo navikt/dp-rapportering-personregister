@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -15,6 +16,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class VedtakFattetUtenforArenaMottak(
     rapidsConnection: RapidsConnection,
     private val behandlingRepository: BehandlingRepository,
+    private val vedtakMetrikker: VedtakMetrikker,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -32,6 +34,7 @@ class VedtakFattetUtenforArenaMottak(
     ) {
         logger.info { "Mottok hendelse om at vedtak har blitt fattet utenfor Arena" }
         sikkerLogg.info { "Mottok hendelse om at vedtak har blitt fattet utenfor Arena: ${packet.toJson()}" }
+        vedtakMetrikker.vedtakFattetUtenforArenaMottatt.increment()
 
         try {
             val behandlingId = packet["behandlingId"].asText()
@@ -43,6 +46,7 @@ class VedtakFattetUtenforArenaMottak(
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av hendelse om at vedtak har blitt fattet utenfor Arena" }
             sikkerLogg.error(e) { "Feil ved behandling av hendelse om at vedtak har blitt fattet utenfor Arena: ${packet.toJson()}" }
+            vedtakMetrikker.vedtakFattetUtenforArenaFeilet.increment()
             throw e
         }
     }

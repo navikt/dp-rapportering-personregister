@@ -46,8 +46,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseM
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SoknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
@@ -86,13 +88,15 @@ internal class ApplicationBuilder(
 
     private val meterRegistry =
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
-    private val soknadMetrikker = SoknadMetrikker(meterRegistry)
+    private val søknadMetrikker = SøknadMetrikker(meterRegistry)
     private val behandlingsresultatMetrikker = BehandlingsresultatMetrikker(meterRegistry)
     private val meldestatusMetrikker = MeldestatusMetrikker(meterRegistry)
     private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
+    private val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
+    private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
 
@@ -276,8 +280,8 @@ internal class ApplicationBuilder(
                         meldestatusMediator,
                         meldestatusMetrikker,
                     )
-                    MeldesyklusErPassertMottak(rapid, personMediator)
-                    SøknadMottak(rapid, personMediator, soknadMetrikker)
+                    MeldesyklusErPassertMottak(rapid, personMediator, meldesyklusErPassertMetrikker)
+                    SøknadMottak(rapid, personMediator, søknadMetrikker)
                     BehandlingsresultatMottak(
                         rapid,
                         personRepository,
@@ -285,7 +289,7 @@ internal class ApplicationBuilder(
                         fremtidigHendelseMediator,
                         behandlingsresultatMetrikker,
                     )
-                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository)
+                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
                 }
 

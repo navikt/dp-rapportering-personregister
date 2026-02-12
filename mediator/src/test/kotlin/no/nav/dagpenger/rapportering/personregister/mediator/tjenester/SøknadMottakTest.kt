@@ -1,10 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.shouldBe
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.soknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.søknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +19,7 @@ class SøknadMottakTest {
     private val personMediator = mockk<PersonMediator>(relaxed = true)
 
     init {
-        SøknadMottak(testRapid, personMediator, soknadMetrikker)
+        SøknadMottak(testRapid, personMediator, søknadMetrikker)
     }
 
     @BeforeEach
@@ -25,7 +28,8 @@ class SøknadMottakTest {
     }
 
     @Test
-    fun `skal motta Quiz-søknad`() {
+    fun `onPacket behandler Quiz-søknad og inkrementerer metrikk`() {
+        val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678901"
         val søknadId = UUIDv7.newUuid().toString()
         val søknadsData = "\"søknad_uuid\": \"$søknadId\""
@@ -42,10 +46,12 @@ class SøknadMottakTest {
             )
 
         verify(exactly = 1) { personMediator.behandle(søknadHendelse) }
+        søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
-    fun `skal motta Legacy-søknad`() {
+    fun `onPacket behandler Legacy-søknad og inkrementerer metrikk`() {
+        val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678902"
         val søknadId = UUIDv7.newUuid().toString()
         val søknadsData = "\"brukerBehandlingId\": \"$søknadId\""
@@ -62,10 +68,12 @@ class SøknadMottakTest {
             )
 
         verify(exactly = 1) { personMediator.behandle(søknadHendelse) }
+        søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
-    fun `skal motta Papirsøknad`() {
+    fun `onPacket behandler Papirsøknad og inkrementerer metrikk`() {
+        val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678903"
         val søknadsData = null
         val dato = "2025-09-25T00:00:00"
@@ -73,13 +81,28 @@ class SøknadMottakTest {
         testRapid.sendTestMessage(lagInnsendingFerdigstiltEvent(ident, dato, søknadsData))
 
         verify(exactly = 1) { personMediator.behandle(any<SøknadHendelse>(), eq(1)) }
+        søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
+    }
+
+    @Test
+    fun `onPacket kaster exception og inkrementerer feilmetrikk hvis behandling av melding feiler`() {
+        val metrikkCount = søknadMetrikker.søknaderFeilet.count()
+        every { personMediator.behandle(any<SøknadHendelse>()) } throws RuntimeException("kaboom")
+
+        val exception =
+            shouldThrow<RuntimeException> {
+                testRapid.sendTestMessage(lagInnsendingFerdigstiltEvent())
+            }
+
+        exception.message shouldBe "kaboom"
+        søknadMetrikker.søknaderFeilet.count() shouldBe metrikkCount + 1
     }
 }
 
 private fun lagInnsendingFerdigstiltEvent(
-    ident: String,
-    dato: String,
-    søknadsData: String?,
+    ident: String = "12345678903",
+    dato: String = "2025-09-25T00:00:00",
+    søknadsData: String? = null,
 ): String {
     //language=json
     return """

@@ -26,8 +26,8 @@ class MeldestatusMottakTest {
     }
 
     @Test
-    fun `onPacket konsumerer meldestatusendring og inkrementerer mottakmetrikk`() {
-        val count = meldestatusMetrikker.meldestatusMottatt.count()
+    fun `onPacket behandler melding og inkrementerer mottakmetrikk`() {
+        val metrikkCount = meldestatusMetrikker.meldestatusMottatt.count()
 
         testRapid.sendTestMessage(lagMeldestatusEndringEvent())
 
@@ -38,13 +38,13 @@ class MeldestatusMottakTest {
                 hendelseId = 95,
             )
 
-        meldestatusMetrikker.meldestatusMottatt.count() shouldBe count + 1
+        meldestatusMetrikker.meldestatusMottatt.count() shouldBe metrikkCount + 1
         verify(exactly = 1) { meldestatusMediator.behandle(forventetHendelse) }
     }
 
     @Test
     fun `onPacket kaster exception og inkrementerer feilmetrikk hvis behandling av meldestatus fra Arena feiler`() {
-        val count = meldestatusMetrikker.meldestatusFeilet.count()
+        val metrikkCount = meldestatusMetrikker.meldestatusFeilet.count()
         every { meldestatusMediator.behandle(any()) } throws RuntimeException("kaboom")
 
         val exception =
@@ -53,7 +53,7 @@ class MeldestatusMottakTest {
             }
 
         exception.message shouldBe "kaboom"
-        meldestatusMetrikker.meldestatusFeilet.count() shouldBe count + 1
+        meldestatusMetrikker.meldestatusFeilet.count() shouldBe metrikkCount + 1
     }
 }
 
