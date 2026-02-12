@@ -21,13 +21,18 @@ private val logger = KotlinLogging.logger {}
 private const val NAMESPACE = "dp_rapportering_personregister"
 private const val ACTION_TIMER_DESCRIPTION = "Indikerer hvor lang tid en funksjon brukte"
 
-class SoknadMetrikker(
+class SøknadMetrikker(
     meterRegistry: MeterRegistry,
 ) {
-    val soknaderMottatt: Counter =
+    val søknaderMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_soknad_mottatt_total")
-            .description("Indikerer antall mottatte søknader")
+            .description("Antall mottatte meldinger om mottatte søknader")
+            .register(meterRegistry)
+    val søknaderFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_soknad_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om mottatte søknader")
             .register(meterRegistry)
 }
 
@@ -37,7 +42,12 @@ class BehandlingsresultatMetrikker(
     val behandlingsresultatMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_behandlingsresultat_mottatt_total")
-            .description("Indikerer antall mottatte behandlingsresultater")
+            .description("Antall mottatte meldinger om behandlingsresultater")
+            .register(meterRegistry)
+    val behandlingsresultatFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_behandlingsresultat_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om behandlingsresultater")
             .register(meterRegistry)
 }
 
@@ -47,12 +57,12 @@ class MeldestatusMetrikker(
     val meldestatusMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldestatus_mottatt_total")
-            .description("Indikerer antall mottatte meldestatus-meldinger fra Arena")
+            .description("Antall mottatte meldinger om meldestatus fra Arena")
             .register(meterRegistry)
     val meldestatusFeilet: Counter =
         Counter
             .builder("${NAMESPACE}_meldestatus_feilet_total")
-            .description("Indikerer antall feilede meldestatus-meldinger fra Arena")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om meldestatus fra Arena")
             .register(meterRegistry)
 }
 
@@ -62,19 +72,19 @@ class MeldegruppeendringMetrikker(
     val dagpengerMeldegruppeMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldegruppeendring_dagpenger_mottatt_total")
-            .description("Indikerer antall mottatte dagpengermeldegruppeendringer")
+            .description("Antall mottatte dagpengermeldegruppeendringer")
             .register(meterRegistry)
 
     val annenMeldegruppeMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldegruppeendring_annet_mottatt_total")
-            .description("Indikerer antall mottatte annenmeldegruppeendringer")
+            .description("Antall mottatte annenmeldegruppeendringer")
             .register(meterRegistry)
 
     val fremtidigMeldegruppeMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldegruppeendring_fremtidig_total")
-            .description("Indikerer antall mottatte meldegruppeendringer med fremtidig dato")
+            .description("Antall mottatte meldegruppeendringer med fremtidig dato")
             .register(meterRegistry)
 }
 
@@ -84,13 +94,28 @@ class MeldepliktendringMetrikker(
     val meldepliktendringMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldepliktendring_mottatt_total")
-            .description("Indikerer antall mottatte meldepliktendringer")
+            .description("Antall mottatte meldepliktendringer")
             .register(meterRegistry)
 
     val fremtidigMeldepliktendringMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldepliktendring_fremtidig_total")
-            .description("Indikerer antall mottatte meldepliktendringer med fremtidig dato")
+            .description("Antall mottatte meldepliktendringer med fremtidig dato")
+            .register(meterRegistry)
+}
+
+class MeldesyklusErPassertMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val meldesyklusErPassertMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldesyklus_er_passert_mottatt_total")
+            .description("Antall mottatte meldinger om at meldesyklus er passert")
+            .register(meterRegistry)
+    val meldesyklusErPassertFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_meldesyklus_er_passert_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om at meldesyklus er passert")
             .register(meterRegistry)
 }
 
@@ -100,7 +125,12 @@ class ArbeidssøkerperiodeMetrikker(
     val arbeidssøkerperiodeMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_arbeidssokerperiode_mottatt_total")
-            .description("Indikerer antall mottatte arbeidssøkerperioder")
+            .description("Antall mottatte meldinger om arbeidssøkerperiode")
+            .register(meterRegistry)
+    val arbeidssøkerperiodeFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerperiode_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om arbeidssøkerperiode")
             .register(meterRegistry)
 }
 
@@ -110,7 +140,22 @@ class SynkroniserPersonMetrikker(
     val personSynkronisert: Counter =
         Counter
             .builder("${NAMESPACE}_person_synkronisert_total")
-            .description("Indikerer antall synkroniserte personer via POST endepunkt")
+            .description("Antall synkroniserte personer via POST endepunkt")
+            .register(meterRegistry)
+}
+
+class VedtakMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val vedtakFattetUtenforArenaMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_vedtak_fattet_utenfor_arena_mottatt_total")
+            .description("Antall mottatte meldinger om vedtak fattet utenfor Arena")
+            .register(meterRegistry)
+    val vedtakFattetUtenforArenaFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_vedtak_fattet_utenfor_arena_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om vedtak fattet utenfor Arena")
             .register(meterRegistry)
 }
 

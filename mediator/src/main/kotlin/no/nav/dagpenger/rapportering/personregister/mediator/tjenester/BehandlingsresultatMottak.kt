@@ -64,7 +64,6 @@ class BehandlingsresultatMottak(
         ) {
             logger.info { "Mottok behandlingsresultat melding" }
             sikkerlogg.info { "Mottok behandlingsresultat melding: ${packet.toJson()}" }
-
             behandlingsresultatMetrikker.behandlingsresultatMottatt.increment()
 
             try {
@@ -108,6 +107,7 @@ class BehandlingsresultatMottak(
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved behandling av behandlingsresultat" }
                 sikkerlogg.error(e) { "Feil ved behandling av behandlingsresultat: ${packet.toJson()}" }
+                behandlingsresultatMetrikker.behandlingsresultatFeilet.increment()
                 throw e
             }
         }

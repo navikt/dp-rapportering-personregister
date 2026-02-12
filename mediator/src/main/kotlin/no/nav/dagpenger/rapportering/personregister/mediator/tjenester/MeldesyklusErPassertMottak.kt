@@ -9,12 +9,14 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import java.time.LocalDateTime
 
 class MeldesyklusErPassertMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
+    private val meldesyklusErPassertMetrikker: MeldesyklusErPassertMetrikker,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -46,6 +48,7 @@ class MeldesyklusErPassertMottak(
     ) {
         logger.info { "Mottok meldesyklus_er_passert melding" }
         sikkerlogg.info { "Mottok meldesyklus_er_passert melding: ${packet.toJson()}" }
+        meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.increment()
 
         try {
             val ident = packet["ident"].asText()
@@ -67,6 +70,7 @@ class MeldesyklusErPassertMottak(
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert" }
             sikkerlogg.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert: ${packet.toJson()}" }
+            meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.increment()
             throw e
         }
     }
