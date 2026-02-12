@@ -52,5 +52,6 @@ private fun MeldepliktHendelse.gjelderTilbakeITid(person: Person) =
         .filterIsInstance<MeldepliktHendelse>()
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldegruppeHendelse ->
-            this.startDato.isBefore(sisteMeldegruppeHendelse.startDato)
+            this.startDato.isBefore(sisteMeldegruppeHendelse.startDato) &&
+                (this.sluttDato != null && this.sluttDato.isBefore(LocalDateTime.now()))
         } ?: false

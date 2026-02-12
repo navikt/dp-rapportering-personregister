@@ -11,15 +11,24 @@ import java.time.LocalDateTime
 
 class AnnenMeldegruppeHendelseTest {
     private val nå = LocalDateTime.now()
-    private val tidligere = nå.minusDays(1)
+    private val tidligere = nå.minusDays(2)
 
     @Test
     fun `Ignorer hendelsen der den gjelder tilbake i tid`() =
         testPerson {
             behandle(dagpengerMeldegruppeHendelse(startDato = nå))
-            behandle(annenMeldegruppeHendelse(startDato = tidligere))
+            behandle(annenMeldegruppeHendelse(startDato = tidligere, sluttDato = nå.minusDays(1)))
 
             meldegruppe shouldBe "DAGP"
+        }
+
+    @Test
+    fun `Ikke ignorer hendelse der startDato gjelder tilbake i tid, men sluttDato ikke er satt`() =
+        testPerson {
+            behandle(dagpengerMeldegruppeHendelse(startDato = nå))
+            behandle(annenMeldegruppeHendelse(startDato = tidligere, sluttDato = null))
+
+            meldegruppe shouldBe "ARBS"
         }
 
     @Test
@@ -37,7 +46,7 @@ class AnnenMeldegruppeHendelseTest {
             behandle(dagpengerMeldegruppeHendelse(startDato = nå.minusDays(2)))
             behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1)))
             behandle(dagpengerMeldegruppeHendelse(startDato = nå))
-            behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1)))
+            behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1), sluttDato = nå.minusMinutes(1)))
 
             meldegruppe shouldBe "DAGP"
         }

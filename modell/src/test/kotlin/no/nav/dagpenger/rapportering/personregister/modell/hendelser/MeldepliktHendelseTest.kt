@@ -2,7 +2,9 @@ package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.arbeidssøker
+import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.meldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import org.junit.jupiter.api.Test
@@ -10,15 +12,24 @@ import java.time.LocalDateTime
 
 class MeldepliktHendelseTest {
     private val nå = LocalDateTime.now()
-    private val tidligere = nå.minusDays(1)
+    private val tidligere = nå.minusDays(2)
 
     @Test
     fun `Ignorer hendelsen der den gjelder tilbake i tid`() =
         testPerson {
             behandle(meldepliktHendelse(startDato = nå, status = true))
-            behandle(meldepliktHendelse(startDato = tidligere, status = false))
+            behandle(meldepliktHendelse(startDato = tidligere, sluttDato = nå.minusDays(1), status = false))
 
             meldeplikt shouldBe true
+        }
+
+    @Test
+    fun `Ikke ignorer hendelse der startDato gjelder tilbake i tid, men sluttDato ikke er satt`() =
+        testPerson {
+            behandle(meldepliktHendelse(startDato = nå, status = true))
+            behandle(meldepliktHendelse(startDato = tidligere, sluttDato = null, status = false))
+
+            meldeplikt shouldBe false
         }
 
     @Test
@@ -34,9 +45,9 @@ class MeldepliktHendelseTest {
     fun `behandler flere hendelser i riktig rekkefølge`() =
         testPerson {
             behandle(meldepliktHendelse(startDato = nå, status = false))
-            behandle(meldepliktHendelse(startDato = nå.plusDays(1), status = false))
+            behandle(meldepliktHendelse(startDato = nå.minusDays(1), status = false))
             behandle(meldepliktHendelse(startDato = nå.plusDays(2), status = true))
-            behandle(meldepliktHendelse(startDato = nå.plusDays(1), status = false))
+            behandle(meldepliktHendelse(startDato = nå.minusDays(2), sluttDato = nå, status = false))
 
             meldeplikt shouldBe true
         }
