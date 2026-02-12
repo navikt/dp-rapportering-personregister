@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmeldin
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 private val logger = KotlinLogging.logger {}
 
@@ -51,7 +52,7 @@ private fun MeldepliktHendelse.gjelderTilbakeITid(person: Person) =
     person.hendelser
         .filterIsInstance<MeldepliktHendelse>()
         .maxByOrNull { it.startDato }
-        ?.let { sisteMeldegruppeHendelse ->
-            this.startDato.isBefore(sisteMeldegruppeHendelse.startDato) &&
-                (this.sluttDato != null && this.sluttDato.isBefore(LocalDateTime.now()))
+        ?.let { sisteMeldepliktHendelse ->
+            this.startDato.isBefore(sisteMeldepliktHendelse.startDato) &&
+                this.sluttDato?.isBefore(now()) == true
         } ?: false

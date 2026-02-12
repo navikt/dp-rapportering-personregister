@@ -46,6 +46,7 @@ class MeldepliktHendelseTest {
             behandle(meldepliktHendelse(startDato = nå.minusDays(1), status = false))
             behandle(meldepliktHendelse(startDato = nå.plusDays(2), status = true))
             behandle(meldepliktHendelse(startDato = nå.minusDays(2), sluttDato = nå, status = false))
+            behandle(meldepliktHendelse(startDato = nå.minusDays(2), sluttDato = nå.minusMinutes(1), status = false))
 
             meldeplikt shouldBe true
         }

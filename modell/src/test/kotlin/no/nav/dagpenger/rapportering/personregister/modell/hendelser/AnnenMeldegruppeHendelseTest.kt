@@ -46,6 +46,7 @@ class AnnenMeldegruppeHendelseTest {
             behandle(dagpengerMeldegruppeHendelse(startDato = nå.minusDays(2)))
             behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1)))
             behandle(dagpengerMeldegruppeHendelse(startDato = nå))
+            behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1), sluttDato = nå))
             behandle(annenMeldegruppeHendelse(startDato = nå.minusDays(1), sluttDato = nå.minusMinutes(1)))
 
             meldegruppe shouldBe "DAGP"
