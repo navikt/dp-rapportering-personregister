@@ -2,9 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import io.kotest.matchers.shouldBe
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.arbeidssøker
-import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.meldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import org.junit.jupiter.api.Test
