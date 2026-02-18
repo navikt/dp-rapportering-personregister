@@ -1,0 +1,56 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+    name: dp-rapportering-personregister-alerts
+    namespace: teamdagpenger
+    labels:
+        team: teamdagpenger
+spec:
+    groups:
+        -   name: dp-rapportering-personregister-kafka
+            rules:
+                -   alert: Ikke mottatt meldestatus-melding siste 3 timer fra Arena
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_meldestatus_mottatt_total[3h]))) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 3 timer siden dp-rapportering-personregister mottok forrige meldestatus-melding fra Arena'
+                        consequence: 'Arena og dp-rapportering-personregister er kanskje ikke i synk'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt hos Arena, i Kafka eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
+                -   alert: Ikke mottatt innsending_ferdigstilt-melding siste 3 timer fra dp-mottak
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_soknad_mottatt_total[3h]))) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 3 timer siden dp-rapportering-personregister mottok forrige innsending_ferdigstilt-melding fra dp-mottak'
+                        consequence: 'dp-rapportering-personregister mangler kanskje informasjon om nye søknader'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i dp-mottak, i Kafka (R&R) eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
+                -   alert: Ikke mottatt behandlingsresultat-melding siste 3 timer fra dp-behandling (kun i normal arbeidstid, målt i UTC)
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_behandlingsresultat_mottatt_total[3h]))) <= 0 and (day_of_week() > 0 and day_of_week() < 6) and (hour() > 8 and hour() < 15)
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 3 timer siden (kun i normal arbeidstid, målt i UTC) dp-rapportering-personregister mottok forrige behandlingsresultat-melding fra dp-behandling'
+                        consequence: 'dp-rapportering-personregister mangler kanskje informasjon om behandlingsresultat'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i dp-behandling, i Kafka (R&R) eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
+                -   alert: Ikke mottatt arbeidssokerperiode-melding siste 3 timer fra Arbeidssøkerregisteret
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_arbeidssokerperiode_mottatt_total[3h]))) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 3 timer siden dp-rapportering-personregister mottok forrige arbeidssøkerperiode-melding fra Arbeidssøkerregisteret'
+                        consequence: 'dp-rapportering-personregister mangler kanskje informasjon om arbeidssøkerperioder'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i Arbeidssøkerregisteret, i Kafka eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
