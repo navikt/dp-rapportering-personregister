@@ -3,7 +3,8 @@ name: Build and deploy
 on:
   workflow_dispatch:
   push:
-  pull_request:
+    branches-ignore:
+      - 'dependabot/**'
 
 jobs:
   build:
