@@ -44,7 +44,7 @@ jobs:
               id: docker-build-push
               with:
                   team: teamdagpenger
-                  push_image: true # The step runs only if the condition above matches
+                  push_image: true # Step runs only when "if: inputs.push_image" is true; push_image is always true when it does
                   tag: ${{ github.sha }}
                   dockerfile: mediator/Dockerfile
                   docker_context: mediator
