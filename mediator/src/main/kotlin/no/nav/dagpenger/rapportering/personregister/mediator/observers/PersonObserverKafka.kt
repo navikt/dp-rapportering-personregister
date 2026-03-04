@@ -96,7 +96,7 @@ class PersonObserverKafka(
                     logger.info {
                         "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
                             " $periodeId til arbeidssøkerregisteret. " +
-                            "Metadata: topic=${metadata.topic()} " +
+                            "Metadata: fristBrutt=$fristBrutt, topic=${metadata.topic()} " +
                             "(partition=${metadata.partition()}, offset=${metadata.offset()})"
                     }
                 }
