@@ -127,7 +127,7 @@ fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
 ) {
-    logger.info { "Frasier arbeidssøkerbekreftelse" }
+    logger.info { "Frasier arbeidssøkerbekreftelse, fristBrutt=$fristBrutt" }
     arbeidssøkerperioder
         .find { it.periodeId == periodeId }
         ?.let {
