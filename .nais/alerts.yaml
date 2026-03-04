@@ -32,12 +32,12 @@ spec:
                     labels:
                         namespace: teamdagpenger
                         severity: warning
-                -   alert: Ikke mottatt behandlingsresultat-melding siste 3 timer fra dp-behandling (kun i normal arbeidstid, målt i UTC)
+                -   alert: Ikke mottatt behandlingsresultat-melding siste 5 timer fra dp-behandling (kun i normal arbeidstid, målt i UTC)
                     expr: |
-                        round(sum(increase(dp_rapportering_personregister_behandlingsresultat_mottatt_total[3h]))) <= 0 and (day_of_week() > 0 and day_of_week() < 6) and (hour() > 8 and hour() < 15)
+                        round(sum(increase(dp_rapportering_personregister_behandlingsresultat_mottatt_total[5h]))) <= 0 and (day_of_week() > 0 and day_of_week() < 6) and (hour() > 8 and hour() < 15)
                     for: 5m
                     annotations:
-                        description: 'Det er over 3 timer siden (kun i normal arbeidstid, målt i UTC) dp-rapportering-personregister mottok forrige behandlingsresultat-melding fra dp-behandling'
+                        description: 'Det er over 5 timer siden (kun i normal arbeidstid, målt i UTC) dp-rapportering-personregister mottok forrige behandlingsresultat-melding fra dp-behandling'
                         consequence: 'dp-rapportering-personregister mangler kanskje informasjon om behandlingsresultat'
                         action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i dp-behandling, i Kafka (R&R) eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
                     labels:
