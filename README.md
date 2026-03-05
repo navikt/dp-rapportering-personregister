@@ -55,7 +55,7 @@ Observere reagerer på endringer i Person og produserer sideeffekter:
 - `PdlConnector` – henter identhistorikk/fødselsnummer fra PDL.
 
 ### Repository
-- `PostgresPersonRepository` – persisterer person, hendelser, fremtidige hendelser, arbeidssøkerperioder og statushistorikk.
+- `PersonRepositoryPostgres` – persisterer person, hendelser, fremtidige hendelser, arbeidssøkerperioder og statushistorikk.
 
 ### Jobber
 - `AktiverHendelserJob` (daglig ~00:01) – aktiverer fremtidige hendelser (meldeplikt/meldegruppe/vedtak) som starter i dag.

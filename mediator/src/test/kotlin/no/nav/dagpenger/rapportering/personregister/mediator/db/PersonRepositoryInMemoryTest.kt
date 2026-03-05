@@ -11,13 +11,13 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class InMemoryPersonRepositoryTest {
+class PersonRepositoryInMemoryTest {
     private lateinit var personRepository: PersonRepository
     private lateinit var person: Person
 
     @BeforeEach
     fun setUp() {
-        personRepository = InMemoryPersonRepository()
+        personRepository = PersonRepositoryInMemory()
         person = Person("12345678901")
     }
 

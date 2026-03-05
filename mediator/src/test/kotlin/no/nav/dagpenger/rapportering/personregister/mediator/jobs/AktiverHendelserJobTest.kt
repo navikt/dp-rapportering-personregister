@@ -12,8 +12,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 
 class AktiverHendelserJobTest : ApiTestSetup() {
     private val arbeidssøkerService = mockk<ArbeidssøkerService>()
-    private var personRepository = PostgresPersonRepository(dataSource, actionTimer)
+    private var personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val personService =
         PersonService(
             pdlConnector = pdlConnector,

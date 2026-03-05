@@ -20,8 +20,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
@@ -93,7 +93,7 @@ class PersonMediatorTest {
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
-        personRepository = InMemoryPersonRepository()
+        personRepository = PersonRepositoryInMemory()
         beslutningRepository = ArbeidssøkerBeslutningRepositoryFaker()
         beslutningObserver = BeslutningObserver(beslutningRepository)
         personService =

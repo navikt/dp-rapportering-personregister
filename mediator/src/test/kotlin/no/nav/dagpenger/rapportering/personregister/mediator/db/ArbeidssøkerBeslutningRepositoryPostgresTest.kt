@@ -12,9 +12,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 
-class PostgressArbeidssøkerBeslutningRepositoryTest {
-    private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
+class ArbeidssøkerBeslutningRepositoryPostgresTest {
+    private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
+    private val arbeidssøkerBeslutningRepository = ArbeidssøkerBeslutningRepositoryPostgres(dataSource, actionTimer)
 
     @Test
     fun `kan lagre og hente arbeidssøkerbeslutning`() {

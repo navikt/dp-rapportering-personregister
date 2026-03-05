@@ -8,7 +8,7 @@ import javax.sql.DataSource
 
 private val logger = KotlinLogging.logger {}
 
-class PostgresTempPersonRepository(
+class TempPersonRepositoryPostgres(
     private val dataSource: DataSource,
 ) : TempPersonRepository {
     override fun hentPerson(ident: String): TempPerson? =

@@ -10,8 +10,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.mockk.every
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -70,7 +70,7 @@ class PersonApiTest : ApiTestSetup() {
     @Test
     fun `hentPersonId returnerer personId hvis den finnes`() =
         setUpTestApplication {
-            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
 
             Person(ident)
                 .apply { behandle(lagHendelse(ident)) }
@@ -129,7 +129,7 @@ class PersonApiTest : ApiTestSetup() {
     @Test
     fun `hentIdent returnerer ident hvis den finnes`() =
         setUpTestApplication {
-            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
 
             Person(ident)
                 .apply { behandle(lagHendelse(ident)) }

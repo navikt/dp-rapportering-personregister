@@ -2,7 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 
-class InMemoryArbeidssøkerBeslutningRepository : ArbeidssøkerBeslutningRepository {
+class ArbeidssøkerBeslutningRepositoryInMemory : ArbeidssøkerBeslutningRepository {
     private val beslutninger = mutableListOf<ArbeidssøkerBeslutning>()
 
     override fun hentBeslutning(id: String) = beslutninger.lastOrNull { it.periodeId.toString() == id }

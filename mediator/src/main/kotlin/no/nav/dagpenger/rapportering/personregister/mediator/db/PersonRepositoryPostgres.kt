@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 import javax.sql.DataSource
 
-class PostgresPersonRepository(
+class PersonRepositoryPostgres(
     private val dataSource: DataSource,
     private val actionTimer: ActionTimer,
 ) : PersonRepository {
@@ -825,6 +825,7 @@ class PostgresPersonRepository(
                     ident = ident,
                     dato = dato,
                     startDato = startDato ?: dato,
+                    sluttDato = sluttDato,
                     referanseId = referanseId,
                     utfall = vedtakExtra.utfall,
                 )

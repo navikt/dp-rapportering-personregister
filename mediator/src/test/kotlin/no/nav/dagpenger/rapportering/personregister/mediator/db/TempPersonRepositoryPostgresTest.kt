@@ -7,13 +7,13 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 
-class PostgresTempPersonRepositoryTest {
+class TempPersonRepositoryPostgresTest {
     private val repository =
-        PostgresTempPersonRepository(
+        TempPersonRepositoryPostgres(
             dataSource = dataSource,
         )
     private val personRepository =
-        PostgresPersonRepository(
+        PersonRepositoryPostgres(
             dataSource = dataSource,
             actionTimer = actionTimer,
         )

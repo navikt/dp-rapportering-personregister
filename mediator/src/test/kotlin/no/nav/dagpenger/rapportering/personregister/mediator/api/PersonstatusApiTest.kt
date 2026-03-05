@@ -15,8 +15,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -189,7 +189,7 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `Get personstatus gir personen med riktig status hvis den finnes`() =
         setUpTestApplication {
-            val personRepository = PostgresPersonRepository(PostgresDataSourceBuilder.dataSource, actionTimer)
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
 
             Person(ident)
                 .apply { behandle(lagHendelse(ident)) }
