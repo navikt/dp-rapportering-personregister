@@ -14,8 +14,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -74,7 +74,7 @@ class MeldepliktMediatorTest {
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
-        personRepository = InMemoryPersonRepository()
+        personRepository = PersonRepositoryInMemory()
         personService =
             PersonService(
                 pdlConnector = pdlConnector,

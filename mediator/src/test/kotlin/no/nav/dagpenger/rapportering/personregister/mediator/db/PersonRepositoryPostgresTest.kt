@@ -33,8 +33,8 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-class PostgresPersonRepositoryTest {
-    private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+class PersonRepositoryPostgresTest {
+    private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val ident = "12345678901"
     private val nå = LocalDateTime.now()
 
@@ -439,6 +439,7 @@ class PostgresPersonRepositoryTest {
                 (it is VedtakHendelse) shouldBe true
                 val vedtakHendelse = it as VedtakHendelse
                 vedtakHendelse.startDato shouldBe LocalDateTime.MIN
+                vedtakHendelse.sluttDato shouldBe LocalDateTime.MAX
             }
         }
     }

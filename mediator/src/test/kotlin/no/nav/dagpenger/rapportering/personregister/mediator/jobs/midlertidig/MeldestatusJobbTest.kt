@@ -10,7 +10,7 @@ import io.mockk.runs
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPerson
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonStatus
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class MeldestatusJobbTest {
-    val personRepository = InMemoryPersonRepository()
+    val personRepository = PersonRepositoryInMemory()
     val personService = mockk<PersonService>()
     val tempPersonRepository = mockk<TempPersonRepository>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)

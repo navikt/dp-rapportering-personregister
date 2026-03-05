@@ -28,12 +28,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresTempPersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgressArbeidssøkerBeslutningRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.TempPersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ScheduledTask
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
@@ -108,11 +108,11 @@ internal class ApplicationBuilder(
             .maximumSize(10000)
             .build()
 
-    private val personRepository = PostgresPersonRepository(dataSource, actionTimer)
-    private val arbeidssøkerBeslutningRepository = PostgressArbeidssøkerBeslutningRepository(dataSource, actionTimer)
+    private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
+    private val arbeidssøkerBeslutningRepository = ArbeidssøkerBeslutningRepositoryPostgres(dataSource, actionTimer)
     private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
 
-    private val tempPersonRepository = PostgresTempPersonRepository(dataSource)
+    private val tempPersonRepository = TempPersonRepositoryPostgres(dataSource)
 
     private val arbeidssøkerConnector = ArbeidssøkerConnector(actionTimer = actionTimer)
     private val meldepliktConnector = MeldepliktConnector(actionTimer = actionTimer)

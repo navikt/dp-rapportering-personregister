@@ -29,10 +29,10 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
@@ -102,7 +102,7 @@ open class ApiTestSetup {
             every { unleash.isEnabled(any()) } returns true
             val meterRegistry =
                 PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
-            val personRepository = PostgresPersonRepository(dataSource, actionTimer)
+            val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
             val overtaBekreftelseKafkaProdusent =

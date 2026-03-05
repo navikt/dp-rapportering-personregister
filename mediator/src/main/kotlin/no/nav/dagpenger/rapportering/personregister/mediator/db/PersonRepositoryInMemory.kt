@@ -12,7 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 import java.util.UUID
 
-class InMemoryPersonRepository : PersonRepository {
+class PersonRepositoryInMemory : PersonRepository {
     private val personList = mutableMapOf<String, Person>()
     private val personList2 = mutableListOf<Person>()
     private val fremtidigeHendelser = mutableListOf<Hendelse>()

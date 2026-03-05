@@ -8,7 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import javax.sql.DataSource
 
-class PostgressArbeidssøkerBeslutningRepository(
+class ArbeidssøkerBeslutningRepositoryPostgres(
     private val dataSource: DataSource,
     private val actionTimer: ActionTimer,
 ) : ArbeidssøkerBeslutningRepository {

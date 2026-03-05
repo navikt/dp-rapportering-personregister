@@ -4,8 +4,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
-import no.nav.dagpenger.rapportering.personregister.mediator.db.InMemoryPersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -30,7 +30,7 @@ class ArbeidssøkerMediatorTest {
 
     @BeforeEach
     fun setup() {
-        personRepository = InMemoryPersonRepository()
+        personRepository = PersonRepositoryInMemory()
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService = arbeidssøkerService,
