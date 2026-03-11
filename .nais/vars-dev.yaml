@@ -16,11 +16,11 @@ MELDEPLIKT_ADAPTER_HOST: http://dp-arena-meldeplikt-adapter.teamdagpenger
 MELDEPLIKT_ADAPTER_SCOPE: api://dev-gcp.teamdagpenger.dp-arena-meldeplikt-adapter/.default
 MELDEKORTREGISTER_HOST: http://dp-meldekortregister.teamdagpenger
 MELDEKORTREGISTER_SCOPE: api://dev-gcp.teamdagpenger.dp-meldekortregister/.default
-PDL_API_HOST: pdl-api-q1.dev-fss-pub.nais.io
+PDL_API_HOST: pdl-api.dev-fss-pub.nais.io
 PDL_AUDIENCE: dev-fss:pdl:pdl-api
-PDL_API_SCOPE: api://dev-fss.pdl.pdl-api-q1/.default
+PDL_API_SCOPE: api://dev-fss.pdl.pdl-api/.default
 
-KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-q1,teamdagpenger.journalforing.v1
+KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-q2,teamdagpenger.journalforing.v1
 
 additionalInbounds:
   - application: meldekort-api-q1
