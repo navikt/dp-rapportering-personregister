@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -12,6 +13,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
@@ -19,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.jobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -76,6 +80,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     @Test
     fun `aktiverHendelser aktiverer hendelser og sletter dem fra tabellen`() {
         setUpTestApplication {
+            val jobExecutionTriggerEvaluationMetrikkCount = jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count()
+            val jobStatusMetrikkCount = jobbkjøringMetrikker.jobStatus.count()
             every { pdlConnector.hentIdenter(ident1) } returns
                 listOf(
                     Ident(
@@ -101,6 +107,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     meldestatusMediator,
                     meldepliktConnector,
                     client,
+                    jobbkjøringMetrikker,
                 )
             val nå = LocalDateTime.now()
 
@@ -262,6 +269,32 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             // hentMeldestatus må kalles kun én gang for hver bruker
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident1), any()) }
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident2), any()) }
+            jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count() shouldBe jobExecutionTriggerEvaluationMetrikkCount + 1
+            jobbkjøringMetrikker.jobStatus.count() shouldBe jobStatusMetrikkCount + 1
         }
+    }
+
+    @Test
+    fun `execute inkrementerer metrikker hvis jobben feiler`() {
+        val jobExecutionTriggerEvaluationMetrikkCount = jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count()
+        val jobErrorsMetrikkCount = jobbkjøringMetrikker.jobErrors.count()
+        val personRepositoryMock = mockk<PersonRepository> {}
+        every { personRepositoryMock.hentHendelserSomSkalAktiveres() } throws RuntimeException()
+
+        val aktiverHendelserJob =
+            AktiverHendelserJob(
+                personRepositoryMock,
+                personService,
+                personMediator,
+                meldestatusMediator,
+                meldepliktConnector,
+                httpClient = createMockClient(OK.value, ""),
+                jobbkjøringMetrikker = jobbkjøringMetrikker,
+            )
+
+        aktiverHendelserJob.execute()
+
+        jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count() shouldBe jobExecutionTriggerEvaluationMetrikkCount + 1
+        jobbkjøringMetrikker.jobErrors.count() shouldBe jobErrorsMetrikkCount + 1
     }
 }

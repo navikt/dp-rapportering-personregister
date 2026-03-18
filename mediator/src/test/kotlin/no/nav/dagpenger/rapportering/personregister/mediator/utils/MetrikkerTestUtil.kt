@@ -7,6 +7,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
@@ -27,4 +28,5 @@ object MetrikkerTestUtil {
     val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     val actionTimer = ActionTimer(meterRegistry)
+    val jobbkjøringMetrikker = JobbkjøringMetrikker(meterRegistry, "jobbnavn")
 }

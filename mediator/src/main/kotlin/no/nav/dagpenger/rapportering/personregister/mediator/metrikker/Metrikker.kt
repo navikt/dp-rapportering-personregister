@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.fixedRateTimer
 import kotlin.random.Random
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.measureTime
 
@@ -157,6 +158,68 @@ class VedtakMetrikker(
             .builder("${NAMESPACE}_vedtak_fattet_utenfor_arena_feilet_total")
             .description("Antall behandlinger som har feilet av mottatte meldinger om vedtak fattet utenfor Arena")
             .register(meterRegistry)
+}
+
+class JobbkjøringMetrikker(
+    meterRegistry: MeterRegistry,
+    navn: String,
+) {
+    val jobExecutionTriggerEvaluation: Counter =
+        Counter
+            .builder("${NAMESPACE}_job_execution_trigger_evaluation_total")
+            .description("Antall ganger jobben har sjekket om den skal kjøre")
+            .tag("navn", navn)
+            .register(meterRegistry)
+
+    val jobStatus: Counter =
+        Counter
+            .builder("${NAMESPACE}_job_execution_status_total")
+            .description("Indikerer status for kjøring av jobb")
+            .tag("navn", navn)
+            .register(meterRegistry)
+
+    val affectedRowsCount: Counter =
+        Counter
+            .builder("${NAMESPACE}_affected_rows_count_total")
+            .description("Antall rader påvirket av jobb")
+            .tag("navn", navn)
+            .register(meterRegistry)
+
+    val jobErrors: Counter =
+        Counter
+            .builder("${NAMESPACE}_job_errors_total")
+            .description("Antall feil under kjøring av jobb")
+            .tag("navn", navn)
+            .register(meterRegistry)
+
+    val jobDuration: Timer =
+        Timer
+            .builder("${NAMESPACE}_job_execution_duration_seconds")
+            .description("Varighet for kjøring av jobb i sekunder")
+            .tag("navn", navn)
+            .register(meterRegistry)
+
+    private fun incrementJobStatus(success: Boolean) = jobStatus.increment(if (success) 1.0 else 0.0)
+
+    private fun observeJobDuration(durationSeconds: Number) = jobDuration.record(durationSeconds.toLong(), SECONDS)
+
+    private fun incrementAffectedRowsCount(count: Number) = affectedRowsCount.increment(count.toDouble())
+
+    private fun incrementJobErrors() = jobErrors.increment()
+
+    fun jobbFeilet() {
+        incrementJobStatus(false)
+        incrementJobErrors()
+    }
+
+    fun jobbFullfort(
+        duration: Duration,
+        affectedRows: Int,
+    ) {
+        incrementJobStatus(true)
+        observeJobDuration(duration.inWholeSeconds)
+        incrementAffectedRowsCount(affectedRows)
+    }
 }
 
 class DatabaseMetrikker(

@@ -13,6 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.jobbkjøringMetrikker
 import org.junit.jupiter.api.Test
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -36,6 +37,7 @@ class TaskExecutorTest {
                 meldestatusMediator,
                 meldepliktConnector,
                 createMockClient(HttpStatusCode.InternalServerError.value, ""),
+                jobbkjøringMetrikker,
             )
 
         val taskExecutor =
