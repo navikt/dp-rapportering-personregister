@@ -21,7 +21,11 @@ import java.time.Instant.now
 class ArbeidssøkerMottakTest {
     val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
     val arbeidssøkerMottak =
-        ArbeidssøkerMottak(arbeidssøkerMediator = arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+        ArbeidssøkerMottak(
+            arbeidssøkerMediator = arbeidssøkerMediator,
+            arbeidssøkerperiodeMetrikker,
+            arbeidssøkerService = mockk(relaxed = true),
+        )
 
     @Test
     fun `consume behandler melding og inkrementerer metrikk`() {

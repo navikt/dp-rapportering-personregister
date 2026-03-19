@@ -165,7 +165,7 @@ internal class ApplicationBuilder(
             pdlIdentCache,
             meldekortregisterConnector,
         )
-    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector)
+    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
@@ -206,7 +206,7 @@ internal class ApplicationBuilder(
             actionTimer,
         )
 
-    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
 
     private val aktiverHendelserJob =

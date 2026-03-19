@@ -5,7 +5,9 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.aktiv
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import java.time.LocalDateTime
@@ -16,32 +18,41 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class ArbeidssøkerMottak(
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
+    private val arbeidssøkerService: ArbeidssøkerService,
 ) {
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach { record ->
+            val periode = record.value()
             try {
-                logger.info { "Behandler periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id}" }
+                logger.info { "Behandler periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id}" }
                 arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
 
-                Arbeidssøkerperiode(
-                    ident = record.value().identitetsnummer,
-                    periodeId = record.value().id,
-                    startet = LocalDateTime.ofInstant(record.value().startet.tidspunkt, ZONE_ID),
-                    avsluttet = record.value().avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
-                    overtattBekreftelse = null,
-                ).also(arbeidssøkerMediator::behandle)
+                val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
+
+                if (!arbeidssøkerperiode.aktiv()) {
+                    arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode)
+                }
+
+                arbeidssøkerMediator.behandle(arbeidssøkerperiode)
             } catch (e: Exception) {
                 logger.error(
                     e,
-                ) { "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id}" }
-                sikkerLogg.error(
-                    e,
-                ) {
-                    "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${record.value().id} for ident ${record.value().identitetsnummer}"
+                ) { "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id}" }
+                sikkerLogg.error(e) {
+                    "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id} for ident ${periode.identitetsnummer}"
                 }
                 arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeFeilet.increment()
                 throw e
             }
         }
+
+    private fun Periode.tilArbeidssøkerperiode() =
+        Arbeidssøkerperiode(
+            ident = identitetsnummer,
+            periodeId = id,
+            startet = LocalDateTime.ofInstant(startet.tidspunkt, ZONE_ID),
+            avsluttet = avsluttet?.let { LocalDateTime.ofInstant(it.tidspunkt, ZONE_ID) },
+            overtattBekreftelse = null,
+        )
 }
