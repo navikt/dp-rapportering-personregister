@@ -101,8 +101,10 @@ class MeldekortregisterConnector(
 
                 else -> {
                     val body = response.bodyAsText()
-                    logger.error { "Uforventet status ${response.status.value} ved henting av siste innsendte meldekort i meldekortregister" }
-                    sikkerLogg.error { "Uforventet status ved henting av siste innsendte meldekort i meldekortregister. Response: $body" }
+                    logger.error {
+                        "Uforventet status " +
+                            "${response.status.value} ved henting av siste innsendte meldekort i meldekortregister"
+                    }
                     throw RuntimeException(
                         "Uforventet status ${response.status.value} ved henting av siste innsendte meldekort i meldekortregister",
                     )
