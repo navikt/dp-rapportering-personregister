@@ -164,35 +164,35 @@ class JobbkjøringMetrikker(
     meterRegistry: MeterRegistry,
     navn: String,
 ) {
-    val jobExecutionTriggerEvaluation: Counter =
+    private val jobExecutionTriggerEvaluation: Counter =
         Counter
             .builder("${NAMESPACE}_job_execution_trigger_evaluation_total")
             .description("Antall ganger jobben har sjekket om den skal kjøre")
             .tag("navn", navn)
             .register(meterRegistry)
 
-    val jobStatus: Counter =
+    private val jobStatus: Counter =
         Counter
             .builder("${NAMESPACE}_job_execution_status_total")
             .description("Indikerer status for kjøring av jobb")
             .tag("navn", navn)
             .register(meterRegistry)
 
-    val affectedRowsCount: Counter =
+    private val affectedRowsCount: Counter =
         Counter
             .builder("${NAMESPACE}_affected_rows_count_total")
             .description("Antall rader påvirket av jobb")
             .tag("navn", navn)
             .register(meterRegistry)
 
-    val jobErrors: Counter =
+    private val jobErrors: Counter =
         Counter
             .builder("${NAMESPACE}_job_errors_total")
             .description("Antall feil under kjøring av jobb")
             .tag("navn", navn)
             .register(meterRegistry)
 
-    val jobDuration: Timer =
+    private val jobDuration: Timer =
         Timer
             .builder("${NAMESPACE}_job_execution_duration_seconds")
             .description("Varighet for kjøring av jobb i sekunder")
@@ -219,6 +219,10 @@ class JobbkjøringMetrikker(
         incrementJobStatus(true)
         observeJobDuration(duration.inWholeSeconds)
         incrementAffectedRowsCount(affectedRows)
+    }
+
+    fun jobbSjekketOmDenSkulleKjøre() {
+        jobExecutionTriggerEvaluation.increment()
     }
 }
 
