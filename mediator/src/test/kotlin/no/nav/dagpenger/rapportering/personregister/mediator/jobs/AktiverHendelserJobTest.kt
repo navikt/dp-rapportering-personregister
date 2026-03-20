@@ -7,6 +7,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
@@ -17,12 +18,12 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMoc
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.jobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class AktiverHendelserJobTest : ApiTestSetup() {
+    private val jobbkjøringMetrikker = mockk<JobbkjøringMetrikker>(relaxed = true)
     private val arbeidssøkerService = mockk<ArbeidssøkerService>()
     private var personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val personService =
@@ -80,8 +82,6 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     @Test
     fun `aktiverHendelser aktiverer hendelser og sletter dem fra tabellen`() {
         setUpTestApplication {
-            val jobExecutionTriggerEvaluationMetrikkCount = jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count()
-            val jobStatusMetrikkCount = jobbkjøringMetrikker.jobStatus.count()
             every { pdlConnector.hentIdenter(ident1) } returns
                 listOf(
                     Ident(
@@ -269,15 +269,15 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             // hentMeldestatus må kalles kun én gang for hver bruker
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident1), any()) }
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident2), any()) }
-            jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count() shouldBe jobExecutionTriggerEvaluationMetrikkCount + 1
-            jobbkjøringMetrikker.jobStatus.count() shouldBe jobStatusMetrikkCount + 1
+
+            verify(exactly = 1) { jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre() }
+            verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 3) }
+            verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
         }
     }
 
     @Test
     fun `execute inkrementerer metrikker hvis jobben feiler`() {
-        val jobExecutionTriggerEvaluationMetrikkCount = jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count()
-        val jobErrorsMetrikkCount = jobbkjøringMetrikker.jobErrors.count()
         val personRepositoryMock = mockk<PersonRepository> {}
         every { personRepositoryMock.hentHendelserSomSkalAktiveres() } throws RuntimeException()
 
@@ -294,7 +294,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
 
         aktiverHendelserJob.execute()
 
-        jobbkjøringMetrikker.jobExecutionTriggerEvaluation.count() shouldBe jobExecutionTriggerEvaluationMetrikkCount + 1
-        jobbkjøringMetrikker.jobErrors.count() shouldBe jobErrorsMetrikkCount + 1
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre() }
+        verify(exactly = 0) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = any()) }
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbFeilet() }
     }
 }

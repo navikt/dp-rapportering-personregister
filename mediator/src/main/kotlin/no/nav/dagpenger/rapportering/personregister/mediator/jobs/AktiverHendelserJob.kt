@@ -59,7 +59,7 @@ internal class AktiverHendelserJob(
             logger.error(e) { "Jobb for å aktivere hendelser mottatt med dato fram i tid feilet" }
             jobbkjøringMetrikker.jobbFeilet()
         } finally {
-            jobbkjøringMetrikker.jobExecutionTriggerEvaluation.increment()
+            jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre()
         }
     }
 
