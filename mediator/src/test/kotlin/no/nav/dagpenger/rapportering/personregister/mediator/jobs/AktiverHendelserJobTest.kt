@@ -2,18 +2,23 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
+import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -32,6 +37,7 @@ import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
 class AktiverHendelserJobTest : ApiTestSetup() {
+    private val jobbkjøringMetrikker = mockk<JobbkjøringMetrikker>(relaxed = true)
     private val arbeidssøkerService = mockk<ArbeidssøkerService>()
     private var personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val personService =
@@ -101,6 +107,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                     meldestatusMediator,
                     meldepliktConnector,
                     client,
+                    jobbkjøringMetrikker,
                 )
             val nå = LocalDateTime.now()
 
@@ -262,6 +269,33 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             // hentMeldestatus må kalles kun én gang for hver bruker
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident1), any()) }
             coVerify { meldepliktConnector.hentMeldestatus(any(), eq(ident2), any()) }
+
+            verify(exactly = 1) { jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre() }
+            verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 3) }
+            verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
         }
+    }
+
+    @Test
+    fun `execute inkrementerer metrikker hvis jobben feiler`() {
+        val personRepositoryMock = mockk<PersonRepository> {}
+        every { personRepositoryMock.hentHendelserSomSkalAktiveres() } throws RuntimeException()
+
+        val aktiverHendelserJob =
+            AktiverHendelserJob(
+                personRepositoryMock,
+                personService,
+                personMediator,
+                meldestatusMediator,
+                meldepliktConnector,
+                httpClient = createMockClient(OK.value, ""),
+                jobbkjøringMetrikker = jobbkjøringMetrikker,
+            )
+
+        aktiverHendelserJob.execute()
+
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre() }
+        verify(exactly = 0) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = any()) }
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbFeilet() }
     }
 }

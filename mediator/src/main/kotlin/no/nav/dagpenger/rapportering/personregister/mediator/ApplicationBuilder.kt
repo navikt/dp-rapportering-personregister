@@ -43,6 +43,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
@@ -216,6 +217,7 @@ internal class ApplicationBuilder(
             personMediator,
             meldestatusMediator,
             meldepliktConnector,
+            jobbkjøringMetrikker = JobbkjøringMetrikker(meterRegistry, AktiverHendelserJob::class.simpleName!!),
         )
     private val taskExecutor =
         TaskExecutor(

@@ -17,12 +17,12 @@ spec:
     path: /isReady
   replicas:
     min: 2
-    max: 4
+    max: 6
   resources:
     limits:
       memory: 1024Mi
     requests:
-      cpu: 200m
+      cpu: 300m
       memory: 512Mi
   tokenx:
     enabled: true
@@ -119,7 +119,7 @@ spec:
       value: "{{ MELDEKORTREGISTER_SCOPE }}"
     - name: KAFKA_EXTRA_TOPIC
       value: "{{ KAFKA_EXTRA_TOPIC }}"
-    - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner
+    - name: JDK_JAVA_OPTIONS # Bytter GC og lar JVMen se at det er flere CPU kjerner ref https://nav-it.slack.com/archives/C5KUST8N6/p1714054537557279
       value: -XX:+UseParallelGC -XX:ActiveProcessorCount=4
     - name: GRUPPER_SAKSBEHANDLER
       value: {{azure.grupper.saksbehandler}}

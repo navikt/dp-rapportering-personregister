@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHttpClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -26,6 +27,7 @@ internal class AktiverHendelserJob(
     private val meldestatusMediator: MeldestatusMediator,
     private val meldepliktConnector: MeldepliktConnector,
     private val httpClient: HttpClient = createHttpClient(),
+    private val jobbkjøringMetrikker: JobbkjøringMetrikker,
 ) : Task {
     override fun execute() {
         try {
@@ -49,11 +51,15 @@ internal class AktiverHendelserJob(
                     "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
                         "Aktiverte $antallHendelser på ${tidBrukt.inWholeSeconds} sekund(er)."
                 }
+                jobbkjøringMetrikker.jobbFullfort(tidBrukt, antallHendelser)
             } else {
                 logger.info { "Pod er ikke leader, så jobb for å aktivere fremtidige hendelser startes ikke" }
             }
         } catch (e: Exception) {
             logger.error(e) { "Jobb for å aktivere hendelser mottatt med dato fram i tid feilet" }
+            jobbkjøringMetrikker.jobbFeilet()
+        } finally {
+            jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre()
         }
     }
 
