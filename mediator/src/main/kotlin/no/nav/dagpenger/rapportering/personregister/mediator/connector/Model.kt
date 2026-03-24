@@ -43,5 +43,5 @@ data class TidspunktFraKildeResponse(
 data class InnsendtMeldekortResponse(
     val fraOgMed: LocalDateTime,
     val tilOgMed: LocalDateTime,
-    val innsendtTidspunkt: LocalDateTime?,
+    val innsendtTidspunkt: LocalDateTime,
 )

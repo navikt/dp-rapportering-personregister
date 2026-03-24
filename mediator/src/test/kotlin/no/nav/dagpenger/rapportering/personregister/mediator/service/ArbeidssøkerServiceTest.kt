@@ -31,7 +31,7 @@ class ArbeidssøkerServiceTest {
     private val ident = "12345678901"
     private val periodeId = UUIDv7.newUuid()
     private val startet = LocalDateTime.now().minusWeeks(3)
-    private val avsluttet = LocalDateTime.now().minusDays(1)
+    private val avsluttetTidspunkt = LocalDateTime.now().minusDays(1)
 
     private lateinit var testRapid: TestRapid
 
@@ -78,7 +78,7 @@ class ArbeidssøkerServiceTest {
         val message = testRapid.inspektør.message(0)
         message["@event_name"].asText() shouldBe "avsluttet_arbeidssokerperiode"
         message["ident"].asText() shouldBe ident
-        message["avsluttet"].asLocalDateTime() shouldBe avsluttet
+        message["avsluttetTidspunkt"].asLocalDateTime() shouldBe avsluttetTidspunkt
         message["fastsattMeldingsdag"].asLocalDateTime() shouldBe tilOgMed.plusDays(1)
     }
 
@@ -93,7 +93,7 @@ class ArbeidssøkerServiceTest {
         val message = testRapid.inspektør.message(0)
         message["@event_name"].asText() shouldBe "avsluttet_arbeidssokerperiode"
         message["ident"].asText() shouldBe ident
-        message["avsluttet"].asLocalDateTime() shouldBe avsluttet
+        message["avsluttetTidspunkt"].asLocalDateTime() shouldBe avsluttetTidspunkt
         message["fastsattMeldingsdag"] shouldBe null
     }
 
@@ -133,7 +133,7 @@ class ArbeidssøkerServiceTest {
             periodeId = periodeId,
             ident = ident,
             startet = startet,
-            avsluttet = avsluttet,
+            avsluttet = avsluttetTidspunkt,
             overtattBekreftelse = null,
         )
 }

@@ -9,7 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
-import java.time.LocalDateTime
 
 class MeldekortregisterConnector(
     private val meldekortregisterUrl: String = Configuration.meldekortregisterUrl,
@@ -92,7 +91,7 @@ class MeldekortregisterConnector(
                 HttpStatusCode.OK -> {
                     response
                         .body<List<InnsendtMeldekortResponse>>()
-                        .maxByOrNull { it.innsendtTidspunkt ?: LocalDateTime.MIN }
+                        .maxByOrNull { it.innsendtTidspunkt }
                 }
 
                 HttpStatusCode.NotFound -> {
@@ -103,7 +102,7 @@ class MeldekortregisterConnector(
                     val body = response.bodyAsText()
                     logger.error {
                         "Uforventet status " +
-                            "${response.status.value} ved henting av siste innsendte meldekort i meldekortregister"
+                            "${response.status.value} ved henting av siste innsendte meldekort i meldekortregister. Response body: $body"
                     }
                     throw RuntimeException(
                         "Uforventet status ${response.status.value} ved henting av siste innsendte meldekort i meldekortregister",

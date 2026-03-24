@@ -33,13 +33,13 @@ class ArbeidssøkerService(
         }
 
     fun publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode: Arbeidssøkerperiode) {
-        val avsluttet =
+        logger.info { "Publiserer avsluttet arbeidssøkerperiode for periodeId ${arbeidssøkerperiode.periodeId}" }
+
+        val avsluttetTidspunkt =
             requireNotNull(arbeidssøkerperiode.avsluttet) {
                 "Kan ikke publisere avsluttet periode for en periode som ikke er avsluttet"
             }
         val ident = arbeidssøkerperiode.ident
-
-        logger.info { "Publiserer avsluttet arbeidssøkerperiode for periodeId ${arbeidssøkerperiode.periodeId}" }
 
         try {
             val sisteInnsendteMeldekort =
@@ -54,7 +54,7 @@ class ArbeidssøkerService(
                     "avsluttet_arbeidssokerperiode",
                     buildMap {
                         put("ident", ident)
-                        put("avsluttet", avsluttet)
+                        put("avsluttetTidspunkt", avsluttetTidspunkt)
                         fastsattMeldingsdag?.let { put("fastsattMeldingsdag", it) }
                     },
                 )
