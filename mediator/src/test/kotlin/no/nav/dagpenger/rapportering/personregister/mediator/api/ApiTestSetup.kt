@@ -145,7 +145,7 @@ open class ApiTestSetup {
                     listOf(personObserver),
                     actionTimer,
                 )
-            val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService)
+            val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
             val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
             val kafkaContext =
                 KafkaContext(

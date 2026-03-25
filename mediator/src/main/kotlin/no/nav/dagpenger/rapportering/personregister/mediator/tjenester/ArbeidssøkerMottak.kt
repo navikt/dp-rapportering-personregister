@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
+import io.getunleash.Unleash
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
@@ -19,6 +20,7 @@ class ArbeidssøkerMottak(
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
     private val arbeidssøkerService: ArbeidssøkerService,
+    private val unleash: Unleash,
 ) {
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
@@ -31,7 +33,11 @@ class ArbeidssøkerMottak(
                 val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
 
                 if (!arbeidssøkerperiode.aktiv()) {
-                    arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode)
+                    if (unleash.isEnabled("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")) {
+                        arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode)
+                    } else {
+                        logger.info { "Publisering av avsluttet arbeidssøkerperiode er deaktivert" }
+                    }
                 }
 
                 arbeidssøkerMediator.behandle(arbeidssøkerperiode)
