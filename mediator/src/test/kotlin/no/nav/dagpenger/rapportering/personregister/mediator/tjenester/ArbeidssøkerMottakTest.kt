@@ -1,11 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
+import io.getunleash.FakeUnleash
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7.newUuid
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -19,9 +21,16 @@ import org.junit.jupiter.api.Test
 import java.time.Instant.now
 
 class ArbeidssøkerMottakTest {
-    val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
-    val arbeidssøkerMottak =
-        ArbeidssøkerMottak(arbeidssøkerMediator = arbeidssøkerMediator, arbeidssøkerperiodeMetrikker)
+    private val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
+    private val arbeidssøkerService = mockk<ArbeidssøkerService>(relaxed = true)
+    private val fakeUnleash = FakeUnleash()
+    private val arbeidssøkerMottak =
+        ArbeidssøkerMottak(
+            arbeidssøkerMediator = arbeidssøkerMediator,
+            arbeidssøkerperiodeMetrikker,
+            arbeidssøkerService = arbeidssøkerService,
+            unleash = fakeUnleash,
+        )
 
     @Test
     fun `consume behandler melding og inkrementerer metrikk`() {
@@ -44,7 +53,25 @@ class ArbeidssøkerMottakTest {
         arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeFeilet.count() shouldBe metrikkCount + 1
     }
 
-    private fun lagConsumerRecords(): ConsumerRecords<Long, Periode> =
+    @Test
+    fun `publiserAvsluttetArbeidssøkerperiode kalles når toggle er på og periode er avsluttet`() {
+        fakeUnleash.enable("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")
+
+        arbeidssøkerMottak.consume(lagConsumerRecords(avsluttet = true))
+
+        verify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
+    }
+
+    @Test
+    fun `publiserAvsluttetArbeidssøkerperiode kalles ikke når toggle er av og periode er avsluttet`() {
+        fakeUnleash.disable("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")
+
+        arbeidssøkerMottak.consume(lagConsumerRecords(avsluttet = true))
+
+        verify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
+    }
+
+    private fun lagConsumerRecords(avsluttet: Boolean = true): ConsumerRecords<Long, Periode> =
         ConsumerRecords(
             mapOf<TopicPartition, List<ConsumerRecord<Long, Periode>>>(
                 Pair(
@@ -59,7 +86,7 @@ class ArbeidssøkerMottakTest {
                                 newUuid(),
                                 "13308825099",
                                 Metadata(now(), null, null, null, null),
-                                Metadata(now(), null, null, null, null),
+                                if (avsluttet) Metadata(now(), null, null, null, null) else null,
                             ),
                         ),
                     ),
