@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.mockk.coEvery
@@ -45,7 +44,6 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             pdlConnector = pdlConnector,
             personRepository = personRepository,
             personObservers = listOf(personObserver),
-            cache = Caffeine.newBuilder().build(),
             meldekortregisterConnector = meldekortregisterConnector,
         )
     private val arbeidssøkerMediator =

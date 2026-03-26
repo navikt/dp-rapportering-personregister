@@ -1,7 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
-import com.github.benmanes.caffeine.cache.Cache
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
@@ -24,12 +22,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldeg
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 class PersonServiceTest {
     val ident = "12345678901"
@@ -39,26 +35,13 @@ class PersonServiceTest {
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
 
-    private val cache: Cache<String, List<Ident>> =
-        Caffeine
-            .newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
-            .maximumSize(10)
-            .build()
-
     private val personService =
         PersonService(
             pdlConnector = pdlConnector,
             personRepository = personRepository,
             personObservers = listOf(personObserver),
-            cache = cache,
             meldekortregisterConnector = meldekortregisterConnector,
         )
-
-    @BeforeEach
-    fun resetCache() {
-        cache.invalidateAll()
-    }
 
     @Test
     fun `person finnes ikke returnerer null`() {

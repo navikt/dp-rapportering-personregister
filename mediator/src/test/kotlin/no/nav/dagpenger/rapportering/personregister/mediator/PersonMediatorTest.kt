@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
@@ -101,7 +100,6 @@ class PersonMediatorTest {
                 pdlConnector = pdlConnector,
                 personRepository = personRepository,
                 personObservers = listOf(personObserver, beslutningObserver),
-                cache = Caffeine.newBuilder().build(),
                 meldekortregisterConnector = meldekortregisterConnector,
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)

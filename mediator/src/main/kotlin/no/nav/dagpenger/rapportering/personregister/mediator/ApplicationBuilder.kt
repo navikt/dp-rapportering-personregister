@@ -157,13 +157,12 @@ internal class ApplicationBuilder(
         )
     private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
-    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl), actionTimer)
+    private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl), actionTimer, pdlIdentCache)
     private val personService =
         PersonService(
             pdlConnector,
             personRepository,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
-            pdlIdentCache,
             meldekortregisterConnector,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
