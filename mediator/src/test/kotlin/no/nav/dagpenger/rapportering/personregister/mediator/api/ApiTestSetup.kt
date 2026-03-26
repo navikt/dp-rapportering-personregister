@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.getunleash.Unleash
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
@@ -51,7 +50,6 @@ import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
-import java.util.concurrent.TimeUnit
 
 open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
@@ -124,7 +122,6 @@ open class ApiTestSetup {
                     pdlConnector = pdlConnector,
                     personRepository = personRepository,
                     personObservers = listOf(personObserver),
-                    cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
                     meldekortregisterConnector = meldekortregisterConnector,
                 )
             val meldepliktMediator =

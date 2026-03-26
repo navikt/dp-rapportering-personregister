@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.FakeUnleash
 import io.kotest.matchers.collections.shouldHaveSize
@@ -38,7 +37,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 class MeldepliktMediatorTest {
     private lateinit var rapidsConnection: TestRapid
@@ -80,7 +78,6 @@ class MeldepliktMediatorTest {
                 pdlConnector = pdlConnector,
                 personRepository = personRepository,
                 personObservers = listOf(personObserver),
-                cache = Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.MINUTES).build(),
                 meldekortregisterConnector = meldekortregisterConnector,
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
