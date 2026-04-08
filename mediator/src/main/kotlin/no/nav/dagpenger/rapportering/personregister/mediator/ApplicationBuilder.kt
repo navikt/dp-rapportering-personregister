@@ -56,6 +56,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObs
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehandlingsresultatMottak
@@ -193,6 +194,13 @@ internal class ApplicationBuilder(
             actionTimer,
             unleash,
         )
+    private val søknadService =
+        SøknadService(
+            personService,
+            personRepository,
+            arbeidssøkerMediator,
+            actionTimer,
+        )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val meldestatusMediator =
         MeldestatusMediator(
@@ -283,7 +291,7 @@ internal class ApplicationBuilder(
                         meldestatusMetrikker,
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator, meldesyklusErPassertMetrikker)
-                    SøknadMottak(rapid, personMediator, søknadMetrikker)
+                    SøknadMottak(rapid, søknadService, søknadMetrikker)
                     BehandlingsresultatMottak(
                         rapid,
                         personRepository,
