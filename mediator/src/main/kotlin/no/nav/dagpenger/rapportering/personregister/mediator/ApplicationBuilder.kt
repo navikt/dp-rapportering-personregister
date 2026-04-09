@@ -197,7 +197,6 @@ internal class ApplicationBuilder(
     private val søknadService =
         SøknadService(
             personService,
-            personRepository,
             arbeidssøkerMediator,
             actionTimer,
         )

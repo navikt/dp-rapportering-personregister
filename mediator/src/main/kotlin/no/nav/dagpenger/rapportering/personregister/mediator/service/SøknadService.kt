@@ -3,7 +3,6 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
-import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
@@ -15,7 +14,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 
 class SøknadService(
     private val personService: PersonService,
-    private val personRepository: PersonRepository,
     private val arbeidssøkerMediator: ArbeidssøkerMediator,
     private val actionTimer: ActionTimer,
 ) {
@@ -32,7 +30,6 @@ class SøknadService(
                 logger.info { "Søknadshendelse ${søknadHendelse.referanseId} er allerede behandlet. Hopper over." }
                 return@timedAction
             }
-
             person.hendelser.add(søknadHendelse)
 
             if (person.ansvarligSystem == AnsvarligSystem.DP && person.erArbeidssøker) {
@@ -47,7 +44,7 @@ class SøknadService(
             }
 
             try {
-                personRepository.oppdaterPerson(person)
+                personService.oppdaterPerson(person)
             } catch (e: OptimisticLockingException) {
                 logger.info(e) {
                     "Optimistisk låsing feilet ved oppdatering av person med referanseId ${søknadHendelse.referanseId}. Counter: $counter"

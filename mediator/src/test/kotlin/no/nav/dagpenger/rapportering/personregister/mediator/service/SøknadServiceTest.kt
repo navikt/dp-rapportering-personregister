@@ -6,7 +6,6 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -22,7 +21,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class SøknadServiceTest {
-    private val personService = mockk<PersonService>()
+    private val personService = mockk<PersonService>(relaxed = true)
     private val personRepository = mockk<PersonRepository>()
     private val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
     private val personObserver = mockk<PersonObserver>(relaxed = true)
@@ -30,7 +29,6 @@ class SøknadServiceTest {
     private val søknadService =
         SøknadService(
             personService = personService,
-            personRepository = personRepository,
             arbeidssøkerMediator = arbeidssøkerMediator,
             actionTimer = actionTimer,
         )
@@ -55,7 +53,7 @@ class SøknadServiceTest {
         person.hendelser.first().referanseId shouldBe søknadHendelse.referanseId
         person.harRettTilDp shouldBe false
         person.status shouldBe Status.IKKE_DAGPENGERBRUKER
-        verify(exactly = 1) { personRepository.oppdaterPerson(person) }
+        verify(exactly = 1) { personService.oppdaterPerson(person) }
         verify(exactly = 1) { arbeidssøkerMediator.behandle(ident) }
     }
 
@@ -70,7 +68,7 @@ class SøknadServiceTest {
 
         person.harRettTilDp shouldBe true
         verify(exactly = 1) { personObserver.sendStartMeldingTilMeldekortregister(person, søknadHendelse.startDato, null, false) }
-        verify(exactly = 1) { personRepository.oppdaterPerson(person) }
+        verify(exactly = 1) { personService.oppdaterPerson(person) }
         verify(exactly = 1) { arbeidssøkerMediator.behandle(ident) }
     }
 

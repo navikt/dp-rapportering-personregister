@@ -140,7 +140,6 @@ class PersonMediatorTest {
         søknadService =
             SøknadService(
                 personService = personService,
-                personRepository = personRepository,
                 arbeidssøkerMediator = arbeidssøkerMediator,
                 actionTimer = actionTimer,
             )
