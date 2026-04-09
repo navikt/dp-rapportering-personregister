@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
-import com.github.benmanes.caffeine.cache.Cache
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
@@ -20,7 +19,6 @@ class PersonService(
     private val pdlConnector: PdlConnector,
     private val personRepository: PersonRepository,
     private val personObservers: List<PersonObserver>,
-    private val cache: Cache<String, List<Ident>>,
     private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
     // testing
@@ -96,6 +94,7 @@ class PersonService(
     }
 
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
+    private fun hentAlleIdenterForPerson(ident: String): List<Ident> = pdlConnector.hentIdenter(ident)
 
     fun hentPersoner(identer: List<String>): List<Person> =
         identer.mapNotNull { ident ->

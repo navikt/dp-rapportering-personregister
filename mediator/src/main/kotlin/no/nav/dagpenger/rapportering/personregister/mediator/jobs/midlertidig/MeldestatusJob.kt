@@ -67,7 +67,7 @@ internal class MeldestatusJob(
                             }
 
                         logger.info {
-                            "Jobb for å sjekke meldestatus er ferdig" +
+                            "Jobb for å sjekke meldestatus er ferdig. " +
                                 "Sjekket $antallPersoner på ${tidBrukt.inWholeSeconds} sekund(er)."
                         }
                     } else {

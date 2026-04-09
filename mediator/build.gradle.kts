@@ -2,7 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     application
-    id("com.gradleup.shadow") version "9.4.0"
+    id("com.gradleup.shadow") version "9.4.1"
     kotlin
 }
 
@@ -26,7 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.26.1")
     implementation("io.opentelemetry:opentelemetry-api:1.60.1")
     implementation("io.getunleash:unleash-client-java:12.2.0")
     implementation("com.github.navikt.tbd-libs:naisful-app:2025.11.04-10.54-c831038e")
