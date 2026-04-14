@@ -47,6 +47,11 @@ data class MeldekortResponse(
     val sisteFristForTrekk: LocalDate,
 )
 
+data class ArenaMeldekortResponse(
+    val status: String,
+    val kanSendesFra: LocalDate,
+)
+
 data class InnsendtMeldekortResponse(
     val fraOgMed: LocalDateTime,
     val tilOgMed: LocalDateTime,
