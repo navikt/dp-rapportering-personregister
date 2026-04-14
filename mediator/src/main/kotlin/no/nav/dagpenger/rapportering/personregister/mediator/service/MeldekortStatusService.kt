@@ -9,7 +9,7 @@ private val logger = KotlinLogging.logger {}
 class MeldekortStatusService(
     private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
-    suspend fun hentStatus(ident: String): MeldekortStatus =
+    suspend fun hentMeldekortStatus(ident: String): MeldekortStatus =
         hentFraMeldekortregister(ident)
             ?: hentFraArena(ident)
             ?: MeldekortStatus(

@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.response.respond
@@ -23,8 +24,8 @@ internal fun Application.meldekortStatusApi(meldekortStatusService: MeldekortSta
         authenticate("tokenX") {
             get("/meldekort/status") {
                 logger.info { "GET /meldekort/status" }
-                val status = meldekortStatusService.hentStatus(call.ident())
-                call.respond(HttpStatusCode.OK, status.tilResponse())
+                val status = meldekortStatusService.hentMeldekortStatus(call.ident())
+                call.respond(OK, status.tilResponse())
             }
         }
     }

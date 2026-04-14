@@ -194,21 +194,21 @@ components:
     MeldekortStatus:
         required:
             - harInnsendteMeldekort
-            - redirectUrl
             - meldekortTilUtfylling
+            - redirectUrl
         type: object
         properties:
             harInnsendteMeldekort:
                 type: boolean
                 description: Om personen har innsendte meldekort
-            redirectUrl:
-                type: string
-                format: string
-                description: URL til bruker sender meldekort
             meldekortTilUtfylling:
                 type: array
                 items:
                     $ref: '#/components/schemas/MeldekortTilUtfylling'
+            redirectUrl:
+                type: string
+                format: string
+                description: URL til bruker sender meldekort
     MeldekortTilUtfylling:
         type: object
         properties:

@@ -24,7 +24,7 @@ class MeldekortStatusServiceTest {
                 meldekortTilUtfylling(kanSendesFra = idag, sisteFristForTrekk = idag.plusDays(7)),
             )
 
-        val response = runBlocking { service.hentStatus(ident) }
+        val response = runBlocking { service.hentMeldekortStatus(ident) }
 
         response.harInnsendteMeldekort shouldBe true
         response.meldekortTilUtfylling.size shouldBe 1
@@ -38,7 +38,7 @@ class MeldekortStatusServiceTest {
                 innsendtMeldekort(),
             )
 
-        val response = runBlocking { service.hentStatus(ident) }
+        val response = runBlocking { service.hentMeldekortStatus(ident) }
 
         response.harInnsendteMeldekort shouldBe true
         response.meldekortTilUtfylling shouldBe emptyList()
@@ -52,7 +52,7 @@ class MeldekortStatusServiceTest {
                 meldekortTilUtfylling(kanSendesFra = idag, sisteFristForTrekk = idag.plusDays(7)),
             )
 
-        val response = runBlocking { service.hentStatus(ident) }
+        val response = runBlocking { service.hentMeldekortStatus(ident) }
 
         response.harInnsendteMeldekort shouldBe false
         response.meldekortTilUtfylling.size shouldBe 1
@@ -63,7 +63,7 @@ class MeldekortStatusServiceTest {
     fun `ingen innsendte og ingen meldekort til utfylling - ingen redirect`() {
         coEvery { meldekortregisterConnector.hentMeldekort(ident) } returns emptyList()
 
-        val response = runBlocking { service.hentStatus(ident) }
+        val response = runBlocking { service.hentMeldekortStatus(ident) }
 
         response.harInnsendteMeldekort shouldBe false
         response.meldekortTilUtfylling shouldBe emptyList()
@@ -71,10 +71,10 @@ class MeldekortStatusServiceTest {
     }
 
     @Test
-    fun `returnerer tom default response når register feiler`() {
+    fun `returnerer tom default response når kall til meldekortregister feiler`() {
         coEvery { meldekortregisterConnector.hentMeldekort(ident) } throws RuntimeException("Meldekortregister utilgjengelig")
 
-        val response = runBlocking { service.hentStatus(ident) }
+        val response = runBlocking { service.hentMeldekortStatus(ident) }
 
         response.harInnsendteMeldekort shouldBe false
         response.meldekortTilUtfylling shouldBe emptyList()
