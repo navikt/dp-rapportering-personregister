@@ -116,8 +116,6 @@ paths:
             application/json:
               schema:
                   $ref: '#/components/schemas/MeldekortStatus'
-        404:
-          description: Not Found
       summary: Hent meldekortstatus for en person
       description: Hent meldekortstatus for en person basert på ident
       operationId: get-meldekortstatus

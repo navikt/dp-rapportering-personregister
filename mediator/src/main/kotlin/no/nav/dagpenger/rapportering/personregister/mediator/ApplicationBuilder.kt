@@ -168,7 +168,7 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
-    private val meldekortLandingssideService = MeldekortStatusService(meldekortregisterConnector)
+    private val meldekortStatusService = MeldekortStatusService(meldekortregisterConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
@@ -271,7 +271,7 @@ internal class ApplicationBuilder(
                                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                                 personApi(personService)
                                 behandlingApi(behandlingRepository)
-                                meldekortStatusApi(meldekortLandingssideService)
+                                meldekortStatusApi(meldekortStatusService)
                             }
                         }
                     },
