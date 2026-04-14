@@ -121,15 +121,8 @@ paths:
       summary: Hent meldekortstatus for en person
       description: Hent meldekortstatus for en person basert på ident
       operationId: get-meldekortstatus
-      parameters:
-        - in: query
-          name: ident
-          schema:
-            type: string
-          required: true
-          description: ident til personen du vil hente meldekortstatus for
       security:
-        - azureAd: []
+        - tokenX: []
 
 components:
   schemas:
