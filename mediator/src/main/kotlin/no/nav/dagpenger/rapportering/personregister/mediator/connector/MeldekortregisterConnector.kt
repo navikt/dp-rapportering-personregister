@@ -70,6 +70,36 @@ class MeldekortregisterConnector(
         }
     }
 
+    suspend fun hentMeldekort(ident: String): List<MeldekortResponse> =
+        withContext(Dispatchers.IO) {
+            val response =
+                sendGetRequest(
+                    httpClient = httpClient,
+                    endpointUrl = "$meldekortregisterUrl/meldekort",
+                    token =
+                        meldekortregisterTokenProvider.invoke()
+                            ?: throw RuntimeException("Klarte ikke å hente token"),
+                    metrikkNavn = "meldekortregister_hentMeldekort",
+                    parameters = mapOf("ident" to ident),
+                    headers = mapOf(),
+                    actionTimer = actionTimer,
+                ).also {
+                    logger.info { "Kall til meldekortregister for å hente meldekort ga status ${it.status}" }
+                }
+
+            when (response.status) {
+                HttpStatusCode.OK -> response.body<List<MeldekortResponse>>()
+                HttpStatusCode.NotFound -> emptyList()
+                else -> {
+                    val body = response.bodyAsText()
+                    logger.error { "Uforventet status ${response.status.value} ved henting av meldekort. Response body: $body" }
+                    throw RuntimeException(
+                        "Uforventet status ${response.status.value} ved henting av meldekort i meldekortregister",
+                    )
+                }
+            }
+        }
+
     suspend fun hentSisteInnsendteMeldekort(ident: String): InnsendtMeldekortResponse? =
         withContext(Dispatchers.IO) {
             val response =
