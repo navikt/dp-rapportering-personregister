@@ -13,7 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTim
 class MeldekortregisterConnector(
     private val meldekortregisterUrl: String = Configuration.meldekortregisterUrl,
     private val meldekortregisterTokenProvider: () -> String? = Configuration.meldekortregisterTokenProvider,
-    private val httpClient: HttpClient = createHttpClient(),
+    private val httpClient: HttpClient = createLoggingHttpClient(),
     private val actionTimer: ActionTimer,
 ) {
     suspend fun oppdaterIdent(
