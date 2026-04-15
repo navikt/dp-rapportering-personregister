@@ -179,7 +179,7 @@ open class ApiTestSetup {
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService)
                 behandlingApi(behandlingRepository)
-                meldekortStatusApi(MeldekortStatusService(meldekortregisterConnector))
+                meldekortStatusApi(MeldekortStatusService(meldekortregisterConnector, meldepliktConnector))
             }
 
             block()

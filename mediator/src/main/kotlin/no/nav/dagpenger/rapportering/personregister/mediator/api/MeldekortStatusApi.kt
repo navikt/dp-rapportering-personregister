@@ -24,8 +24,13 @@ internal fun Application.meldekortStatusApi(meldekortStatusService: MeldekortSta
         authenticate("tokenX") {
             get("/meldekort/status") {
                 logger.info { "GET /meldekort/status" }
-                val status = meldekortStatusService.hentMeldekortStatus(call.ident())
-                call.respond(OK, status.tilResponse())
+                try {
+                    val status = meldekortStatusService.hentMeldekortStatus(call.ident())
+                    call.respond(OK, status.tilResponse())
+                } catch (e: Exception) {
+                    logger.error(e) { "Feil ved henting av meldekortstatus" }
+                    call.respond(HttpStatusCode.InternalServerError)
+                }
             }
         }
     }

@@ -84,7 +84,7 @@ class MeldepliktConnector(
             }
         }
 
-    suspend fun hentMeldekortFraArena(ident: String): List<ArenaMeldekortResponse>? =
+    suspend fun hentMeldekortFraArena(ident: String): List<ArenaMeldekortResponse> =
         withContext(Dispatchers.IO) {
             val response =
                 sendGetRequest(

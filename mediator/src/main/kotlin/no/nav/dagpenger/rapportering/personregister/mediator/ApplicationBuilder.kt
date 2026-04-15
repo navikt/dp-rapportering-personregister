@@ -168,7 +168,7 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
-    private val meldekortStatusService = MeldekortStatusService(meldekortregisterConnector)
+    private val meldekortStatusService = MeldekortStatusService(meldekortregisterConnector, meldepliktConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,

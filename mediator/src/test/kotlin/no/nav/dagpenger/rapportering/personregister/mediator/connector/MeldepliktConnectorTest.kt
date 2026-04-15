@@ -125,7 +125,7 @@ class MeldepliktConnectorTest {
 
             val result = runBlocking { meldepliktConnector(body, 200).hentMeldekortFraArena(ident) }
 
-            result!!.size shouldBe 2
+            result.size shouldBe 2
             result[0].status shouldBe "Innsendt"
             result[1].status shouldBe "TilUtfylling"
             result[1].kanSendesFra shouldBe idag

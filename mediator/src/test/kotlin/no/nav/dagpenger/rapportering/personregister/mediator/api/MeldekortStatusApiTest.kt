@@ -68,6 +68,14 @@ class MeldekortStatusApiTest : ApiTestSetup() {
         }
 
     @Test
+    fun `krasj i service gir 503`() =
+        setUpTestApplication {
+            coEvery { meldekortregisterConnector.hentMeldekort(ident) } throws RuntimeException("utilgjengelig")
+
+            client.get("/meldekort/status") { bearerAuth(issueTokenX(ident)) }.status shouldBe HttpStatusCode.InternalServerError
+        }
+
+    @Test
     fun `datofelter mappes til riktig format`() =
         setUpTestApplication {
             coEvery { meldekortregisterConnector.hentMeldekort(ident) } returns
