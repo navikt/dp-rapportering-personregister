@@ -69,7 +69,7 @@ class ArbeidssøkerServiceTest {
                 tilOgMed = tilOgMed,
                 innsendtTidspunkt = LocalDateTime.now().minusDays(3),
             )
-        coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort(ident) } returns meldekort
+        coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns meldekort
 
         val periode = avsluttetPeriode()
         arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(periode)
@@ -84,7 +84,7 @@ class ArbeidssøkerServiceTest {
 
     @Test
     fun `publiserer avsluttet_arbeidssokerperiode uten fastsattMeldingsdag når ingen innsendte meldekort finnes`() {
-        coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort(ident) } returns null
+        coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns null
 
         val periode = avsluttetPeriode()
         arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(periode)
@@ -118,7 +118,7 @@ class ArbeidssøkerServiceTest {
     @Test
     fun `kaster exception videre og publiserer ikke melding hvis meldekortregister feiler`() {
         coEvery {
-            meldekortregisterConnector.hentSisteInnsendteMeldekort(ident)
+            meldekortregisterConnector.hentSisteInnsendteMeldekort()
         } throws RuntimeException("Meldekortregister utilgjengelig")
 
         shouldThrow<RuntimeException> {
