@@ -22,7 +22,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafka
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
 import no.nav.dagpenger.rapportering.personregister.mediator.api.behandlingApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.internalApi
-import no.nav.dagpenger.rapportering.personregister.mediator.api.meldekortStatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -56,7 +55,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.service.MeldekortStatusService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
@@ -168,7 +166,6 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
         )
     private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
-    private val meldekortStatusService = MeldekortStatusService(meldekortregisterConnector, meldepliktConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
@@ -271,7 +268,6 @@ internal class ApplicationBuilder(
                                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                                 personApi(personService)
                                 behandlingApi(behandlingRepository)
-                                meldekortStatusApi(meldekortStatusService)
                             }
                         }
                     },

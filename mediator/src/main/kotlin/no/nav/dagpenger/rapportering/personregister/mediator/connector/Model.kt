@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -39,17 +38,6 @@ data class BrukerResponse(
 data class TidspunktFraKildeResponse(
     val tidspunkt: OffsetDateTime,
     val avviksType: String,
-)
-
-data class MeldekortResponse(
-    val status: String,
-    val kanSendesFra: LocalDate,
-    val sisteFristForTrekk: LocalDate,
-)
-
-data class ArenaMeldekortResponse(
-    val status: String,
-    val kanSendesFra: LocalDate,
 )
 
 data class InnsendtMeldekortResponse(

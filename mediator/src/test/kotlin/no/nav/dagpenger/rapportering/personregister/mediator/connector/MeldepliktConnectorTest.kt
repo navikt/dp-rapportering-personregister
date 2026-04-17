@@ -6,9 +6,7 @@ import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 import java.time.LocalDateTime
 
 class MeldepliktConnectorTest {
@@ -104,51 +102,6 @@ class MeldepliktConnectorTest {
         shouldThrow<RuntimeException> {
             runBlocking {
                 meldepliktConnector("false", 500).hentMeldestatus(1L)
-            }
-        }
-    }
-
-    @Nested
-    inner class HentMeldekortFraArena {
-        private val ident = "12345678901"
-        private val idag = LocalDate.now()
-
-        @Test
-        fun `returnerer liste med meldekort ved 200`() {
-            val body =
-                defaultObjectMapper.writeValueAsString(
-                    listOf(
-                        ArenaMeldekortResponse("Innsendt", idag.minusDays(14)),
-                        ArenaMeldekortResponse("TilUtfylling", idag),
-                    ),
-                )
-
-            val result = runBlocking { meldepliktConnector(body, 200).hentMeldekortFraArena(ident) }
-
-            result.size shouldBe 2
-            result[0].status shouldBe "Innsendt"
-            result[1].status shouldBe "TilUtfylling"
-            result[1].kanSendesFra shouldBe idag
-        }
-
-        @Test
-        fun `returnerer tom liste ved tom respons`() {
-            val result = runBlocking { meldepliktConnector("[]", 200).hentMeldekortFraArena(ident) }
-
-            result shouldBe emptyList()
-        }
-
-        @Test
-        fun `returnerer tom liste ved 404`() {
-            val result = runBlocking { meldepliktConnector("{}", 404).hentMeldekortFraArena(ident) }
-
-            result shouldBe emptyList()
-        }
-
-        @Test
-        fun `kaster exception ved uventet statuskode`() {
-            shouldThrow<RuntimeException> {
-                runBlocking { meldepliktConnector("{}", 500).hentMeldekortFraArena(ident) }
             }
         }
     }

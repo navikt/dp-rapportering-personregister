@@ -10,11 +10,6 @@ servers:
     description: dev
   - url: https://dp-rapportering-personregister.intern.nav.no
     description: prod
-tags:
-    - name: PersonStatusApi
-      description: Endepunkter for personstatus
-    - name: MeldekortStatusApi
-      description: Endepunkter for meldekortstatus
 paths:
   /personstatus:
     get:
@@ -105,22 +100,6 @@ paths:
       security:
         - azureAd: []
 
-  /meldekort/status:
-    get:
-      tags:
-          - MeldekortStatusApi
-      responses:
-        200:
-          description: OK
-          content:
-            application/json:
-              schema:
-                  $ref: '#/components/schemas/MeldekortStatus'
-      summary: Hent meldekortstatus for en person
-      description: Hent meldekortstatus for en person basert på ident
-      operationId: get-meldekortstatus
-      security:
-        - tokenX: []
 
 components:
   schemas:
@@ -191,35 +170,6 @@ components:
             - Startet
             - Avsluttet
           description: Status for arbeidssøkerperioden
-    MeldekortStatus:
-        required:
-            - harInnsendteMeldekort
-            - meldekortTilUtfylling
-            - redirectUrl
-        type: object
-        properties:
-            harInnsendteMeldekort:
-                type: boolean
-                description: Om personen har innsendte meldekort
-            meldekortTilUtfylling:
-                type: array
-                items:
-                    $ref: '#/components/schemas/MeldekortTilUtfylling'
-            redirectUrl:
-                type: string
-                format: string
-                description: URL til bruker sender meldekort
-    MeldekortTilUtfylling:
-        type: object
-        properties:
-            kanSendesFra:
-                type: string
-                format: date-time
-                description: Tidligste dato for når meldekort kan sendes inn
-            fristForInnsending:
-                type: string
-                format: date-time
-                description: Frist for innsending av meldekort
     Problem:
       type: object
       description: Implementasjon av Problem Details for HTTP APIs [RFC 7807](https://datatracker.ietf.org/doc/html/rfc7807)
