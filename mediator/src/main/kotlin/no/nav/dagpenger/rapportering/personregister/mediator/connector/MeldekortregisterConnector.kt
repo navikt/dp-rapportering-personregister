@@ -70,7 +70,7 @@ class MeldekortregisterConnector(
         }
     }
 
-    suspend fun hentSisteInnsendteMeldekort(ident: String): InnsendtMeldekortResponse? =
+    suspend fun hentSisteInnsendteMeldekort(): InnsendtMeldekortResponse? =
         withContext(Dispatchers.IO) {
             val response =
                 sendGetRequest(
@@ -80,7 +80,7 @@ class MeldekortregisterConnector(
                         meldekortregisterTokenProvider.invoke()
                             ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "meldekortregister_hentSisteInnsendteMeldekort",
-                    parameters = mapOf("ident" to ident, "status" to "Innsendt"),
+                    parameters = mapOf("status" to "Innsendt"),
                     headers = mapOf(),
                     actionTimer = actionTimer,
                 ).also {
