@@ -38,7 +38,7 @@ class MeldekortregisterConnectorTest {
                 ),
             )
 
-        val result = runBlocking { connector(body, 200).hentSisteInnsendteMeldekort("12345678901") }
+        val result = runBlocking { connector(body, 200).hentSisteInnsendteMeldekort() }
 
         result shouldNotBe null
         result!!.innsendtTidspunkt shouldBe now.minusDays(1)
@@ -46,14 +46,14 @@ class MeldekortregisterConnectorTest {
 
     @Test
     fun `returnerer null ved tom liste`() {
-        val result = runBlocking { connector("[]", 200).hentSisteInnsendteMeldekort("12345678901") }
+        val result = runBlocking { connector("[]", 200).hentSisteInnsendteMeldekort() }
 
         result shouldBe null
     }
 
     @Test
     fun `returnerer null ved 404`() {
-        val result = runBlocking { connector("{}", 404).hentSisteInnsendteMeldekort("12345678901") }
+        val result = runBlocking { connector("{}", 404).hentSisteInnsendteMeldekort() }
 
         result shouldBe null
     }
@@ -61,7 +61,7 @@ class MeldekortregisterConnectorTest {
     @Test
     fun `kaster exception ved uventet statuskode`() {
         shouldThrow<RuntimeException> {
-            runBlocking { connector("{}", 500).hentSisteInnsendteMeldekort("12345678901") }
+            runBlocking { connector("{}", 500).hentSisteInnsendteMeldekort() }
         }
     }
 }
