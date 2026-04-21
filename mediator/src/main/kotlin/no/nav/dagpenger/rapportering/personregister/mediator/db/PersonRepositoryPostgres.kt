@@ -915,8 +915,8 @@ class PersonRepositoryPostgres(
         tx.run(
             queryOf(
                 """
-                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
-                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, aarsak_til_utmelding, sist_endret)
+                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :aarsak_til_utmelding, :sist_endret)
                 ON CONFLICT (periode_id) 
                 DO UPDATE SET 
                     person_id = EXCLUDED.person_id,

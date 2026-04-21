@@ -1,4 +1,2 @@
-ALTER TABLE arbeidssoker ADD COLUMN  aarsak_til_utmelding VARCHAR(50) NULL default NULL;
-
-
-
+ALTER TABLE arbeidssoker ADD COLUMN aarsak_til_utmelding VARCHAR(50)
+    CHECK (aarsak_til_utmelding IN ('UTMELDT_I_ARBEIDSSØKERREGISTERET', 'IKKE_MELDT_SEG_PÅ_21_DAGER', 'UTMELDT_PÅ_MELDEKORT'));

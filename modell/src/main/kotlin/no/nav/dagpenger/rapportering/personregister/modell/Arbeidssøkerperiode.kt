@@ -18,7 +18,7 @@ val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
     get() = this.firstOrNull { it.aktiv() }
 
 enum class ÅrsakTilUtmelding {
-    UTMELDT_I_ASR,
+    UTMELDT_I_ARBEIDSSØKERREGISTERET,
     IKKE_MELDT_SEG_PÅ_21_DAGER,
     UTMELDT_PÅ_MELDEKORT,
 }
