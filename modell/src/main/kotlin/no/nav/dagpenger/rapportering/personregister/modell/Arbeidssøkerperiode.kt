@@ -19,6 +19,6 @@ val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
 
 enum class ÅrsakTilUtmelding {
     UTMELDT_I_ASR,
-    MELDEPLIKT_BRUTT,
+    IKKE_MELDT_SEG_PÅ_21_DAGER,
     UTMELDT_PÅ_MELDEKORT,
 }
