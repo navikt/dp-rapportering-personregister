@@ -227,6 +227,7 @@ class PersonTest {
                 behandle(meldesyklusErPassertHendelse())
 
                 arbeidssøkerperiodeObserver skalHaFrasagtSegAnsvaretMedFristBruttFor this
+                this.arbeidssøkerperioder.gjeldende?.årsakTilUtmelding shouldBe ÅrsakTilUtmelding.MELDEPLIKT_BRUTT
             }
     }
 
