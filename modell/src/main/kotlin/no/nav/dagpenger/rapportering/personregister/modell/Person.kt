@@ -158,7 +158,7 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: StartetArbeidssøkerperiodeHe
         Arbeidssøkerperiode(
             hendelse.periodeId,
             ident,
-            hendelse.startet,
+            hendelse.startDato,
             null,
             overtattBekreftelse = null,
         ),
@@ -170,8 +170,8 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
         Arbeidssøkerperiode(
             hendelse.periodeId,
             ident,
-            hendelse.startet,
-            hendelse.avsluttet,
+            hendelse.startDato,
+            hendelse.sluttDato,
             overtattBekreftelse = false,
         ),
     )

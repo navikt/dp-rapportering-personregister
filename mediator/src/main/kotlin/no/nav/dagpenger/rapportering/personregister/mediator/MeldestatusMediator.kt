@@ -146,9 +146,9 @@ class MeldestatusMediator(
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
-                            dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
+                            dato = LocalDateTime.now(),
                             meldegruppeKode = it.meldegruppe,
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )

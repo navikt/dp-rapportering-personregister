@@ -12,6 +12,7 @@ data class PersonIkkeDagpengerSynkroniseringHendelse(
     override val startDato: LocalDateTime,
     val dagpengerbruker: Boolean = true,
 ) : Hendelse {
+    override val sluttDato = null
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {

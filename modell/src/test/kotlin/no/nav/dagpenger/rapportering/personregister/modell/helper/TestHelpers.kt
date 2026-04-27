@@ -64,4 +64,4 @@ fun startetArbeidssøkerperiodeHendelse(
     startet: LocalDateTime = tidligere,
 ) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, startet)
 
-fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå)
+fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)

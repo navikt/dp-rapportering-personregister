@@ -269,8 +269,8 @@ class PersonRepositoryPostgres(
                 """,
                                 hendelse.ident,
                                 hendelse.dato,
-                                hendelse.hentStartDato(),
-                                hendelse.hentSluttDato(),
+                                hendelse.startDato,
+                                hendelse.sluttDato,
                                 hendelse.kilde.name,
                                 hendelse.referanseId,
                                 hendelse::class.simpleName,
@@ -600,8 +600,8 @@ class PersonRepositoryPostgres(
                 """,
                 personId,
                 hendelse.dato,
-                hendelse.hentStartDato()?.tilPostgresqlTimestamp(),
-                hendelse.hentSluttDato()?.tilPostgresqlTimestamp(),
+                hendelse.startDato.tilPostgresqlTimestamp(),
+                hendelse.sluttDato?.tilPostgresqlTimestamp(),
                 hendelse.kilde.name,
                 hendelse.referanseId,
                 hendelse::class.simpleName,
@@ -609,31 +609,6 @@ class PersonRepositoryPostgres(
             ).asUpdate,
         )
     }
-
-    private fun Hendelse.hentStartDato(): LocalDateTime? =
-        when (this) {
-            is AnnenMeldegruppeHendelse -> this.startDato
-            is AvsluttetArbeidssøkerperiodeHendelse -> this.startet
-            is DagpengerMeldegruppeHendelse -> this.startDato
-            is MeldepliktHendelse -> this.startDato
-            is MeldesyklusErPassertHendelse -> this.startDato
-            is PersonIkkeDagpengerSynkroniseringHendelse -> this.startDato
-            is PersonSynkroniseringHendelse -> this.startDato
-            is StartetArbeidssøkerperiodeHendelse -> this.startet
-            is VedtakHendelse -> this.startDato
-            is NødbremsHendelse -> this.startDato
-            else -> null
-        }
-
-    private fun Hendelse.hentSluttDato(): LocalDateTime? =
-        when (this) {
-            is AnnenMeldegruppeHendelse -> this.sluttDato
-            is AvsluttetArbeidssøkerperiodeHendelse -> this.avsluttet
-            is DagpengerMeldegruppeHendelse -> this.sluttDato
-            is MeldepliktHendelse -> this.sluttDato
-            is VedtakHendelse -> this.sluttDato
-            else -> null
-        }
 
     private fun Hendelse.hentEkstrafelter(): String? {
         val test =
@@ -792,7 +767,8 @@ class PersonRepositoryPostgres(
                 StartetArbeidssøkerperiodeHendelse(
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
-                    startet =
+                    dato = dato,
+                    startDato =
                         startDato ?: throw IllegalStateException(
                             "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
                         ),
@@ -803,11 +779,12 @@ class PersonRepositoryPostgres(
                 AvsluttetArbeidssøkerperiodeHendelse(
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
-                    startet =
+                    dato = dato,
+                    startDato =
                         startDato ?: throw IllegalStateException(
                             "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
                         ),
-                    avsluttet =
+                    sluttDato =
                         sluttDato ?: throw IllegalStateException(
                             "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
                         ),

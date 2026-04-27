@@ -13,6 +13,8 @@ data class NødbremsHendelse(
     override val referanseId: String,
     override val kilde: Kildesystem = Kildesystem.Dagpenger,
 ) : Hendelse {
+    override val sluttDato = null
+
     override fun behandle(person: Person) {
         person.hendelser.add(this)
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)

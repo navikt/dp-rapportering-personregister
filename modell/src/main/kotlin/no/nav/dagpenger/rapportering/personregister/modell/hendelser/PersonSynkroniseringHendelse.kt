@@ -11,6 +11,7 @@ data class PersonSynkroniseringHendelse(
     override val referanseId: String,
     override val startDato: LocalDateTime,
 ) : Hendelse {
+    override val sluttDato = null
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {

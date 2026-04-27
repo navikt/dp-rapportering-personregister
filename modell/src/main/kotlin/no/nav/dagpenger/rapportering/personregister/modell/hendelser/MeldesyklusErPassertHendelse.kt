@@ -13,6 +13,8 @@ class MeldesyklusErPassertHendelse(
     override val startDato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
+    override val sluttDato = null
+
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 

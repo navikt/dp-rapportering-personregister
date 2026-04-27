@@ -9,5 +9,6 @@ data class SøknadHendelse(
     override val startDato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
+    override val sluttDato = null
     override val kilde: Kildesystem = Kildesystem.Søknad
 }

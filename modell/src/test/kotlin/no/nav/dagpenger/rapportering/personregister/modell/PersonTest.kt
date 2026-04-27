@@ -273,7 +273,7 @@ class PersonTest {
 
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
 
-    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå)
+    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
 
     private fun meldesyklusErPassertHendelse() =
         MeldesyklusErPassertHendelse(
