@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMe
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -69,9 +70,7 @@ class BehandlingsresultatMottak(
             try {
                 val ident = packet["ident"].asText()
 
-                if (!ident.matches(Regex("[0-9]{11}"))) {
-                    throw IllegalArgumentException("Person-ident må ha 11 sifre")
-                }
+                ident.validerIdent()
 
                 // Slett fremtidige VedtakHendelser
                 personRepository.slettFremtidigeVedtakHendelser(ident)
