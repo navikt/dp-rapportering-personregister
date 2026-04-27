@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 interface MeldegruppeHendelse : Hendelse

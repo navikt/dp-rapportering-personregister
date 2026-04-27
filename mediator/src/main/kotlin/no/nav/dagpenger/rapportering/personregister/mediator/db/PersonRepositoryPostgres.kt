@@ -701,7 +701,7 @@ class PersonRepositoryPostgres(
 
         return when (type) {
             "SøknadHendelse" -> {
-                SøknadHendelse(ident, dato, dato, referanseId)
+                SøknadHendelse(ident, dato, startDato ?: dato, referanseId)
             }
 
             "DagpengerMeldegruppeHendelse" -> {

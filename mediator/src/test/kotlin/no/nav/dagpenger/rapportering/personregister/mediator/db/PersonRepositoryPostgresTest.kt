@@ -28,7 +28,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -36,10 +35,9 @@ import java.time.LocalDateTime
 class PersonRepositoryPostgresTest {
     private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val ident = "12345678901"
-    private val nå = LocalDateTime.now()
+    private val dato = LocalDateTime.parse("2026-04-27T15:31:18")
 
     @Test
-    @Disabled
     fun `kan lagre og hente komplett person`() =
         withMigratedDb {
             val person =
@@ -58,7 +56,6 @@ class PersonRepositoryPostgresTest {
         }
 
     @Test
-    @Disabled
     fun `kan oppdatere person`() =
         withMigratedDb {
             val person =
@@ -144,8 +141,8 @@ class PersonRepositoryPostgresTest {
             val ikkeArenaHendelse =
                 VedtakHendelse(
                     ident = ident,
-                    dato = LocalDateTime.now(),
-                    startDato = LocalDateTime.now(),
+                    dato = dato,
+                    startDato = dato.plusSeconds(1),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
                 )
@@ -233,8 +230,8 @@ class PersonRepositoryPostgresTest {
                 """,
                             personId,
                             hendelse.dato,
-                            LocalDateTime.now(),
-                            LocalDateTime.now(),
+                            dato.plusSeconds(1),
+                            dato.plusSeconds(2),
                             hendelse.kilde.name,
                             hendelse.referanseId,
                             hendelse::class.simpleName,
@@ -302,7 +299,7 @@ class PersonRepositoryPostgresTest {
                 )
             personRepository.lagrePerson(person)
 
-            val nyPeriode = person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå)
+            val nyPeriode = person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = dato.plusSeconds(1))
             person.arbeidssøkerperioder.add(nyPeriode)
             personRepository.oppdaterPerson(person)
 
@@ -348,7 +345,7 @@ class PersonRepositoryPostgresTest {
 
             originalTimestamp shouldBe oppdatertTimestamp
 
-            person.arbeidssøkerperioder.add(person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = nå))
+            person.arbeidssøkerperioder.add(person.arbeidssøkerperioder.gjeldende!!.copy(avsluttet = dato.plusSeconds(1)))
             personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
             val avsluttetTimestamp =
@@ -450,7 +447,7 @@ class PersonRepositoryPostgresTest {
         status: Status = IKKE_DAGPENGERBRUKER,
     ) = Person(
         ident = ident,
-        statusHistorikk = statusHistorikk(mapOf(nå to status)),
+        statusHistorikk = statusHistorikk(mapOf(dato to status)),
         arbeidssøkerperioder = arbeidssøkerperiode,
     ).apply { this.hendelser.addAll(hendelser) }
 
@@ -460,7 +457,7 @@ class PersonRepositoryPostgresTest {
         harRett: Boolean = false,
     ) = VedtakHendelse(
         ident = ident,
-        dato = LocalDateTime.now(),
+        dato = dato,
         startDato = fraOgMed.atStartOfDay(),
         sluttDato = tilOgMed?.atStartOfDay(),
         referanseId = UUIDv7.newUuid().toString(),
@@ -471,15 +468,15 @@ class PersonRepositoryPostgresTest {
         SøknadHendelse(
             ident = "12345678901",
             referanseId = UUIDv7.newUuid().toString(),
-            dato = LocalDateTime.now(),
-            startDato = LocalDateTime.now(),
+            dato = dato,
+            startDato = dato.plusSeconds(1),
         )
 
     private fun arbeidssøkerperiode() =
         Arbeidssøkerperiode(
             ident = "12345678901",
             periodeId = UUIDv7.newUuid(),
-            startet = LocalDateTime.now(),
+            startet = dato.plusSeconds(1),
             avsluttet = null,
             overtattBekreftelse = false,
         )
@@ -497,8 +494,8 @@ class PersonRepositoryPostgresTest {
         DagpengerMeldegruppeHendelse(
             ident = "12345678901",
             referanseId = referanseId,
-            dato = LocalDateTime.now(),
-            startDato = LocalDateTime.now(),
+            dato = dato,
+            startDato = dato.plusSeconds(1),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
             harMeldtSeg = harMeldtSeg,
@@ -507,8 +504,8 @@ class PersonRepositoryPostgresTest {
         AnnenMeldegruppeHendelse(
             ident = "12345678901",
             referanseId = referanseId,
-            dato = LocalDateTime.now(),
-            startDato = LocalDateTime.now(),
+            dato = dato,
+            startDato = dato.plusSeconds(1),
             sluttDato = null,
             meldegruppeKode = meldegruppeKode,
             harMeldtSeg = harMeldtSeg,
@@ -522,8 +519,8 @@ class PersonRepositoryPostgresTest {
     ) = MeldepliktHendelse(
         ident = ident,
         referanseId = referanseId,
-        dato = LocalDateTime.now(),
-        startDato = LocalDateTime.now(),
+        dato = dato,
+        startDato = dato.plusSeconds(1),
         sluttDato = null,
         statusMeldeplikt = true,
         harMeldtSeg = harMeldtSeg,

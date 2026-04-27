@@ -141,7 +141,6 @@ class PersonServiceTest {
         coVerify(exactly = 1) { meldekortregisterConnector.konsoliderIdenter(eq(personId), eq(nyIdent), any()) }
     }
 
-    @Disabled
     @Test
     fun `hentPerson merger person med hendelser og finner riktig arbeidssøkerperiode `() {
         val nyIdent = "98765432101"
