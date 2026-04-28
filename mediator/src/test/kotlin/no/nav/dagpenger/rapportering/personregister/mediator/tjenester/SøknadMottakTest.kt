@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.søknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
@@ -16,10 +16,10 @@ import java.time.LocalDateTime
 
 class SøknadMottakTest {
     private val testRapid = TestRapid()
-    private val personMediator = mockk<PersonMediator>(relaxed = true)
+    private val søknadService = mockk<SøknadService>(relaxed = true)
 
     init {
-        SøknadMottak(testRapid, personMediator, søknadMetrikker)
+        SøknadMottak(testRapid, søknadService, søknadMetrikker)
     }
 
     @BeforeEach
@@ -45,7 +45,7 @@ class SøknadMottakTest {
                 søknadId,
             )
 
-        verify(exactly = 1) { personMediator.behandle(søknadHendelse) }
+        verify(exactly = 1) { søknadService.behandle(søknadHendelse) }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
@@ -67,7 +67,7 @@ class SøknadMottakTest {
                 søknadId,
             )
 
-        verify(exactly = 1) { personMediator.behandle(søknadHendelse) }
+        verify(exactly = 1) { søknadService.behandle(søknadHendelse) }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
@@ -80,14 +80,14 @@ class SøknadMottakTest {
 
         testRapid.sendTestMessage(lagInnsendingFerdigstiltEvent(ident, dato, søknadsData))
 
-        verify(exactly = 1) { personMediator.behandle(any<SøknadHendelse>(), eq(1)) }
+        verify(exactly = 1) { søknadService.behandle(any<SøknadHendelse>()) }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
     fun `onPacket kaster exception og inkrementerer feilmetrikk hvis behandling av melding feiler`() {
         val metrikkCount = søknadMetrikker.søknaderFeilet.count()
-        every { personMediator.behandle(any<SøknadHendelse>()) } throws RuntimeException("kaboom")
+        every { søknadService.behandle(any<SøknadHendelse>()) } throws RuntimeException("kaboom")
 
         val exception =
             shouldThrow<RuntimeException> {

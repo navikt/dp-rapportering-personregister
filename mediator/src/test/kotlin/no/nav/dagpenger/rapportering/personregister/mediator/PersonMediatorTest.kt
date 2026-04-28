@@ -23,6 +23,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -72,6 +73,7 @@ class PersonMediatorTest {
     private lateinit var meldepliktConnector: MeldepliktConnector
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
+    private lateinit var søknadService: SøknadService
 
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
@@ -133,6 +135,13 @@ class PersonMediatorTest {
                 unleash,
             )
 
+        søknadService =
+            SøknadService(
+                personService = personService,
+                arbeidssøkerMediator = arbeidssøkerMediator,
+                actionTimer = actionTimer,
+            )
+
         unleash.enableAll()
         every { pdlConnector.hentIdenter(ident) } returns listOf(Ident(ident, Ident.IdentGruppe.FOLKEREGISTERIDENT, false))
     }
@@ -147,7 +156,7 @@ class PersonMediatorTest {
         @Test
         fun `søknad for ny person`() {
             coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
-            personMediator.behandle(søknadHendelse(ident))
+            søknadService.behandle(søknadHendelse(ident))
 
             personRepository
                 .hentPerson(ident)
@@ -161,7 +170,7 @@ class PersonMediatorTest {
         fun `søknad for eksisterende person`() {
             testPerson {
                 coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
-                personMediator.behandle(søknadHendelse(ident))
+                søknadService.behandle(søknadHendelse(ident))
 
                 personRepository
                     .hentPerson(ident)
@@ -183,7 +192,7 @@ class PersonMediatorTest {
 
             val oppdatertPerson = personRepository.hentPerson(ident)!!
             val søknadHendelse = søknadHendelse(ident)
-            personMediator.behandle(søknadHendelse)
+            søknadService.behandle(søknadHendelse)
 
             oppdatertPerson.apply {
                 ident shouldBe ident
@@ -198,7 +207,7 @@ class PersonMediatorTest {
     inner class VedtakHendelser {
         @Test
         fun `innvilget-vedtak for ny person`() {
-            personMediator.behandle(søknadHendelse(ident))
+            søknadService.behandle(søknadHendelse(ident))
             personMediator.behandle(vedtakHendelse(ident))
 
             personRepository
@@ -214,7 +223,7 @@ class PersonMediatorTest {
         fun `innvilget-vedtak for arbeidssøker`() {
             arbeidssøker { }
 
-            personMediator.behandle(søknadHendelse(ident))
+            søknadService.behandle(søknadHendelse(ident))
 
             val person = personRepository.hentPerson(ident)!!
             every { personObserver.overtattArbeidssøkerbekreftelse(any(), periodeId) } answers {
@@ -245,7 +254,7 @@ class PersonMediatorTest {
         @Test
         fun `avslag-vedtak for dagpengerbruker`() {
             arbeidssøker(overtattBekreftelse = true) {}
-            personMediator.behandle(søknadHendelse(ident))
+            søknadService.behandle(søknadHendelse(ident))
             personMediator.behandle(vedtakHendelse(ident, utfall = true))
 
             val person = personRepository.hentPerson(ident)!!
@@ -316,7 +325,7 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppeendring for person ved innvilget vedtak tas ikke hensyn til`() {
             arbeidssøker {}
-            personMediator.behandle(søknadHendelse())
+            søknadService.behandle(søknadHendelse())
             personMediator.behandle(vedtakHendelse(ident))
             personMediator.behandle(dagpengerMeldegruppeHendelse(startDato = nå))
             personMediator.behandle(annenMeldegruppeHendelse(startDato = nå))
@@ -561,7 +570,7 @@ class PersonMediatorTest {
                     ),
                 ),
         ).apply { personRepository.lagrePerson(this) }
-        personMediator.behandle(søknadHendelse())
+        søknadService.behandle(søknadHendelse())
         personMediator.behandle(vedtakHendelse())
 
         val person = personRepository.hentPerson(ident)!!
