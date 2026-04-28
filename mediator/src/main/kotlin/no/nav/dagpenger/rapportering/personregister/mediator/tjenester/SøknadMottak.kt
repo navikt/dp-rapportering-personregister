@@ -8,15 +8,15 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
-import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import java.time.LocalDateTime
 
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
-    private val personMediator: PersonMediator,
+    private val søknadService: SøknadService,
     private val søknadMetrikker: SøknadMetrikker,
 ) : River.PacketListener {
     private val quizSøknadIdNøkkel = "søknadsData.søknad_uuid"
@@ -52,7 +52,7 @@ class SøknadMottak(
         søknadMetrikker.søknaderMottatt.increment()
 
         try {
-            personMediator.behandle(packet.tilHendelse())
+            søknadService.behandle(packet.tilHendelse())
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av søknad" }
             sikkerlogg.error(e) { "Feil ved behandling av søknad: ${packet.toJson()}" }

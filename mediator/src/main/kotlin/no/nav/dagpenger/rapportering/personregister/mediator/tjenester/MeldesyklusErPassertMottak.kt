@@ -10,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import java.time.LocalDateTime
 
@@ -54,9 +55,7 @@ class MeldesyklusErPassertMottak(
             val ident = packet["ident"].asText()
             val referanseId = packet["referanseId"].asText()
 
-            if (!ident.matches(Regex("[0-9]{11}"))) {
-                throw IllegalArgumentException("Person-ident må ha 11 sifre")
-            }
+            ident.validerIdent()
 
             val meldesyklusErPassertHendelse =
                 MeldesyklusErPassertHendelse(

@@ -27,6 +27,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
 import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -637,27 +638,33 @@ class PersonRepositoryPostgres(
     private fun Hendelse.hentEkstrafelter(): String? {
         val test =
             when (this) {
-                is DagpengerMeldegruppeHendelse ->
+                is DagpengerMeldegruppeHendelse -> {
                     defaultObjectMapper.writeValueAsString(
                         MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
                     )
+                }
 
-                is AnnenMeldegruppeHendelse ->
+                is AnnenMeldegruppeHendelse -> {
                     defaultObjectMapper.writeValueAsString(
                         MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
                     )
+                }
 
-                is MeldepliktHendelse ->
+                is MeldepliktHendelse -> {
                     defaultObjectMapper.writeValueAsString(
                         MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
                     )
+                }
 
-                is VedtakHendelse ->
+                is VedtakHendelse -> {
                     defaultObjectMapper.writeValueAsString(
                         VedtakExtra(utfall = this.utfall),
                     )
+                }
 
-                else -> null
+                else -> {
+                    null
+                }
             }
 
         return test
@@ -718,7 +725,10 @@ class PersonRepositoryPostgres(
         val kilde = row.string("kilde")
 
         return when (type) {
-            "SøknadHendelse" -> SøknadHendelse(ident, dato, dato, referanseId)
+            "SøknadHendelse" -> {
+                SøknadHendelse(ident, dato, dato, referanseId)
+            }
+
             "DagpengerMeldegruppeHendelse" -> {
                 val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 DagpengerMeldegruppeHendelse(
@@ -778,7 +788,7 @@ class PersonRepositoryPostgres(
                 )
             }
 
-            "StartetArbeidssøkerperiodeHendelse" ->
+            "StartetArbeidssøkerperiodeHendelse" -> {
                 StartetArbeidssøkerperiodeHendelse(
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
@@ -787,8 +797,9 @@ class PersonRepositoryPostgres(
                             "StartetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler startDato",
                         ),
                 )
+            }
 
-            "AvsluttetArbeidssøkerperiodeHendelse" ->
+            "AvsluttetArbeidssøkerperiodeHendelse" -> {
                 AvsluttetArbeidssøkerperiodeHendelse(
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
@@ -801,22 +812,25 @@ class PersonRepositoryPostgres(
                             "AvsluttetArbeidssøkerperiodeHendelse med referanseId $referanseId mangler sluttDato",
                         ),
                 )
+            }
 
-            "PersonSynkroniseringHendelse" ->
+            "PersonSynkroniseringHendelse" -> {
                 PersonSynkroniseringHendelse(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
                     startDato = dato,
                 )
+            }
 
-            "PersonIkkeDagpengerSynkroniseringHendelse" ->
+            "PersonIkkeDagpengerSynkroniseringHendelse" -> {
                 PersonIkkeDagpengerSynkroniseringHendelse(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
                     startDato = dato,
                 )
+            }
 
             "VedtakHendelse" -> {
                 val vedtakExtra = defaultObjectMapper.readValue<VedtakExtra>(extra!!)
@@ -831,15 +845,18 @@ class PersonRepositoryPostgres(
                 )
             }
 
-            "NødbremsHendelse" ->
+            "NødbremsHendelse" -> {
                 NødbremsHendelse(
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
                     startDato = dato,
                 )
+            }
 
-            else -> throw IllegalArgumentException("Unknown type: $type")
+            else -> {
+                throw IllegalArgumentException("Unknown type: $type")
+            }
         }
     }
 
@@ -870,6 +887,7 @@ class PersonRepositoryPostgres(
             startet = row.localDateTime("startet"),
             avsluttet = row.localDateTimeOrNull("avsluttet"),
             overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
+            årsakTilUtmelding = row.stringOrNull("aarsak_til_utmelding")?.let { ÅrsakTilUtmelding.valueOf(it) },
         )
 
     private fun hentStatusHistorikk(
@@ -897,14 +915,15 @@ class PersonRepositoryPostgres(
         tx.run(
             queryOf(
                 """
-                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, sist_endret)
-                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :sist_endret)
+                INSERT INTO arbeidssoker (periode_id, person_id, startet, avsluttet, overtatt_bekreftelse, aarsak_til_utmelding, sist_endret)
+                VALUES (:periode_id, :person_id, :startet, :avsluttet, :overtatt_bekreftelse, :aarsak_til_utmelding, :sist_endret)
                 ON CONFLICT (periode_id) 
                 DO UPDATE SET 
                     person_id = EXCLUDED.person_id,
                     startet = EXCLUDED.startet,
                     avsluttet = EXCLUDED.avsluttet,
                     overtatt_bekreftelse = EXCLUDED.overtatt_bekreftelse,
+                    aarsak_til_utmelding = EXCLUDED.aarsak_til_utmelding,
                     sist_endret = CASE 
                         WHEN EXCLUDED.person_id IS DISTINCT FROM arbeidssoker.person_id
                             OR EXCLUDED.startet IS DISTINCT FROM arbeidssoker.startet
@@ -921,6 +940,7 @@ class PersonRepositoryPostgres(
                     "avsluttet" to arbeidssøkerperiode.avsluttet,
                     "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
                     "sist_endret" to LocalDateTime.now(),
+                    "aarsak_til_utmelding" to arbeidssøkerperiode.årsakTilUtmelding?.name,
                 ),
             ).asUpdate,
         )
@@ -956,19 +976,23 @@ class PersonRepositoryPostgres(
 
     private fun LocalDateTime.tilPostgresqlTimestamp() =
         when {
-            this.toLocalDate().isEqual(LocalDate.MIN) ->
+            this.toLocalDate().isEqual(LocalDate.MIN) -> {
                 PGobject().apply {
                     type = "timestamp"
                     value = "-infinity"
                 }
+            }
 
-            this.toLocalDate().isEqual(LocalDate.MAX) ->
+            this.toLocalDate().isEqual(LocalDate.MAX) -> {
                 PGobject().apply {
                     type = "timestamp"
                     value = "infinity"
                 }
+            }
 
-            else -> this
+            else -> {
+                this
+            }
         }
 
     private fun Row.fraPostgresqlTimestamp(kolonneNavn: String): LocalDateTime? =
