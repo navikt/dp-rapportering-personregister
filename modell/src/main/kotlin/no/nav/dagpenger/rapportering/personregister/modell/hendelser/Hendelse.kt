@@ -11,5 +11,5 @@ interface Hendelse {
     val kilde: Kildesystem
     val referanseId: String
 
-    fun behandle(person: Person)
+    fun behandle(person: Person) {}
 }

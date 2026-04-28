@@ -8,7 +8,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
-import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
@@ -17,7 +16,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Meldesyklus
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDateTime
 
@@ -30,30 +28,6 @@ class PersonMediator(
     private val actionTimer: ActionTimer,
     private val unleash: Unleash,
 ) {
-    fun behandle(
-        søknadHendelse: SøknadHendelse,
-        counter: Int = 1,
-    ): Unit =
-        actionTimer.timedAction("behandle_SoknadHendelse") {
-            logger.info { "Behandler søknadshendelse: ${søknadHendelse.referanseId}" }
-            personService
-                .hentEllerOpprettPerson(søknadHendelse.ident)
-                .also { person ->
-                    if (person.hendelser.any { it.referanseId == søknadHendelse.referanseId }) return@timedAction
-
-                    person.behandle(søknadHendelse)
-                    try {
-                        personRepository.oppdaterPerson(person)
-                    } catch (e: OptimisticLockingException) {
-                        logger.info(e) {
-                            "Optimistisk låsing feilet ved oppdatering av person med periodeId ${søknadHendelse.referanseId}. Counter: $counter"
-                        }
-                        behandle(søknadHendelse, counter + 1)
-                    }
-                    arbeidssøkerMediator.behandle(søknadHendelse.ident)
-                }
-        }
-
     fun behandle(
         vedtakHendelse: VedtakHendelse,
         counter: Int = 1,

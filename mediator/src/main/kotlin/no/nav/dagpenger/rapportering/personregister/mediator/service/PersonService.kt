@@ -88,6 +88,11 @@ class PersonService(
 
     fun hentIdent(personId: Long): String? = personRepository.hentIdent(personId)
 
+    fun oppdaterPerson(person: Person) {
+        logger.info { "Oppdaterer person med ident ${person.ident}" }
+        personRepository.oppdaterPerson(person)
+    }
+
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = pdlConnector.hentIdenter(ident)
 
     fun hentPersoner(identer: List<String>): List<Person> =
