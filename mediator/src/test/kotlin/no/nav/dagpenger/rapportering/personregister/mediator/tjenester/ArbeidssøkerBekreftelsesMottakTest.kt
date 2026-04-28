@@ -6,6 +6,7 @@ import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerBekreftelseMottakTest {
@@ -27,7 +28,7 @@ class ArbeidssøkerBekreftelseMottakTest {
 
         testRapid.sendTestMessage(lagArbeidssøkerBekreftelseEvent(ident))
 
-        verify(exactly = 1) { arbeidssøkerBekreftelseService.behandle(ident) }
+        verify(exactly = 1) { arbeidssøkerBekreftelseService.behandle(any()) }
     }
 }
 
@@ -42,8 +43,8 @@ private fun lagArbeidssøkerBekreftelseEvent(ident: String): String =
         "bekreftelsesløsning": "DAGPENGER",
         "id": "${UUID.randomUUID()}",
         "svar": {
-          "sendtInntAv": {
-            "tidspunkt": "2025-09-25T00:00:00Z",
+          "sendtInnAv": {
+            "tidspunkt": "${LocalDateTime.now()}",
             "utførtAv": {
               "type": "Person",
               "ident": "$ident",
@@ -52,8 +53,8 @@ private fun lagArbeidssøkerBekreftelseEvent(ident: String): String =
             "kilde": "DAGPENGER",
             "årsak": "VET IKKE"
           },
-          "gjelderFra": "2025-09-01T00:00:00Z",
-          "gjelderTil": "2025-09-30T00:00:00Z",
+          "gjelderFra":  "${LocalDateTime.now()}",
+          "gjelderTil":  "${LocalDateTime.now()}",
           "harJobbetIDennePerioden": true,
           "vilFortsetteSomArbeidssøker": true
         }

@@ -36,7 +36,7 @@ class ArbeidssøkerBekreftelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
-        arbeidssøkerBekreftelseService.behandle(ident)
+        val melding = packet.tilArbeidssøkerBekreftelseMelding()
+        arbeidssøkerBekreftelseService.behandle(melding)
     }
 }
