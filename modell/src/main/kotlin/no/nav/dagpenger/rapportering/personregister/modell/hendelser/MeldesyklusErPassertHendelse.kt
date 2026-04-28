@@ -4,6 +4,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
+import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
 import java.time.LocalDateTime
 
 class MeldesyklusErPassertHendelse(
@@ -17,6 +18,7 @@ class MeldesyklusErPassertHendelse(
 
         person.arbeidssøkerperioder.gjeldende
             ?.also { periode ->
+                periode.årsakTilUtmelding = ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER
                 person.sendFrasigelsesmelding(periode.periodeId, true)
             }
     }

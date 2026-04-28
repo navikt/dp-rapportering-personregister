@@ -43,7 +43,7 @@ class ArbeidssøkerService(
 
         try {
             val sisteInnsendteMeldekort =
-                runBlocking { meldekortregisterConnector.hentSisteInnsendteMeldekort(ident) }
+                runBlocking { meldekortregisterConnector.hentSisteInnsendteMeldekort() }
 
             val fastsattMeldingsdag = sisteInnsendteMeldekort?.tilOgMed?.plusDays(1)
 

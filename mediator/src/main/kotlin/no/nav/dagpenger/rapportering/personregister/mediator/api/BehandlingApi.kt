@@ -11,6 +11,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 
 private val logger = KotlinLogging.logger {}
 
@@ -22,9 +23,12 @@ internal fun Application.behandlingApi(behandlingRepository: BehandlingRepositor
                     logger.info { "POST /hentSisteSakId" }
                     val request = call.receive<IdentBody>()
 
-                    if (!request.ident.matches(Regex("[0-9]{11}"))) {
-                        logger.error { "Person-ident må ha 11 sifre" }
-                        throw BadRequestException("Person-ident må ha 11 sifre")
+                    try {
+                        request.ident.validerIdent()
+                    } catch (e: IllegalArgumentException) {
+                        val melding = "Validering av ident feilet: $e.message"
+                        logger.error { melding }
+                        throw BadRequestException(melding)
                     }
 
                     behandlingRepository
