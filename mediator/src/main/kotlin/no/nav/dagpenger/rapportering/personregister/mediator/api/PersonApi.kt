@@ -13,6 +13,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.rapportering.personregister.api.models.ArbeidssokerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import java.net.URI
 import java.time.ZoneOffset
 
@@ -26,9 +27,12 @@ internal fun Application.personApi(personService: PersonService) {
                     logger.info { "POST /hentPersonId" }
                     val request = call.receive<IdentBody>()
 
-                    if (!request.ident.matches(Regex("[0-9]{11}"))) {
-                        logger.error { "Person-ident må ha 11 sifre" }
-                        throw BadRequestException("Person-ident må ha 11 sifre")
+                    try {
+                        request.ident.validerIdent()
+                    } catch (e: IllegalArgumentException) {
+                        val melding = "Validering av ident feilet: $e.message"
+                        logger.error { melding }
+                        throw BadRequestException(melding)
                     }
 
                     personService
