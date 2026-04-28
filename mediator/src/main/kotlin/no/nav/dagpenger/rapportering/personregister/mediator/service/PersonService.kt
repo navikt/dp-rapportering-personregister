@@ -93,7 +93,6 @@ class PersonService(
         personRepository.oppdaterPerson(person)
     }
 
-    private fun hentAlleIdenterForPerson(ident: String): List<Ident> = cache.get(ident) { pdlConnector.hentIdenter(ident) }
     private fun hentAlleIdenterForPerson(ident: String): List<Ident> = pdlConnector.hentIdenter(ident)
 
     fun hentPersoner(identer: List<String>): List<Person> =
