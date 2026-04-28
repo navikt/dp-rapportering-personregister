@@ -9,9 +9,16 @@ data class Arbeidssøkerperiode(
     val startet: LocalDateTime,
     var avsluttet: LocalDateTime?,
     var overtattBekreftelse: Boolean?,
+    var årsakTilUtmelding: ÅrsakTilUtmelding? = null,
 )
 
 fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
 
 val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
     get() = this.firstOrNull { it.aktiv() }
+
+enum class ÅrsakTilUtmelding {
+    UTMELDT_I_ARBEIDSSØKERREGISTERET,
+    IKKE_MELDT_SEG_PÅ_21_DAGER,
+    UTMELDT_PÅ_MELDEKORT,
+}
