@@ -66,6 +66,8 @@ class PersonService(
 
     fun hentPerson(ident: String): Person? {
         logger.info { "Henter person" }
+        sikkerLogg.info { "Henter person med ident $ident" }
+
         // Henter alle personens identer fra PDL
         val pdlIdenter = hentAlleIdenterForPerson(ident)
         logger.info { "Personen har ${pdlIdenter.size} identer i PDL" }
@@ -81,6 +83,7 @@ class PersonService(
                     },
             )
         logger.info { "Personen finnes ${personer.size} ganger i databasen" }
+        sikkerLogg.info { "Person med ident $ident finnes ${personer.size} ganger i databasen" }
         return ryddOppPersoner(pdlIdenter, personer)
     }
 
