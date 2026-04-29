@@ -376,6 +376,7 @@ class RettPersonStatusUtilsTest {
                         StartetArbeidssøkerperiodeHendelse(
                             UUIDv7.newUuid(),
                             "12345678903",
+                            nå,
                             nå.minusDays(2),
                         ),
                     ),

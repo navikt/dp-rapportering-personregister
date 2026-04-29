@@ -271,7 +271,7 @@ class PersonTest {
         status: Boolean = false,
     ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status, true)
 
-    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, tidligere)
+    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, nå, tidligere)
 
     private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
 

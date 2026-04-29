@@ -62,6 +62,6 @@ fun startetArbeidssøkerperiodeHendelse(
     periodeId: UUID = UUID.randomUUID(),
     ident: String = "12345678901",
     startet: LocalDateTime = tidligere,
-) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, startet)
+) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, nå, startet)
 
 fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
