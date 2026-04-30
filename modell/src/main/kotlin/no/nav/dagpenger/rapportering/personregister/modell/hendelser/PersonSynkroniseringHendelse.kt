@@ -7,7 +7,7 @@ import java.time.LocalDateTime
 
 data class PersonSynkroniseringHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
 ) : Hendelse {

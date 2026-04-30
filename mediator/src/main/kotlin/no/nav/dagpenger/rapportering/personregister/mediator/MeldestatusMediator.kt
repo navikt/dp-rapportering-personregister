@@ -100,7 +100,6 @@ class MeldestatusMediator(
                     MeldepliktHendelse(
                         ident = person.ident,
                         referanseId = "MSMP$meldestatusId-$index",
-                        dato = LocalDateTime.now(),
                         startDato = it.meldepliktperiode?.fom ?: LocalDateTime.now(),
                         sluttDato = it.meldepliktperiode?.tom,
                         statusMeldeplikt = it.meldeplikt,
@@ -127,7 +126,6 @@ class MeldestatusMediator(
                         DagpengerMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
-                            dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,
@@ -146,7 +144,6 @@ class MeldestatusMediator(
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
-                            dato = LocalDateTime.now(),
                             startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
                             sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,

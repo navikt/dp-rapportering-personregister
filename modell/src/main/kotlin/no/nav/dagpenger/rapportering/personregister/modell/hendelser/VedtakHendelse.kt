@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 
 data class VedtakHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
     override val startDato: LocalDateTime,
     override val referanseId: String,
     override val sluttDato: LocalDateTime? = null,

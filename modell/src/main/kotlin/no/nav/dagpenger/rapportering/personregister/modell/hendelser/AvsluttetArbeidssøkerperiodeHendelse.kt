@@ -12,9 +12,8 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     override val ident: String,
     override val startDato: LocalDateTime,
     override val sluttDato: LocalDateTime,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
 ) : ArbeidssøkerperiodeHendelse(periodeId) {
-
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 

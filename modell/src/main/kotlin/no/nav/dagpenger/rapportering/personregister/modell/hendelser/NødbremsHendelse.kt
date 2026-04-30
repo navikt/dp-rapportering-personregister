@@ -8,7 +8,7 @@ import java.time.LocalDateTime
 
 data class NødbremsHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
     override val startDato: LocalDateTime,
     override val referanseId: String,
     override val kilde: Kildesystem = Kildesystem.Dagpenger,

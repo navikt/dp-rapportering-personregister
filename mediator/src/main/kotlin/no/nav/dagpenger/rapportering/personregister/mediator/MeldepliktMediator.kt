@@ -54,7 +54,6 @@ class MeldepliktMediator(
                                 MeldepliktHendelse(
                                     ident = person.ident,
                                     referanseId = UUIDv7.newUuid().toString(),
-                                    dato = LocalDateTime.now(),
                                     startDato = LocalDateTime.now(),
                                     sluttDato = null,
                                     statusMeldeplikt = meldeplikt,

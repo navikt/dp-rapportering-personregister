@@ -9,13 +9,12 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmeldin
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
-import java.time.LocalDateTime.now
 
 private val logger = KotlinLogging.logger {}
 
 data class MeldepliktHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
     override val sluttDato: LocalDateTime?,
@@ -54,5 +53,5 @@ private fun MeldepliktHendelse.gjelderTilbakeITid(person: Person) =
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldepliktHendelse ->
             this.startDato.isBefore(sisteMeldepliktHendelse.startDato) &&
-                this.sluttDato?.isBefore(now()) == true
+                this.sluttDato?.isBefore(LocalDateTime.now()) == true
         } ?: false

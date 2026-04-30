@@ -17,7 +17,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbe
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
-import java.time.LocalDateTime
 import kotlin.time.Duration.Companion.seconds
 
 class ArbeidssøkerMediator(
@@ -44,7 +43,6 @@ class ArbeidssøkerMediator(
                         ident = arbeidssøkerperiode.ident,
                         startDato = arbeidssøkerperiode.startet,
                         sluttDato = arbeidssøkerperiode.avsluttet!!,
-                        dato = LocalDateTime.now()
                     ),
                 )
             }

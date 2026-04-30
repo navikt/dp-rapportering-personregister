@@ -51,7 +51,6 @@ internal fun Application.personstatusApi(
                         personMediator.behandle(
                             PersonIkkeDagpengerSynkroniseringHendelse(
                                 ident = ident,
-                                dato = LocalDateTime.now(),
                                 startDato = LocalDateTime.now(),
                                 referanseId = UUIDv7.newUuid().toString(),
                             ),
@@ -60,7 +59,6 @@ internal fun Application.personstatusApi(
                         personMediator.behandle(
                             PersonSynkroniseringHendelse(
                                 ident = ident,
-                                dato = LocalDateTime.now(),
                                 startDato = LocalDateTime.now(),
                                 referanseId = UUIDv7.newUuid().toString(),
                             ),

@@ -13,7 +13,7 @@ private val logger = KotlinLogging.logger {}
 
 data class AnnenMeldegruppeHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = LocalDateTime.now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
     override val sluttDato: LocalDateTime?,
