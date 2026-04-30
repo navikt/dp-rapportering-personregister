@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.personstatusApi(
     personMediator: PersonMediator,
@@ -75,28 +76,34 @@ internal fun Application.personstatusApi(
                     logger.info { "GET /personstatus" }
                     val ident = call.ident()
 
+                    sikkerLogg.info { "Henter personstatus for ident $ident" }
+
                     try {
-                        personService
-                            .hentPerson(ident)
-                            ?.also { person ->
-                                call.respond(
-                                    HttpStatusCode.OK,
-                                    PersonStatusResponse(
-                                        ident = person.ident,
-                                        status = StatusResponse.valueOf(person.status.name),
-                                        overtattBekreftelse = person.overtattBekreftelse,
-                                        ansvarligSystem =
-                                            person.ansvarligSystem?.let {
-                                                AnsvarligSystemResponse.valueOf(
-                                                    it.name,
-                                                )
-                                            },
-                                    ),
-                                )
-                            }
-                            ?: call.respond(HttpStatusCode.NotFound, "Finner ikke status for person")
+                        val person = personService.hentPerson(ident)
+
+                        if (person != null) {
+                            sikkerLogg.info { "Fant person med ident $ident" }
+                            call.respond(
+                                HttpStatusCode.OK,
+                                PersonStatusResponse(
+                                    ident = person.ident,
+                                    status = StatusResponse.valueOf(person.status.name),
+                                    overtattBekreftelse = person.overtattBekreftelse,
+                                    ansvarligSystem =
+                                        person.ansvarligSystem?.let {
+                                            AnsvarligSystemResponse.valueOf(
+                                                it.name,
+                                            )
+                                        },
+                                ),
+                            )
+                        } else {
+                            sikkerLogg.info { "Fant ikke person med ident $ident" }
+                            call.respond(HttpStatusCode.NotFound, "Fant ikke status for person")
+                        }
                     } catch (e: Exception) {
                         logger.error(e) { "Kunne ikke hente personstatus" }
+                        sikkerLogg.error(e) { "Kunne ikke hente personstatus for ident $ident" }
                         call.respond(HttpStatusCode.InternalServerError, "Kunne ikke hente personstatus")
                     }
                 }
