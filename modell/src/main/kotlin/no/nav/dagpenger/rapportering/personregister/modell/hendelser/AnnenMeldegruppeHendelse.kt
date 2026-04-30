@@ -8,12 +8,13 @@ import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 private val logger = KotlinLogging.logger {}
 
 data class AnnenMeldegruppeHendelse(
     override val ident: String,
-    override val dato: LocalDateTime = LocalDateTime.now(),
+    override val dato: LocalDateTime = now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
     override val sluttDato: LocalDateTime?,

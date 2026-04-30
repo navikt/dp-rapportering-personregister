@@ -5,6 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.leggTilNyArbeidssøke
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 import java.util.UUID
 
 data class AvsluttetArbeidssøkerperiodeHendelse(
@@ -12,7 +13,7 @@ data class AvsluttetArbeidssøkerperiodeHendelse(
     override val ident: String,
     override val startDato: LocalDateTime,
     override val sluttDato: LocalDateTime,
-    override val dato: LocalDateTime = LocalDateTime.now(),
+    override val dato: LocalDateTime = now(),
 ) : ArbeidssøkerperiodeHendelse(periodeId) {
     override fun behandle(person: Person) {
         person.hendelser.add(this)

@@ -5,10 +5,11 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 data class NødbremsHendelse(
     override val ident: String,
-    override val dato: LocalDateTime = LocalDateTime.now(),
+    override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
     override val referanseId: String,
     override val kilde: Kildesystem = Kildesystem.Dagpenger,
