@@ -4,7 +4,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import java.time.LocalDateTime
 import java.util.UUID
 
-class ArbeidssøkerBekreftelseMelding(
+data class ArbeidssøkerBekreftelseMelding(
     val ident: String,
     val bekreftelse: Bekreftelse,
 )
@@ -25,7 +25,7 @@ data class Svar(
 )
 
 data class SendtInnAv(
-    val tidspunkt: String,
+    val tidspunkt: LocalDateTime,
     val utførtAv: UtførtAv,
     val kilde: String,
     val årsak: String,
@@ -51,7 +51,7 @@ fun JsonMessage.tilArbeidssøkerBekreftelseMelding(): ArbeidssøkerBekreftelseMe
     val sendtInnAvNode = svarNode["sendtInnAv"]
     val sendtInnAv =
         SendtInnAv(
-            tidspunkt = sendtInnAvNode["tidspunkt"].asText(),
+            tidspunkt = LocalDateTime.parse(sendtInnAvNode["tidspunkt"].asText()),
             utførtAv =
                 UtførtAv(
                     type = sendtInnAvNode["utførtAv"]["type"].asText(),
