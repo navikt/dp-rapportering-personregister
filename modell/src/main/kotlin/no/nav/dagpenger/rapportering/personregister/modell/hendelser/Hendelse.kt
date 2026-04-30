@@ -8,6 +8,7 @@ interface Hendelse {
     val ident: String
     val dato: LocalDateTime
     val startDato: LocalDateTime
+    val sluttDato: LocalDateTime?
     val kilde: Kildesystem
     val referanseId: String
 

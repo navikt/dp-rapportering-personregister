@@ -6,13 +6,16 @@ import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 class MeldesyklusErPassertHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
     override val referanseId: String,
 ) : Hendelse {
+    override val sluttDato = null
+
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 

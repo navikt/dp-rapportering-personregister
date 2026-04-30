@@ -11,13 +11,14 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMe
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 data class VedtakHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
     override val referanseId: String,
-    val sluttDato: LocalDateTime? = null,
+    override val sluttDato: LocalDateTime? = null,
     val utfall: Boolean,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ

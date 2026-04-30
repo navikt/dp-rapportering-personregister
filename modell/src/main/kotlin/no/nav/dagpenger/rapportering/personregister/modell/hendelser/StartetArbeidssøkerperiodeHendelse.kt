@@ -15,8 +15,11 @@ private val logger = KotlinLogging.logger {}
 data class StartetArbeidssøkerperiodeHendelse(
     override val periodeId: UUID,
     override val ident: String,
-    val startet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
+    override val dato: LocalDateTime = LocalDateTime.now(),
+    override val startDato: LocalDateTime,
+) : ArbeidssøkerperiodeHendelse(periodeId) {
+    override val sluttDato = null
+
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 

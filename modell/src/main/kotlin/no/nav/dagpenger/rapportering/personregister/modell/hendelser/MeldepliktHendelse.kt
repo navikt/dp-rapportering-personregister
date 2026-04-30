@@ -15,10 +15,10 @@ private val logger = KotlinLogging.logger {}
 
 data class MeldepliktHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
-    val sluttDato: LocalDateTime?,
+    override val sluttDato: LocalDateTime?,
     val statusMeldeplikt: Boolean,
     val harMeldtSeg: Boolean,
     override val kilde: Kildesystem = Kildesystem.Arena,
@@ -54,5 +54,5 @@ private fun MeldepliktHendelse.gjelderTilbakeITid(person: Person) =
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldepliktHendelse ->
             this.startDato.isBefore(sisteMeldepliktHendelse.startDato) &&
-                this.sluttDato?.isBefore(now()) == true
+                this.sluttDato?.isBefore(LocalDateTime.now()) == true
         } ?: false

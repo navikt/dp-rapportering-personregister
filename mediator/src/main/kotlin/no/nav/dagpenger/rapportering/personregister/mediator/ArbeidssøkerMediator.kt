@@ -33,7 +33,7 @@ class ArbeidssøkerMediator(
                     StartetArbeidssøkerperiodeHendelse(
                         periodeId = arbeidssøkerperiode.periodeId,
                         ident = arbeidssøkerperiode.ident,
-                        startet = arbeidssøkerperiode.startet,
+                        startDato = arbeidssøkerperiode.startet,
                     ),
                 )
             } else {
@@ -41,8 +41,8 @@ class ArbeidssøkerMediator(
                     AvsluttetArbeidssøkerperiodeHendelse(
                         periodeId = arbeidssøkerperiode.periodeId,
                         ident = arbeidssøkerperiode.ident,
-                        startet = arbeidssøkerperiode.startet,
-                        avsluttet = arbeidssøkerperiode.avsluttet!!,
+                        startDato = arbeidssøkerperiode.startet,
+                        sluttDato = arbeidssøkerperiode.avsluttet!!,
                     ),
                 )
             }

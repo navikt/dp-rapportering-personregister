@@ -115,7 +115,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                         StartetArbeidssøkerperiodeHendelse(
                             periodeId = UUIDv7.newUuid(),
                             ident = ident1,
-                            startet = nå.minusDays(1),
+                            startDato = nå.minusDays(1),
                         ),
                     )
                 }
@@ -125,7 +125,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                         StartetArbeidssøkerperiodeHendelse(
                             periodeId = UUIDv7.newUuid(),
                             ident = ident2,
-                            startet = nå.minusDays(1),
+                            startDato = nå.minusDays(1),
                         ),
                     )
                 }

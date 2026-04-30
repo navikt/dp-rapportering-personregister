@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 class MeldepliktMediator(
     private val personRepository: PersonRepository,
@@ -54,8 +55,7 @@ class MeldepliktMediator(
                                 MeldepliktHendelse(
                                     ident = person.ident,
                                     referanseId = UUIDv7.newUuid().toString(),
-                                    dato = LocalDateTime.now(),
-                                    startDato = LocalDateTime.now(),
+                                    startDato = now(),
                                     sluttDato = null,
                                     statusMeldeplikt = meldeplikt,
                                     harMeldtSeg = harMeldtSeg,

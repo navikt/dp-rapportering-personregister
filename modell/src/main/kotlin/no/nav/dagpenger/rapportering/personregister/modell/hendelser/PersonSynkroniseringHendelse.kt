@@ -4,13 +4,15 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 data class PersonSynkroniseringHendelse(
     override val ident: String,
-    override val dato: LocalDateTime,
+    override val dato: LocalDateTime = now(),
     override val referanseId: String,
     override val startDato: LocalDateTime,
 ) : Hendelse {
+    override val sluttDato = null
     override val kilde: Kildesystem = Dagpenger
 
     override fun behandle(person: Person) {

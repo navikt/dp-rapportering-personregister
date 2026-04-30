@@ -15,7 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 class MeldestatusMediator(
     private val personRepository: PersonRepository,
@@ -51,9 +51,9 @@ class MeldestatusMediator(
                         (
                             it.meldegruppeperiode == null ||
                                 (
-                                    LocalDateTime.now() >= it.meldegruppeperiode?.fom &&
-                                        (it.meldegruppeperiode?.tom == null || LocalDateTime.now() <= it.meldegruppeperiode?.tom) ||
-                                        LocalDateTime.now() <= it.meldegruppeperiode?.fom
+                                    now() >= it.meldegruppeperiode?.fom &&
+                                        (it.meldegruppeperiode?.tom == null || now() <= it.meldegruppeperiode?.tom) ||
+                                        now() <= it.meldegruppeperiode?.fom
                                 )
                         )
                 }
@@ -100,14 +100,13 @@ class MeldestatusMediator(
                     MeldepliktHendelse(
                         ident = person.ident,
                         referanseId = "MSMP$meldestatusId-$index",
-                        dato = LocalDateTime.now(),
-                        startDato = it.meldepliktperiode?.fom ?: LocalDateTime.now(),
+                        startDato = it.meldepliktperiode?.fom ?: now(),
                         sluttDato = it.meldepliktperiode?.tom,
                         statusMeldeplikt = it.meldeplikt,
                         harMeldtSeg = meldestatus.harMeldtSeg,
                     )
 
-                if (meldepliktHendelse.startDato.isAfter(LocalDateTime.now())) {
+                if (meldepliktHendelse.startDato.isAfter(now())) {
                     meldepliktendringMetrikker.fremtidigMeldepliktendringMottatt.increment()
                     fremtidigHendelseMediator.behandle(meldepliktHendelse)
                 } else {
@@ -127,14 +126,13 @@ class MeldestatusMediator(
                         DagpengerMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
-                            dato = LocalDateTime.now(),
-                            startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
+                            startDato = it.meldegruppeperiode?.fom ?: now(),
                             sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (dagpengerMeldegruppeHendelse.startDato.isAfter(LocalDateTime.now())) {
+                    if (dagpengerMeldegruppeHendelse.startDato.isAfter(now())) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(dagpengerMeldegruppeHendelse)
                     } else {
@@ -146,14 +144,13 @@ class MeldestatusMediator(
                         AnnenMeldegruppeHendelse(
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
-                            dato = LocalDateTime.now(),
-                            startDato = it.meldegruppeperiode?.fom ?: LocalDateTime.now(),
+                            startDato = it.meldegruppeperiode?.fom ?: now(),
                             sluttDato = it.meldegruppeperiode?.tom,
                             meldegruppeKode = it.meldegruppe,
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (annenMeldegruppeHendelse.startDato.isAfter(LocalDateTime.now())) {
+                    if (annenMeldegruppeHendelse.startDato.isAfter(now())) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(annenMeldegruppeHendelse)
                     } else {

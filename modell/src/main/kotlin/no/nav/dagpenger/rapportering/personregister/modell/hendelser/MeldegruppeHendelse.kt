@@ -1,12 +1,9 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
-interface MeldegruppeHendelse : Hendelse {
-    val sluttDato: LocalDateTime?
-}
+interface MeldegruppeHendelse : Hendelse
 
 fun MeldegruppeHendelse.gjelderTilbakeITid(person: Person) =
     person.hendelser

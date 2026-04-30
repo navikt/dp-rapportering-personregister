@@ -5,20 +5,22 @@ import no.nav.dagpenger.rapportering.personregister.modell.leggTilNyArbeidssøke
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomIkkeOvertatt
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 import java.util.UUID
 
 data class AvsluttetArbeidssøkerperiodeHendelse(
     override val periodeId: UUID,
     override val ident: String,
-    val startet: LocalDateTime,
-    val avsluttet: LocalDateTime,
-) : ArbeidssøkerperiodeHendelse(periodeId, ident, LocalDateTime.now(), startet) {
+    override val startDato: LocalDateTime,
+    override val sluttDato: LocalDateTime,
+    override val dato: LocalDateTime = now(),
+) : ArbeidssøkerperiodeHendelse(periodeId) {
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
         person.arbeidssøkerperioder
             .find { it.periodeId == periodeId }
-            ?.let { it.avsluttet = avsluttet }
+            ?.let { it.avsluttet = sluttDato }
             ?: run { person.leggTilNyArbeidssøkerperiode(this) }
 
         person

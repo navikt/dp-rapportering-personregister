@@ -22,7 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 private val logger = KotlinLogging.logger {}
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
@@ -51,8 +51,7 @@ internal fun Application.personstatusApi(
                         personMediator.behandle(
                             PersonIkkeDagpengerSynkroniseringHendelse(
                                 ident = ident,
-                                dato = LocalDateTime.now(),
-                                startDato = LocalDateTime.now(),
+                                startDato = now(),
                                 referanseId = UUIDv7.newUuid().toString(),
                             ),
                         )
@@ -60,8 +59,7 @@ internal fun Application.personstatusApi(
                         personMediator.behandle(
                             PersonSynkroniseringHendelse(
                                 ident = ident,
-                                dato = LocalDateTime.now(),
-                                startDato = LocalDateTime.now(),
+                                startDato = now(),
                                 referanseId = UUIDv7.newUuid().toString(),
                             ),
                         )
