@@ -137,7 +137,7 @@ open class ApiTestSetup {
                     actionTimer,
                 )
 
-            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector, bekreftelseKafkaProdusent)
+            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
                     arbeidssøkerService,

@@ -30,7 +30,7 @@ class ArbeidssøkerServiceTest {
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
     private val bekreftelseKafkaProdusent = mockk<Producer<Long, Bekreftelse>>(relaxed = true)
 
-    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector, bekreftelseKafkaProdusent)
+    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
 
     private val ident = "12345678901"
     private val periodeId = UUIDv7.newUuid()
