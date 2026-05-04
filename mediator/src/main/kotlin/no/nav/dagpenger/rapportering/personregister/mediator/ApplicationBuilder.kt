@@ -173,7 +173,7 @@ internal class ApplicationBuilder(
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
             meldekortregisterConnector,
         )
-    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector, bekreftelseKafkaProdusent)
+    private val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,

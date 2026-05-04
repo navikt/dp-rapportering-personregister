@@ -7,6 +7,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 
 private val logger = KotlinLogging.logger {}
@@ -45,7 +46,7 @@ class ArbeidssøkerBekreftelseMottak(
             sikkerlogg.info { "Mottok arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
 
             val melding = packet.tilArbeidssøkerBekreftelseMelding()
-            arbeidssøkerBekreftelseService.behandle(melding)
+            runBlocking { arbeidssøkerBekreftelseService.behandle(melding) }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av arbeidssøkerbekreftelse" }
             throw e
