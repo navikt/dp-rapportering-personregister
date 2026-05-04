@@ -43,7 +43,7 @@ class ArbeidssøkerBekreftelseMeldingTest {
                                     SendtInnAv(
                                         tidspunkt = tidspunkt,
                                         utførtAv =
-                                            UtførtAv(
+                                            Bruker(
                                                 type = "Person",
                                                 ident = ident,
                                                 sikkerhetsnivå = "1",

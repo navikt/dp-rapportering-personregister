@@ -52,6 +52,7 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
+import org.apache.kafka.clients.producer.Producer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
@@ -78,6 +79,7 @@ class PersonMediatorTest {
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
+    private val bekreftelseKafkaProdusent = mockk<Producer<Long, no.nav.paw.bekreftelse.melding.v1.Bekreftelse>>(relaxed = true)
 
     private val unleash = FakeUnleash()
 
@@ -106,7 +108,7 @@ class PersonMediatorTest {
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
-        arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
+        arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector, bekreftelseKafkaProdusent)
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService,
