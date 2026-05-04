@@ -26,12 +26,12 @@ data class Svar(
 
 data class SendtInnAv(
     val tidspunkt: LocalDateTime,
-    val utførtAv: UtførtAv,
+    val utførtAv: Bruker,
     val kilde: String,
     val årsak: String,
 )
 
-data class UtførtAv(
+data class Bruker(
     val type: String,
     val ident: String,
     val sikkerhetsnivå: String,
@@ -53,7 +53,7 @@ fun JsonMessage.tilArbeidssøkerBekreftelseMelding(): ArbeidssøkerBekreftelseMe
         SendtInnAv(
             tidspunkt = LocalDateTime.parse(sendtInnAvNode["tidspunkt"].asText()),
             utførtAv =
-                UtførtAv(
+                Bruker(
                     type = sendtInnAvNode["utførtAv"]["type"].asText(),
                     ident = sendtInnAvNode["utførtAv"]["ident"].asText(),
                     sikkerhetsnivå = sendtInnAvNode["utførtAv"]["sikkerhetsnivå"].asText(),
