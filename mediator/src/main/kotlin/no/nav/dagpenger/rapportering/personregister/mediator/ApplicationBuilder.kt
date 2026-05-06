@@ -278,7 +278,7 @@ internal class ApplicationBuilder(
                             }
                         }
                     },
-                ) { _, rapid ->
+                ) { engine, rapid ->
                     logger.info { "Starter rapid with" }
                     logger.info { "config: $config" }
 
@@ -299,6 +299,14 @@ internal class ApplicationBuilder(
                     )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
+
+                    rapidsConnection.register(
+                        object : RapidsConnection.StatusListener {
+                            override fun onShutdown(rapidsConnection: RapidsConnection) {
+                                engine.stop()
+                            }
+                        },
+                    )
                 }
 
         rapidsConnection.register(this)
