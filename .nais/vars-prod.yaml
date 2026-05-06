@@ -5,6 +5,9 @@ ingresses:
   - https://dp-rapportering-personregister.intern.nav.no
 
 cluster: prod-gcp
+gcp:
+  sql:
+    tier: db-custom-1-3840
 
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag-v2.paw
 ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://prod-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag-v2/.default
