@@ -47,7 +47,7 @@ spec:
       - type: POSTGRES_15
         highAvailability: true
         diskAutoresize: true
-        tier: db-custom-1-3840
+        tier: {{gcp.sql.tier}}
         pointInTimeRecovery: true
         databases:
           - name: dp-rapportering-personregister
