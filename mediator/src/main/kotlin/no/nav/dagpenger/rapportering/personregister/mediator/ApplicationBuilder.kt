@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.navikt.tbd_libs.naisful.naisApp
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.ApplicationStopped
 import io.micrometer.core.instrument.Clock
@@ -69,6 +70,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakFat
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
+import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
@@ -146,6 +148,12 @@ internal class ApplicationBuilder(
             valueDeserializer = PeriodeAvroDeserializer::class,
         )
 
+    private val bekreftelseKafkaProdusent =
+        kafkaFactory.createProducer<Long, Bekreftelse>(
+            clientId = "teamdagpenger-rapportering-producer",
+            keySerializer = LongSerializer::class,
+            valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
+        )
     private val personObserverKafka =
         PersonObserverKafka(
             bekreftelsePåVegneAvProdusent,

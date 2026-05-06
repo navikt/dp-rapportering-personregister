@@ -10,7 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 
 class ArbeidssøkerService(
-    private val arbeidssøkerConnector: ArbeidssøkerConnector,
+    private val `arbeidssøkerConnector`: ArbeidssøkerConnector,
     private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
     suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =

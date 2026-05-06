@@ -60,6 +60,8 @@ internal object Configuration {
         properties[Key("MELDEKORTREGISTER_HOST", stringType)].formatUrl()
     }
 
+    val bekreftelseTopic by lazy { properties[Key("BEKREFTELSE_TOPIC", stringType)] }
+
     private val azureAdConfig by lazy { AzureAd(properties) }
     private val azureAdClient by lazy {
         CachedOauth2Client(

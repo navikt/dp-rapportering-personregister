@@ -1,13 +1,19 @@
+import com.github.davidmc24.gradle.plugin.avro.GenerateAvroProtocolTask
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     application
     id("com.gradleup.shadow") version "9.4.1"
+    id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     kotlin
 }
 
 group = "no.nav"
 version = "unspecified"
+
+val schema by configurations.creating {
+    isTransitive = false
+}
 
 dependencies {
     implementation(project(":kafka"))
@@ -32,6 +38,8 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:naisful-app:2025.11.04-10.54-c831038e")
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
+
+    schema("no.nav.paw.arbeidssokerregisteret.api:bekreftelsesmelding-schema:1.26.01.09.34-1")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
@@ -61,8 +69,12 @@ application {
     mainClass.set("no.nav.dagpenger.rapportering.personregister.mediator.ApplicationKt")
 }
 
-tasks.withType<ShadowJar> {
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-
-    mergeServiceFiles()
+tasks {
+    withType<ShadowJar> {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        mergeServiceFiles()
+    }
+    named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
+        source(zipTree(schema.singleFile))
+    }
 }
