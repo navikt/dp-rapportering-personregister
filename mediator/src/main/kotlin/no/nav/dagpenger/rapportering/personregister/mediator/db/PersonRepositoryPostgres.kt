@@ -567,6 +567,30 @@ class PersonRepositoryPostgres(
             )
         }
 
+    override fun lagreÅrsakTilUtmelding(
+        periodeId: UUID,
+        ident: String,
+        årsak: ÅrsakTilUtmelding,
+    ) {
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    """
+                    UPDATE arbeidssoker 
+                    SET aarsak_til_utmelding = :aarsak
+                    WHERE periode_id = :periode_id 
+                    AND person_id = (SELECT id FROM person WHERE ident = :ident)
+                    """.trimIndent(),
+                    mapOf(
+                        "aarsak" to årsak.name,
+                        "periode_id" to periodeId,
+                        "ident" to ident,
+                    ),
+                ).asUpdate,
+            )
+        }
+    }
+
     private fun hentVersjon(
         ident: String,
         tx: TransactionalSession,
