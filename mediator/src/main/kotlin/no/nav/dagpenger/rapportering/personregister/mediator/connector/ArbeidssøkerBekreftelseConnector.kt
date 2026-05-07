@@ -19,6 +19,7 @@ class ArbeidssøkerBekreftelseConnector(
         recordKey: Long,
         bekreftelsesmelding: ArbeidssøkerBekreftelseMelding,
     ): UUID {
+        logger.info { "Sender arbeidssøkerbekreftelse for $recordKey" }
         val bekreftelse = BekreftelseMapper.tilBekreftelse(bekreftelsesmelding)
         val record = ProducerRecord(bekreftelseTopic, recordKey, bekreftelse)
 
