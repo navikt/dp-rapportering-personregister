@@ -1,8 +1,8 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
 import java.util.UUID
 
 interface PersonRepository {
@@ -66,6 +66,6 @@ interface PersonRepository {
     fun lagreÅrsakTilUtmelding(
         periodeId: UUID,
         ident: String,
-        årsak: ÅrsakTilUtmelding,
+        årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ) {}
 }

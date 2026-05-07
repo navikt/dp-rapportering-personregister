@@ -5,7 +5,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
-import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import java.util.UUID
 
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -40,7 +40,7 @@ class ArbeidssøkerBekreftelseService(
     ) {
         try {
             sikkerlogg.info { "Lagrer årsak til utmelding for periodeId $periodeId" }
-            personRepository.lagreÅrsakTilUtmelding(periodeId, ident, ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT)
+            personRepository.lagreÅrsakTilUtmelding(periodeId, ident, Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT)
         } catch (e: Exception) {
             sikkerlogg.error(e) { "Feil ved lagring av årsak til utmelding for ident $ident og periodeId $periodeId" }
             throw e

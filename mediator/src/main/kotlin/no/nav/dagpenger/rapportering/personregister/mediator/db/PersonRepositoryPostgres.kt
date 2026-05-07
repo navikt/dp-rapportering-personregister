@@ -27,7 +27,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.ÅrsakTilUtmelding
 import org.postgresql.util.PGobject
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -570,19 +569,20 @@ class PersonRepositoryPostgres(
     override fun lagreÅrsakTilUtmelding(
         periodeId: UUID,
         ident: String,
-        årsak: ÅrsakTilUtmelding,
+        årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ) {
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
                     UPDATE arbeidssoker 
-                    SET aarsak_til_utmelding = :aarsak
+                    SET aarsak_til_utmelding = :aarsak, sist_endret = :sist_endret
                     WHERE periode_id = :periode_id 
                     AND person_id = (SELECT id FROM person WHERE ident = :ident)
                     """.trimIndent(),
                     mapOf(
-                        "aarsak" to årsak.name,
+                        "aarsak" to årsak.dbValue,
+                        "sist_endret" to LocalDateTime.now(),
                         "periode_id" to periodeId,
                         "ident" to ident,
                     ),
@@ -888,7 +888,7 @@ class PersonRepositoryPostgres(
             startet = row.localDateTime("startet"),
             avsluttet = row.localDateTimeOrNull("avsluttet"),
             overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
-            årsakTilUtmelding = row.stringOrNull("aarsak_til_utmelding")?.let { ÅrsakTilUtmelding.valueOf(it) },
+            årsakTilUtmelding = row.stringOrNull("aarsak_til_utmelding")?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) },
         )
 
     private fun hentStatusHistorikk(
@@ -930,6 +930,7 @@ class PersonRepositoryPostgres(
                             OR EXCLUDED.startet IS DISTINCT FROM arbeidssoker.startet
                             OR EXCLUDED.avsluttet IS DISTINCT FROM arbeidssoker.avsluttet
                             OR EXCLUDED.overtatt_bekreftelse IS DISTINCT FROM arbeidssoker.overtatt_bekreftelse
+                            OR EXCLUDED.aarsak_til_utmelding IS DISTINCT FROM arbeidssoker.aarsak_til_utmelding
                         THEN EXCLUDED.sist_endret
                         ELSE arbeidssoker.sist_endret
                     END
@@ -941,7 +942,7 @@ class PersonRepositoryPostgres(
                     "avsluttet" to arbeidssøkerperiode.avsluttet,
                     "overtatt_bekreftelse" to arbeidssøkerperiode.overtattBekreftelse,
                     "sist_endret" to LocalDateTime.now(),
-                    "aarsak_til_utmelding" to arbeidssøkerperiode.årsakTilUtmelding?.name,
+                    "aarsak_til_utmelding" to arbeidssøkerperiode.årsakTilUtmelding?.dbValue,
                 ),
             ).asUpdate,
         )

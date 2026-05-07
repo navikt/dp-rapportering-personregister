@@ -16,6 +16,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
@@ -260,32 +261,26 @@ class PersonRepositoryPostgresTest {
             val person = testPerson(status = IKKE_DAGPENGERBRUKER)
             personRepository.lagrePerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    status shouldBe IKKE_DAGPENGERBRUKER
-                    statusHistorikk.getAll() shouldHaveSize 1
-                }
+            personRepository.hentPerson(ident)?.apply {
+                status shouldBe IKKE_DAGPENGERBRUKER
+                statusHistorikk.getAll() shouldHaveSize 1
+            }
 
             person.setStatus(DAGPENGERBRUKER)
             personRepository.oppdaterPerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    status shouldBe DAGPENGERBRUKER
-                    statusHistorikk.getAll() shouldHaveSize 2
-                }
+            personRepository.hentPerson(ident)?.apply {
+                status shouldBe DAGPENGERBRUKER
+                statusHistorikk.getAll() shouldHaveSize 2
+            }
 
             person.setStatus(DAGPENGERBRUKER)
             personRepository.oppdaterPerson(person.copy(versjon = person.versjon + 1))
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    status shouldBe DAGPENGERBRUKER
-                    statusHistorikk.getAll() shouldHaveSize 2
-                }
+            personRepository.hentPerson(ident)?.apply {
+                status shouldBe DAGPENGERBRUKER
+                statusHistorikk.getAll() shouldHaveSize 2
+            }
         }
     }
 
@@ -362,26 +357,48 @@ class PersonRepositoryPostgresTest {
     }
 
     @Test
+    fun `kan lagre arbeidssøkerperiode uten årsakTilUtmelding`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            personRepository.lagreÅrsakTilUtmelding(
+                periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId,
+                ident = person.ident,
+                årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+            )
+
+            val årsakTilUtmelding =
+                personRepository
+                    .hentPerson(ident)
+                    ?.arbeidssøkerperioder
+                    ?.gjeldende
+                    ?.årsakTilUtmelding
+
+            årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+        }
+
+    @Test
     fun `kan oppdatere persons ansvarlig system`() {
         withMigratedDb {
             val person = testPerson()
             person.setAnsvarligSystem(AnsvarligSystem.ARENA)
             personRepository.lagrePerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    ansvarligSystem shouldBe AnsvarligSystem.ARENA
-                }
+            personRepository.hentPerson(ident)?.apply {
+                ansvarligSystem shouldBe AnsvarligSystem.ARENA
+            }
 
             person.setAnsvarligSystem(AnsvarligSystem.DP)
             personRepository.oppdaterPerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    ansvarligSystem shouldBe AnsvarligSystem.DP
-                }
+            personRepository.hentPerson(ident)?.apply {
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+            }
         }
     }
 
@@ -391,20 +408,16 @@ class PersonRepositoryPostgresTest {
             val person = testPerson()
             personRepository.lagrePerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    harRettTilDp shouldBe false
-                }
+            personRepository.hentPerson(ident)?.apply {
+                harRettTilDp shouldBe false
+            }
 
             person.setHarRettTilDp(true)
             personRepository.oppdaterPerson(person)
 
-            personRepository
-                .hentPerson(ident)
-                ?.apply {
-                    harRettTilDp shouldBe true
-                }
+            personRepository.hentPerson(ident)?.apply {
+                harRettTilDp shouldBe true
+            }
         }
     }
 
