@@ -357,7 +357,7 @@ class PersonRepositoryPostgresTest {
     }
 
     @Test
-    fun `kan lagre arbeidssøkerperiode uten årsakTilUtmelding`() =
+    fun `kan lagre og hente arbeidssøkerperiode med årsakTilUtmelding`() =
         withMigratedDb {
             val person =
                 testPerson(
