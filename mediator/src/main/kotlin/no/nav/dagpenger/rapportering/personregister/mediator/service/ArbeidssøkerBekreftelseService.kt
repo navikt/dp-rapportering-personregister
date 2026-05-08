@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import java.util.UUID
 
+private val logger = KotlinLogging.logger { }
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class ArbeidssøkerBekreftelseService(
@@ -15,21 +16,30 @@ class ArbeidssøkerBekreftelseService(
     private val arbeidssøkerBekreftelseConnector: ArbeidssøkerBekreftelseConnector,
     private val personRepository: PersonRepository,
 ) {
-    suspend fun behandle(melding: ArbeidssøkerBekreftelseMelding) {
+    suspend fun behandle(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding) {
         try {
-            sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $melding" }
-            val recordKey = arbeidssøkerConnector.hentRecordKey(melding.ident).key
+            sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $arbeidssøkerBekreftelseMelding" }
+            logger.info {
+                "Behandle arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+            }
+            val recordKey = arbeidssøkerConnector.hentRecordKey(arbeidssøkerBekreftelseMelding.ident).key
 
-            val vilFortsetteSomArbeidssøker = melding.bekreftelse.svar.vilFortsetteSomArbeidssøker
+            val vilFortsetteSomArbeidssøker =
+                arbeidssøkerBekreftelseMelding.bekreftelse.svar.vilFortsetteSomArbeidssøker
             if (!vilFortsetteSomArbeidssøker) {
                 lagreÅrsakTilUtmelding(
-                    periodeId = melding.bekreftelse.periodeId,
-                    ident = melding.ident,
+                    periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId,
+                    ident = arbeidssøkerBekreftelseMelding.ident,
                 )
             }
-            arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, melding)
+            arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
         } catch (e: Exception) {
-            sikkerlogg.error(e) { "Feil ved behandling av arbeidssøkerbekreftelse for ident ${melding.ident}" }
+            logger.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident ${arbeidssøkerBekreftelseMelding.ident}"
+            }
+            sikkerlogg.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident ${arbeidssøkerBekreftelseMelding.ident}"
+            }
             throw e
         }
     }
@@ -39,9 +49,15 @@ class ArbeidssøkerBekreftelseService(
         ident: String,
     ) {
         try {
+            logger.info { "Lagrer årsak til utmelding for periodeId $periodeId" }
             sikkerlogg.info { "Lagrer årsak til utmelding for periodeId $periodeId" }
-            personRepository.lagreÅrsakTilUtmelding(periodeId, ident, Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT)
+            personRepository.lagreÅrsakTilUtmelding(
+                periodeId,
+                ident,
+                Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+            )
         } catch (e: Exception) {
+            logger.error(e) { "Feil ved lagring av årsak til utmelding for ident $ident og periodeId $periodeId" }
             sikkerlogg.error(e) { "Feil ved lagring av årsak til utmelding for ident $ident og periodeId $periodeId" }
             throw e
         }

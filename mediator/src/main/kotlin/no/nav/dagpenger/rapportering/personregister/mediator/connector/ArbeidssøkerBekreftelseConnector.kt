@@ -17,23 +17,34 @@ class ArbeidssøkerBekreftelseConnector(
 ) {
     suspend fun sendBekreftelse(
         recordKey: Long,
-        bekreftelsesmelding: ArbeidssøkerBekreftelseMelding,
+        arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding,
     ): UUID {
-        logger.info { "Sender arbeidssøkerbekreftelse for $recordKey" }
-        val bekreftelse = BekreftelseMapper.tilBekreftelse(bekreftelsesmelding)
+        val periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId
+
+        logger.info { "Sender arbeidssøkerbekreftelse for periode $periodeId" }
+        sikkerlogg.info { "Sender arbeidssøkerbekreftelse for periode $periodeId." }
+
+        val bekreftelse = BekreftelseMapper.tilBekreftelse(arbeidssøkerBekreftelseMelding)
         val record = ProducerRecord(bekreftelseTopic, recordKey, bekreftelse)
 
         try {
             val metadata = bekreftelseKafkaProdusent.sendDeferred(record).await()
             sikkerlogg.info {
-                "Sendt arbeidssøkerbekreftelse for ident = ${bekreftelsesmelding.ident} til Team PAW. " +
-                    "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+                "Sendt arbeidssøkerbekreftelse for periode: $periodeId, ident: ${arbeidssøkerBekreftelseMelding.ident} til Arbeidssøkerregisteret."
+                "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
+            }
+            logger.info {
+                "Sendt arbeidssøkerbekreftelse for periode: $periodeId, ident: ${arbeidssøkerBekreftelseMelding.ident} til Arbeidssøkerregisteret."
             }
 
-            return bekreftelsesmelding.bekreftelse.id
+            return arbeidssøkerBekreftelseMelding.bekreftelse.id
         } catch (e: Exception) {
-            logger.error(e) { "Kunne ikke sende arbeidssøkerstatus til Kafka" }
-
+            logger.error(e) {
+                "Kunne ikke sende arbeidssøkerstatus for periode $periodeId til Arbeidssøkerregisteret."
+            }
+            sikkerlogg.error(e) {
+                "Kunne ikke sende arbeidssøkerstatus for periode $periodeId til Arbeidssøkerregisteret. Melding forsøkt sendt: $bekreftelse"
+            }
             throw e
         }
     }

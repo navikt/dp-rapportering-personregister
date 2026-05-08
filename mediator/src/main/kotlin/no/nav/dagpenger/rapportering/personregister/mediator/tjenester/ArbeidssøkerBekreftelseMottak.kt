@@ -41,14 +41,27 @@ class ArbeidssøkerBekreftelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        try {
-            logger.info { "Mottok arbeidssøkerbekreftelse melding" }
-            sikkerlogg.info { "Mottok arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
+        val arbeidssøkerBekreftelseMelding =
+            try {
+                packet.tilArbeidssøkerBekreftelseMelding()
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding" }
+                sikkerlogg.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
+                throw e
+            }
 
-            val melding = packet.tilArbeidssøkerBekreftelseMelding()
-            runBlocking { arbeidssøkerBekreftelseService.behandle(melding) }
+        try {
+            logger.info {
+                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+            }
+            runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av arbeidssøkerbekreftelse" }
+            logger.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+            }
+            sikkerlogg.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}. Melding: $arbeidssøkerBekreftelseMelding"
+            }
             throw e
         }
     }

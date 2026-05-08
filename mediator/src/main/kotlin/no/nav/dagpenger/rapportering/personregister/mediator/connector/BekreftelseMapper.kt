@@ -12,14 +12,14 @@ import java.time.Instant
 
 class BekreftelseMapper {
     companion object {
-        fun tilBekreftelse(melding: ArbeidssøkerBekreftelseMelding): Bekreftelse {
-            val svar = melding.bekreftelse.svar
+        fun tilBekreftelse(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding): Bekreftelse {
+            val svar = arbeidssøkerBekreftelseMelding.bekreftelse.svar
             val bruker = svar.sendtInnAv.utførtAv
 
             return Bekreftelse(
-                melding.bekreftelse.periodeId,
+                arbeidssøkerBekreftelseMelding.bekreftelse.periodeId,
                 Bekreftelsesloesning.DAGPENGER,
-                melding.bekreftelse.id,
+                arbeidssøkerBekreftelseMelding.bekreftelse.id,
                 Svar(
                     Metadata(
                         Instant.now().atZone(ZONE_ID).toInstant(),

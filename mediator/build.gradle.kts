@@ -61,10 +61,6 @@ kotlin {
     jvmToolchain(21)
 }
 
-/*tasks.named("build") {
-    dependsOn(":kafka:build")
-}*/
-
 application {
     mainClass.set("no.nav.dagpenger.rapportering.personregister.mediator.ApplicationKt")
 }
