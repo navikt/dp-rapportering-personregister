@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.FakeUnleash
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.mockk.every
@@ -191,6 +192,34 @@ class MeldepliktMediatorTest {
             status shouldBe DAGPENGERBRUKER
             arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
             hendelser.size shouldBe 2
+        }
+    }
+
+    @Test
+    fun `behandle skal kaste exception videre`() {
+        every { pdlConnector.hentIdenter(ident) } throws RuntimeException("Kastet feil fra PDL")
+
+        arbeidssøker {
+            val throwable =
+                shouldThrow<RuntimeException> {
+                    runBlocking { meldepliktMediator.behandle(ident, true) }
+                }
+
+            throwable.message shouldBe "Kastet feil fra PDL"
+        }
+    }
+
+    @Test
+    fun `behandleHendelse skal kaste exception videre`() {
+        every { pdlConnector.hentIdenter(ident) } throws RuntimeException("Kastet feil fra PDL")
+
+        arbeidssøker {
+            val throwable =
+                shouldThrow<RuntimeException> {
+                    meldepliktMediator.behandle(meldepliktHendelse(status = true))
+                }
+
+            throwable.message shouldBe "Kastet feil fra PDL"
         }
     }
 

@@ -39,9 +39,9 @@ class PdlConnector(
                         }
                 }
             } catch (e: Exception) {
-                logger.warn(e) { "Feil ved henting av identer fra PDL" }
-                sikkerLogg.warn(e) { "Feil ved henting av identer fra PDL for ident $ident" }
-                emptyList()
+                logger.error(e) { "Feil ved henting av identer fra PDL" }
+                sikkerLogg.error(e) { "Feil ved henting av identer fra PDL for ident $ident" }
+                throw e
             }
         }
 
