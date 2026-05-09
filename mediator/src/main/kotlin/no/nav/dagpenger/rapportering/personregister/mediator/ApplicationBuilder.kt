@@ -302,6 +302,11 @@ internal class ApplicationBuilder(
                 }
 
         rapidsConnection.register(this)
+
+        Thread.setDefaultUncaughtExceptionHandler { _, e ->
+            logger.error(e) { "Uncaught exception in thread ${Thread.currentThread().name}" }
+            throw e
+        }
     }
 
     internal fun start() {

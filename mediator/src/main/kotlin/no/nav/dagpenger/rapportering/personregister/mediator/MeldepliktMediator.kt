@@ -67,6 +67,7 @@ class MeldepliktMediator(
                     }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved henting av meldeplikt for ident" }
+                throw e
             }
         }
     }
@@ -98,7 +99,8 @@ class MeldepliktMediator(
                     }
                 }
         } catch (e: Exception) {
-            logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
+            logger.error(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
+            throw e
         }
     }
 
