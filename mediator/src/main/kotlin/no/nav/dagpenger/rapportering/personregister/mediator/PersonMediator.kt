@@ -197,7 +197,8 @@ class PersonMediator(
                     logger.info { "Hendelse behandlet: ${hendelse.referanseId}" }
                 }
         } catch (e: Exception) {
-            logger.info(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
+            logger.error(e) { "Feil ved behandling av hendelse: ${hendelse.referanseId}" }
+            throw e
         }
     }
 

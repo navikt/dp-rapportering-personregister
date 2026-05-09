@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.every
@@ -207,6 +208,18 @@ class PersonServiceTest {
 
         personService.hentPersonId(ident) shouldBe personId
         personService.hentIdent(personId) shouldBe ident
+    }
+
+    @Test
+    fun `hentPerson skal kaste exception fra pdlConnector videre`() {
+        every { pdlConnector.hentIdenter(ident) } throws RuntimeException("Kastet feil fra PDL")
+
+        val throwable =
+            shouldThrow<RuntimeException> {
+                personService.hentPerson(ident)
+            }
+
+        throwable.message shouldBe "Kastet feil fra PDL"
     }
 }
 

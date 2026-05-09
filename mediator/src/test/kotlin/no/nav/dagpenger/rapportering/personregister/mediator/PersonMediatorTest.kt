@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.FakeUnleash
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -524,6 +525,26 @@ class PersonMediatorTest {
                     harRettTilDp shouldBe false
                     status shouldBe DAGPENGERBRUKER
                 }
+            }
+        }
+
+        @Test
+        fun `skal kaste exception videre`() {
+            dagpengebrukerMedVedtak {
+                with(this) {
+                    ansvarligSystem shouldBe AnsvarligSystem.DP
+                    harRettTilDp shouldBe true
+                    status shouldBe DAGPENGERBRUKER
+                }
+
+                every { pdlConnector.hentIdenter(ident) } throws RuntimeException("Kastet feil fra PDL")
+
+                val throwable =
+                    shouldThrow<RuntimeException> {
+                        personMediator.behandle(nødbremsHendelse())
+                    }
+
+                throwable.message shouldBe "Kastet feil fra PDL"
             }
         }
     }
