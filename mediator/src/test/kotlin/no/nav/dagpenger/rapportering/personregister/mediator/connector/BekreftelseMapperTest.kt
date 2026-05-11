@@ -23,34 +23,30 @@ class BekreftelseMapperTest {
         val gjelderFra = LocalDateTime.of(2025, 1, 1, 0, 0, 0)
         val gjelderTil = LocalDateTime.of(2025, 1, 14, 23, 59, 59)
 
-        val melding = bekreftelseMelding(periodeId, bekreftelseId, gjelderFra, gjelderTil)
+        val melding = bekreftelseMelding(periodeId, bekreftelseId, gjelderFra, gjelderTil).tilBekreftelse()
 
-        BekreftelseMapper.tilBekreftelse(melding).apply {
-            this.periodeId shouldBe periodeId
-            bekreftelsesloesning shouldBe Bekreftelsesloesning.DAGPENGER
-            svar shouldNotBe null
-            svar.harJobbetIDennePerioden shouldBe true
-            svar.vilFortsetteSomArbeidssoeker shouldBe true
-        }
+        melding.periodeId shouldBe periodeId
+        melding.bekreftelsesloesning shouldBe Bekreftelsesloesning.DAGPENGER
+        melding.svar shouldNotBe null
+        melding.svar.harJobbetIDennePerioden shouldBe true
+        melding.svar.vilFortsetteSomArbeidssoeker shouldBe true
     }
 
     @Test
     fun `gjelderTil utvides med en dag`() {
         val gjelderTil = LocalDateTime.of(2025, 1, 14, 23, 59, 59)
-        val melding = bekreftelseMelding(gjelderTil = gjelderTil)
+        val melding = bekreftelseMelding(gjelderTil = gjelderTil).tilBekreftelse()
 
-        BekreftelseMapper.tilBekreftelse(melding).apply {
-            svar.gjelderTil
-                .atZone(java.time.ZoneId.of("Europe/Oslo"))
-                .toLocalDateTime() shouldBe gjelderTil.plusDays(1)
-        }
+        melding.svar.gjelderTil
+            .atZone(java.time.ZoneId.of("Europe/Oslo"))
+            .toLocalDateTime() shouldBe gjelderTil.plusDays(1)
     }
 
     @Test
     fun `bruker mappes korrekt`() {
         val melding = bekreftelseMelding()
 
-        val resultat = BekreftelseMapper.tilBekreftelse(melding)
+        val resultat = melding.tilBekreftelse()
 
         resultat.svar.sendtInnAv.utfoertAv.type shouldBe BrukerType.SLUTTBRUKER
         resultat.svar.sendtInnAv.utfoertAv.id shouldBe "12345678910"
@@ -61,7 +57,7 @@ class BekreftelseMapperTest {
         val melding = bekreftelseMelding(brukerType = "UGYLDIG")
 
         shouldThrow<IllegalArgumentException> {
-            BekreftelseMapper.tilBekreftelse(melding)
+            melding.tilBekreftelse()
         }
     }
 

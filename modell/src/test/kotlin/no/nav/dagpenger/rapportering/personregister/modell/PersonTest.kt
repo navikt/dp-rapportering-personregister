@@ -225,7 +225,8 @@ class PersonTest {
         fun `behandler meldesyklus er passert hendelse`() =
             arbeidssøker(overtattBekreftelse = true) {
                 behandle(meldesyklusErPassertHendelse())
-                this.arbeidssøkerperioder.gjeldende?.årsakTilUtmelding shouldBe Arbeidssøkerperiode.ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER
+                this.arbeidssøkerperioder.gjeldende?.årsakTilUtmelding shouldBe
+                    Arbeidssøkerperiode.ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER
                 arbeidssøkerperiodeObserver skalHaFrasagtSegAnsvaretMedFristBruttFor this
             }
     }

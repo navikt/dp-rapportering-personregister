@@ -24,7 +24,7 @@ class ArbeidssøkerBekreftelseKafka(
         logger.info { "Sender arbeidssøkerbekreftelse for periode $periodeId" }
         sikkerlogg.info { "Sender arbeidssøkerbekreftelse for periode $periodeId." }
 
-        val bekreftelse = BekreftelseMapper.tilBekreftelse(arbeidssøkerBekreftelseMelding)
+        val bekreftelse = arbeidssøkerBekreftelseMelding.tilBekreftelse()
         val record = ProducerRecord(bekreftelseTopic, recordKey, bekreftelse)
 
         try {
