@@ -310,7 +310,7 @@ internal class ApplicationBuilder(
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
                     ArbeidssøkerBekreftelseMottak(
-                        rapidsConnection,
+                        rapid,
                         ArbeidssøkerBekreftelseService(
                             arbeidssøkerConnector,
                             arbeidssøkerBekreftelseKafka,
