@@ -259,7 +259,7 @@ internal class ApplicationBuilder(
                                 objectMapper = Configuration.defaultObjectMapper,
                                 applicationLogger = LoggerFactory.getLogger("ApplicationLogger"),
                                 callLogger = LoggerFactory.getLogger("CallLogger"),
-                                aliveCheck = rapid::isReady,
+                                aliveCheck = rapid::isRunning,
                                 readyCheck = rapid::isReady,
                                 preStopHook = preStopHook::handlePreStopRequest,
                                 statusPagesConfig = { statusPagesConfig() },
@@ -302,11 +302,6 @@ internal class ApplicationBuilder(
                 }
 
         rapidsConnection.register(this)
-
-        Thread.setDefaultUncaughtExceptionHandler { _, e ->
-            logger.error(e) { "Uncaught exception in thread ${Thread.currentThread().name}" }
-            throw e
-        }
     }
 
     internal fun start() {
