@@ -5,7 +5,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
@@ -22,7 +22,7 @@ import java.util.UUID
 
 class ArbeidssøkerBekreftelseServiceTest {
     private val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>()
-    private val arbeidssøkerBekreftelseConnector = mockk<ArbeidssøkerBekreftelseConnector>()
+    private val arbeidssøkerBekreftelseConnector = mockk<ArbeidssøkerBekreftelseKafka>()
     private val personRepositoryMock = mockk<PersonRepository>()
 
     private val service =

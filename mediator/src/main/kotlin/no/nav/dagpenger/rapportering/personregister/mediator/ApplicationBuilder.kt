@@ -24,6 +24,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unlea
 import no.nav.dagpenger.rapportering.personregister.mediator.api.behandlingApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
@@ -54,9 +55,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMet
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehandlingsresultatMottak
@@ -147,12 +150,6 @@ internal class ApplicationBuilder(
             valueDeserializer = PeriodeAvroDeserializer::class,
         )
 
-    private val bekreftelseKafkaProdusent =
-        kafkaFactory.createProducer<Long, Bekreftelse>(
-            clientId = "teamdagpenger-rapportering-producer",
-            keySerializer = LongSerializer::class,
-            valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
-        )
     private val personObserverKafka =
         PersonObserverKafka(
             bekreftelsePåVegneAvProdusent,
@@ -222,6 +219,13 @@ internal class ApplicationBuilder(
 
     private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+    private val bekreftelseKafkaProdusent =
+        kafkaFactory.createProducer<Long, Bekreftelse>(
+            clientId = "teamdagpenger-rapportering-producer",
+            keySerializer = LongSerializer::class,
+            valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
+        )
+    private val arbeidssøkerBekreftelseKafka = ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent)
 
     private val aktiverHendelserJob =
         AktiverHendelserJob(
@@ -305,6 +309,14 @@ internal class ApplicationBuilder(
                     )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
+                    ArbeidssøkerBekreftelseMottak(
+                        rapidsConnection,
+                        ArbeidssøkerBekreftelseService(
+                            arbeidssøkerConnector,
+                            arbeidssøkerBekreftelseKafka,
+                            personRepository,
+                        ),
+                    )
                 }
 
         rapidsConnection.register(this)

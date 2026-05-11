@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
@@ -13,7 +13,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class ArbeidssøkerBekreftelseService(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
-    private val arbeidssøkerBekreftelseConnector: ArbeidssøkerBekreftelseConnector,
+    private val arbeidssøkerBekreftelseKafka: ArbeidssøkerBekreftelseKafka,
     private val personRepository: PersonRepository,
 ) {
     suspend fun behandle(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding) {
@@ -32,7 +32,7 @@ class ArbeidssøkerBekreftelseService(
                     ident = arbeidssøkerBekreftelseMelding.ident,
                 )
             }
-            arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
+            arbeidssøkerBekreftelseKafka.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
         } catch (e: Exception) {
             logger.error(e) {
                 "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident ${arbeidssøkerBekreftelseMelding.ident}"

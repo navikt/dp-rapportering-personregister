@@ -26,7 +26,7 @@ import no.nav.paw.bekreftelse.melding.v1.Bekreftelse as ASRBekreftelse
 
 class ArbeidssøkerBekreftelseConnectorTest {
     private val producer = mockk<Producer<Long, ASRBekreftelse>>()
-    private val connector = ArbeidssøkerBekreftelseConnector(producer)
+    private val connector = ArbeidssøkerBekreftelseKafka(producer)
 
     init {
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")

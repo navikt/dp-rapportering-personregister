@@ -12,7 +12,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger { }
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
-class ArbeidssøkerBekreftelseConnector(
+class ArbeidssøkerBekreftelseKafka(
     private val bekreftelseKafkaProdusent: Producer<Long, Bekreftelse>,
 ) {
     suspend fun sendBekreftelse(
