@@ -7,14 +7,12 @@ import org.flywaydb.core.Flyway
 import org.flywaydb.core.api.configuration.FluentConfiguration
 
 internal object PostgresDataSourceBuilder {
-    const val DB_URL_KEY = "DB_JDBC_URL"
-
     private fun getOrThrow(key: String): String = getEnv(key) ?: getSystemProperty(key)
 
     val dataSource by lazy {
         HikariDataSource().apply {
-            jdbcUrl = getOrThrow(DB_URL_KEY)
-            maximumPoolSize = 30
+            jdbcUrl = getOrThrow("DB_JDBC_URL")
+            maximumPoolSize = getOrThrow("MAXIMUM_POOL_SIZE_PER_POD").toInt()
             minimumIdle = 5
             idleTimeout = 300000 // 5min
             connectionTimeout = 10000 // 10s
