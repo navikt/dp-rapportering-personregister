@@ -19,13 +19,11 @@ class ArbeidssøkerBekreftelseMottak(
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
 ) : River.PacketListener {
     init {
+        logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
         River(rapidsConnection)
             .apply {
                 precondition {
-                    it.requireValue(
-                        "@event_name",
-                        "arbeidssøkerbekreftelse",
-                    )
+                    it.requireValue("@event_name", "arbeidssøkerbekreftelse")
                 }
                 validate {
                     it.requireKey(
@@ -42,6 +40,8 @@ class ArbeidssøkerBekreftelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
+        logger.info { "Mottok arbeidssøkerbekreftelse" }
+        sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
         val arbeidssøkerBekreftelseMelding =
             try {
                 packet.tilArbeidssøkerBekreftelseMelding()
