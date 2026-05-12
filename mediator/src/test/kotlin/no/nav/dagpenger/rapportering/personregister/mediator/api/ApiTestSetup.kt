@@ -186,6 +186,7 @@ open class ApiTestSetup {
 
     private fun setEnvConfig() {
         System.setProperty("DB_JDBC_URL", "${database.jdbcUrl}&user=${database.username}&password=${database.password}")
+        System.setProperty("MAXIMUM_POOL_SIZE_PER_POD", "10")
         System.setProperty("token-x.client-id", TOKENX_ISSUER_ID)
         System.setProperty("token-x.well-known-url", mockOAuth2Server.wellKnownUrl(TOKENX_ISSUER_ID).toString())
         System.setProperty(
