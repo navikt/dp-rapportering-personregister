@@ -29,12 +29,12 @@ class ArbeidssøkerBekreftelseKafka(
 
         try {
             val metadata = bekreftelseKafkaProdusent.sendDeferred(record).await()
+            logger.info {
+                "Sendt arbeidssøkerbekreftelse for periode: $periodeId til Arbeidssøkerregisteret."
+            }
             sikkerlogg.info {
                 "Sendt arbeidssøkerbekreftelse for periode: $periodeId, ident: ${arbeidssøkerBekreftelseMelding.ident} til Arbeidssøkerregisteret."
                 "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
-            }
-            logger.info {
-                "Sendt arbeidssøkerbekreftelse for periode: $periodeId, ident: ${arbeidssøkerBekreftelseMelding.ident} til Arbeidssøkerregisteret."
             }
 
             return arbeidssøkerBekreftelseMelding.bekreftelse.id

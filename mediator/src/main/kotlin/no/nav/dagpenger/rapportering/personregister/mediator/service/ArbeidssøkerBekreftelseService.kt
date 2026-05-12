@@ -18,10 +18,10 @@ class ArbeidssøkerBekreftelseService(
 ) {
     suspend fun behandle(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding) {
         try {
-            sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $arbeidssøkerBekreftelseMelding" }
             logger.info {
-                "Behandle arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+                "Behandle arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
+            sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $arbeidssøkerBekreftelseMelding" }
             val recordKey = arbeidssøkerConnector.hentRecordKey(arbeidssøkerBekreftelseMelding.ident).key
 
             val vilFortsetteSomArbeidssøker =
@@ -35,10 +35,10 @@ class ArbeidssøkerBekreftelseService(
             arbeidssøkerBekreftelseKafka.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
         } catch (e: Exception) {
             logger.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident ${arbeidssøkerBekreftelseMelding.ident}"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
             sikkerlogg.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident ${arbeidssøkerBekreftelseMelding.ident}"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: ${arbeidssøkerBekreftelseMelding}"
             }
             throw e
         }

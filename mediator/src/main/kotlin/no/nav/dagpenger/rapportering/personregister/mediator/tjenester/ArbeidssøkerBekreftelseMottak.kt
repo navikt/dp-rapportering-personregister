@@ -53,15 +53,15 @@ class ArbeidssøkerBekreftelseMottak(
 
         try {
             logger.info {
-                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
             runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
             logger.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
             sikkerlogg.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident: ${arbeidssøkerBekreftelseMelding.ident}. Melding: $arbeidssøkerBekreftelseMelding"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: $arbeidssøkerBekreftelseMelding"
             }
             throw e
         }
