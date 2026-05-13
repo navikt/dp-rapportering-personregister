@@ -10,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
+import kotlin.math.log
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -18,6 +19,8 @@ class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
 ) : River.PacketListener {
+    val meldingerSomSkalIgnoreres = listOf("bae64281-c3f3-493b-bc57-3424a3f6c2e5", "019e1c47-0dfa-73d7-90d3-3302854ee0e1")
+
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
         River(rapidsConnection)
@@ -31,6 +34,7 @@ class ArbeidssøkerBekreftelseMottak(
                         "bekreftelse",
                     )
                 }
+                validate { it.interestedIn("@id") }
             }.register(this)
     }
 
@@ -42,6 +46,12 @@ class ArbeidssøkerBekreftelseMottak(
     ) {
         logger.info { "Mottok arbeidssøkerbekreftelse" }
         sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
+
+        if (meldingerSomSkalIgnoreres.contains(packet["@id"].asText())) {
+            logger.info { "Melding med id ${packet["@id"].asText()} er i listen over meldinger som skal ignoreres, så ignorer den." }
+            return
+        }
+
         val arbeidssøkerBekreftelseMelding =
             try {
                 packet.tilArbeidssøkerBekreftelseMelding()
