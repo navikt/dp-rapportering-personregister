@@ -309,14 +309,14 @@ internal class ApplicationBuilder(
                     )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
-                    ArbeidssøkerBekreftelseMottak(
+                    /*ArbeidssøkerBekreftelseMottak(
                         rapid,
                         ArbeidssøkerBekreftelseService(
                             arbeidssøkerConnector,
                             arbeidssøkerBekreftelseKafka,
                             personRepository,
                         ),
-                    )
+                    )*/
                 }
 
         rapidsConnection.register(this)
