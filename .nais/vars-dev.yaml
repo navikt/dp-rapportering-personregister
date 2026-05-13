@@ -8,7 +8,7 @@ cluster: dev-gcp
 gcp:
   sql:
     tier: db-g1-small
-    maximumPoolSizePerPod: 10
+    maximumPoolSizePerPod: 8
 
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag-v2.paw
 ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag-v2/.default

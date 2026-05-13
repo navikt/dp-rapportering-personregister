@@ -12,9 +12,9 @@ spec:
     enabled: true
     path: /metrics
   liveness:
-    path: /isAlive
+    path: /isalive
   readiness:
-    path: /isReady
+    path: /isready
   replicas:
     min: 2
     max: 6
