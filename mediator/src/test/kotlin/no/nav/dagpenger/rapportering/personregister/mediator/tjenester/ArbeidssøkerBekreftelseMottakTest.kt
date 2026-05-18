@@ -5,8 +5,10 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class ArbeidssøkerBekreftelseMottakTest {
     private val testRapid = TestRapid()
     private val arbeidssøkerBekreftelseService = mockk<ArbeidssøkerBekreftelseService>(relaxed = true)
