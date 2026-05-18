@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import java.util.UUID
@@ -61,4 +62,15 @@ interface PersonRepository {
     fun hentPersonId(ident: String): Long?
 
     fun hentIdent(personId: Long): String?
+
+    fun lagreÅrsakTilUtmelding(
+        periodeId: UUID,
+        ident: String,
+        årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
+    ) {}
+
+    fun hentÅrsakTilUtmelding(
+        periodeId: UUID,
+        ident: String,
+    ): Arbeidssøkerperiode.ÅrsakTilUtmelding?
 }

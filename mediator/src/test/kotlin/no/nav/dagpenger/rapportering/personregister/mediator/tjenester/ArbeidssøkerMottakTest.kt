@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import io.getunleash.FakeUnleash
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -59,7 +60,7 @@ class ArbeidssøkerMottakTest {
 
         arbeidssøkerMottak.consume(lagConsumerRecords(avsluttet = true))
 
-        verify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
+        coVerify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
     }
 
     @Test
@@ -68,7 +69,7 @@ class ArbeidssøkerMottakTest {
 
         arbeidssøkerMottak.consume(lagConsumerRecords(avsluttet = true))
 
-        verify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
+        coVerify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any()) }
     }
 
     private fun lagConsumerRecords(avsluttet: Boolean = true): ConsumerRecords<Long, Periode> =

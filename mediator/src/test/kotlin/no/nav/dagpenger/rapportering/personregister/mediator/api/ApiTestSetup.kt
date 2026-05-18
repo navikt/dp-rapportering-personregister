@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.Unleash
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
@@ -44,17 +45,21 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
+import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
+    private val rapidsConnection = TestRapid()
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val personObserver = mockk<PersonObserver>(relaxed = true)
+
     val pdlConnector = mockk<PdlConnector>()
     val meldekortregisterConnector = mockk<MeldekortregisterConnector>()
     val unleash = mockk<Unleash>()
@@ -133,7 +138,8 @@ open class ApiTestSetup {
                     actionTimer,
                 )
 
-            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
+            val arbeidssøkerService =
+                ArbeidssøkerService(rapidsConnection, personRepository, arbeidssøkerConnector, meldekortregisterConnector)
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
                     arbeidssøkerService,
@@ -142,7 +148,8 @@ open class ApiTestSetup {
                     listOf(personObserver),
                     actionTimer,
                 )
-            val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
+            val arbeidssøkerMottak =
+                ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
             val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
             val kafkaContext =
                 KafkaContext(
