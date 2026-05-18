@@ -19,8 +19,6 @@ class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
 ) : River.PacketListener {
-    val meldingerSomSkalIgnoreres = listOf("bae64281-c3f3-493b-bc57-3424a3f6c2e5", "019e1c47-0dfa-73d7-90d3-3302854ee0e1")
-
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
         River(rapidsConnection)
@@ -46,35 +44,29 @@ class ArbeidssøkerBekreftelseMottak(
     ) {
         logger.info { "Mottok arbeidssøkerbekreftelse" }
         sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
-        return
 
-//        if (meldingerSomSkalIgnoreres.contains(packet["@id"].asText())) {
-//            logger.info { "Melding med id ${packet["@id"].asText()} er i listen over meldinger som skal ignoreres, så ignorer den." }
-//            return
-//        }
+        val arbeidssøkerBekreftelseMelding =
+            try {
+                packet.tilArbeidssøkerBekreftelseMelding()
+            } catch (e: Exception) {
+                logger.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding" }
+                sikkerlogg.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
+                throw e
+            }
 
-//        val arbeidssøkerBekreftelseMelding =
-//            try {
-//                packet.tilArbeidssøkerBekreftelseMelding()
-//            } catch (e: Exception) {
-//                logger.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding" }
-//                sikkerlogg.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
-//                throw e
-//            }
-//
-//        try {
-//            logger.info {
-//                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
-//            }
-//            runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
-//        } catch (e: Exception) {
-//            logger.error(e) {
-//                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
-//            }
-//            sikkerlogg.error(e) {
-//                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: $arbeidssøkerBekreftelseMelding"
-//            }
-//            throw e
-//        }
+        try {
+            logger.info {
+                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+            }
+            runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
+        } catch (e: Exception) {
+            logger.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+            }
+            sikkerlogg.error(e) {
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: $arbeidssøkerBekreftelseMelding"
+            }
+            throw e
+        }
     }
 }
