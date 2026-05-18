@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import java.time.LocalDateTime
 import java.util.UUID
@@ -38,20 +39,25 @@ class ArbeidssøkerService(
 
     suspend fun publiserAvsluttetArbeidssøkerperiode(periode: Arbeidssøkerperiode) {
         logger.info { "Publiserer avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}" }
-        val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
-        val periodeId = periode.periodeId
-        val fastsattMeldedato = hentFastsattMeldedato(periodeId)
-        val årsak = hentÅrsakEllerDefault(periodeId, periode.ident)
 
-        val melding =
-            avsluttetMelding(
-                periode = periode,
-                fastsattMeldedato = fastsattMeldedato,
-                avregistrertTidspunkt = avregistrertTidspunkt,
-                årsak = årsak,
-            )
+        personRepository.hentPerson(periode.ident)?.let { person ->
+            if (person.ansvarligSystem == AnsvarligSystem.DP) {
+                val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
+                val periodeId = periode.periodeId
+                val fastsattMeldedato = hentFastsattMeldedato(periodeId)
+                val årsak = hentÅrsakEllerDefault(periodeId, periode.ident)
 
-        publiser(periode, melding)
+                val melding =
+                    avsluttetMelding(
+                        periode = periode,
+                        fastsattMeldedato = fastsattMeldedato,
+                        avregistrertTidspunkt = avregistrertTidspunkt,
+                        årsak = årsak,
+                    )
+
+                publiser(periode, melding)
+            }
+        }
     }
 
     private fun Arbeidssøkerperiode.hentAvregistrertTidspunkt(): LocalDateTime =

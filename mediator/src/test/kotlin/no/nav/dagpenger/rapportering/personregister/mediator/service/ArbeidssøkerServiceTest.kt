@@ -15,8 +15,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
+import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -59,9 +62,12 @@ class ArbeidssøkerServiceTest {
     }
 
     @Test
-    fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort`() {
+    fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem er DP`() {
         runBlocking {
             val tilOgMed = LocalDateTime.now().minusDays(2)
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+
+            every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
             coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns
                 InnsendtMeldekortResponse(
@@ -87,6 +93,8 @@ class ArbeidssøkerServiceTest {
     @Test
     fun `defaulter årsak til UTMELDT_I_ARBEIDSSØKERREGISTERET når repository ikke har lagret årsak`() {
         runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+            every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns null
 
@@ -100,6 +108,8 @@ class ArbeidssøkerServiceTest {
     @Test
     fun `utelater fastsattMeldedato når ingen innsendte meldekort finnes`() {
         runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+            every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns null
 
@@ -110,27 +120,59 @@ class ArbeidssøkerServiceTest {
     }
 
     @Test
-    fun `kaster exception hvis perioden ikke er avsluttet`() {
-        val aktivPeriode = avsluttetPeriode().copy(avsluttet = null)
+    fun `publiserer ikke melding når ansvarligSystem ikke er DP`() {
+        runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.ARENA)
+            every { personRepository.hentPerson(ident) } returns person
 
-        shouldThrow<IllegalArgumentException> {
-            runBlocking { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(aktivPeriode) }
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+
+            rapid.inspektør.size shouldBe 0
         }
+    }
 
-        rapid.inspektør.size shouldBe 0
+    @Test
+    fun `publiserer ikke melding når person ikke finnes`() {
+        runBlocking {
+            every { personRepository.hentPerson(ident) } returns null
+
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+
+            rapid.inspektør.size shouldBe 0
+        }
+    }
+
+    @Test
+    fun `kaster exception hvis perioden ikke er avsluttet`() {
+        runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+            val aktivPeriode = avsluttetPeriode().copy(avsluttet = null)
+            every { personRepository.hentPerson(ident) } returns person
+
+            shouldThrow<IllegalArgumentException> {
+                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(aktivPeriode)
+            }
+
+            rapid.inspektør.size shouldBe 0
+        }
     }
 
     @Test
     fun `kaster exception videre og publiserer ikke melding hvis meldekortregister feiler`() {
-        coEvery {
-            meldekortregisterConnector.hentSisteInnsendteMeldekort()
-        } throws RuntimeException("Meldekortregister utilgjengelig")
+        runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+            every { personRepository.hentPerson(ident) } returns person
+            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
+            coEvery {
+                meldekortregisterConnector.hentSisteInnsendteMeldekort()
+            } throws RuntimeException("Meldekortregister utilgjengelig")
 
-        shouldThrow<RuntimeException> {
-            runBlocking { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode()) }
+            shouldThrow<RuntimeException> {
+                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+            }
+
+            rapid.inspektør.size shouldBe 0
         }
-
-        rapid.inspektør.size shouldBe 0
     }
 
     private fun avsluttetPeriode() =
@@ -141,4 +183,10 @@ class ArbeidssøkerServiceTest {
             avsluttet = avregistrertTidspunkt,
             overtattBekreftelse = null,
         )
+
+    private fun person(ansvarligSystem: AnsvarligSystem? = null) =
+        Person(ident = ident).apply {
+            setStatus(Status.DAGPENGERBRUKER)
+            setAnsvarligSystem(ansvarligSystem)
+        }
 }
