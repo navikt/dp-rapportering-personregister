@@ -68,4 +68,9 @@ interface PersonRepository {
         ident: String,
         årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ) {}
+
+    fun hentÅrsakTilUtmelding(
+        periodeId: UUID,
+        ident: String,
+    ): Arbeidssøkerperiode.ÅrsakTilUtmelding?
 }

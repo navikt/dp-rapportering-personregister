@@ -7,10 +7,10 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
+import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
-import kotlin.math.log
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -36,6 +36,7 @@ class ArbeidssøkerBekreftelseMottak(
             }.register(this)
     }
 
+    @WithSpan
     override fun onPacket(
         packet: JsonMessage,
         context: MessageContext,

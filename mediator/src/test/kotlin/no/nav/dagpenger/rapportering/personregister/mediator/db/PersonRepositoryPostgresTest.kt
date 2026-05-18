@@ -383,6 +383,62 @@ class PersonRepositoryPostgresTest {
         }
 
     @Test
+    fun `hentÅrsakTilUtmelding returnerer årsak når den er satt`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
+            personRepository.lagreÅrsakTilUtmelding(
+                periodeId = periodeId,
+                ident = person.ident,
+                årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+            )
+
+            val årsak = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)
+
+            årsak shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+        }
+
+    @Test
+    fun `hentÅrsakTilUtmelding returnerer null når årsak ikke er satt`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
+
+            val årsak = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)
+
+            årsak shouldBe null
+        }
+
+    @Test
+    fun `hentÅrsakTilUtmelding returnerer null når periode ikke finnes`() =
+        withMigratedDb {
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                )
+            personRepository.lagrePerson(person)
+
+            val ukjentPeriodeId = UUIDv7.newUuid()
+
+            val årsak = personRepository.hentÅrsakTilUtmelding(ukjentPeriodeId, person.ident)
+
+            årsak shouldBe null
+        }
+
+    @Test
     fun `kan oppdatere persons ansvarlig system`() {
         withMigratedDb {
             val person = testPerson()

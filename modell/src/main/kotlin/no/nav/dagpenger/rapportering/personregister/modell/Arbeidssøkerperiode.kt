@@ -25,7 +25,7 @@ data class Arbeidssøkerperiode(
     }
 }
 
-fun Arbeidssøkerperiode.aktiv(): Boolean = avsluttet == null
+fun Arbeidssøkerperiode.avregistrert(): Boolean = avsluttet != null
 
 val List<Arbeidssøkerperiode>.gjeldende: Arbeidssøkerperiode?
-    get() = this.firstOrNull { it.aktiv() }
+    get() = this.firstOrNull { !it.avregistrert() }

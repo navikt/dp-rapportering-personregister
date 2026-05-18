@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.Unleash
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson.JacksonConverter
@@ -36,7 +37,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
@@ -55,6 +55,7 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
 open class ApiTestSetup {
+    private val rapidsConnection = TestRapid()
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val personObserver = mockk<PersonObserver>(relaxed = true)
@@ -137,7 +138,8 @@ open class ApiTestSetup {
                     actionTimer,
                 )
 
-            val arbeidssøkerService = ArbeidssøkerService(arbeidssøkerConnector, meldekortregisterConnector)
+            val arbeidssøkerService =
+                ArbeidssøkerService(rapidsConnection, personRepository, arbeidssøkerConnector, meldekortregisterConnector)
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
                     arbeidssøkerService,
