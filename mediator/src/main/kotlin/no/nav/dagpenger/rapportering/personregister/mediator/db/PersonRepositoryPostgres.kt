@@ -591,6 +591,31 @@ class PersonRepositoryPostgres(
         }
     }
 
+    override fun hentÅrsakTilUtmelding(
+        periodeId: UUID,
+        ident: String,
+    ): Arbeidssøkerperiode.ÅrsakTilUtmelding? =
+        sessionOf(dataSource).use { session ->
+            session.run(
+                queryOf(
+                    """
+                    SELECT aarsak_til_utmelding
+                    FROM arbeidssoker
+                    WHERE periode_id = :periode_id
+                    AND person_id = (SELECT id FROM person WHERE ident = :ident)
+                    """.trimIndent(),
+                    mapOf(
+                        "periode_id" to periodeId,
+                        "ident" to ident,
+                    ),
+                ).map { row ->
+                    row
+                        .stringOrNull("aarsak_til_utmelding")
+                        ?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) }
+                }.asSingle,
+            )
+        }
+
     private fun hentVersjon(
         ident: String,
         tx: TransactionalSession,
