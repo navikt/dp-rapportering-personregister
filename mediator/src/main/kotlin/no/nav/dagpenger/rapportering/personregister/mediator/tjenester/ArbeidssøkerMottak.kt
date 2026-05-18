@@ -3,12 +3,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import io.getunleash.Unleash
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
-import no.nav.dagpenger.rapportering.personregister.modell.aktiv
+import no.nav.dagpenger.rapportering.personregister.modell.avregistrert
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
 import java.time.LocalDateTime
@@ -32,9 +33,9 @@ class ArbeidssøkerMottak(
 
                 val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
 
-                if (!arbeidssøkerperiode.aktiv()) {
+                if (arbeidssøkerperiode.avregistrert()) {
                     if (unleash.isEnabled("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")) {
-                        arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode)
+                        runBlocking { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode) }
                     } else {
                         logger.info { "Publisering av avsluttet arbeidssøkerperiode er deaktivert" }
                     }
