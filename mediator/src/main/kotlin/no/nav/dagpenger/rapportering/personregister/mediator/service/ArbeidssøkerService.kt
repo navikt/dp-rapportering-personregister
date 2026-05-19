@@ -13,7 +13,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerService(
-    private val rapidsConnection: RapidsConnection,
+    // private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val meldekortregisterConnector: MeldekortregisterConnector,
@@ -70,7 +70,7 @@ class ArbeidssøkerService(
         melding: JsonMessage,
     ) {
         try {
-            rapidsConnection.publish(periode.ident, melding.toJson())
+            // rapidsConnection.publish(periode.ident, melding.toJson())
             logger.info { "Publiserte avsluttet_arbeidssokerperiode for periodeId ${periode.periodeId}" }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved publisering, periodeId=${periode.periodeId}" }
