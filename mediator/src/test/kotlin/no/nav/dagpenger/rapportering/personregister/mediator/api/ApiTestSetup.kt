@@ -139,7 +139,7 @@ open class ApiTestSetup {
                 )
 
             val arbeidssøkerService =
-                ArbeidssøkerService(rapidsConnection, personRepository, arbeidssøkerConnector, meldekortregisterConnector)
+                ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector)
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
                     arbeidssøkerService,
