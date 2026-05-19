@@ -35,7 +35,7 @@ class ArbeidssøkerServiceTest {
             personRepository = personRepository,
             arbeidssøkerConnector = arbeidssøkerConnector,
             meldekortregisterConnector = meldekortregisterConnector,
-            rapidsConnection = rapidsConnection,
+            rapidsConnection = { rapidsConnection },
         )
 
     private val ident = "12345678901"

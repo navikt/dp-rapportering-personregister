@@ -171,7 +171,7 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
         )
     private val arbeidssøkerService =
-        ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector)
+        ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, { getRapidsConnection() })
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
