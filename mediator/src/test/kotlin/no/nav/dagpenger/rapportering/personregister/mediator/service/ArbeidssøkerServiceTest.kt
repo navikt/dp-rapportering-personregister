@@ -20,13 +20,12 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
 
 class ArbeidssøkerServiceTest {
-    private val rapid = TestRapid()
+    private val rapidsConnection = TestRapid()
     private val personRepository = mockk<PersonRepository>(relaxed = true)
     private val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
@@ -36,6 +35,7 @@ class ArbeidssøkerServiceTest {
             personRepository = personRepository,
             arbeidssøkerConnector = arbeidssøkerConnector,
             meldekortregisterConnector = meldekortregisterConnector,
+            rapidsConnection = rapidsConnection,
         )
 
     private val ident = "12345678901"
@@ -62,7 +62,6 @@ class ArbeidssøkerServiceTest {
     }
 
     @Test
-    @Disabled
     fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem er DP`() {
         runBlocking {
             val tilOgMed = LocalDateTime.now().minusDays(2)
@@ -79,8 +78,8 @@ class ArbeidssøkerServiceTest {
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
-            rapid.inspektør.size shouldBe 1
-            with(rapid.inspektør.message(0)) {
+            rapidsConnection.inspektør.size shouldBe 1
+            with(rapidsConnection.inspektør.message(0)) {
                 this["@event_name"].asText() shouldBe "avsluttet_arbeidssokerperiode"
                 this["ident"].asText() shouldBe ident
                 this["periodeId"].asText() shouldBe periodeId.toString()
@@ -92,7 +91,6 @@ class ArbeidssøkerServiceTest {
     }
 
     @Test
-    @Disabled
     fun `defaulter årsak til UTMELDT_I_ARBEIDSSØKERREGISTERET når repository ikke har lagret årsak`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
@@ -102,13 +100,12 @@ class ArbeidssøkerServiceTest {
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
-            rapid.inspektør.message(0)["årsak"].asText() shouldBe
+            rapidsConnection.inspektør.message(0)["årsak"].asText() shouldBe
                 ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue
         }
     }
 
     @Test
-    @Disabled
     fun `utelater fastsattMeldedato når ingen innsendte meldekort finnes`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
@@ -118,7 +115,7 @@ class ArbeidssøkerServiceTest {
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
-            rapid.inspektør.message(0).has("fastsattMeldedato") shouldBe false
+            rapidsConnection.inspektør.message(0).has("fastsattMeldedato") shouldBe false
         }
     }
 
@@ -130,7 +127,7 @@ class ArbeidssøkerServiceTest {
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
-            rapid.inspektør.size shouldBe 0
+            rapidsConnection.inspektør.size shouldBe 0
         }
     }
 
@@ -141,7 +138,7 @@ class ArbeidssøkerServiceTest {
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
-            rapid.inspektør.size shouldBe 0
+            rapidsConnection.inspektør.size shouldBe 0
         }
     }
 
@@ -156,7 +153,7 @@ class ArbeidssøkerServiceTest {
                 arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(aktivPeriode)
             }
 
-            rapid.inspektør.size shouldBe 0
+            rapidsConnection.inspektør.size shouldBe 0
         }
     }
 
@@ -174,7 +171,7 @@ class ArbeidssøkerServiceTest {
                 arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
             }
 
-            rapid.inspektør.size shouldBe 0
+            rapidsConnection.inspektør.size shouldBe 0
         }
     }
 

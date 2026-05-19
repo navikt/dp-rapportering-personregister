@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
+import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.Companion.getRapidsConnection
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
@@ -13,10 +14,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 class ArbeidssøkerService(
-    // private val rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val meldekortregisterConnector: MeldekortregisterConnector,
+    private val rapidsConnection: RapidsConnection = getRapidsConnection(),
 ) {
     suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =
         arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
@@ -70,7 +71,7 @@ class ArbeidssøkerService(
         melding: JsonMessage,
     ) {
         try {
-            // rapidsConnection.publish(periode.ident, melding.toJson())
+            rapidsConnection.publish(periode.ident, melding.toJson())
             logger.info { "Publiserte avsluttet_arbeidssokerperiode for periodeId ${periode.periodeId}" }
         } catch (e: Exception) {
             logger.error(e) { "Feil ved publisering, periodeId=${periode.periodeId}" }
