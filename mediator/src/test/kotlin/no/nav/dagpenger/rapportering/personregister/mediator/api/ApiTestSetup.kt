@@ -143,7 +143,7 @@ open class ApiTestSetup {
                     personRepository,
                     arbeidssøkerConnector,
                     meldekortregisterConnector,
-                    rapidsConnection,
+                    { rapidsConnection },
                 )
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
