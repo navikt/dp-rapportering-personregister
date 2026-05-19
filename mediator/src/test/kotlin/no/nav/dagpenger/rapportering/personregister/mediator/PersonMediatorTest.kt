@@ -109,7 +109,7 @@ class PersonMediatorTest {
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
-        arbeidssøkerService = ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector)
+        arbeidssøkerService = ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, rapidsConnection)
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService,
