@@ -135,6 +135,50 @@ class ArbeidssøkerperiodeMetrikker(
             .register(meterRegistry)
 }
 
+class ArbeidssøkerBekreftelseMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val arbeidssøkerbekreftelseMottatt: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_mottatt_total")
+            .description("Antall mottatte meldinger om arbeidssøkerbekreftelse")
+            .register(meterRegistry)
+
+    val arbeidssøkerbekreftelseMottakFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_mottak_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om arbeidssøkerbekreftelse")
+            .register(meterRegistry)
+
+    val arbeidssøkerbekreftelseUtsendt: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_utsendt_total")
+            .description("Indikerer antall utsendte arbeidssøkerbekreftelser")
+            .register(meterRegistry)
+
+    val arbeidssøkerbekreftelseUtsendingFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_utsendt_feilet_total")
+            .description("Indikerer antall feilende utsendinger av arbeidssøkerbekreftelser")
+            .register(meterRegistry)
+}
+
+class ArbeidssøkerperiodeAvsluttetMetrikker(
+    meterRegistry: MeterRegistry,
+) {
+    val arbeidssøkerperiodeAvsluttetSendt: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerperiode_avsluttet_utsendt_total")
+            .description("Antall sendte meldinger om avsluttede arbeidssøkerperioder")
+            .register(meterRegistry)
+
+    val arbeidssøkerperiodeAvsluttetFeilet: Counter =
+        Counter
+            .builder("${NAMESPACE}_arbeidssokerperiode_avsluttet_feilet_total")
+            .description("Antall feilende utsendinger om avsluttede arbeidssøkerperioder")
+            .register(meterRegistry)
+}
+
 class SynkroniserPersonMetrikker(
     meterRegistry: MeterRegistry,
 ) {

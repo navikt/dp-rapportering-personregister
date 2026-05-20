@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -29,9 +30,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
-import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import org.apache.kafka.clients.producer.Producer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -55,7 +54,6 @@ class MeldestatusMediatorTest {
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
-    private val bekreftelseKafkaProdusent = mockk<Producer<Long, Bekreftelse>>(relaxed = true)
 
     private val unleash = FakeUnleash()
 
@@ -72,7 +70,14 @@ class MeldestatusMediatorTest {
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
-        arbeidssøkerService = ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, { rapidsConnection })
+        arbeidssøkerService =
+            ArbeidssøkerService(
+                personRepository,
+                arbeidssøkerConnector,
+                meldekortregisterConnector,
+                { rapidsConnection },
+                arbeidssøkerperiodeAvsluttetMetrikker,
+            )
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService,

@@ -1,11 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseMetrikker
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class ArbeidssøkerBekreftelseMottakTest {
@@ -13,7 +14,7 @@ class ArbeidssøkerBekreftelseMottakTest {
     private val arbeidssøkerBekreftelseService = mockk<ArbeidssøkerBekreftelseService>(relaxed = true)
 
     init {
-        ArbeidssøkerBekreftelseMottak(testRapid, arbeidssøkerBekreftelseService)
+        ArbeidssøkerBekreftelseMottak(testRapid, arbeidssøkerBekreftelseService, arbeidssøkerBekreftelseMetrikker)
     }
 
     @BeforeEach
@@ -22,7 +23,9 @@ class ArbeidssøkerBekreftelseMottakTest {
     }
 
     @Test
-    fun `mottar og sender riktig melding til service`() {
+    fun `mottar og sender riktig melding til service og øker metrikk`() {
+        val metrikkCount = arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottatt.count()
+
         testRapid.sendTestMessage(ArbeidssøkerBekreftelseTestData.event())
 
         coVerify(exactly = 1) {
@@ -36,6 +39,8 @@ class ArbeidssøkerBekreftelseMottakTest {
                 },
             )
         }
+
+        arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test

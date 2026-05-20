@@ -19,6 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -32,11 +33,9 @@ import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.merkPeriodeSomOvertatt
-import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
-import org.apache.kafka.clients.producer.Producer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -56,7 +55,6 @@ class MeldepliktMediatorTest {
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
-    private val bekreftelseKafkaProdusent = mockk<Producer<Long, Bekreftelse>>(relaxed = true)
 
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
@@ -86,7 +84,10 @@ class MeldepliktMediatorTest {
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
-        arbeidssøkerService = ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, { rapidsConnection })
+        arbeidssøkerService =
+            ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, {
+                rapidsConnection
+            }, arbeidssøkerperiodeAvsluttetMetrikker)
         arbeidssøkerMediator =
             ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
         meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)

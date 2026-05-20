@@ -41,6 +41,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
@@ -101,6 +103,8 @@ internal class ApplicationBuilder(
     private val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
+    private val arbeidssøkerBekreftelseMetrikker = ArbeidssøkerBekreftelseMetrikker(meterRegistry)
+    private val arbeidssøkerperiodeAvsluttetMetrikker = ArbeidssøkerperiodeAvsluttetMetrikker(meterRegistry)
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
@@ -171,7 +175,13 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
         )
     private val arbeidssøkerService =
-        ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, { getRapidsConnection() })
+        ArbeidssøkerService(
+            personRepository,
+            arbeidssøkerConnector,
+            meldekortregisterConnector,
+            { getRapidsConnection() },
+            arbeidssøkerperiodeAvsluttetMetrikker,
+        )
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
             arbeidssøkerService,
@@ -218,7 +228,8 @@ internal class ApplicationBuilder(
             actionTimer,
         )
 
-    private val arbeidssøkerMottak = ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
+    private val arbeidssøkerMottak =
+        ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
     private val bekreftelseKafkaProdusent =
         kafkaFactory.createProducer<Long, Bekreftelse>(
@@ -226,7 +237,8 @@ internal class ApplicationBuilder(
             keySerializer = LongSerializer::class,
             valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
         )
-    private val arbeidssøkerBekreftelseKafka = ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent)
+    private val arbeidssøkerBekreftelseKafka =
+        ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent, arbeidssøkerBekreftelseMetrikker)
 
     private val aktiverHendelserJob =
         AktiverHendelserJob(
@@ -317,6 +329,7 @@ internal class ApplicationBuilder(
                             arbeidssøkerBekreftelseKafka,
                             personRepository,
                         ),
+                        arbeidssøkerBekreftelseMetrikker,
                     )
                 }
 

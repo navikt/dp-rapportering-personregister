@@ -28,6 +28,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadServ
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -53,7 +54,6 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Bekreftelsesloesning
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
-import org.apache.kafka.clients.producer.Producer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
@@ -80,7 +80,6 @@ class PersonMediatorTest {
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
-    private val bekreftelseKafkaProdusent = mockk<Producer<Long, no.nav.paw.bekreftelse.melding.v1.Bekreftelse>>(relaxed = true)
 
     private val unleash = FakeUnleash()
 
@@ -109,7 +108,14 @@ class PersonMediatorTest {
             )
         arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
         overtaBekreftelseKafkaProdusent = MockKafkaProducer()
-        arbeidssøkerService = ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, { rapidsConnection })
+        arbeidssøkerService =
+            ArbeidssøkerService(
+                personRepository,
+                arbeidssøkerConnector,
+                meldekortregisterConnector,
+                { rapidsConnection },
+                arbeidssøkerperiodeAvsluttetMetrikker,
+            )
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
                 arbeidssøkerService,
@@ -146,7 +152,14 @@ class PersonMediatorTest {
             )
 
         unleash.enableAll()
-        every { pdlConnector.hentIdenter(ident) } returns listOf(Ident(ident, Ident.IdentGruppe.FOLKEREGISTERIDENT, false))
+        every { pdlConnector.hentIdenter(ident) } returns
+            listOf(
+                Ident(
+                    ident,
+                    Ident.IdentGruppe.FOLKEREGISTERIDENT,
+                    false,
+                ),
+            )
     }
 
     private val ident = "12345678910"
@@ -247,7 +260,15 @@ class PersonMediatorTest {
 
             with(person) {
                 status shouldBe DAGPENGERBRUKER
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Start(),
+                        ),
+                    )
+                }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
                 this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
@@ -278,7 +299,15 @@ class PersonMediatorTest {
 
             with(person) {
                 status shouldBe IKKE_DAGPENGERBRUKER
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Stopp(),
+                        ),
+                    )
+                }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 personObserver skalHaFrasagtAnsvaretFor this
                 this skalHaSendtStoppMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
@@ -354,7 +383,15 @@ class PersonMediatorTest {
 
             with(person) {
                 status shouldBe DAGPENGERBRUKER
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Start(),
+                        ),
+                    )
+                }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
                 personObserver skalHaSendtOvertakelseFor this
             }
@@ -366,7 +403,15 @@ class PersonMediatorTest {
             personMediator.behandle(annenMeldegruppeHendelse(startDato = nå.plusDays(1)))
             with(person2) {
                 status shouldBe IKKE_DAGPENGERBRUKER
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Stopp(),
+                        ),
+                    )
+                }
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
                 personObserver skalHaFrasagtAnsvaretFor this
             }
@@ -382,7 +427,15 @@ class PersonMediatorTest {
                 person.merkPeriodeSomOvertatt(periodeId)
             }
             personMediator.behandle(dagpengerMeldegruppeHendelse())
-            runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+            runBlocking {
+                arbeidssøkerMediator.behandle(
+                    PaaVegneAv(
+                        periodeId,
+                        Bekreftelsesloesning.DAGPENGER,
+                        Start(),
+                    ),
+                )
+            }
             with(person) {
                 status shouldBe DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe true
@@ -465,7 +518,15 @@ class PersonMediatorTest {
             arbeidssøker {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Start(),
+                        ),
+                    )
+                }
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
 
@@ -484,7 +545,15 @@ class PersonMediatorTest {
             arbeidssøker(overtattBekreftelse = false) {
                 meldepliktMediator.behandle(meldepliktHendelse())
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Start())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Start(),
+                        ),
+                    )
+                }
 
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 1
                 beslutningRepository.hentBeslutning(ident)?.apply {
@@ -492,7 +561,15 @@ class PersonMediatorTest {
                 }
 
                 personMediator.behandle(annenMeldegruppeHendelse())
-                runBlocking { arbeidssøkerMediator.behandle(PaaVegneAv(periodeId, Bekreftelsesloesning.DAGPENGER, Stopp())) }
+                runBlocking {
+                    arbeidssøkerMediator.behandle(
+                        PaaVegneAv(
+                            periodeId,
+                            Bekreftelsesloesning.DAGPENGER,
+                            Stopp(),
+                        ),
+                    )
+                }
                 beslutningRepository.hentBeslutninger(ident) shouldHaveSize 2
             }
         }
@@ -635,14 +712,30 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = startDato, sluttDato = sluttDato, "DAGP", harMeldtSeg = true)
+    ) = DagpengerMeldegruppeHendelse(
+        ident,
+        dato,
+        referanseId,
+        startDato = startDato,
+        sluttDato = sluttDato,
+        "DAGP",
+        harMeldtSeg = true,
+    )
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = startDato, sluttDato = sluttDato, "ARBS", harMeldtSeg = true)
+    ) = AnnenMeldegruppeHendelse(
+        ident,
+        dato,
+        referanseId,
+        startDato = startDato,
+        sluttDato = sluttDato,
+        "ARBS",
+        harMeldtSeg = true,
+    )
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,

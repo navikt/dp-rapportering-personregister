@@ -10,6 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 
 private val logger = KotlinLogging.logger {}
@@ -18,6 +19,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
+    private val arbeidssøkerBekreftelseMetrikker: ArbeidssøkerBekreftelseMetrikker,
 ) : River.PacketListener {
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
@@ -46,6 +48,8 @@ class ArbeidssøkerBekreftelseMottak(
         logger.info { "Mottok arbeidssøkerbekreftelse" }
         sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
 
+        arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottatt.increment()
+
         val arbeidssøkerBekreftelseMelding =
             try {
                 packet.tilArbeidssøkerBekreftelseMelding()
@@ -61,6 +65,7 @@ class ArbeidssøkerBekreftelseMottak(
             }
             runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
+            arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()
             logger.error(e) {
                 "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
