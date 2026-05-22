@@ -54,6 +54,28 @@ spec:
                     labels:
                         namespace: teamdagpenger
                         severity: warning
+                -   alert: Ikke mottatt arbeidssøkerbekreftelse-melding siste 6 timer fra dp-meldekortregister
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_arbeidssokerbekreftelse_mottatt_total[6h]))) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 6 timer siden dp-rapportering-personregister mottok forrige arbeidssøkerbekreftelse-melding fra dp-meldekortregister'
+                        consequence: 'dp-rapportering-personregister mottar kanskje ikke bekreftelser fra dp-meldekortregister'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i dp-meldekortregister, i Kafka (R&R) eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
+                -   alert: Ikke sendt arbeidssøkerbekreftelse-melding siste 6 timer til Arbeidssøkerregisteret
+                    expr: |
+                        round(sum(increase(dp_rapportering_personregister_arbeidssokerbekreftelse_utsendt_total[6h]))) <= 0
+                    for: 5m
+                    annotations:
+                        description: 'Det er over 6 timer siden dp-rapportering-personregister sendte forrige arbeidssøkerbekreftelse-melding til Arbeidssøkerregisteret'
+                        consequence: 'Arbeidssøkerregisteret mottar kanskje ikke bekreftelser fra dp-rapportering-personregister'
+                        action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt med Kafka-produsent, Arbeidssøkerregisteret eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
+                    labels:
+                        namespace: teamdagpenger
+                        severity: warning
         -   name: dp-rapportering-personregister-tidsstyrte-jobber
             rules:
                 -   alert: Tidsstyrt jobb har ikke sjekket om den skal starte
