@@ -29,7 +29,7 @@ class MeldekortregisterConnectorTest {
     )
 
     @Test
-    fun `returnerer fastsattMeldedato`() {
+    fun `hentSisteFastsattMeldedato returnerer fastsattMeldedato`() {
         val forventet = LocalDate.now().minusDays(1)
         val body = defaultObjectMapper.writeValueAsString(SisteFastsattMeldedatoResponse(forventet))
 
@@ -39,7 +39,7 @@ class MeldekortregisterConnectorTest {
     }
 
     @Test
-    fun `returnerer null når bruker ikke har fastsattMeldedato`() {
+    fun `hentSisteFastsattMeldedato returnerer null når bruker ikke har fastsattMeldedato`() {
         val body = defaultObjectMapper.writeValueAsString(SisteFastsattMeldedatoResponse(null))
 
         val result = runBlocking { connector(body, 200).hentSisteFastsattMeldedato(ident) }
@@ -48,14 +48,14 @@ class MeldekortregisterConnectorTest {
     }
 
     @Test
-    fun `returnerer null ved 404`() {
+    fun `hentSisteFastsattMeldedato returnerer null ved 404`() {
         val result = runBlocking { connector("{}", 404).hentSisteFastsattMeldedato(ident) }
 
         result shouldBe null
     }
 
     @Test
-    fun `kaster exception ved uventet statuskode`() {
+    fun `hentSisteFastsattMeldedato kaster exception ved uventet statuskode`() {
         shouldThrow<RuntimeException> {
             runBlocking { connector("{}", 500).hentSisteFastsattMeldedato(ident) }
         }
