@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
 import io.mockk.mockk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseFraDpMetrikker
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -14,7 +14,7 @@ class ArbeidssøkerBekreftelseMottakTest {
     private val arbeidssøkerBekreftelseService = mockk<ArbeidssøkerBekreftelseService>(relaxed = true)
 
     init {
-        ArbeidssøkerBekreftelseMottak(testRapid, arbeidssøkerBekreftelseService, arbeidssøkerBekreftelseMetrikker)
+        ArbeidssøkerBekreftelseMottak(testRapid, arbeidssøkerBekreftelseService, arbeidssøkerBekreftelseFraDpMetrikker)
     }
 
     @BeforeEach
@@ -24,7 +24,7 @@ class ArbeidssøkerBekreftelseMottakTest {
 
     @Test
     fun `mottar og sender riktig melding til service og øker metrikk`() {
-        val metrikkCount = arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottatt.count()
+        val metrikkCount = arbeidssøkerBekreftelseFraDpMetrikker.arbeidssøkerbekreftelseMottatt.count()
 
         testRapid.sendTestMessage(ArbeidssøkerBekreftelseTestData.event())
 
@@ -40,7 +40,7 @@ class ArbeidssøkerBekreftelseMottakTest {
             )
         }
 
-        arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseMottatt.count() shouldBe metrikkCount + 1
+        arbeidssøkerBekreftelseFraDpMetrikker.arbeidssøkerbekreftelseMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test

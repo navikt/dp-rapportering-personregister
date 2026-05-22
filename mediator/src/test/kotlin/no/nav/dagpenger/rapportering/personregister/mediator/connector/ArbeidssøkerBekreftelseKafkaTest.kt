@@ -15,7 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftel
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bruker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SendtInnAv
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Svar
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -32,7 +32,7 @@ class ArbeidssøkerBekreftelseKafkaTest {
     private val arbeidssøkerBekreftelseKafka: ArbeidssøkerBekreftelseKafka =
         ArbeidssøkerBekreftelseKafka(
             bekreftelseKafkaProdusent = producer,
-            arbeidssøkerBekreftelseMetrikker = arbeidssøkerBekreftelseMetrikker,
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker = arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker,
         )
 
     init {
@@ -50,7 +50,7 @@ class ArbeidssøkerBekreftelseKafkaTest {
 
     @Test
     fun `sender bekreftelse og inkrementerer metrikk`() {
-        val metrikk = arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendt.count()
+        val metrikk = arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendt.count()
 
         every { producer.sendDeferred(any<ProducerRecord<Long, ASRBekreftelse>>()) } returns
             CompletableDeferred(
@@ -62,13 +62,13 @@ class ArbeidssøkerBekreftelseKafkaTest {
 
             coVerify(exactly = 1) { producer.sendDeferred(any()) }
 
-            arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendt.count() shouldBe metrikk + 1
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendt.count() shouldBe metrikk + 1
         }
     }
 
     @Test
     fun `kaster exception når sending av bekreftelse feiler og inkrementerer metrikk`() {
-        val metrikk = arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.count()
+        val metrikk = arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.count()
 
         val deferred = CompletableDeferred<RecordMetadata>()
         deferred.completeExceptionally(RuntimeException("Kafka feil"))
@@ -79,7 +79,7 @@ class ArbeidssøkerBekreftelseKafkaTest {
             runBlocking { arbeidssøkerBekreftelseKafka.sendBekreftelse(1L, bekreftelseMelding()) }
         }
 
-        arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.count() shouldBe metrikk + 1
+        arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.count() shouldBe metrikk + 1
     }
 
     private fun bekreftelseMelding() =

@@ -41,7 +41,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
@@ -103,7 +104,9 @@ internal class ApplicationBuilder(
     private val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
-    private val arbeidssøkerBekreftelseMetrikker = ArbeidssøkerBekreftelseMetrikker(meterRegistry)
+    private val arbeidssøkerBekreftelseFraDpMetrikker = ArbeidssøkerBekreftelseFraDpMetrikker(meterRegistry)
+    private val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker =
+        ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)
     private val arbeidssøkerperiodeAvsluttetMetrikker = ArbeidssøkerperiodeAvsluttetMetrikker(meterRegistry)
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
@@ -238,7 +241,7 @@ internal class ApplicationBuilder(
             valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
         )
     private val arbeidssøkerBekreftelseKafka =
-        ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent, arbeidssøkerBekreftelseMetrikker)
+        ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker)
 
     private val aktiverHendelserJob =
         AktiverHendelserJob(
@@ -329,7 +332,7 @@ internal class ApplicationBuilder(
                             arbeidssøkerBekreftelseKafka,
                             personRepository,
                         ),
-                        arbeidssøkerBekreftelseMetrikker,
+                        arbeidssøkerBekreftelseFraDpMetrikker,
                     )
                 }
 

@@ -135,7 +135,7 @@ class ArbeidssøkerperiodeMetrikker(
             .register(meterRegistry)
 }
 
-class ArbeidssøkerBekreftelseMetrikker(
+class ArbeidssøkerBekreftelseFraDpMetrikker(
     meterRegistry: MeterRegistry,
 ) {
     val arbeidssøkerbekreftelseMottatt: Counter =
@@ -149,7 +149,11 @@ class ArbeidssøkerBekreftelseMetrikker(
             .builder("${NAMESPACE}_arbeidssokerbekreftelse_mottak_feilet_total")
             .description("Antall behandlinger som har feilet av mottatte meldinger om arbeidssøkerbekreftelse")
             .register(meterRegistry)
+}
 
+class ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(
+    meterRegistry: MeterRegistry,
+) {
     val arbeidssøkerbekreftelseUtsendt: Counter =
         Counter
             .builder("${NAMESPACE}_arbeidssokerbekreftelse_utsendt_total")

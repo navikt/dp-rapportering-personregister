@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.bekreftelseTopic
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import org.apache.kafka.clients.producer.Producer
@@ -15,7 +15,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class ArbeidssøkerBekreftelseKafka(
     private val bekreftelseKafkaProdusent: Producer<Long, Bekreftelse>,
-    private val arbeidssøkerBekreftelseMetrikker: ArbeidssøkerBekreftelseMetrikker,
+    private val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker: ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker,
 ) {
     suspend fun sendBekreftelse(
         recordKey: Long,
@@ -32,7 +32,7 @@ class ArbeidssøkerBekreftelseKafka(
         try {
             val metadata = bekreftelseKafkaProdusent.sendDeferred(record).await()
 
-            arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendt.increment()
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendt.increment()
             logger.info {
                 "Sendt arbeidssøkerbekreftelse for periode: $periodeId til Arbeidssøkerregisteret."
             }
@@ -43,7 +43,7 @@ class ArbeidssøkerBekreftelseKafka(
 
             return arbeidssøkerBekreftelseMelding.bekreftelse.id
         } catch (e: Exception) {
-            arbeidssøkerBekreftelseMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.increment()
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker.arbeidssøkerbekreftelseUtsendingFeilet.increment()
             logger.error(e) {
                 "Kunne ikke sende arbeidssøkerstatus for periode $periodeId til Arbeidssøkerregisteret."
             }
