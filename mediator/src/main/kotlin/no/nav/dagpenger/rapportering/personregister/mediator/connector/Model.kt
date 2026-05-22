@@ -1,8 +1,16 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import java.time.LocalDateTime
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+
+data class SisteFastsattMeldedatoRequest(
+    val ident: String,
+)
+
+data class SisteFastsattMeldedatoResponse(
+    val fastsattMeldedato: LocalDate?,
+)
 
 data class ArbeidssøkerperiodeRequestBody(
     val identitetsnummer: String,
@@ -40,8 +48,3 @@ data class TidspunktFraKildeResponse(
     val avviksType: String,
 )
 
-data class InnsendtMeldekortResponse(
-    val fraOgMed: LocalDateTime,
-    val tilOgMed: LocalDateTime,
-    val innsendtTidspunkt: LocalDateTime,
-)

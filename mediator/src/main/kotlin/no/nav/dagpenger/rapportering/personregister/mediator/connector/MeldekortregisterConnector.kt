@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import java.time.LocalDate
 
 class MeldekortregisterConnector(
     private val meldekortregisterUrl: String = Configuration.meldekortregisterUrl,
@@ -70,42 +71,33 @@ class MeldekortregisterConnector(
         }
     }
 
-    suspend fun hentSisteInnsendteMeldekort(): InnsendtMeldekortResponse? =
+    suspend fun hentSisteFastsattMeldedato(ident: String): LocalDate? =
         withContext(Dispatchers.IO) {
             val response =
-                sendGetRequest(
+                sendPostRequest(
                     httpClient = httpClient,
-                    endpointUrl = "$meldekortregisterUrl/meldekort",
+                    endpointUrl = "$meldekortregisterUrl/bruker/siste-fastsatt-meldedato",
                     token =
                         meldekortregisterTokenProvider.invoke()
                             ?: throw RuntimeException("Klarte ikke å hente token"),
-                    metrikkNavn = "meldekortregister_hentSisteInnsendteMeldekort",
-                    parameters = mapOf("status" to "Innsendt"),
-                    headers = mapOf(),
+                    metrikkNavn = "meldekortregister_hentSisteFastsattMeldedato",
+                    body = SisteFastsattMeldedatoRequest(ident),
+                    parameters = mapOf(),
                     actionTimer = actionTimer,
                 ).also {
-                    logger.info { "Kall til meldekortregister for å hente siste innsendte meldekort ga status ${it.status}" }
+                    logger.info { "Kall til meldekortregister for å hente siste fastsatt meldedato ga status ${it.status}" }
                 }
 
             when (response.status) {
-                HttpStatusCode.OK -> {
-                    response
-                        .body<List<InnsendtMeldekortResponse>>()
-                        .maxByOrNull { it.innsendtTidspunkt }
-                }
-
-                HttpStatusCode.NotFound -> {
-                    null
-                }
-
+                HttpStatusCode.OK -> response.body<SisteFastsattMeldedatoResponse>().fastsattMeldedato
+                HttpStatusCode.NotFound -> null
                 else -> {
                     val body = response.bodyAsText()
                     logger.error {
-                        "Uforventet status " +
-                            "${response.status.value} ved henting av siste innsendte meldekort i meldekortregister. Response body: $body"
+                        "Uforventet status ${response.status.value} ved henting av siste fastsatt meldedato i meldekortregister. Response body: $body"
                     }
                     throw RuntimeException(
-                        "Uforventet status ${response.status.value} ved henting av siste innsendte meldekort i meldekortregister",
+                        "Uforventet status ${response.status.value} ved henting av siste fastsatt meldedato i meldekortregister",
                     )
                 }
             }

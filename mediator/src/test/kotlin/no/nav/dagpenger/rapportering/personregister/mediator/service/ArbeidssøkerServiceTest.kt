@@ -10,7 +10,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.InnsendtMeldekortResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -21,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.Test
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 
@@ -64,17 +64,12 @@ class ArbeidssøkerServiceTest {
     @Test
     fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem er DP`() {
         runBlocking {
-            val tilOgMed = LocalDateTime.now().minusDays(2)
+            val forventetMeldedato = LocalDate.now().minusDays(1)
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
 
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
-            coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns
-                InnsendtMeldekortResponse(
-                    fraOgMed = LocalDateTime.now().minusWeeks(2),
-                    tilOgMed = tilOgMed,
-                    innsendtTidspunkt = LocalDateTime.now().minusDays(3),
-                )
+            coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns forventetMeldedato
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
@@ -85,7 +80,7 @@ class ArbeidssøkerServiceTest {
                 this["periodeId"].asText() shouldBe periodeId.toString()
                 this["avregistrertTidspunkt"].asLocalDateTime() shouldBe avregistrertTidspunkt
                 this["årsak"].asText() shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT.dbValue
-                this["fastsattMeldedato"].asLocalDateTime() shouldBe tilOgMed.plusDays(1)
+                LocalDate.parse(this["fastsattMeldedato"].asText()) shouldBe forventetMeldedato
             }
         }
     }
@@ -96,7 +91,7 @@ class ArbeidssøkerServiceTest {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
-            coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns null
+            coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns null
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
@@ -111,7 +106,7 @@ class ArbeidssøkerServiceTest {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
-            coEvery { meldekortregisterConnector.hentSisteInnsendteMeldekort() } returns null
+            coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns null
 
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
 
@@ -164,7 +159,7 @@ class ArbeidssøkerServiceTest {
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery {
-                meldekortregisterConnector.hentSisteInnsendteMeldekort()
+                meldekortregisterConnector.hentSisteFastsattMeldedato(ident)
             } throws RuntimeException("Meldekortregister utilgjengelig")
 
             shouldThrow<RuntimeException> {
