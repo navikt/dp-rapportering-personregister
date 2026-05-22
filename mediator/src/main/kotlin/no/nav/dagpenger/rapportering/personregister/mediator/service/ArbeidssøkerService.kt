@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -44,7 +45,7 @@ class ArbeidssøkerService(
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
                 val periodeId = periode.periodeId
-                val fastsattMeldedato = hentFastsattMeldedato(periodeId)
+                val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId)
                 val årsak = hentÅrsakEllerDefault(periodeId, periode.ident)
 
                 val melding =
@@ -86,15 +87,18 @@ class ArbeidssøkerService(
         personRepository.hentÅrsakTilUtmelding(periodeId, ident)
             ?: Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET
 
-    private suspend fun hentFastsattMeldedato(periodeId: UUID): LocalDateTime? {
-        val fastsatt = meldekortregisterConnector.hentSisteInnsendteMeldekort()?.tilOgMed?.plusDays(1)
+    private suspend fun hentFastsattMeldedato(
+        ident: String,
+        periodeId: UUID,
+    ): LocalDate? {
+        val fastsatt = meldekortregisterConnector.hentSisteFastsattMeldedato(ident)
         logger.info { "fastsattMeldedato=$fastsatt for periodeId=$periodeId" }
         return fastsatt
     }
 
     private fun avsluttetMelding(
         periode: Arbeidssøkerperiode,
-        fastsattMeldedato: LocalDateTime?,
+        fastsattMeldedato: LocalDate?,
         avregistrertTidspunkt: LocalDateTime,
         årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ): JsonMessage =
