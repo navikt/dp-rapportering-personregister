@@ -21,12 +21,12 @@ spec:
                     labels:
                         namespace: teamdagpenger
                         severity: warning
-                -   alert: Ikke mottatt innsending_ferdigstilt-melding siste 3 timer fra dp-mottak
+                -   alert: Ikke mottatt innsending_ferdigstilt-melding siste 6 timer fra dp-mottak
                     expr: |
-                        round(sum(increase(dp_rapportering_personregister_soknad_mottatt_total[3h]))) <= 0
+                        round(sum(increase(dp_rapportering_personregister_soknad_mottatt_total[6h]))) <= 0
                     for: 5m
                     annotations:
-                        description: 'Det er over 3 timer siden dp-rapportering-personregister mottok forrige innsending_ferdigstilt-melding fra dp-mottak'
+                        description: 'Det er over 6 timer siden dp-rapportering-personregister mottok forrige innsending_ferdigstilt-melding fra dp-mottak'
                         consequence: 'dp-rapportering-personregister mangler kanskje informasjon om nye søknader'
                         action: 'Sjekk om dette er en naturlig svingning eller om det er noe galt i dp-mottak, i Kafka (R&R) eller i dp-rapportering-personregister https://grafana.nav.cloud.nais.io/goto/cfd0v4wliq7swa?orgId=1'
                     labels:
