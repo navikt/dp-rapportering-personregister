@@ -239,6 +239,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe false
                 obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
+                obj["erRegistrertArbeidssøker"].asBoolean() shouldBe false
             }
 
             // Oppdaterer Status og AnsvarligSystem
@@ -270,6 +271,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 obj["status"].asText() shouldBe StatusResponse.DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe true
                 obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
+                obj["erRegistrertArbeidssøker"].asBoolean() shouldBe true
             }
         }
 }
