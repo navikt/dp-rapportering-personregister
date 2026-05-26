@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftel
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bruker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SendtInnAv
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Svar
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
@@ -26,7 +27,7 @@ import no.nav.paw.bekreftelse.melding.v1.Bekreftelse as ASRBekreftelse
 
 class ArbeidssøkerBekreftelseConnectorTest {
     private val producer = mockk<Producer<Long, ASRBekreftelse>>()
-    private val connector = ArbeidssøkerBekreftelseKafka(producer)
+    private val connector = ArbeidssøkerBekreftelseKafka(producer, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker)
 
     init {
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")

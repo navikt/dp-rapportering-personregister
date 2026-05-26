@@ -39,4 +39,3 @@ data class Bruker(
 enum class Bekreftelsesløsning {
     DAGPENGER,
 }
-

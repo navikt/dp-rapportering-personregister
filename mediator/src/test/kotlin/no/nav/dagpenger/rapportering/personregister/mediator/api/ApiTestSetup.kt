@@ -40,16 +40,15 @@ import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
@@ -144,6 +143,7 @@ open class ApiTestSetup {
                     arbeidssøkerConnector,
                     meldekortregisterConnector,
                     { rapidsConnection },
+                    arbeidssøkerperiodeAvsluttetMetrikker,
                 )
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
