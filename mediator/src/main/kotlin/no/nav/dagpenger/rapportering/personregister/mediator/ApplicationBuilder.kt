@@ -41,7 +41,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
@@ -104,7 +104,8 @@ internal class ApplicationBuilder(
     private val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
-    private val arbeidssøkerBekreftelseFraDpMetrikker = ArbeidssøkerBekreftelseFraDpMetrikker(meterRegistry)
+    private val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker =
+        ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker(meterRegistry)
     private val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker =
         ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)
     private val arbeidssøkerperiodeAvsluttetMetrikker = ArbeidssøkerperiodeAvsluttetMetrikker(meterRegistry)
@@ -332,7 +333,7 @@ internal class ApplicationBuilder(
                             arbeidssøkerBekreftelseKafka,
                             personRepository,
                         ),
-                        arbeidssøkerBekreftelseFraDpMetrikker,
+                        arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
                     )
                 }
 

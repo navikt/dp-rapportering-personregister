@@ -10,7 +10,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 
 private val logger = KotlinLogging.logger {}
@@ -19,7 +19,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
-    private val arbeidssøkerBekreftelseFraDpMetrikker: ArbeidssøkerBekreftelseFraDpMetrikker,
+    private val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker: ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
 ) : River.PacketListener {
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
@@ -48,7 +48,7 @@ class ArbeidssøkerBekreftelseMottak(
         logger.info { "Mottok arbeidssøkerbekreftelse" }
         sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
 
-        arbeidssøkerBekreftelseFraDpMetrikker.arbeidssøkerbekreftelseMottatt.increment()
+        arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottatt.increment()
 
         val arbeidssøkerBekreftelseMelding =
             try {
@@ -65,7 +65,7 @@ class ArbeidssøkerBekreftelseMottak(
             }
             runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
-            arbeidssøkerBekreftelseFraDpMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()
+            arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()
             logger.error(e) {
                 "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }

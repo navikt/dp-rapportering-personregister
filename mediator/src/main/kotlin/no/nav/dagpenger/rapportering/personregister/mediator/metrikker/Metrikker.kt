@@ -135,19 +135,19 @@ class ArbeidssøkerperiodeMetrikker(
             .register(meterRegistry)
 }
 
-class ArbeidssøkerBekreftelseFraDpMetrikker(
+class ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker(
     meterRegistry: MeterRegistry,
 ) {
     val arbeidssøkerbekreftelseMottatt: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerbekreftelse_mottatt_total")
-            .description("Antall mottatte meldinger om arbeidssøkerbekreftelse")
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_fra_meldekortregisteret_mottatt_total")
+            .description("Antall mottatte meldinger om arbeidssøkerbekreftelse fra dp-meldekortregister")
             .register(meterRegistry)
 
     val arbeidssøkerbekreftelseMottakFeilet: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerbekreftelse_mottak_feilet_total")
-            .description("Antall behandlinger som har feilet av mottatte meldinger om arbeidssøkerbekreftelse")
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_fra_meldekortregisteret_mottak_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om arbeidssøkerbekreftelse fra dp-meldekortregister")
             .register(meterRegistry)
 }
 
@@ -156,14 +156,14 @@ class ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(
 ) {
     val arbeidssøkerbekreftelseUtsendt: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerbekreftelse_utsendt_total")
-            .description("Indikerer antall utsendte arbeidssøkerbekreftelser")
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_til_arbeidssokerregisteret_utsendt_total")
+            .description("Indikerer antall utsendte arbeidssøkerbekreftelser til arbeidssøkerregisteret")
             .register(meterRegistry)
 
     val arbeidssøkerbekreftelseUtsendingFeilet: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerbekreftelse_utsendt_feilet_total")
-            .description("Indikerer antall feilende utsendinger av arbeidssøkerbekreftelser")
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_til_arbeidssokerregisteret_utsendt_feilet_total")
+            .description("Indikerer antall feilende utsendinger av arbeidssøkerbekreftelser til arbeidssøkerregisteret")
             .register(meterRegistry)
 }
 
