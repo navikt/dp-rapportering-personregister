@@ -39,10 +39,11 @@ class ArbeidssøkerService(
         }
 
     suspend fun publiserAvsluttetArbeidssøkerperiode(periode: Arbeidssøkerperiode) {
-        logger.info { "Publiserer avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}" }
-
         personRepository.hentPerson(periode.ident)?.let { person ->
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
+                logger.info {
+                    "Bruker har ansvarligSystem == DP, publiserer avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}"
+                }
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
                 val periodeId = periode.periodeId
                 val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId)
@@ -57,6 +58,10 @@ class ArbeidssøkerService(
                     )
 
                 publiser(periode, melding)
+            } else {
+                logger.info {
+                    "Bruker har ansvarligSystem != DP, publiserer ikke avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}"
+                }
             }
         }
     }
