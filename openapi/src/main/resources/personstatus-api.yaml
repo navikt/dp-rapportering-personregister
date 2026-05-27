@@ -122,6 +122,7 @@ components:
         - ident
         - status
         - overtattBekreftelse
+        - erRegistrertArbeidssøker
       type: object
       properties:
         ident:
@@ -132,6 +133,8 @@ components:
           type: boolean
         ansvarligSystem:
           $ref: '#/components/schemas/AnsvarligSystem'
+        erRegistrertArbeidssøker:
+          type: boolean
     Status:
       type: string
       enum:
