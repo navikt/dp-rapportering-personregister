@@ -227,4 +227,35 @@ class BehandlingsresultatMottakTest {
         verify { fremtidigHendelseMediator wasNot Called }
         behandlingsresultatMetrikker.behandlingsresultatMottatt.count() shouldBe metrikkCount
     }
+
+    @Test
+    fun `behandlingsresultat med regelverk som ikke er Ferietillegg skal behandles`() {
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "27298194126",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2020-01-01",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify { personMediator.behandle(any<VedtakHendelse>()) }
+    }
 }
