@@ -46,7 +46,7 @@ class BehandlingsresultatMottak(
                         "rettighetsperioder",
                     )
                 }
-                validate { it.forbidValue("behandlingId", "019a0650-20e8-7db4-a756-6ed0706ef26a") }
+                validate { it.forbidValue("regelverk", "Ferietillegg") }
             }.register(this)
     }
 
