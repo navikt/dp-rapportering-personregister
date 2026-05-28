@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -189,5 +190,41 @@ class BehandlingsresultatMottakTest {
 
         exception.message shouldBe "kaboom"
         behandlingsresultatMetrikker.behandlingsresultatFeilet.count() shouldBe metrikkCount + 1
+    }
+
+    @Test
+    fun `behandlingsresultat med regelverk Ferietillegg skal ikke behandles`() {
+        val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatMottatt.count()
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Ferietillegg",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "27298194126",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2020-01-01",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify { personRepository wasNot Called }
+        verify { personMediator wasNot Called }
+        verify { fremtidigHendelseMediator wasNot Called }
+        behandlingsresultatMetrikker.behandlingsresultatMottatt.count() shouldBe metrikkCount
     }
 }
