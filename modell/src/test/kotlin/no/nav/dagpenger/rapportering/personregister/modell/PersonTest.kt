@@ -96,6 +96,59 @@ class PersonTest {
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
+
+        @Test
+        fun `innvilget vedtak med tilOgMed tilbake i tid avslutter meldekortproduksjon for dagpengerbruker`() =
+            arbeidssøker(overtattBekreftelse = true) {
+                hendelser.add(søknadHendelse(referanseId = "456"))
+                behandle(vedtakHendelse(utfall = true))
+                status shouldBe DAGPENGERBRUKER
+
+                val innvilgetTilbakeITid = vedtakHendelse(dato = tidligere, utfall = true, sluttDato = tidligere)
+                behandle(innvilgetTilbakeITid)
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStoppMeldingFor Periode(innvilgetTilbakeITid.startDato, innvilgetTilbakeITid.sluttDato)
+                this skalIkkeHaSendtStartMeldingFor Periode(innvilgetTilbakeITid.startDato, innvilgetTilbakeITid.sluttDato)
+                status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
+            }
+
+        @Test
+        fun `innvilget vedtak med tilOgMed tilbake i tid starter ikke meldekortproduksjon for ny bruker`() =
+            arbeidssøker {
+                hendelser.add(søknadHendelse(referanseId = "456"))
+
+                val innvilgetTilbakeITid = vedtakHendelse(dato = tidligere, utfall = true, sluttDato = tidligere)
+                behandle(innvilgetTilbakeITid)
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStoppMeldingFor Periode(innvilgetTilbakeITid.startDato, innvilgetTilbakeITid.sluttDato)
+                this skalIkkeHaSendtStartMeldingFor Periode(innvilgetTilbakeITid.startDato, innvilgetTilbakeITid.sluttDato)
+                status shouldBe IKKE_DAGPENGERBRUKER
+            }
+
+        @Test
+        fun `innvilget vedtak med tilOgMed i dag starter meldekortproduksjon`() =
+            arbeidssøker {
+                val vedtakHendelse = vedtakHendelse(utfall = true, sluttDato = nå)
+                behandle(vedtakHendelse)
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
+                status shouldBe DAGPENGERBRUKER
+            }
+
+        @Test
+        fun `innvilget vedtak uten tilOgMed starter meldekortproduksjon`() =
+            arbeidssøker {
+                val vedtakHendelse = vedtakHendelse(utfall = true, sluttDato = null)
+                behandle(vedtakHendelse)
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, null)
+                status shouldBe DAGPENGERBRUKER
+            }
     }
 
     @Nested
@@ -265,7 +318,8 @@ class PersonTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, dato, referanseId, dato.plusDays(10), utfall)
+        sluttDato: LocalDateTime? = dato.plusDays(10),
+    ) = VedtakHendelse(ident, dato, dato, referanseId, sluttDato, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
@@ -303,6 +357,10 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
     verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
+}
+
+infix fun Person.skalIkkeHaSendtStartMeldingFor(periode: Periode) {
+    verify(exactly = 0) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
