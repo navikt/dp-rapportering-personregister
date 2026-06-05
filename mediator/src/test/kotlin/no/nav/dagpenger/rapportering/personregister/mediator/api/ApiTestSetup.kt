@@ -40,8 +40,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
@@ -143,7 +143,7 @@ open class ApiTestSetup {
                     arbeidssøkerConnector,
                     meldekortregisterConnector,
                     { rapidsConnection },
-                    arbeidssøkerperiodeAvsluttetMetrikker,
+                    avsluttetArbeidssøkerperiodeMetrikker,
                 )
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(

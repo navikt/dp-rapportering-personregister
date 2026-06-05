@@ -19,7 +19,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -87,7 +87,7 @@ class MeldepliktMediatorTest {
         arbeidssøkerService =
             ArbeidssøkerService(personRepository, arbeidssøkerConnector, meldekortregisterConnector, {
                 rapidsConnection
-            }, arbeidssøkerperiodeAvsluttetMetrikker)
+            }, avsluttetArbeidssøkerperiodeMetrikker)
         arbeidssøkerMediator =
             ArbeidssøkerMediator(arbeidssøkerService, personRepository, personService, listOf(personObserver), actionTimer)
         meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
