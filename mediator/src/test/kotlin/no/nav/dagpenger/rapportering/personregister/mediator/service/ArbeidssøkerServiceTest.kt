@@ -12,7 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -37,7 +37,7 @@ class ArbeidssøkerServiceTest {
             arbeidssøkerConnector = arbeidssøkerConnector,
             meldekortregisterConnector = meldekortregisterConnector,
             rapidsConnection = { rapidsConnection },
-            arbeidssøkerperiodeAvsluttetMetrikker,
+            avsluttetArbeidssøkerperiodeMetrikker,
         )
 
     private val ident = "12345678901"
@@ -65,7 +65,7 @@ class ArbeidssøkerServiceTest {
 
     @Test
     fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem er DP og inkrementer metrikk`() {
-        val metrikk = arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetSendt.count()
+        val metrikk = avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count()
         runBlocking {
             val forventetMeldedato = LocalDate.now().minusDays(1)
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
@@ -85,7 +85,7 @@ class ArbeidssøkerServiceTest {
                 this["årsak"].asText() shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT.dbValue
                 LocalDate.parse(this["fastsattMeldedato"].asText()) shouldBe forventetMeldedato
             }
-            arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetSendt.count() shouldBe metrikk + 1
+            avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count() shouldBe metrikk + 1
         }
     }
 
@@ -132,8 +132,8 @@ class ArbeidssøkerServiceTest {
 
     @Test
     fun `publiserer ikke melding når person ikke finnes og inkrementerer ikke metrikker`() {
-        val metrikkFeilet = arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetFeilet.count()
-        val metrikkSendt = arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetSendt.count()
+        val metrikkFeilet = avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeUtsendingFeilet.count()
+        val metrikkSendt = avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count()
 
         runBlocking {
             every { personRepository.hentPerson(ident) } returns null
@@ -142,8 +142,8 @@ class ArbeidssøkerServiceTest {
 
             rapidsConnection.inspektør.size shouldBe 0
 
-            arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetFeilet.count() shouldBe metrikkFeilet
-            arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetSendt.count() shouldBe metrikkSendt
+            avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeUtsendingFeilet.count() shouldBe metrikkFeilet
+            avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count() shouldBe metrikkSendt
         }
     }
 

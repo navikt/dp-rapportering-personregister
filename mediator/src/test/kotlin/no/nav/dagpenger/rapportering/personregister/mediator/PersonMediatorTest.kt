@@ -28,7 +28,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadServ
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBeslutning
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Handling
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeAvsluttetMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -114,7 +114,7 @@ class PersonMediatorTest {
                 arbeidssøkerConnector,
                 meldekortregisterConnector,
                 { rapidsConnection },
-                arbeidssøkerperiodeAvsluttetMetrikker,
+                avsluttetArbeidssøkerperiodeMetrikker,
             )
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
