@@ -43,8 +43,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.Re
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
@@ -108,7 +108,7 @@ internal class ApplicationBuilder(
         ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker(meterRegistry)
     private val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker =
         ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)
-    private val arbeidssøkerperiodeAvsluttetMetrikker = ArbeidssøkerperiodeAvsluttetMetrikker(meterRegistry)
+    private val avsluttetArbeidssøkerperiodeMetrikker = AvsluttetArbeidssøkerperiodeMetrikker(meterRegistry)
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
@@ -184,7 +184,7 @@ internal class ApplicationBuilder(
             arbeidssøkerConnector,
             meldekortregisterConnector,
             { getRapidsConnection() },
-            arbeidssøkerperiodeAvsluttetMetrikker,
+            avsluttetArbeidssøkerperiodeMetrikker,
         )
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(

@@ -7,8 +7,8 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
@@ -30,7 +30,7 @@ object MetrikkerTestUtil {
     val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
     val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker = ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker(meterRegistry)
     val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker = ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)
-    val arbeidssøkerperiodeAvsluttetMetrikker = ArbeidssøkerperiodeAvsluttetMetrikker(meterRegistry)
+    val avsluttetArbeidssøkerperiodeMetrikker = AvsluttetArbeidssøkerperiodeMetrikker(meterRegistry)
     val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
     val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     val actionTimer = ActionTimer(meterRegistry)

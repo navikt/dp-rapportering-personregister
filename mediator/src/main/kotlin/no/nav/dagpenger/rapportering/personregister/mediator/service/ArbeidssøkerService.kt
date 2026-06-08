@@ -7,7 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeAvsluttetMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import java.time.LocalDate
@@ -19,7 +19,7 @@ class ArbeidssøkerService(
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val meldekortregisterConnector: MeldekortregisterConnector,
     private val rapidsConnection: () -> RapidsConnection,
-    private val arbeidssøkerperiodeAvsluttetMetrikker: ArbeidssøkerperiodeAvsluttetMetrikker,
+    private val avsluttetArbeidssøkerperiodeMetrikker: AvsluttetArbeidssøkerperiodeMetrikker,
 ) {
     suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =
         arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
@@ -79,10 +79,10 @@ class ArbeidssøkerService(
     ) {
         try {
             rapidsConnection().publish(periode.ident, melding.toJson())
-            arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetSendt.increment()
+            avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.increment()
             logger.info { "Publiserte avsluttet_arbeidssokerperiode for periodeId ${periode.periodeId}" }
         } catch (e: Exception) {
-            arbeidssøkerperiodeAvsluttetMetrikker.arbeidssøkerperiodeAvsluttetFeilet.increment()
+            avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeUtsendingFeilet.increment()
             logger.error(e) { "Feil ved publisering, periodeId=${periode.periodeId}" }
             sikkerLogg.error(e) { "Feil ved publisering, periodeId=${periode.periodeId}, ident=${periode.ident}" }
             throw e

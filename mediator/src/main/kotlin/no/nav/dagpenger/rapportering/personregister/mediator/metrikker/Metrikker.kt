@@ -162,24 +162,24 @@ class ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(
 
     val arbeidssøkerbekreftelseUtsendingFeilet: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerbekreftelse_til_arbeidssokerregisteret_utsendt_feilet_total")
+            .builder("${NAMESPACE}_arbeidssokerbekreftelse_til_arbeidssokerregisteret_utsending_feilet_total")
             .description("Indikerer antall feilende utsendinger av arbeidssøkerbekreftelser til arbeidssøkerregisteret")
             .register(meterRegistry)
 }
 
-class ArbeidssøkerperiodeAvsluttetMetrikker(
+class AvsluttetArbeidssøkerperiodeMetrikker(
     meterRegistry: MeterRegistry,
 ) {
-    val arbeidssøkerperiodeAvsluttetSendt: Counter =
+    val avsluttetArbeidssøkerperiodeSendt: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerperiode_avsluttet_utsendt_total")
-            .description("Antall sendte meldinger om avsluttede arbeidssøkerperioder")
+            .builder("${NAMESPACE}_avsluttet_arbeidssokerperiode_utsendt_total")
+            .description("Antall sendte meldinger om avsluttet arbeidssøkerperiode")
             .register(meterRegistry)
 
-    val arbeidssøkerperiodeAvsluttetFeilet: Counter =
+    val avsluttetArbeidssøkerperiodeUtsendingFeilet: Counter =
         Counter
-            .builder("${NAMESPACE}_arbeidssokerperiode_avsluttet_feilet_total")
-            .description("Antall feilende utsendinger om avsluttede arbeidssøkerperioder")
+            .builder("${NAMESPACE}_avsluttet_arbeidssokerperiode_utsending_feilet_total")
+            .description("Antall feilende utsendinger om avsluttet arbeidssøkerperiode")
             .register(meterRegistry)
 }
 
