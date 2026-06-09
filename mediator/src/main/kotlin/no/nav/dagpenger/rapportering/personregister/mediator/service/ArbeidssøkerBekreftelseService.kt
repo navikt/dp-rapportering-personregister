@@ -23,7 +23,7 @@ class ArbeidssøkerBekreftelseService(
 
         try {
             logger.info {
-                "Behandle arbeidssøkerbekreftelse for periode: $periodeId"
+                "Behandler arbeidssøkerbekreftelse for periode: $periodeId"
             }
             sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $arbeidssøkerBekreftelseMelding" }
             val recordKey = arbeidssøkerConnector.hentRecordKey(ident).key
@@ -33,10 +33,12 @@ class ArbeidssøkerBekreftelseService(
                     ?: throw IllegalStateException("Kunne ikke hente person for å sjekke ansvar for arbeidssøkerbekreftelse")
 
             if (!person.overtattBekreftelse) {
-                val infoMelding =
+                logger.info {
                     "Dagpenger har ikke ansvar for arbeidssøkerbekreftelse for personen. Bekreftelsesmelding for periode $periodeId behandles ikke."
-                logger.info { infoMelding }
-                sikkerlogg.info { infoMelding }
+                }
+                sikkerlogg.info {
+                    "Dagpenger har ikke ansvar for arbeidssøkerbekreftelse for person med ident=$ident. Bekreftelsesmelding for periode $periodeId behandles ikke."
+                }
                 return
             }
 

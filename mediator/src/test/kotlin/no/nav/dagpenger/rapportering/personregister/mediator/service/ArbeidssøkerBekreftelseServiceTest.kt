@@ -110,11 +110,9 @@ class ArbeidssøkerBekreftelseServiceTest {
     @Test
     fun `kaster exception når hentRecordKey feiler`() =
         runBlocking {
-            val melding = bekreftelseMelding()
-
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } throws RuntimeException("Feil")
 
-            shouldThrow<RuntimeException> { service.behandle(melding) }
+            shouldThrow<RuntimeException> { service.behandle(bekreftelseMelding()) }
 
             coVerify(exactly = 0) { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) }
         }
@@ -122,12 +120,10 @@ class ArbeidssøkerBekreftelseServiceTest {
     @Test
     fun `kaster exception når person ikke finnes`() =
         runBlocking {
-            val melding = bekreftelseMelding()
-
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
             coEvery { personRepositoryMock.hentPerson(ident) } returns null
 
-            shouldThrow<IllegalStateException> { service.behandle(melding) }
+            shouldThrow<IllegalStateException> { service.behandle(bekreftelseMelding()) }
 
             coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
             coVerify(exactly = 0) { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) }
@@ -136,8 +132,6 @@ class ArbeidssøkerBekreftelseServiceTest {
     @Test
     fun `kaster exception når sendBekreftelse feiler`(): Unit =
         runBlocking {
-            val melding = bekreftelseMelding()
-
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
             coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = true)
             coEvery {
@@ -147,7 +141,7 @@ class ArbeidssøkerBekreftelseServiceTest {
                 )
             } throws RuntimeException("Kafka feil")
 
-            shouldThrow<RuntimeException> { service.behandle(melding) }
+            shouldThrow<RuntimeException> { service.behandle(bekreftelseMelding()) }
         }
 
     private fun person(dpHarAnsvarForArbeidssøkerbekreftelse: Boolean): Person =
