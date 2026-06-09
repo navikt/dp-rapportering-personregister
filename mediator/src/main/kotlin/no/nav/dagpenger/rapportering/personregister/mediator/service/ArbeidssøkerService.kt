@@ -49,7 +49,7 @@ class ArbeidssøkerService(
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
                 val periodeId = periode.periodeId
                 val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId)
-                val årsak = hentÅrsakEllerDefault(periodeId, periode.ident)
+                val årsak = hentEllerOpprettÅrsak(periodeId, periode.ident)
 
                 val melding =
                     avsluttetMelding(
@@ -89,12 +89,20 @@ class ArbeidssøkerService(
         }
     }
 
-    private fun hentÅrsakEllerDefault(
+    private fun hentEllerOpprettÅrsak(
         periodeId: UUID,
         ident: String,
     ): Arbeidssøkerperiode.ÅrsakTilUtmelding =
         personRepository.hentÅrsakTilUtmelding(periodeId, ident)
-            ?: Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET
+            ?: Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.also { årsak ->
+                logger.info {
+                    "Ingen årsak til utmelding lagret for periodeId=$periodeId. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
+                }
+                sikkerLogg.info {
+                    "Ingen årsak til utmelding lagret for periodeId=$periodeId, ident=$ident. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
+                }
+                personRepository.lagreÅrsakTilUtmelding(periodeId, ident, årsak)
+            }
 
     private suspend fun hentFastsattMeldedato(
         ident: String,
