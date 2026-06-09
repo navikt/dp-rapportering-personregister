@@ -75,7 +75,7 @@ class ArbeidssøkerBekreftelseService(
                 Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved lagring av årsak til utmelding for ident $ident og periodeId $periodeId" }
+            logger.error(e) { "Feil ved lagring av årsak til utmelding for periodeId $periodeId" }
             sikkerlogg.error(e) { "Feil ved lagring av årsak til utmelding for ident $ident og periodeId $periodeId" }
             throw e
         }
