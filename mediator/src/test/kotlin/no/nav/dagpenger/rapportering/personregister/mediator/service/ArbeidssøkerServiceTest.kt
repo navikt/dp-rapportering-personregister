@@ -7,6 +7,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -85,12 +86,13 @@ class ArbeidssøkerServiceTest {
                 this["årsak"].asText() shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT.dbValue
                 LocalDate.parse(this["fastsattMeldedato"].asText()) shouldBe forventetMeldedato
             }
+            verify(exactly = 0) { personRepository.lagreÅrsakTilUtmelding(any(), any(), any()) }
             avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count() shouldBe metrikk + 1
         }
     }
 
     @Test
-    fun `defaulter årsak til UTMELDT_I_ARBEIDSSØKERREGISTERET når repository ikke har lagret årsak`() {
+    fun `lagrer årsak som UTMELDT_I_ARBEIDSSØKERREGISTERET når årsak til utmelding ikke finnes fra før av`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
@@ -101,6 +103,13 @@ class ArbeidssøkerServiceTest {
 
             rapidsConnection.inspektør.message(0)["årsak"].asText() shouldBe
                 ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue
+            verify(exactly = 1) {
+                personRepository.lagreÅrsakTilUtmelding(
+                    periodeId,
+                    ident,
+                    ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                )
+            }
         }
     }
 
