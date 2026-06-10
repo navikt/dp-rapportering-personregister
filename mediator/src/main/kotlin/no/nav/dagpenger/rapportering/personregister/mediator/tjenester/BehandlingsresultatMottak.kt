@@ -6,6 +6,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageContext
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
+import io.getunleash.Unleash
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
@@ -25,6 +26,7 @@ class BehandlingsresultatMottak(
     private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
     private val behandlingsresultatMetrikker: BehandlingsresultatMetrikker,
+    private val unleash: Unleash,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -79,13 +81,19 @@ class BehandlingsresultatMottak(
                     .toList()
                     .sortedBy { it["fraOgMed"].asLocalDate() }
                     .forEachIndexed { index, rettighetsperiode ->
-                        //  Vi sletter ikke eksisterende VedtahHendelser. Da kan vi ha hele vedtak-historikken i databasen
-                        //  Vi prosesserer alle rettighetsperioder fordi det er mulig at DP er innvilget før søknadsdato
-                        //  Vi oppretter VedtakHendelse for hver rettighetsperiode slik at personregister kan vurdere ny status iht til den siste versjonen av sannheten fra PJ
-                        //  Dvs. det spiller ingen rolle om det er en ny rettighetsperiode eller en endring. Bare opprett nye VedtakHendelser for alle perioder og la personregister bestemme
+                        val opprinnelse = rettighetsperiode["opprinnelse"].asText()
                         val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
                         val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
                         val harRett = rettighetsperiode["harRett"].asBoolean()
+
+                        // Vi sletter ikke eksisterende VedtakHendelser. Da kan vi ha hele vedtak-historikken i databasen
+                        // Men vi prosesserer ikke Arvet-rettighetsperioder (disse er allerede behandlet)
+                        // Vi oppretter VedtakHendelse for hver ikke Arvet-rettighetsperiode slik at personregister kan vurdere ny status iht den siste versjonen av sannheten fra PJ
+                        if (unleash.isEnabled("dp-rapportering-personregister-ikke-prosesser-arvet") && opprinnelse == "Arvet") {
+                            logger.info { "Rettighetsperioder fra $fraOgMed til $tilOgMed er Arvet" }
+                            sikkerlogg.info { "Rettighetsperioder fra $fraOgMed til $tilOgMed er Arvet" }
+                            return@forEachIndexed
+                        }
 
                         val vedtakHendelse =
                             VedtakHendelse(
