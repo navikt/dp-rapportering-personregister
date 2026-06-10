@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
@@ -17,28 +18,45 @@ class ArbeidssøkerBekreftelseService(
     private val personRepository: PersonRepository,
 ) {
     suspend fun behandle(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding) {
+        val periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId
+        val ident = arbeidssøkerBekreftelseMelding.ident
+
         try {
             logger.info {
-                "Behandle arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+                "Behandler arbeidssøkerbekreftelse for periode: $periodeId"
             }
             sikkerlogg.info { "Behandle arbeidssøkerbekreftelse: $arbeidssøkerBekreftelseMelding" }
-            val recordKey = arbeidssøkerConnector.hentRecordKey(arbeidssøkerBekreftelseMelding.ident).key
+            val recordKey = arbeidssøkerConnector.hentRecordKey(ident).key
+
+            val person =
+                personRepository.hentPerson(ident)
+                    ?: throw IllegalStateException("Kunne ikke hente person for å sjekke ansvar for arbeidssøkerbekreftelse")
+
+            if (!person.overtattBekreftelse) {
+                logger.info {
+                    "Dagpenger har ikke ansvar for arbeidssøkerbekreftelse for personen. Bekreftelsesmelding for periode $periodeId behandles ikke."
+                }
+                sikkerlogg.info {
+                    "Dagpenger har ikke ansvar for arbeidssøkerbekreftelse for person med ident=$ident. Bekreftelsesmelding for periode $periodeId behandles ikke."
+                }
+                return
+            }
 
             val vilFortsetteSomArbeidssøker =
                 arbeidssøkerBekreftelseMelding.bekreftelse.svar.vilFortsetteSomArbeidssøker
             if (!vilFortsetteSomArbeidssøker) {
                 lagreÅrsakTilUtmelding(
-                    periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId,
-                    ident = arbeidssøkerBekreftelseMelding.ident,
+                    periodeId = periodeId,
+                    ident = ident,
                 )
             }
             arbeidssøkerBekreftelseKafka.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
         } catch (e: Exception) {
             logger.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: $periodeId"
             }
             sikkerlogg.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: $arbeidssøkerBekreftelseMelding"
+                "Feil ved behandling av arbeidssøkerbekreftelse for periode: $periodeId. Melding: $arbeidssøkerBekreftelseMelding"
             }
             throw e
         }
