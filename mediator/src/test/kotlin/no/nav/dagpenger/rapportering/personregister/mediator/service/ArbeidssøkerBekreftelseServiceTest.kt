@@ -16,6 +16,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bruker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SendtInnAv
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Svar
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET
+import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.util.UUID
@@ -36,43 +38,57 @@ class ArbeidssøkerBekreftelseServiceTest {
     private val recordKey = 42L
 
     @Test
-    fun `lagrer årsak dersom vilFortsetteSomArbeidssøker er false`() =
+    fun `lagrer årsak og sender bekreftelse dersom vilFortsetteSomArbeidssøker er false og dp har ansvar for arbeidssøkerbekreftelse`() =
         runBlocking {
             val melding = bekreftelseMelding(vilFortsetteSomArbeidssøker = false)
 
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = true)
             coEvery { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) } returns melding.bekreftelse.id
             coEvery { personRepositoryMock.lagreÅrsakTilUtmelding(any(), any(), any()) } returns Unit
 
             service.behandle(melding)
 
-            coVerify {
+            coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
+            coVerify(exactly = 1) {
                 personRepositoryMock.lagreÅrsakTilUtmelding(
                     melding.bekreftelse.periodeId,
                     ident = ident,
                     Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
                 )
             }
+            coVerify(exactly = 1) { arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, melding) }
         }
 
     @Test
-    fun `lagrer ikke årsak dersom vilFortsetteSomArbeidssøker er true`() =
+    fun `sender ikke bekreftelse og lagrer ikke årsak dersom dp ikke har ansvar for arbeidssøkerbekreftelse`() =
+        runBlocking {
+            val melding = bekreftelseMelding(vilFortsetteSomArbeidssøker = false)
+
+            coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = false)
+
+            service.behandle(melding)
+
+            coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
+            coVerify(exactly = 0) { personRepositoryMock.lagreÅrsakTilUtmelding(any(), any(), any()) }
+            coVerify(exactly = 0) { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) }
+        }
+
+    @Test
+    fun `sender bekreftelse uten å lagre årsak dersom vilFortsetteSomArbeidssøker er true og dp har ansvar`() =
         runBlocking {
             val melding = bekreftelseMelding(vilFortsetteSomArbeidssøker = true)
 
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = true)
             coEvery { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) } returns melding.bekreftelse.id
-            coEvery { personRepositoryMock.lagreÅrsakTilUtmelding(any(), any(), any()) } returns Unit
 
             service.behandle(melding)
 
-            coVerify(exactly = 0) {
-                personRepositoryMock.lagreÅrsakTilUtmelding(
-                    any(),
-                    any(),
-                    any(),
-                )
-            }
+            coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
+            coVerify(exactly = 0) { personRepositoryMock.lagreÅrsakTilUtmelding(any(), any(), any()) }
+            coVerify(exactly = 1) { arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, melding) }
         }
 
     @Test
@@ -81,32 +97,43 @@ class ArbeidssøkerBekreftelseServiceTest {
             val melding = bekreftelseMelding()
 
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = true)
             coEvery { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) } returns melding.bekreftelse.id
 
             service.behandle(melding)
 
-            coVerify { arbeidssøkerConnector.hentRecordKey(ident) }
-            coVerify { arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, melding) }
+            coVerify(exactly = 1) { arbeidssøkerConnector.hentRecordKey(ident) }
+            coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
+            coVerify(exactly = 1) { arbeidssøkerBekreftelseConnector.sendBekreftelse(recordKey, melding) }
         }
 
     @Test
     fun `kaster exception når hentRecordKey feiler`() =
         runBlocking {
-            val melding = bekreftelseMelding()
-
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } throws RuntimeException("Feil")
 
-            shouldThrow<RuntimeException> { service.behandle(melding) }
+            shouldThrow<RuntimeException> { service.behandle(bekreftelseMelding()) }
 
+            coVerify(exactly = 0) { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) }
+        }
+
+    @Test
+    fun `kaster exception når person ikke finnes`() =
+        runBlocking {
+            coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns null
+
+            shouldThrow<IllegalStateException> { service.behandle(bekreftelseMelding()) }
+
+            coVerify(exactly = 1) { personRepositoryMock.hentPerson(ident) }
             coVerify(exactly = 0) { arbeidssøkerBekreftelseConnector.sendBekreftelse(any(), any()) }
         }
 
     @Test
     fun `kaster exception når sendBekreftelse feiler`(): Unit =
         runBlocking {
-            val melding = bekreftelseMelding()
-
             coEvery { arbeidssøkerConnector.hentRecordKey(ident) } returns RecordKeyResponse(recordKey)
+            coEvery { personRepositoryMock.hentPerson(ident) } returns person(dpHarAnsvarForArbeidssøkerbekreftelse = true)
             coEvery {
                 arbeidssøkerBekreftelseConnector.sendBekreftelse(
                     any(),
@@ -114,8 +141,24 @@ class ArbeidssøkerBekreftelseServiceTest {
                 )
             } throws RuntimeException("Kafka feil")
 
-            shouldThrow<RuntimeException> { service.behandle(melding) }
+            shouldThrow<RuntimeException> { service.behandle(bekreftelseMelding()) }
         }
+
+    private fun person(dpHarAnsvarForArbeidssøkerbekreftelse: Boolean): Person =
+        Person(
+            ident,
+            arbeidssøkerperioder =
+                mutableListOf(
+                    Arbeidssøkerperiode(
+                        periodeId = UUID.randomUUID(),
+                        ident = ident,
+                        startet = LocalDateTime.now().minusDays(2),
+                        avsluttet = null,
+                        overtattBekreftelse = dpHarAnsvarForArbeidssøkerbekreftelse,
+                        årsakTilUtmelding = UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    ),
+                ),
+        )
 
     private fun bekreftelseMelding(vilFortsetteSomArbeidssøker: Boolean = true) =
         ArbeidssøkerBekreftelseMelding(
