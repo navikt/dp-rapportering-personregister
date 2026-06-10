@@ -76,6 +76,11 @@ class PersonObserverKafka(
         fristBrutt: Boolean,
     ) {
         try {
+            logger.info { "Starter frasigelse for person. Arbeidssøkerperioder: ${person.arbeidssøkerperioder.size}" }
+            sikkerlogg.info {
+                "Starter frasigelse for person ${person.ident}. Arbeidssøkerperioder: ${person.arbeidssøkerperioder}"
+            }
+
             person
                 .arbeidssøkerperioder
                 .gjeldende

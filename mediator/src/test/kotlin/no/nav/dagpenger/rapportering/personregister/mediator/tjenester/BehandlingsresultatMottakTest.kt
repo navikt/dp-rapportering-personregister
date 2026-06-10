@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.getunleash.FakeUnleash
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.Called
@@ -24,6 +25,7 @@ class BehandlingsresultatMottakTest {
     private val personRepository = mockk<PersonRepository>(relaxed = true)
     private val personMediator = mockk<PersonMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
+    private val unleash = FakeUnleash()
 
     init {
         BehandlingsresultatMottak(
@@ -32,6 +34,7 @@ class BehandlingsresultatMottakTest {
             personMediator,
             fremtidigHendelseMediator,
             behandlingsresultatMetrikker,
+            unleash,
         )
     }
 
@@ -257,5 +260,102 @@ class BehandlingsresultatMottakTest {
         )
 
         verify { personMediator.behandle(any<VedtakHendelse>()) }
+    }
+
+    @Test
+    fun `behandlingsresultat med opprinnelse Arvet skal behandles hvis feature er disabled`() {
+        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val ident = "27298194126"
+
+        unleash.disable("dp-rapportering-personregister-ikke-prosesser-arvet")
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2020-01-01",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                },
+                {
+                  "fraOgMed": "2020-02-02",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify(exactly = 2) {
+            personMediator.behandle(any<VedtakHendelse>())
+        }
+    }
+
+    @Test
+    fun `behandlingsresultat med opprinnelse Arvet skal ikke behandles hvis feature er enabled`() {
+        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val ident = "27298194126"
+
+        unleash.enable("dp-rapportering-personregister-ikke-prosesser-arvet")
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "2020-01-01",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                },
+                {
+                  "fraOgMed": "2020-02-02",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify(exactly = 1) {
+            personMediator.behandle(any<VedtakHendelse>())
+        }
+        verify(exactly = 1) {
+            personMediator.behandle(
+                withArg<VedtakHendelse> { vedtakHendelse ->
+                    vedtakHendelse.ident shouldBe ident
+                    vedtakHendelse.startDato shouldBe LocalDate.of(2020, 2, 2).atStartOfDay()
+                    vedtakHendelse.sluttDato shouldBe null
+                    vedtakHendelse.referanseId shouldBe "$behandlingId-1"
+                    vedtakHendelse.utfall shouldBe true
+                },
+            )
+        }
     }
 }
