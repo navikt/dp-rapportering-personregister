@@ -45,8 +45,10 @@ class ArbeidssøkerBekreftelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok arbeidssøkerbekreftelse" }
-        sikkerlogg.info { "Mottok arbeidssøkerbekreftelse ${packet.toJson()}" }
+        val ident = packet["ident"].asText()
+
+        logger.info { "Mottok arbeidssøkerbekreftelse-melding" }
+        sikkerlogg.info { "Mottok arbeidssøkerbekreftelse-melding, ident=$ident: ${packet.toJson()}" }
 
         arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottatt.increment()
 
@@ -54,23 +56,23 @@ class ArbeidssøkerBekreftelseMottak(
             try {
                 packet.tilArbeidssøkerBekreftelseMelding()
             } catch (e: Exception) {
-                logger.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding" }
-                sikkerlogg.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse melding: ${packet.toJson()}" }
+                logger.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse-melding" }
+                sikkerlogg.error(e) { "Feil ved parsing av arbeidssøkerbekreftelse-melding, ident=$ident: ${packet.toJson()}" }
                 throw e
             }
 
         try {
             logger.info {
-                "Mottok arbeidssøkerbekreftelse melding for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+                "Mottok arbeidssøkerbekreftelse melding for periode=${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
             runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
             arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()
             logger.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
+                "Feil ved behandling av arbeidssøkerbekreftelse-melding for periode=${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
             sikkerlogg.error(e) {
-                "Feil ved behandling av arbeidssøkerbekreftelse for periode: ${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}. Melding: $arbeidssøkerBekreftelseMelding"
+                "Feil ved behandling av arbeidssøkerbekreftelse-melding for periode=${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}, ident=$ident: $arbeidssøkerBekreftelseMelding"
             }
             throw e
         }

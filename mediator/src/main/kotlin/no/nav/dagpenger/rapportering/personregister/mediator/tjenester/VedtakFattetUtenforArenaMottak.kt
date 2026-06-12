@@ -32,20 +32,21 @@ class VedtakFattetUtenforArenaMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok hendelse om at vedtak har blitt fattet utenfor Arena" }
-        sikkerLogg.info { "Mottok hendelse om at vedtak har blitt fattet utenfor Arena: ${packet.toJson()}" }
+        val ident = packet["ident"].asText()
+
+        logger.info { "Mottok vedtak_fattet_utenfor_arena-melding" }
+        sikkerLogg.info { "Mottok vedtak_fattet_utenfor_arena-melding, ident=$ident: ${packet.toJson()}" }
         vedtakMetrikker.vedtakFattetUtenforArenaMottatt.increment()
 
         try {
             val behandlingId = packet["behandlingId"].asText()
             val søknadId = packet["søknadId"].asText()
-            val ident = packet["ident"].asText()
             val sakId = packet["sakId"].asText()
 
             behandlingRepository.lagreData(behandlingId, søknadId, ident, sakId)
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av hendelse om at vedtak har blitt fattet utenfor Arena" }
-            sikkerLogg.error(e) { "Feil ved behandling av hendelse om at vedtak har blitt fattet utenfor Arena: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av vedtak_fattet_utenfor_arena-melding" }
+            sikkerLogg.error(e) { "Feil ved behandling av vedtak_fattet_utenfor_arena-melding, ident=$ident: ${packet.toJson()}" }
             vedtakMetrikker.vedtakFattetUtenforArenaFeilet.increment()
             throw e
         }

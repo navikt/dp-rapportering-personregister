@@ -27,8 +27,12 @@ class ArbeidssøkerMottak(
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach { record ->
             val periode = record.value()
+
             try {
-                logger.info { "Behandler periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id}" }
+                logger.info { "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}" }
+                sikkerLogg.info {
+                    "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}, ident=${periode.identitetsnummer}"
+                }
                 arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
 
                 val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
@@ -45,9 +49,11 @@ class ArbeidssøkerMottak(
             } catch (e: Exception) {
                 logger.error(
                     e,
-                ) { "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id}" }
+                ) {
+                    "Feil ved behandling av periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}"
+                }
                 sikkerLogg.error(e) {
-                    "Feil ved behandling av periode fra Arbeidssøkerregisteret med key ${record.key()}, periodeId ${periode.id} for ident ${periode.identitetsnummer}"
+                    "Feil ved behandling av periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}, ident=${periode.identitetsnummer}"
                 }
                 arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeFeilet.increment()
                 throw e

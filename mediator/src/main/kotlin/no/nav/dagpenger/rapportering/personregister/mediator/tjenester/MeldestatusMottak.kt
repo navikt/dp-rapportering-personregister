@@ -42,16 +42,18 @@ class MeldestatusMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok ny meldestatus fra Arena" }
-        sikkerlogg.info { "Mottok ny meldestatus fra Arena: ${packet.toJson()}" }
+        val arenaPersonId = packet["after"]["PERSON_ID"].asText()
+
+        logger.info { "Mottok ny meldestatus-melding fra Arena" }
+        sikkerlogg.info { "Mottok ny meldestatus-melding fra Arena, arenaPersonId=$arenaPersonId: ${packet.toJson()}" }
         meldestatusMetrikker.meldestatusMottatt.increment()
 
         try {
             val hendelse = packet.tilHendelse()
             meldestatusMediator.behandle(hendelse)
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av meldestatus fra Arena" }
-            sikkerlogg.error(e) { "Feil ved behandling av meldestatus fra Arena: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av meldestatus-melding fra Arena" }
+            sikkerlogg.error(e) { "Feil ved behandling av meldestatus-melding fra Arena, arenaPersonId=$arenaPersonId: ${packet.toJson()}" }
             meldestatusMetrikker.meldestatusFeilet.increment()
             throw e
         }

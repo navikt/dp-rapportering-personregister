@@ -47,12 +47,13 @@ class MeldesyklusErPassertMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok meldesyklus_er_passert melding" }
-        sikkerlogg.info { "Mottok meldesyklus_er_passert melding: ${packet.toJson()}" }
+        val ident = packet["ident"].asText()
+
+        logger.info { "Mottok meldesyklus_er_passert-melding" }
+        sikkerlogg.info { "Mottok meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
         meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.increment()
 
         try {
-            val ident = packet["ident"].asText()
             val referanseId = packet["referanseId"].asText()
 
             ident.validerIdent()
@@ -67,8 +68,8 @@ class MeldesyklusErPassertMottak(
 
             personMediator.behandle(meldesyklusErPassertHendelse)
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert" }
-            sikkerlogg.error(e) { "Feil ved behandling av hendelse om at meldesyklus er passert: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding" }
+            sikkerlogg.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
             meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.increment()
             throw e
         }
