@@ -4,7 +4,9 @@ metadata:
   name: dp-rapportering-personregister
   namespace: teamdagpenger
   labels:
-    team: teamdagpenger
+    team: "teamdagpenger"
+    app: "dp-rapportering-personregister"
+    subteam: "ramp"
 spec:
   image: "{{ image }}"
   port: 8080
