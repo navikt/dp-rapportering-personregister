@@ -33,7 +33,7 @@ jobs:
         id-token: write
     environment: ${{ inputs.environment }}-gcp
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
       - uses: nais/deploy/actions/deploy@v2
         env:
           CLUSTER: ${{ inputs.environment }}-gcp
