@@ -63,6 +63,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "$søknadId",
@@ -126,6 +127,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "$søknadId",
@@ -170,6 +172,7 @@ class BehandlingsresultatMottakTest {
                     {
                       "@event_name": "behandlingsresultat",
                       "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+                      "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
                       "behandletHendelse": {
                         "datatype": "string",
                         "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -204,6 +207,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -238,6 +242,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -274,6 +279,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -317,6 +323,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",

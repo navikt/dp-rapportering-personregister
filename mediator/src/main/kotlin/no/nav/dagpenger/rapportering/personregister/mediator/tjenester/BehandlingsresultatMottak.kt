@@ -20,6 +20,11 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHende
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+
+private const val OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE = "Arvet"
+
 class BehandlingsresultatMottak(
     rapidsConnection: RapidsConnection,
     private val personRepository: PersonRepository,
@@ -28,11 +33,6 @@ class BehandlingsresultatMottak(
     private val behandlingsresultatMetrikker: BehandlingsresultatMetrikker,
     private val unleash: Unleash,
 ) : River.PacketListener {
-    companion object {
-        private val logger = KotlinLogging.logger {}
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
-    }
-
     init {
         River(rapidsConnection)
             .apply {
@@ -43,6 +43,7 @@ class BehandlingsresultatMottak(
                     it.requireKey(
                         "behandletHendelse",
                         "behandlingId",
+                        "behandlingskjedeId",
                         "ident",
                         "automatisk",
                         "rettighetsperioder",
@@ -60,21 +61,24 @@ class BehandlingsresultatMottak(
         meterRegistry: MeterRegistry,
     ) {
         val behandlingId = packet["behandlingId"].asText()
+        val behandlingskjedeId = packet["behandlingskjedeId"].asText()
+        val ident = packet["ident"].asText()
 
         withLoggingContext(
             "behandlingId" to behandlingId,
+            "behandlingskjedeId" to behandlingskjedeId,
             "event_name" to "behandlingsresultat",
         ) {
-            logger.info { "Mottok behandlingsresultat melding" }
-            sikkerlogg.info { "Mottok behandlingsresultat melding: ${packet.toJson()}" }
+            logger.info { "Mottok behandlingsresultat-melding" }
+            sikkerlogg.info {
+                "Mottok behandlingsresultat-melding, ident=$ident (melding logges på neste linje. Er den ikke der? Se https://nav-it.slack.com/docs/T5LNAMWNA/F0B9N9UB7S5)"
+            }
+            sikkerlogg.info { "Mottok behandlingsresultat-melding, ident=$ident: ${packet.toJson()}" }
             behandlingsresultatMetrikker.behandlingsresultatMottatt.increment()
 
             try {
-                val ident = packet["ident"].asText()
-
                 ident.validerIdent()
 
-                // Slett fremtidige VedtakHendelser
                 personRepository.slettFremtidigeVedtakHendelser(ident)
 
                 packet["rettighetsperioder"]
@@ -86,12 +90,15 @@ class BehandlingsresultatMottak(
                         val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
                         val harRett = rettighetsperiode["harRett"].asBoolean()
 
-                        // Vi sletter ikke eksisterende VedtakHendelser. Da kan vi ha hele vedtak-historikken i databasen
-                        // Men vi prosesserer ikke Arvet-rettighetsperioder (disse er allerede behandlet)
-                        // Vi oppretter VedtakHendelse for hver ikke Arvet-rettighetsperiode slik at personregister kan vurdere ny status iht den siste versjonen av sannheten fra PJ
-                        if (unleash.isEnabled("dp-rapportering-personregister-ikke-prosesser-arvet") && opprinnelse == "Arvet") {
-                            logger.info { "Rettighetsperioder fra $fraOgMed til $tilOgMed er Arvet" }
-                            sikkerlogg.info { "Rettighetsperioder fra $fraOgMed til $tilOgMed er Arvet" }
+                        if (unleash.isEnabled("dp-rapportering-personregister-ikke-prosesser-arvet") &&
+                            rettighetsperiodenErBehandletTidligere(opprinnelse)
+                        ) {
+                            logger.info {
+                                "Rettighetsperioder med fraOgMed=$fraOgMed og tilOgMed=$tilOgMed er behandlet tidligere (opprinnelse=$OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE)"
+                            }
+                            sikkerlogg.info {
+                                "Rettighetsperioder med fraOgMed=$fraOgMed og tilOgMed=$tilOgMed for ident=$ident er behandlet tidligere (opprinnelse=$OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE)"
+                            }
                             return@forEachIndexed
                         }
 
@@ -113,10 +120,13 @@ class BehandlingsresultatMottak(
                     }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved behandling av behandlingsresultat" }
-                sikkerlogg.error(e) { "Feil ved behandling av behandlingsresultat: ${packet.toJson()}" }
+                sikkerlogg.error(e) { "Feil ved behandling av behandlingsresultat, ident=$ident. Selve meldingen er logget tidligere." }
                 behandlingsresultatMetrikker.behandlingsresultatFeilet.increment()
                 throw e
             }
         }
     }
+
+    private fun rettighetsperiodenErBehandletTidligere(opprinnelse: String): Boolean =
+        opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE
 }

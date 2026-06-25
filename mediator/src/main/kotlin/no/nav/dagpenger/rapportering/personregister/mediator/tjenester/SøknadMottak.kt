@@ -14,14 +14,17 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import java.time.LocalDateTime
 
+private const val QUIZ_SØKNAD_ID_NØKKEL = "søknadsData.søknad_uuid"
+private const val LEGACY_SØKNAD_ID_NØKKEL = "søknadsData.brukerBehandlingId"
+
+private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
+
 class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val søknadService: SøknadService,
     private val søknadMetrikker: SøknadMetrikker,
 ) : River.PacketListener {
-    private val quizSøknadIdNøkkel = "søknadsData.søknad_uuid"
-    private val legacySøknadIdNøkkel = "søknadsData.brukerBehandlingId"
-
     init {
         River(rapidsConnection)
             .apply {
@@ -33,8 +36,8 @@ class SøknadMottak(
                     )
                     it.requireAny("type", listOf("NySøknad", "Gjenopptak"))
                     it.interestedIn(
-                        quizSøknadIdNøkkel,
-                        legacySøknadIdNøkkel,
+                        QUIZ_SØKNAD_ID_NØKKEL,
+                        LEGACY_SØKNAD_ID_NØKKEL,
                     )
                 }
             }.register(this)
@@ -47,23 +50,20 @@ class SøknadMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok innsending_ferdigstilt melding" }
-        sikkerlogg.info { "Mottok innsending_ferdigstilt melding: ${packet.toJson()}" }
+        val ident = packet["fødselsnummer"].asText()
+
+        logger.info { "Mottok innsending_ferdigstilt-melding" }
+        sikkerlogg.info { "Mottok innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
         søknadMetrikker.søknaderMottatt.increment()
 
         try {
             søknadService.behandle(packet.tilHendelse())
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av søknad" }
-            sikkerlogg.error(e) { "Feil ved behandling av søknad: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding" }
+            sikkerlogg.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
             søknadMetrikker.søknaderFeilet.increment()
             throw e
         }
-    }
-
-    companion object {
-        private val logger = KotlinLogging.logger {}
-        private val sikkerlogg = KotlinLogging.logger("tjenestekall")
     }
 
     private fun JsonMessage.tilHendelse(): SøknadHendelse {
@@ -71,10 +71,10 @@ class SøknadMottak(
         val dato = LocalDateTime.parse(this["datoRegistrert"].asText())
 
         val referanseId =
-            if (!this[quizSøknadIdNøkkel].isMissingNode) {
-                this[quizSøknadIdNøkkel].asText()
-            } else if (!this[legacySøknadIdNøkkel].isMissingNode) {
-                this[legacySøknadIdNøkkel].asText()
+            if (!this[QUIZ_SØKNAD_ID_NØKKEL].isMissingNode) {
+                this[QUIZ_SØKNAD_ID_NØKKEL].asText()
+            } else if (!this[LEGACY_SØKNAD_ID_NØKKEL].isMissingNode) {
+                this[LEGACY_SØKNAD_ID_NØKKEL].asText()
             } else {
                 UUIDv7.newUuid().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
             }
