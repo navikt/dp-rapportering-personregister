@@ -19,6 +19,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHende
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDate.now
+import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 
 class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
@@ -49,9 +51,9 @@ class BehandlingsresultatMottakTest {
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
-        val fraOgMed1 = LocalDate.now().minusDays(10)
-        val tilOgMed1 = LocalDate.now()
-        val fraOgMed2 = LocalDate.now().plusDays(1)
+        val fraOgMed1 = now().minusDays(10)
+        val tilOgMed1 = now()
+        val fraOgMed2 = now().plusDays(1)
 
         val hendelser = mutableListOf<VedtakHendelse>()
         val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
@@ -95,7 +97,7 @@ class BehandlingsresultatMottakTest {
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident
-        hendelser[0].dato.toLocalDate() shouldBe LocalDate.now()
+        hendelser[0].dato.toLocalDate() shouldBe now()
         hendelser[0].startDato shouldBe fraOgMed1.atStartOfDay()
         hendelser[0].sluttDato shouldBe tilOgMed1.atStartOfDay()
         hendelser[0].referanseId shouldBe "$behandlingId-0"
@@ -103,7 +105,7 @@ class BehandlingsresultatMottakTest {
 
         fremtidigeHendelser.size shouldBe 1
         fremtidigeHendelser[0].ident shouldBe ident
-        fremtidigeHendelser[0].dato.toLocalDate() shouldBe LocalDate.now()
+        fremtidigeHendelser[0].dato.toLocalDate() shouldBe now()
         fremtidigeHendelser[0].startDato shouldBe fraOgMed2.atStartOfDay()
         fremtidigeHendelser[0].sluttDato shouldBe null
         fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-1"
@@ -117,7 +119,7 @@ class BehandlingsresultatMottakTest {
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
-        val fraOgMed = LocalDate.now().minusDays(10)
+        val fraOgMed = now().minusDays(10)
 
         val hendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser), 1) } just runs
@@ -153,7 +155,7 @@ class BehandlingsresultatMottakTest {
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident
-        hendelser[0].dato.toLocalDate() shouldBe LocalDate.now()
+        hendelser[0].dato.toLocalDate() shouldBe now()
         hendelser[0].startDato shouldBe fraOgMed.atStartOfDay()
         hendelser[0].sluttDato shouldBe null
         hendelser[0].referanseId shouldBe "$behandlingId-0"
@@ -312,7 +314,7 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `behandlingsresultat med opprinnelse Arvet skal ikke behandles hvis feature er enabled`() {
+    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fortid og nåtid skal ikke behandles hvis feature er enabled`() {
         val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
         val ident = "27298194126"
 
@@ -336,7 +338,68 @@ class BehandlingsresultatMottakTest {
               "opplysninger": [ ],
               "rettighetsperioder": [
                 {
-                  "fraOgMed": "2020-01-01",
+                  "fraOgMed": "${now().minusDays(14).format(ISO_LOCAL_DATE)}",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                },
+                {
+                  "fraOgMed": "${now().format(ISO_LOCAL_DATE)}",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                },
+                {
+                  "fraOgMed": "2020-02-02",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify {
+            fremtidigHendelseMediator wasNot Called
+        }
+        verify(exactly = 1) {
+            personMediator.behandle(
+                withArg<VedtakHendelse> { vedtakHendelse ->
+                    vedtakHendelse.ident shouldBe ident
+                    vedtakHendelse.startDato shouldBe LocalDate.of(2020, 2, 2).atStartOfDay()
+                    vedtakHendelse.sluttDato shouldBe null
+                    vedtakHendelse.referanseId shouldBe "$behandlingId-0"
+                    vedtakHendelse.utfall shouldBe true
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fremtid skal behandles hvis feature er enabled`() {
+        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val ident = "27298194126"
+        val fremtidigFraOgMed = now().plusDays(10)
+
+        unleash.enable("dp-rapportering-personregister-ikke-prosesser-arvet")
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "${fremtidigFraOgMed.format(ISO_LOCAL_DATE)}",
                   "harRett": true,
                   "opprinnelse": "Arvet"
                 },
@@ -354,10 +417,13 @@ class BehandlingsresultatMottakTest {
             personMediator.behandle(any<VedtakHendelse>())
         }
         verify(exactly = 1) {
-            personMediator.behandle(
+            fremtidigHendelseMediator.behandle(any())
+        }
+        verify(exactly = 1) {
+            fremtidigHendelseMediator.behandle(
                 withArg<VedtakHendelse> { vedtakHendelse ->
                     vedtakHendelse.ident shouldBe ident
-                    vedtakHendelse.startDato shouldBe LocalDate.of(2020, 2, 2).atStartOfDay()
+                    vedtakHendelse.startDato shouldBe fremtidigFraOgMed.atStartOfDay()
                     vedtakHendelse.sluttDato shouldBe null
                     vedtakHendelse.referanseId shouldBe "$behandlingId-1"
                     vedtakHendelse.utfall shouldBe true
