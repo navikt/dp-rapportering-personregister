@@ -314,7 +314,7 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fortid og nåtid skal ikke behandles hvis feature er enabled`() {
+    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fortid skal ikke behandles hvis feature er enabled`() {
         val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
         val ident = "27298194126"
 
@@ -342,6 +342,56 @@ class BehandlingsresultatMottakTest {
                   "harRett": true,
                   "opprinnelse": "Arvet"
                 },
+                {
+                  "fraOgMed": "2020-02-02",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        verify {
+            fremtidigHendelseMediator wasNot Called
+        }
+        verify(exactly = 1) {
+            personMediator.behandle(
+                withArg<VedtakHendelse> { vedtakHendelse ->
+                    vedtakHendelse.ident shouldBe ident
+                    vedtakHendelse.startDato shouldBe LocalDate.of(2020, 2, 2).atStartOfDay()
+                    vedtakHendelse.sluttDato shouldBe null
+                    vedtakHendelse.referanseId shouldBe "$behandlingId-0"
+                    vedtakHendelse.utfall shouldBe true
+                },
+            )
+        }
+    }
+
+    @Test
+    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i nåtid skal ikke behandles hvis feature er enabled`() {
+        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val ident = "27298194126"
+
+        unleash.enable("dp-rapportering-personregister-ikke-prosesser-arvet")
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
                 {
                   "fraOgMed": "${now().format(ISO_LOCAL_DATE)}",
                   "harRett": true,
