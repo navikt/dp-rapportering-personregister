@@ -130,6 +130,7 @@ class BehandlingsresultatMottak(
     private fun rettighetsperiodenErBehandletTidligere(
         opprinnelse: String,
         fraOgMed: LocalDate,
-    ): Boolean =
-        opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE && fraOgMed.isBefore(LocalDate.now().plusDays(1))
+    ): Boolean = opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE && fraOgMed.erFortidEllerIdag()
+
+    private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
 }
