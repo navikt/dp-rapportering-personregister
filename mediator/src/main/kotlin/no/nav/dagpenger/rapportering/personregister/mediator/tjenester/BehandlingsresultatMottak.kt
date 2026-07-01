@@ -91,7 +91,7 @@ class BehandlingsresultatMottak(
                         val harRett = rettighetsperiode["harRett"].asBoolean()
 
                         if (unleash.isEnabled("dp-rapportering-personregister-ikke-prosesser-arvet") &&
-                            rettighetsperiodenErBehandletTidligere(opprinnelse)
+                            rettighetsperiodenErBehandletTidligere(opprinnelse, fraOgMed)
                         ) {
                             logger.info {
                                 "Rettighetsperioder med fraOgMed=$fraOgMed og tilOgMed=$tilOgMed er behandlet tidligere (opprinnelse=$OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE)"
@@ -127,6 +127,10 @@ class BehandlingsresultatMottak(
         }
     }
 
-    private fun rettighetsperiodenErBehandletTidligere(opprinnelse: String): Boolean =
-        opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE
+    private fun rettighetsperiodenErBehandletTidligere(
+        opprinnelse: String,
+        fraOgMed: LocalDate,
+    ): Boolean = opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE && fraOgMed.erFortidEllerIdag()
+
+    private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
 }
