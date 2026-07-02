@@ -64,7 +64,7 @@ data class VedtakHendelse(
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
-        if (utfall && !erFremtidigStoppHendelse()) {
+        if (utfall && !erFremtidigStansHendelse()) {
             val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
@@ -105,7 +105,7 @@ data class VedtakHendelse(
             }
     }
 
-    fun erFremtidigStoppHendelse() = referanseId.endsWith(FREMTIDIG_STANS_SUFFIKS)
+    fun erFremtidigStansHendelse() = referanseId.endsWith(FREMTIDIG_STANS_SUFFIKS)
 }
 
 private fun LocalDateTime?.erFortid() = this?.toLocalDate()?.isBefore(LocalDate.now()) ?: false

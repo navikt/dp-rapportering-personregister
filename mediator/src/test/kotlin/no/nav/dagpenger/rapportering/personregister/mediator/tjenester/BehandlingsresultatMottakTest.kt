@@ -567,7 +567,7 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `rettighetsperiode med både fraOgMed og tilOgMed i nåtid skal behandles nå og ikke gi fremtidige hendelser`() {
+    fun `rettighetsperiode med både fraOgMed og tilOgMed i nåtid skal behandles nå og gi fremtidige hendelse`() {
         val behandlingId = UUIDv7.newUuid().toString()
         val ident = "12345678903"
         val fraOgMed = now()
@@ -603,7 +603,8 @@ class BehandlingsresultatMottakTest {
         hendelser.size shouldBe 1
         hendelser[0].referanseId shouldBe "$behandlingId-0"
 
-        fremtidigeHendelser.size shouldBe 0
+        fremtidigeHendelser.size shouldBe 1
+        fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-0-FREMTIDIG-STANS"
     }
 
     @Test

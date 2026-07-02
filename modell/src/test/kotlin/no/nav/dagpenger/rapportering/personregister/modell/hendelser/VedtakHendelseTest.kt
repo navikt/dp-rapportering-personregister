@@ -5,10 +5,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.dagpenger.rapportering.personregister.modell.Status
-import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
-import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
-import no.nav.dagpenger.rapportering.personregister.modell.helper.arbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelseMedFremtidigStans
@@ -210,16 +206,16 @@ class VedtakHendelseTest {
     }
 
     @Test
-    fun `erFremtidigStoppHendelse returnerer true for hendelse laget med medFremtidigStopp`() {
+    fun `erFremtidigStansHendelse returnerer true for hendelse laget med medFremtidigStopp`() {
         val hendelse = vedtakHendelseMedFremtidigStans(utfall = true)
 
-        hendelse.erFremtidigStoppHendelse() shouldBe true
+        hendelse.erFremtidigStansHendelse() shouldBe true
     }
 
     @Test
-    fun `erFremtidigStoppHendelse returnerer false for vanlig VedtakHendelse`() {
+    fun `erFremtidigStansHendelse returnerer false for vanlig VedtakHendelse`() {
         val hendelse = vedtakHendelse(utfall = true)
 
-        hendelse.erFremtidigStoppHendelse() shouldBe false
+        hendelse.erFremtidigStansHendelse() shouldBe false
     }
 }

@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.date.after
@@ -266,7 +265,7 @@ class PersonRepositoryPostgresTest {
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
                     ident = ident,
-                    startDato = LocalDate.now().atStartOfDay(),
+                    startDato = LocalDateTime.now().minusDays(1),
                     sluttDato = LocalDateTime.now().plusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,

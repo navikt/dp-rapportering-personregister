@@ -125,7 +125,7 @@ class BehandlingsresultatMottak(
                             )
                         }
 
-                        if (tilOgMed.erIFremtid()) {
+                        if (tilOgMed.erIdagEllerIFremtid()) {
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStans(
                                     ident = ident,
@@ -153,5 +153,5 @@ class BehandlingsresultatMottak(
 
     private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
 
-    private fun LocalDate?.erIFremtid() = this?.isAfter(LocalDate.now()) ?: false
+    private fun LocalDate?.erIdagEllerIFremtid() = this?.isAfter(LocalDate.now().minusDays(1)) ?: false
 }
