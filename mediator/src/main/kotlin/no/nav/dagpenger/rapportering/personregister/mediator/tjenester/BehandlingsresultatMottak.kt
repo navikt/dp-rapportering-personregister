@@ -18,7 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Behandlin
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -102,20 +102,39 @@ class BehandlingsresultatMottak(
                             return@forEachIndexed
                         }
 
-                        val vedtakHendelse =
-                            VedtakHendelse(
-                                ident = ident,
-                                dato = LocalDateTime.now(),
-                                startDato = fraOgMed.atStartOfDay(),
-                                sluttDato = tilOgMed?.atStartOfDay(),
-                                referanseId = "$behandlingId-$index",
-                                utfall = harRett,
-                            )
-
-                        if (fraOgMed.isAfter(LocalDate.now())) {
-                            fremtidigHendelseMediator.behandle(vedtakHendelse)
-                        } else {
+                        if (fraOgMed.erFortidEllerIdag()) {
+                            val vedtakHendelse =
+                                VedtakHendelse(
+                                    ident = ident,
+                                    dato = now(),
+                                    startDato = fraOgMed.atStartOfDay(),
+                                    sluttDato = tilOgMed?.atStartOfDay(),
+                                    referanseId = "$behandlingId-$index",
+                                    utfall = harRett,
+                                )
                             personMediator.behandle(vedtakHendelse)
+                        } else {
+                            fremtidigHendelseMediator.behandle(
+                                VedtakHendelse.medFremtidigStart(
+                                    ident = ident,
+                                    startDato = fraOgMed.atStartOfDay(),
+                                    sluttDato = tilOgMed?.atStartOfDay(),
+                                    referanseId = "$behandlingId-$index",
+                                    utfall = harRett,
+                                ),
+                            )
+                        }
+
+                        if (tilOgMed.erIdagEllerIFremtid()) {
+                            fremtidigHendelseMediator.behandle(
+                                VedtakHendelse.medFremtidigStans(
+                                    ident = ident,
+                                    startDato = fraOgMed.atStartOfDay(),
+                                    sluttDato = tilOgMed?.atStartOfDay(),
+                                    referanseId = "$behandlingId-$index",
+                                    utfall = harRett,
+                                ),
+                            )
                         }
                     }
             } catch (e: Exception) {
@@ -133,4 +152,6 @@ class BehandlingsresultatMottak(
     ): Boolean = opprinnelse == OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE && fraOgMed.erFortidEllerIdag()
 
     private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
+
+    private fun LocalDate?.erIdagEllerIFremtid() = this?.isAfter(LocalDate.now().minusDays(1)) ?: false
 }
