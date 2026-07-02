@@ -288,7 +288,12 @@ class PersonRepositoryPostgres(
                         """
                         SELECT *
                         FROM fremtidig_hendelse
-                        WHERE DATE(start_dato) <= current_date
+                        WHERE (DATE(start_dato) <= current_date AND NOT referanse_id LIKE '%FREMTIDIG-STANS')
+                            OR (
+                                type = 'VedtakHendelse'
+                                AND DATE(slutt_dato) < current_date
+                                AND referanse_id LIKE '%FREMTIDIG-STANS'
+                            )
                         ORDER BY ident, start_dato
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
@@ -913,7 +918,10 @@ class PersonRepositoryPostgres(
             startet = row.localDateTime("startet"),
             avsluttet = row.localDateTimeOrNull("avsluttet"),
             overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
-            årsakTilUtmelding = row.stringOrNull("aarsak_til_utmelding")?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) },
+            årsakTilUtmelding =
+                row
+                    .stringOrNull("aarsak_til_utmelding")
+                    ?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) },
         )
 
     private fun hentStatusHistorikk(

@@ -108,7 +108,7 @@ class BehandlingsresultatMottakTest {
         fremtidigeHendelser[0].dato.toLocalDate() shouldBe now()
         fremtidigeHendelser[0].startDato shouldBe fraOgMed2.atStartOfDay()
         fremtidigeHendelser[0].sluttDato shouldBe null
-        fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-1"
+        fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-1-FREMTIDIG-START"
         fremtidigeHendelser[0].utfall shouldBe false
 
         behandlingsresultatMetrikker.behandlingsresultatMottatt.count() shouldBe metrikkCount + 1
@@ -475,10 +475,174 @@ class BehandlingsresultatMottakTest {
                     vedtakHendelse.ident shouldBe ident
                     vedtakHendelse.startDato shouldBe fremtidigFraOgMed.atStartOfDay()
                     vedtakHendelse.sluttDato shouldBe null
-                    vedtakHendelse.referanseId shouldBe "$behandlingId-1"
+                    vedtakHendelse.referanseId shouldBe "$behandlingId-1-FREMTIDIG-START"
                     vedtakHendelse.utfall shouldBe true
                 },
             )
         }
+    }
+
+    @Test
+    fun `rettighetsperiode med fraOgMed i fortid og tilOgMed i fremtid skal behandles både nå og som fremtidig hendelse`() {
+        val behandlingId = UUIDv7.newUuid().toString()
+        val ident = "12345678903"
+        val fraOgMed = now().minusDays(10)
+        val tilOgMed = now().plusDays(30)
+
+        val hendelser = mutableListOf<VedtakHendelse>()
+        val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
+        every { personMediator.behandle(capture(hendelser)) } just runs
+        every { fremtidigHendelseMediator.behandle(capture(fremtidigeHendelser)) } just runs
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        hendelser.size shouldBe 1
+        hendelser[0].referanseId shouldBe "$behandlingId-0"
+
+        fremtidigeHendelser.size shouldBe 1
+        fremtidigeHendelser[0].referanseId shouldBe "$behandlingId-0-FREMTIDIG-STANS"
+        fremtidigeHendelser[0].startDato shouldBe fraOgMed.atStartOfDay()
+        fremtidigeHendelser[0].sluttDato shouldBe tilOgMed.atStartOfDay()
+    }
+
+    @Test
+    fun `rettighetsperiode med både fraOgMed og tilOgMed i fremtid skal gi to fremtidige hendelser`() {
+        val behandlingId = UUIDv7.newUuid().toString()
+        val ident = "12345678903"
+        val fraOgMed = now().plusDays(5)
+        val tilOgMed = now().plusDays(30)
+
+        val hendelser = mutableListOf<VedtakHendelse>()
+        val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
+        every { personMediator.behandle(capture(hendelser)) } just runs
+        every { fremtidigHendelseMediator.behandle(capture(fremtidigeHendelser)) } just runs
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        hendelser.size shouldBe 0
+
+        fremtidigeHendelser.size shouldBe 2
+        fremtidigeHendelser.any { it.referanseId == "$behandlingId-0-FREMTIDIG-START" } shouldBe true
+        fremtidigeHendelser.any { it.referanseId == "$behandlingId-0-FREMTIDIG-STANS" } shouldBe true
+    }
+
+    @Test
+    fun `rettighetsperiode med både fraOgMed og tilOgMed i nåtid skal behandles nå og ikke gi fremtidige hendelser`() {
+        val behandlingId = UUIDv7.newUuid().toString()
+        val ident = "12345678903"
+        val fraOgMed = now()
+        val tilOgMed = now()
+
+        val hendelser = mutableListOf<VedtakHendelse>()
+        val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
+        every { personMediator.behandle(capture(hendelser)) } just runs
+        every { fremtidigHendelseMediator.behandle(capture(fremtidigeHendelser)) } just runs
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        hendelser.size shouldBe 1
+        hendelser[0].referanseId shouldBe "$behandlingId-0"
+
+        fremtidigeHendelser.size shouldBe 0
+    }
+
+    @Test
+    fun `rettighetsperiode med både fraOgMed og tilOgMed i fortid skal behandles nå og ikke gi fremtidige hendelser`() {
+        val behandlingId = UUIDv7.newUuid().toString()
+        val ident = "12345678903"
+        val fraOgMed = now().minusDays(30)
+        val tilOgMed = now().minusDays(5)
+
+        val hendelser = mutableListOf<VedtakHendelse>()
+        val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
+        every { personMediator.behandle(capture(hendelser)) } just runs
+        every { fremtidigHendelseMediator.behandle(capture(fremtidigeHendelser)) } just runs
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent(),
+        )
+
+        hendelser.size shouldBe 1
+        hendelser[0].referanseId shouldBe "$behandlingId-0"
+
+        fremtidigeHendelser.size shouldBe 0
     }
 }

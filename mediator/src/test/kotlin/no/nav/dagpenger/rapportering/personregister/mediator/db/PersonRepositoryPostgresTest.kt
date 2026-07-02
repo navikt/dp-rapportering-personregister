@@ -1,6 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.date.after
@@ -190,6 +191,111 @@ class PersonRepositoryPostgresTest {
 
             personRepository.lagreFremtidigHendelse(nyHendelse)
             personRepository.hentHendelserSomSkalAktiveres().first().javaClass shouldBe nyHendelse.javaClass
+        }
+
+    @Test
+    fun `hentHendelserSomSkalAktiveres inkluderer vedtakHendelse for fremtidig stans med passert sluttDato`() =
+        withMigratedDb {
+            val person = Person(ident)
+            val passertStart = LocalDateTime.now().minusDays(10)
+            val passertSlutt = LocalDateTime.now().minusDays(1)
+
+            val fremtidigStansVedtak =
+                VedtakHendelse.medFremtidigStans(
+                    ident = ident,
+                    startDato = passertStart,
+                    sluttDato = passertSlutt,
+                    referanseId = UUIDv7.newUuid().toString(),
+                    utfall = false,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(fremtidigStansVedtak)
+
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                size shouldBe 1
+                first().referanseId shouldBe fremtidigStansVedtak.referanseId
+            }
+        }
+
+    @Test
+    fun `hentHendelserSomSkalAktiveres henter ikke vedtakHendelse for fremtidig stans med sluttDato i dag`() =
+        withMigratedDb {
+            val person = Person(ident)
+
+            val fremtidigStansVedtak =
+                VedtakHendelse.medFremtidigStans(
+                    ident = ident,
+                    startDato = LocalDate.now().atStartOfDay(),
+                    sluttDato = LocalDate.now().atStartOfDay(),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    utfall = false,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(fremtidigStansVedtak)
+
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+
+    @Test
+    fun `hentHendelserSomSkalAktiveres henter ikke vedtakHendelse for fremtidig stans med sluttDato i fremtid`() =
+        withMigratedDb {
+            val person = Person(ident)
+
+            val fremtidigStansVedtak =
+                VedtakHendelse.medFremtidigStans(
+                    ident = ident,
+                    startDato = LocalDate.now().atStartOfDay(),
+                    sluttDato = LocalDateTime.now().plusDays(10),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    utfall = false,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(fremtidigStansVedtak)
+
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+
+    @Test
+    fun `hentHendelserSomSkalAktiveres henter ikke vedtakHendelse for fremtidig stans når bare startDato er i fortid`() =
+        withMigratedDb {
+            val person = Person(ident)
+
+            val fremtidigStansVedtak =
+                VedtakHendelse.medFremtidigStans(
+                    ident = ident,
+                    startDato = LocalDate.now().atStartOfDay(),
+                    sluttDato = LocalDateTime.now().plusDays(10),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    utfall = false,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(fremtidigStansVedtak)
+
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 0
+        }
+
+    @Test
+    fun `hentHendelserSomSkalAktiveres henter vedtakHendelser når startDato er i fortid og vedtak ikke gjelder fremtidig stans`() =
+        withMigratedDb {
+            val person = Person(ident)
+
+            val fremtidigStansVedtak =
+                VedtakHendelse.medFremtidigStart(
+                    ident = ident,
+                    startDato = LocalDate.now().atStartOfDay(),
+                    sluttDato = LocalDateTime.now().plusDays(10),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    utfall = false,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(fremtidigStansVedtak)
+
+            personRepository.hentHendelserSomSkalAktiveres().size shouldBe 1
         }
 
     @Test
