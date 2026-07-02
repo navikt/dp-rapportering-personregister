@@ -92,7 +92,8 @@ class PersonService(
     fun hentIdent(personId: Long): String? = personRepository.hentIdent(personId)
 
     fun oppdaterPerson(person: Person) {
-        logger.info { "Oppdaterer person med ident ${person.ident}" }
+        logger.info { "Oppdaterer person" }
+        sikkerLogg.info { "Oppdaterer person med ident ${person.ident}" }
         personRepository.oppdaterPerson(person)
     }
 
@@ -174,7 +175,8 @@ class PersonService(
                 }
                 return gjeldendePerson
             } else {
-                logger.warn { "Fant ingen gjeldende ident for ${personer.map { it.ident }}" }
+                logger.warn { "Fant ingen gjeldende ident for person" }
+                sikkerLogg.warn { "Fant ingen gjeldende ident for ${personer.map { it.ident }}" }
                 return null
             }
         }
