@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmeldi
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
@@ -26,20 +27,44 @@ data class VedtakHendelse(
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
-        // Starter eller stopper meldekortproduksjon basert på vedtakets utfall
-        if (utfall) {
-            val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
-            person.setAnsvarligSystem(AnsvarligSystem.DP)
-
-            person.setHarRettTilDp(true)
-            person.sendStartMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, skalMigreres = skalMigreres)
+        if (skalStarteDagpenger) {
+            startDagpenger(person)
         } else {
-            person.setHarRettTilDp(false)
-            if (person.ansvarligSystem == AnsvarligSystem.DP) {
-                person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
-            }
+            avsluttDagpenger(person)
         }
 
+        oppdaterStatus(person)
+    }
+
+    private val skalStarteDagpenger: Boolean
+        get() = utfall && !sluttDatoErPassert
+
+    private val erInnvilgetTilbakeITid: Boolean
+        get() = utfall && sluttDatoErPassert
+
+    private val sluttDatoErPassert: Boolean
+        get() = sluttDato?.toLocalDate()?.isBefore(LocalDate.now()) ?: false
+
+    private fun startDagpenger(person: Person) {
+        val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
+        person.setAnsvarligSystem(AnsvarligSystem.DP)
+        person.setHarRettTilDp(true)
+        person.sendStartMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, skalMigreres = skalMigreres)
+    }
+
+    private fun avsluttDagpenger(person: Person) {
+        person.setHarRettTilDp(false)
+
+        if (erInnvilgetTilbakeITid && person.ansvarligSystem != AnsvarligSystem.DP) {
+            person.setAnsvarligSystem(AnsvarligSystem.DP)
+        }
+
+        if (person.ansvarligSystem == AnsvarligSystem.DP) person.stoppMeldekortproduksjon()
+    }
+
+    private fun Person.stoppMeldekortproduksjon() = sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
+
+    private fun oppdaterStatus(person: Person) {
         person
             .vurderNyStatus()
             .takeIf { it != person.status }

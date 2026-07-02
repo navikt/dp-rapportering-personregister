@@ -163,6 +163,55 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
+    fun `innvilget rettighetsperiode med tilOgMed tilbake i tid rutes til personMediator med utfall true`() {
+        val ident = "12345678903"
+        val behandlingId = UUIDv7.newUuid().toString()
+        val søknadId = UUIDv7.newUuid().toString()
+        val fraOgMed = LocalDate.now().minusDays(40)
+        val tilOgMed = LocalDate.now().minusDays(10)
+
+        val hendelser = mutableListOf<VedtakHendelse>()
+        every { personMediator.behandle(capture(hendelser), 1) } just runs
+
+        val behandlingsresultat =
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "$søknadId",
+                "type": "Søknad"
+              },
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+              ]
+            }
+            """.trimIndent()
+
+        testRapid.sendTestMessage(behandlingsresultat)
+
+        verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident)) }
+        verify(exactly = 0) { fremtidigHendelseMediator.behandle(any()) }
+
+        hendelser.size shouldBe 1
+        hendelser[0].ident shouldBe ident
+        hendelser[0].startDato shouldBe fraOgMed.atStartOfDay()
+        hendelser[0].sluttDato shouldBe tilOgMed.atStartOfDay()
+        hendelser[0].referanseId shouldBe "$behandlingId-0"
+        hendelser[0].utfall shouldBe true
+    }
+
+    @Test
     fun `onPacket kaster exception og inkrementerer metrikk hvis behandling av melding feiler`() {
         val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatFeilet.count()
         every { personMediator.behandle(any<VedtakHendelse>()) } throws RuntimeException("kaboom")
