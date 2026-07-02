@@ -52,7 +52,7 @@ class BehandlingsresultatMottakTest {
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
         val fraOgMed1 = now().minusDays(10)
-        val tilOgMed1 = now()
+        val tilOgMed1 = now().minusDays(1)
         val fraOgMed2 = now().plusDays(1)
 
         val hendelser = mutableListOf<VedtakHendelse>()
