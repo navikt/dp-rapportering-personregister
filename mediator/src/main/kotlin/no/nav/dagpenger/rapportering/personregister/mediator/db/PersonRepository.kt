@@ -8,6 +8,8 @@ import java.util.UUID
 interface PersonRepository {
     fun hentPerson(ident: String): Person?
 
+    fun hentPerson(personId: Long): Person?
+
     fun finnesPerson(ident: String): Boolean
 
     fun lagrePerson(person: Person)

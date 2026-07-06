@@ -9,12 +9,8 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.micrometer.core.instrument.Clock
-import io.micrometer.prometheusmetrics.PrometheusConfig
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.mockk.every
 import io.mockk.mockk
-import io.prometheus.metrics.model.registry.PrometheusRegistry
 import kotliquery.queryOf
 import kotliquery.sessionOf
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
@@ -36,6 +32,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSour
 import no.nav.dagpenger.rapportering.personregister.mediator.pluginConfiguration
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
@@ -102,8 +99,6 @@ open class ApiTestSetup {
             behandlingRepository = BehandlingRepositoryPostgres(dataSource)
 
             every { unleash.isEnabled(any()) } returns true
-            val meterRegistry =
-                PrometheusMeterRegistry(PrometheusConfig.DEFAULT, PrometheusRegistry.defaultRegistry, Clock.SYSTEM)
             val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
@@ -153,6 +148,12 @@ open class ApiTestSetup {
                     listOf(personObserver),
                     actionTimer,
                 )
+            val søknadService =
+                SøknadService(
+                    personService,
+                    arbeidssøkerMediator,
+                    actionTimer,
+                )
             val arbeidssøkerMottak =
                 ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
             val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
@@ -187,7 +188,7 @@ open class ApiTestSetup {
                 }
                 pluginConfiguration(kafkaContext)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
-                personApi(personService)
+                personApi(personService, søknadService)
                 behandlingApi(behandlingRepository)
             }
 
@@ -220,6 +221,11 @@ open class ApiTestSetup {
             session.run(
                 queryOf(
                     "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",
+                ).asExecute,
+            )
+            session.run(
+                queryOf(
+                    "ALTER SEQUENCE person_id_seq RESTART;",
                 ).asExecute,
             )
         }

@@ -74,6 +74,33 @@ paths:
       security:
         - azureAd: []
 
+  /api/person/{personId}/søknader:
+      get:
+          responses:
+              200:
+                  description: OK
+                  content:
+                      application/json:
+                          schema:
+                              type: array
+                              items:
+                                  $ref: '#/components/schemas/Soknad'
+              404:
+                  description: Hvis bruker med oppgitt personId ikke eksisterer
+          summary: Henter alle kjente søknader (de dp-rapportering-personregister vet om) for en gitt personId
+          description: Returnerer en liste med søknadId og tidspunkt for innsending. Hvis personId ikke har kjente søknader returneres en tom liste
+          operationId: get-personid-soknader
+          parameters:
+              -   in: path
+                  name: personId
+                  schema:
+                      type: integer
+                      format: int64
+                  required: true
+                  description: personId til personen du vil hente søknader for
+          security:
+              -   azureAd: [ ]
+
   /arbeidssokerperioder/{personId}:
     get:
       responses:
@@ -117,6 +144,16 @@ components:
       properties:
         personId:
           type: integer
+    Soknad:
+        required:
+            - søknadId
+            - innsendtTidspunkt
+        type: object
+        properties:
+            søknadId:
+                type: string
+            innsendtTidspunkt:
+                type: string
     PersonStatus:
       required:
         - ident

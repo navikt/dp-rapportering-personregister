@@ -38,7 +38,7 @@ class PersonRepositoryPostgres(
     private val actionTimer: ActionTimer,
 ) : PersonRepository {
     override fun hentPerson(ident: String): Person? =
-        actionTimer.timedAction("db-hentPerson") {
+        actionTimer.timedAction("db-hentPerson-gitt-ident") {
             sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     val personId = hentPersonId(ident) ?: return@transaction null
@@ -65,6 +65,16 @@ class PersonRepositoryPostgres(
                         hendelser.forEach { this.hendelser.add(it) }
                     }
                 }
+            }
+        }
+
+    override fun hentPerson(personId: Long): Person? =
+        actionTimer.timedAction("db-hentPerson-gitt-personId") {
+            hentIdent(personId)?.let {
+                hentPerson(it)
+            } ?: run {
+                logger.warn { "Fant ikke ident for personId=$personId" }
+                null
             }
         }
 
@@ -913,7 +923,10 @@ class PersonRepositoryPostgres(
             startet = row.localDateTime("startet"),
             avsluttet = row.localDateTimeOrNull("avsluttet"),
             overtattBekreftelse = row.stringOrNull("overtatt_bekreftelse").toBooleanOrNull(),
-            årsakTilUtmelding = row.stringOrNull("aarsak_til_utmelding")?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) },
+            årsakTilUtmelding =
+                row
+                    .stringOrNull("aarsak_til_utmelding")
+                    ?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) },
         )
 
     private fun hentStatusHistorikk(
