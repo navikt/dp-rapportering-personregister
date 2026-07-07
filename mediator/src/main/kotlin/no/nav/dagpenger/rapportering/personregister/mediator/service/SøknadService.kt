@@ -5,12 +5,15 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediat
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
+import no.nav.dagpenger.rapportering.personregister.modell.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
+
+private val logger = KotlinLogging.logger {}
 
 class SøknadService(
     private val personService: PersonService,
@@ -57,7 +60,11 @@ class SøknadService(
         }
     }
 
-    companion object {
-        private val logger = KotlinLogging.logger {}
-    }
+    fun hentSøknader(personId: Long): List<Søknad> =
+        personService.hentPerson(personId).hendelser.filterIsInstance<SøknadHendelse>().map { hendelse ->
+            Søknad(
+                søknadId = hendelse.referanseId,
+                innsendtTidspunkt = hendelse.startDato,
+            )
+        }
 }

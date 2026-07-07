@@ -300,7 +300,7 @@ internal class ApplicationBuilder(
 
                                 pluginConfiguration(kafkaContext)
                                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
-                                personApi(personService)
+                                personApi(personService, søknadService)
                                 behandlingApi(behandlingRepository)
                             }
                         }

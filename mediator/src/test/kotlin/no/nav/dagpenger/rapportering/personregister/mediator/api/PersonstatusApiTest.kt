@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerRes
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
+import no.nav.dagpenger.rapportering.personregister.mediator.lagSøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -25,11 +26,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
-import java.time.LocalDateTime
+import java.time.LocalDateTime.now
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -192,7 +192,7 @@ class PersonstatusApiTest : ApiTestSetup() {
             val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
 
             Person(ident)
-                .apply { behandle(lagHendelse(ident)) }
+                .apply { behandle(lagSøknadHendelse(ident)) }
                 .also {
                     it.setAnsvarligSystem(AnsvarligSystem.ARENA)
                     personRepository.lagrePerson(it)
@@ -218,10 +218,10 @@ class PersonstatusApiTest : ApiTestSetup() {
                     person.behandle(
                         VedtakHendelse(
                             ident,
-                            LocalDateTime.now(),
-                            LocalDateTime.now(),
+                            now(),
+                            now(),
                             "ref",
-                            LocalDateTime.now(),
+                            now(),
                             true,
                         ),
                     )
@@ -246,12 +246,12 @@ class PersonstatusApiTest : ApiTestSetup() {
             personRepository.oppdaterPerson(
                 Person(
                     ident,
-                    TemporalCollection<Status>().also { it.put(LocalDateTime.now(), Status.DAGPENGERBRUKER) },
+                    TemporalCollection<Status>().also { it.put(now(), Status.DAGPENGERBRUKER) },
                     mutableListOf(
                         Arbeidssøkerperiode(
                             UUIDv7.newUuid(),
                             ident,
-                            LocalDateTime.now(),
+                            now(),
                             null,
                             true,
                         ),
@@ -275,11 +275,3 @@ class PersonstatusApiTest : ApiTestSetup() {
             }
         }
 }
-
-fun lagHendelse(ident: String) =
-    SøknadHendelse(
-        ident = ident,
-        referanseId = "123",
-        dato = LocalDateTime.now(),
-        startDato = LocalDateTime.now(),
-    )

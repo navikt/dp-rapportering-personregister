@@ -7,6 +7,7 @@ import io.mockk.every
 import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.mediator.api.PersonNotFoundException
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
@@ -66,7 +67,7 @@ class PersonServiceTest {
                 Ident(ident = "123456", gruppe = Ident.IdentGruppe.AKTORID, historisk = false),
                 Ident(ident = ident, gruppe = Ident.IdentGruppe.FOLKEREGISTERIDENT, historisk = false),
             )
-        every { personRepository.hentPerson(any()) } returns Person(ident = ident)
+        every { personRepository.hentPerson(any<String>()) } returns Person(ident = ident)
 
         val person = personService.hentPerson(ident)!!
 
@@ -100,7 +101,7 @@ class PersonServiceTest {
 
         person.ident shouldBe nyIdent
 
-        verify(exactly = 2) { personRepository.hentPerson(any()) }
+        verify(exactly = 2) { personRepository.hentPerson(any<String>()) }
         verify(exactly = 1) { personRepository.oppdaterIdent(any(), nyIdent) }
         verify(exactly = 0) { personRepository.slettPerson(any()) }
         verify(exactly = 0) { personRepository.lagrePerson(any()) }
@@ -133,7 +134,7 @@ class PersonServiceTest {
 
         person.ident shouldBe nyIdent
 
-        verify(exactly = 2) { personRepository.hentPerson(any()) }
+        verify(exactly = 2) { personRepository.hentPerson(any<String>()) }
         verify(exactly = 1) { personRepository.slettPerson(any()) }
         verify(exactly = 1) { personRepository.finnesPerson(any()) }
         verify(exactly = 1) { personRepository.oppdaterPerson(any()) }
@@ -150,7 +151,7 @@ class PersonServiceTest {
         val periodeId1 = UUIDv7.newUuid()
         val periodeId2 = UUIDv7.newUuid()
         val person1 =
-            person(
+            lagPerson(
                 ident = gammelIdent1,
                 periodeId = periodeId1,
                 startet = LocalDateTime.now().minusYears(1),
@@ -159,7 +160,7 @@ class PersonServiceTest {
                 meldegruppe = "ARBS",
             )
         val person2 =
-            person(
+            lagPerson(
                 ident = gammelIdent2,
                 periodeId = periodeId2,
             )
@@ -193,7 +194,7 @@ class PersonServiceTest {
     @Test
     fun `hentPerson returnerer person fra databasen selv om pdl returnerer tom liste`() {
         every { pdlConnector.hentIdenter(any()) } returns emptyList()
-        every { personRepository.hentPerson(ident) } returns person(ident, UUIDv7.newUuid())
+        every { personRepository.hentPerson(ident) } returns lagPerson(ident, UUIDv7.newUuid())
 
         val person = personService.hentPerson(ident)!!
         person.ident shouldBe ident
@@ -220,11 +221,30 @@ class PersonServiceTest {
 
         throwable.message shouldBe "Kastet feil fra PDL"
     }
+
+    @Test
+    fun `hentPerson gitt personId returnerer forventet person hvis personen eksisterer`() {
+        val person = lagPerson()
+        every { personRepository.hentPerson(any<Long>()) } returns person
+
+        val personFraDb = personService.hentPerson(12345)
+
+        personFraDb.ident shouldBe person.ident
+    }
+
+    @Test
+    fun `hentPerson gitt personId kaster forventet exception hvis person ikke eksisterer`() {
+        every { personRepository.hentPerson(any<Long>()) } returns null
+
+        val exception = shouldThrow<PersonNotFoundException> { personService.hentPerson(12345) }
+
+        exception.message shouldBe "Fant ikke person med personId=12345"
+    }
 }
 
-private fun person(
-    ident: String,
-    periodeId: UUID,
+private fun lagPerson(
+    ident: String = "12345678901",
+    periodeId: UUID = UUIDv7.newUuid(),
     startet: LocalDateTime = LocalDateTime.now().minusDays(1),
     avsluttet: LocalDateTime? = null,
     meldeplikt: Boolean = true,

@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.api.PersonNotFoundException
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
@@ -63,6 +64,10 @@ class PersonService(
                 }
                 personRepository.lagrePerson(person)
             }
+
+    fun hentPerson(personId: Long): Person =
+        personRepository.hentPerson(personId)
+            ?: throw PersonNotFoundException("Fant ikke person med personId=$personId")
 
     fun hentPerson(ident: String): Person? {
         logger.info { "Henter person" }

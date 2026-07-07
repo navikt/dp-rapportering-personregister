@@ -510,6 +510,25 @@ class PersonRepositoryPostgresTest {
         }
     }
 
+    @Test
+    fun `hentPerson gitt personId returnerer forventet person hvis personen eksisterer`() {
+        withMigratedDb {
+            val person = testPerson()
+            personRepository.lagrePerson(person)
+
+            val personFraDatabase = personRepository.hentPerson(personRepository.hentPersonId(person.ident) ?: 0)
+
+            personFraDatabase?.ident shouldBe person.ident
+        }
+    }
+
+    @Test
+    fun `hentPerson gitt personId returnerer null hvis personen ikke eksisterer`() {
+        withMigratedDb {
+            personRepository.hentPerson(10) shouldBe null
+        }
+    }
+
     private fun testPerson(
         hendelser: MutableList<Hendelse> = mutableListOf(),
         arbeidssøkerperiode: MutableList<Arbeidssøkerperiode> = mutableListOf(),

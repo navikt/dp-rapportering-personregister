@@ -21,6 +21,9 @@ class PersonRepositoryInMemory : PersonRepository {
 
     override fun hentPerson(ident: String): Person? = personList[ident]?.apply { this.setHarRettTilDp(vedtakListe[ident] ?: false) }
 
+    override fun hentPerson(personId: Long): Person? =
+        personList[hentIdent(personId)]?.apply { this.setHarRettTilDp(vedtakListe[ident] ?: false) }
+
     override fun finnesPerson(ident: String): Boolean = personList.containsKey(ident)
 
     override fun lagrePerson(person: Person) {

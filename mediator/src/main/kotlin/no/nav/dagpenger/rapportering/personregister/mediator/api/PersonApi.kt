@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
@@ -12,14 +12,19 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.rapportering.personregister.api.models.ArbeidssokerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.api.models.SoknadResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import java.net.URI
 import java.time.ZoneOffset
 
 private val logger = KotlinLogging.logger {}
 
-internal fun Application.personApi(personService: PersonService) {
+internal fun Application.personApi(
+    personService: PersonService,
+    søknadService: SøknadService,
+) {
     routing {
         authenticate("azureAd") {
             route("/hentPersonId") {
@@ -39,7 +44,7 @@ internal fun Application.personApi(personService: PersonService) {
                         .hentPersonId(request.ident)
                         ?.also { personId ->
                             call.respond(
-                                HttpStatusCode.OK,
+                                OK,
                                 PersonIdBody(personId),
                             )
                         }
@@ -57,7 +62,7 @@ internal fun Application.personApi(personService: PersonService) {
                         .hentIdent(request.personId)
                         ?.also { ident ->
                             call.respond(
-                                HttpStatusCode.OK,
+                                OK,
                                 IdentBody(ident),
                             )
                         }
@@ -76,7 +81,7 @@ internal fun Application.personApi(personService: PersonService) {
                         .also { perioder ->
                             call
                                 .respond(
-                                    HttpStatusCode.OK,
+                                    OK,
                                     perioder.map { periode ->
                                         ArbeidssokerperiodeResponse(
                                             periodeId = periode.periodeId.toString(),
@@ -94,6 +99,28 @@ internal fun Application.personApi(personService: PersonService) {
                                         )
                                     },
                                 )
+                        }
+                }
+            }
+
+            route("/api/person/{personId}/søknader") {
+                get {
+                    val personId =
+                        call.parameters["personId"]?.toLongOrNull()
+                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+
+                    søknadService
+                        .hentSøknader(personId)
+                        .also { søknader ->
+                            call.respond(
+                                OK,
+                                søknader.map { søknad ->
+                                    SoknadResponse(
+                                        søknadId = søknad.søknadId,
+                                        innsendtTidspunkt = søknad.innsendtTidspunkt.toString(),
+                                    )
+                                },
+                            )
                         }
                 }
             }
