@@ -71,53 +71,71 @@ internal class AktiverHendelserJob(
         meldepliktConnector: MeldepliktConnector,
     ): Int {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
-        var currentIdent = ""
-        var currentMeldestatus: MeldestatusResponse? = null
-        hendelser.forEach { hendelse ->
-            val person = personService.hentPerson(hendelse.ident)
+        hendelser.groupBy { hendelse -> hendelse.ident }.forEach { (ident, hendelserForIdent) ->
+            var referanseIdForHendelseSomBehandles: String? = null
             try {
-                if (person != null) {
-                    when (hendelse) {
-                        is DagpengerMeldegruppeHendelse, is AnnenMeldegruppeHendelse, is MeldepliktHendelse -> {
-                            // Sjekk om bruker har meldt seg
-                            // Hendelser er sortert etter ident
-                            // Da kan vi hente meldestatus for hver ident og ikke for hver hendelse
-                            if (hendelse.ident != currentIdent || currentMeldestatus == null) {
-                                val meldestatus =
-                                    runBlocking {
-                                        meldepliktConnector.hentMeldestatus(ident = hendelse.ident)
-                                    }
+                var meldestatus: MeldestatusResponse? = null
+                hendelserForIdent.forEach { hendelse ->
+                    referanseIdForHendelseSomBehandles = hendelse.referanseId
+                    val person = personService.hentPerson(ident)
 
-                                // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                    if (person != null) {
+                        when (hendelse) {
+                            is DagpengerMeldegruppeHendelse, is AnnenMeldegruppeHendelse, is MeldepliktHendelse -> {
                                 if (meldestatus == null) {
-                                    logger.error { "Kunne ikke hente meldestatus" }
-                                    sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${hendelse.ident}" }
-                                    throw RuntimeException("Kunne ikke hente meldestatus")
+                                    meldestatus =
+                                        runBlocking {
+                                            meldepliktConnector.hentMeldestatus(ident = hendelse.ident)
+                                        }
+
+                                    // Det er veldig rart at vi ikke kan hente meldestatus her fordi vi fikk data fra Arena, men for sikkerhetsskyld
+                                    if (meldestatus == null) {
+                                        logger.error { "Kunne ikke hente meldestatus" }
+                                        sikkerLogg.error { "Kunne ikke hente meldestatus for person med ident ${hendelse.ident}" }
+                                        throw RuntimeException("Kunne ikke hente meldestatus")
+                                    }
                                 }
 
-                                currentIdent = hendelse.ident
-                                currentMeldestatus = meldestatus
+                                meldestatusMediator.behandleHendelse(hendelse.referanseId, person, meldestatus)
                             }
 
-                            meldestatusMediator.behandleHendelse(hendelse.referanseId, person, currentMeldestatus)
-                        }
+                            is VedtakHendelse -> {
+                                personMediator.behandle(hendelse)
+                            }
 
-                        is VedtakHendelse -> {
-                            personMediator.behandle(hendelse)
+                            else -> {
+                                throw RuntimeException(
+                                    "Ukjent fremtidig hendelsetype ${hendelse::class.simpleName} for hendelse med referanseId=${hendelse.referanseId}",
+                                )
+                            }
                         }
-
-                        else -> {
-                            logger.warn { "Fant ukjent fremtidig hendelsetype $hendelse" }
-                        }
+                        personRepository.slettFremtidigHendelse(hendelse.referanseId)
+                        logger.info { "Behandlet hendelse med referanseId=${hendelse.referanseId}. Fremtidig hendelse er slettet." }
+                    } else {
+                        throw RuntimeException(
+                            "Fant ikke person. Kan ikke aktivere hendelser for personen.",
+                        )
                     }
-                } else {
-                    logger.warn { "Fant ikke person. Kan ikke aktivere hendelse." }
-                    sikkerLogg.warn { "Fant ikke person med ident ${hendelse.ident}. Kan ikke aktivere hendelse." }
                 }
-                personRepository.slettFremtidigHendelse(hendelse.referanseId)
             } catch (e: Exception) {
-                logger.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
-                sikkerLogg.error(e) { "Aktivering av hendelse med referanseId ${hendelse.referanseId} feilet" }
+                val loggmelding =
+                    if (referanseIdForHendelseSomBehandles == null) {
+                        "Ingen hendelser ble behandlet for personen. Ubehandlede hendelser=[${hendelserForIdent.joinToString {
+                            it.referanseId
+                        }}]."
+                    } else {
+                        val ubehandledeHendelser = hendelserForIdent.dropWhile { it.referanseId != referanseIdForHendelseSomBehandles }
+                        "Feilende hendelse=$referanseIdForHendelseSomBehandles. Ubehandlede hendelser=[${ubehandledeHendelser.joinToString {
+                            it.referanseId
+                        }}]."
+                    }
+
+                logger.error(e) {
+                    "Aktivering av hendelser feilet for person. $loggmelding"
+                }
+                sikkerLogg.error(e) {
+                    "Aktivering av hendelser feilet for person med ident $ident. $loggmelding"
+                }
             }
         }
         return hendelser.size
