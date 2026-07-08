@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetAr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -65,3 +66,33 @@ fun startetArbeidssøkerperiodeHendelse(
 ) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, nå, startet)
 
 fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
+
+fun vedtakHendelse(
+    dato: LocalDateTime = nå,
+    startDato: LocalDateTime,
+    sluttDato: LocalDateTime?,
+    referanseId: String = "vedtak-123",
+    utfall: Boolean = true,
+) = VedtakHendelse(
+    ident = ident,
+    dato = dato,
+    startDato = startDato,
+    referanseId = referanseId,
+    sluttDato = sluttDato,
+    utfall = utfall,
+)
+
+fun vedtakHendelseMedFremtidigStans(
+    dato: LocalDateTime = nå,
+    startDato: LocalDateTime,
+    sluttDato: LocalDateTime,
+    referanseId: String = "vedtak-123",
+    utfall: Boolean = true,
+) = VedtakHendelse.medFremtidigStans(
+    ident = ident,
+    dato = dato,
+    startDato = startDato,
+    referanseId = referanseId,
+    sluttDato = sluttDato,
+    utfall = utfall,
+)

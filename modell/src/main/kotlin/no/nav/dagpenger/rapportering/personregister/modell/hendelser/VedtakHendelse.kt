@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmeldi
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
@@ -23,17 +24,59 @@ data class VedtakHendelse(
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ
 
+    companion object {
+        private const val PREFIKS_FREMTIDIG_START = "FREMTIDIG-START"
+        private const val PREFIKS_FREMTIDIG_STANS = "FREMTIDIG-STANS"
+
+        fun medFremtidigStart(
+            ident: String,
+            dato: LocalDateTime = now(),
+            startDato: LocalDateTime,
+            referanseId: String,
+            sluttDato: LocalDateTime? = null,
+            utfall: Boolean,
+        ) = VedtakHendelse(
+            ident = ident,
+            dato = dato,
+            startDato = startDato,
+            referanseId = "$PREFIKS_FREMTIDIG_START-$referanseId",
+            sluttDato = sluttDato,
+            utfall = utfall,
+        )
+
+        fun medFremtidigStans(
+            ident: String,
+            dato: LocalDateTime = now(),
+            startDato: LocalDateTime,
+            referanseId: String,
+            sluttDato: LocalDateTime,
+            utfall: Boolean,
+        ) = VedtakHendelse(
+            ident = ident,
+            dato = dato,
+            startDato = startDato,
+            referanseId = "$PREFIKS_FREMTIDIG_STANS-$referanseId",
+            sluttDato = sluttDato,
+            utfall = utfall,
+        )
+    }
+
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
-        // Starter eller stopper meldekortproduksjon basert på vedtakets utfall
-        if (utfall) {
+        if (utfall && !erFremtidigStansHendelse()) {
             val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
             person.setHarRettTilDp(true)
-            person.sendStartMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, skalMigreres = skalMigreres)
-        } else {
+            person.sendStartMeldingTilMeldekortregister(
+                fraOgMed = startDato,
+                tilOgMed = sluttDato,
+                skalMigreres = skalMigreres,
+            )
+        }
+
+        if (!utfall || sluttDato.erFortid()) {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
@@ -61,4 +104,8 @@ data class VedtakHendelse(
                 }
             }
     }
+
+    internal fun erFremtidigStansHendelse() = referanseId.startsWith(PREFIKS_FREMTIDIG_STANS)
 }
+
+private fun LocalDateTime?.erFortid() = this?.toLocalDate()?.isBefore(LocalDate.now()) ?: false

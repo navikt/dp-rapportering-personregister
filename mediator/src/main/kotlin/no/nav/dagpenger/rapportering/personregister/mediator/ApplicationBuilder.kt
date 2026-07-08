@@ -323,7 +323,6 @@ internal class ApplicationBuilder(
                         personMediator,
                         fremtidigHendelseMediator,
                         behandlingsresultatMetrikker,
-                        unleash,
                     )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)

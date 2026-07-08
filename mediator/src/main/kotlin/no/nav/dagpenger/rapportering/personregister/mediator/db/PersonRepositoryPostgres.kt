@@ -298,8 +298,24 @@ class PersonRepositoryPostgres(
                         """
                         SELECT *
                         FROM fremtidig_hendelse
-                        WHERE DATE(start_dato) <= current_date
-                        ORDER BY ident, start_dato
+                        WHERE (DATE(start_dato) <= current_date AND NOT referanse_id LIKE 'FREMTIDIG-STANS%')
+                            OR (
+                                type = 'VedtakHendelse'
+                                AND DATE(slutt_dato) < current_date
+                                AND referanse_id LIKE 'FREMTIDIG-STANS%'
+                            )
+                        ORDER BY
+                            ident,
+                            CASE
+                                WHEN type = 'VedtakHendelse' AND referanse_id LIKE 'FREMTIDIG-STANS%' THEN slutt_dato
+                                ELSE start_dato
+                            END,
+                            -- Hendelser basert på sluttdato skal komme før hendelser basert på startdato
+                            CASE
+                                WHEN type = 'VedtakHendelse' AND referanse_id LIKE 'FREMTIDIG-STANS%' THEN 0
+                                ELSE 1
+                            END,
+                            referanse_id
                         """.trimIndent(),
                     ).map { tilHendelse(it, it.string("ident")) }
                         .asList,
