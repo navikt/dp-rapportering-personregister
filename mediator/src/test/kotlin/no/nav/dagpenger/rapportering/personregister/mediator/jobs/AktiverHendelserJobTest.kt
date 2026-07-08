@@ -2,9 +2,11 @@ package no.nav.dagpenger.rapportering.personregister.mediator.jobs
 
 import io.kotest.matchers.shouldBe
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
@@ -13,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.api.ApiTestSetup
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.createMockClient
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
@@ -30,6 +33,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import org.junit.jupiter.api.Test
@@ -272,6 +276,139 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 3) }
             verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
         }
+    }
+
+    @Test
+    fun `aktiverHendelser stopper videre behandling for ident ved feil og beholder fremtidige hendelser`() {
+        val personRepositoryMock = mockk<PersonRepository>()
+        val personServiceMock = mockk<PersonService>()
+        val personMediatorMock = mockk<PersonMediator>()
+        val meldestatusMediatorMock = mockk<MeldestatusMediator>(relaxed = true)
+        val meldepliktConnectorMock =
+            mockk<MeldepliktConnector>(relaxed = true)
+
+        val nå = LocalDateTime.now()
+        val behandlet =
+            VedtakHendelse(
+                ident = ident1,
+                referanseId = "behandlet-1",
+                startDato = nå.minusDays(2),
+                utfall = true,
+            )
+        val feiler =
+            VedtakHendelse(
+                ident = ident1,
+                referanseId = "feiler-2",
+                startDato = nå.minusDays(1),
+                utfall = true,
+            )
+        val ikkeBehandlet =
+            VedtakHendelse(
+                ident = ident1,
+                referanseId = "ikke-behandlet-3",
+                startDato = nå,
+                utfall = true,
+            )
+
+        every { personRepositoryMock.hentHendelserSomSkalAktiveres() } returns listOf(behandlet, feiler, ikkeBehandlet)
+        every { personRepositoryMock.slettFremtidigHendelse(any()) } just Runs
+        every { personServiceMock.hentPerson(ident1) } returns Person(ident1)
+        every { personMediatorMock.behandle(any<VedtakHendelse>()) } answers {
+            if (firstArg<VedtakHendelse>() == feiler) throw RuntimeException("boom")
+        }
+
+        val aktiverHendelserJob =
+            AktiverHendelserJob(
+                personRepositoryMock,
+                personServiceMock,
+                personMediatorMock,
+                meldestatusMediatorMock,
+                meldepliktConnectorMock,
+                httpClient = createMockClient(OK.value, ""),
+                jobbkjøringMetrikker = jobbkjøringMetrikker,
+            )
+
+        aktiverHendelserJob.execute()
+
+        verify(exactly = 1) { personMediatorMock.behandle(behandlet) }
+        verify(exactly = 1) { personMediatorMock.behandle(feiler) }
+        verify(exactly = 2) { personMediatorMock.behandle(any<VedtakHendelse>()) }
+
+        verify(exactly = 1) { personRepositoryMock.slettFremtidigHendelse(behandlet.referanseId) }
+        verify(exactly = 0) { personRepositoryMock.slettFremtidigHendelse(feiler.referanseId) }
+        verify(exactly = 0) { personRepositoryMock.slettFremtidigHendelse(ikkeBehandlet.referanseId) }
+    }
+
+    @Test
+    fun `aktiverHendelser fortsetter med andre identer selv om en ident feiler`() {
+        val personRepositoryMock = mockk<PersonRepository>()
+        val personServiceMock = mockk<PersonService>()
+        val personMediatorMock = mockk<PersonMediator>()
+        val meldestatusMediatorMock = mockk<MeldestatusMediator>(relaxed = true)
+        val meldepliktConnectorMock =
+            mockk<MeldepliktConnector>(relaxed = true)
+
+        val nå = LocalDateTime.now()
+        val vedtakSomFeiler =
+            VedtakHendelse(
+                ident = ident1,
+                referanseId = "ident1-feiler-1",
+                startDato = nå.minusDays(1),
+                utfall = true,
+            )
+        val meldegruppeForIdent2 =
+            DagpengerMeldegruppeHendelse(
+                ident = ident2,
+                referanseId = "ident2-behandles-1",
+                dato = nå.minusDays(1),
+                startDato = nå,
+                sluttDato = null,
+                meldegruppeKode = "DAGP",
+                harMeldtSeg = true,
+            )
+
+        every { personRepositoryMock.hentHendelserSomSkalAktiveres() } returns listOf(vedtakSomFeiler, meldegruppeForIdent2)
+        every { personRepositoryMock.slettFremtidigHendelse(any()) } just Runs
+        every { personServiceMock.hentPerson(ident1) } returns Person(ident1)
+        every { personServiceMock.hentPerson(ident2) } returns Person(ident2)
+        every { personMediatorMock.behandle(vedtakSomFeiler) } throws RuntimeException("boom")
+
+        coEvery { meldepliktConnectorMock.hentMeldestatus(ident = ident2) } returns
+            MeldestatusResponse(
+                arenaPersonId = 2L,
+                personIdent = ident2,
+                formidlingsgruppe = "Formidling",
+                harMeldtSeg = false,
+                meldepliktListe = listOf(),
+                meldegruppeListe = listOf(),
+            )
+
+        val aktiverHendelserJob =
+            AktiverHendelserJob(
+                personRepositoryMock,
+                personServiceMock,
+                personMediatorMock,
+                meldestatusMediatorMock,
+                meldepliktConnectorMock,
+                httpClient = createMockClient(OK.value, ""),
+                jobbkjøringMetrikker = jobbkjøringMetrikker,
+            )
+
+        aktiverHendelserJob.execute()
+
+        verify(exactly = 1) { personMediatorMock.behandle(vedtakSomFeiler) }
+        verify(exactly = 1) {
+            meldestatusMediatorMock.behandleHendelse(
+                meldestatusId = "ident2-behandles-1",
+                person = any(),
+                meldestatus = any(),
+            )
+        }
+
+        verify(exactly = 0) { personRepositoryMock.slettFremtidigHendelse("ident1-feiler-1") }
+        verify(exactly = 1) { personRepositoryMock.slettFremtidigHendelse("ident2-behandles-1") }
+
+        coVerify(exactly = 1) { meldepliktConnectorMock.hentMeldestatus(any(), eq(ident2), any()) }
     }
 
     @Test
