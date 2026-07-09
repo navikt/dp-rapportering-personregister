@@ -112,9 +112,13 @@ internal class AktiverHendelserJob(
                         personRepository.slettFremtidigHendelse(hendelse.referanseId)
                         logger.info { "Behandlet hendelse med referanseId=${hendelse.referanseId}. Fremtidig hendelse er slettet." }
                     } else {
-                        throw RuntimeException(
-                            "Fant ikke person. Kan ikke aktivere hendelser for personen.",
-                        )
+                        logger.warn {
+                            "Fant ikke person. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
+                        }
+                        sikkerLogg.warn {
+                            "Fant ikke person med ident=$ident. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
+                        }
+                        personRepository.slettFremtidigHendelse(hendelse.referanseId)
                     }
                 }
             } catch (e: Exception) {

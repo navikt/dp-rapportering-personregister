@@ -412,6 +412,49 @@ class AktiverHendelserJobTest : ApiTestSetup() {
     }
 
     @Test
+    fun `aktiverHendelser ignorerer og sletter fremtidig hendelse når person ikke finnes`() {
+        val personRepositoryMock = mockk<PersonRepository>()
+        val personServiceMock = mockk<PersonService>()
+        val personMediatorMock = mockk<PersonMediator>()
+        val meldestatusMediatorMock = mockk<MeldestatusMediator>(relaxed = true)
+        val meldepliktConnectorMock = mockk<MeldepliktConnector>(relaxed = true)
+
+        val hendelse =
+            VedtakHendelse(
+                ident = ident1,
+                referanseId = "mangler-person-1",
+                startDato = LocalDateTime.now().minusDays(1),
+                utfall = true,
+            )
+
+        every { personRepositoryMock.hentHendelserSomSkalAktiveres() } returns listOf(hendelse)
+        every { personRepositoryMock.slettFremtidigHendelse(hendelse.referanseId) } just Runs
+        every { personServiceMock.hentPerson(ident1) } returns null
+
+        val aktiverHendelserJob =
+            AktiverHendelserJob(
+                personRepositoryMock,
+                personServiceMock,
+                personMediatorMock,
+                meldestatusMediatorMock,
+                meldepliktConnectorMock,
+                httpClient = createMockClient(OK.value, ""),
+                jobbkjøringMetrikker = jobbkjøringMetrikker,
+            )
+
+        aktiverHendelserJob.execute()
+
+        verify(exactly = 1) { personServiceMock.hentPerson(ident1) }
+        verify(exactly = 1) { personRepositoryMock.slettFremtidigHendelse(hendelse.referanseId) }
+        verify(exactly = 0) { personMediatorMock.behandle(any<VedtakHendelse>()) }
+        coVerify(exactly = 0) { meldepliktConnectorMock.hentMeldestatus(any(), any(), any()) }
+
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbSjekketOmDenSkulleKjøre() }
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 1) }
+        verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
+    }
+
+    @Test
     fun `execute inkrementerer metrikker hvis jobben feiler`() {
         val personRepositoryMock = mockk<PersonRepository> {}
         every { personRepositoryMock.hentHendelserSomSkalAktiveres() } throws RuntimeException()
