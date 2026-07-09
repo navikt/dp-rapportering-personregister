@@ -79,60 +79,75 @@ class BehandlingsresultatMottak(
 
                 personRepository.slettFremtidigeVedtakHendelser(ident)
 
-                packet["rettighetsperioder"]
-                    .toList()
-                    .sortedBy { it["fraOgMed"].asLocalDate() }
-                    .forEachIndexed { index, rettighetsperiode ->
-                        val opprinnelse = rettighetsperiode["opprinnelse"].asText()
-                        val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
-                        val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
-                        val harRett = rettighetsperiode["harRett"].asBoolean()
+                val rettighetsperioder =
+                    packet["rettighetsperioder"]
+                        .toList()
+                        .map { rettighetsperiode ->
+                            val opprinnelse = rettighetsperiode["opprinnelse"].asText()
+                            val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
+                            val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
+                            val harRett = rettighetsperiode["harRett"].asBoolean()
 
-                        if (rettighetsperiodenSkalBehandlesNå(opprinnelse, fraOgMed)) {
-                            logger.info {
-                                "Rettighetsperiode behandles nå: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
-                            }
-                            val vedtakHendelse =
-                                VedtakHendelse(
-                                    ident = ident,
-                                    dato = now(),
-                                    startDato = fraOgMed.atStartOfDay(),
-                                    sluttDato = tilOgMed?.atStartOfDay(),
-                                    referanseId = "$behandlingId-$index",
-                                    utfall = harRett,
-                                )
-                            personMediator.behandle(vedtakHendelse)
-                        }
+                            Rettighetsperiode(opprinnelse, fraOgMed, tilOgMed, harRett)
+                        }.sortedBy { it.fraOgMed }
 
-                        if (rettighetsperiodenSkalBehandlesSomFremtidigStart(fraOgMed)) {
-                            logger.info {
-                                "Rettighetsperiode med fremtidig start legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
-                            }
-                            fremtidigHendelseMediator.behandle(
-                                VedtakHendelse.medFremtidigStart(
-                                    ident = ident,
-                                    startDato = fraOgMed.atStartOfDay(),
-                                    sluttDato = tilOgMed?.atStartOfDay(),
-                                    referanseId = "$behandlingId-$index",
-                                    utfall = harRett,
-                                ),
-                            )
+                rettighetsperioder.forEachIndexed { index, rettighetsperiode ->
+                    val (opprinnelse, fraOgMed, tilOgMed, harRett) = rettighetsperiode
+                    val harNyRettighetsperiodeFraDagenEtter =
+                        rettighetsperioder.harNyRettighetsperiodeFraDagenEtterTilOgMed(
+                            rettighetsperiode,
+                        )
+
+                    if (rettighetsperiodenSkalBehandlesNå(opprinnelse, fraOgMed)) {
+                        logger.info {
+                            "Rettighetsperiode behandles nå: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
                         }
-                        if (tilOgMed != null && rettighetsperiodenSkalBehandlesSomFremtidigStans(tilOgMed)) {
-                            logger.info {
-                                "Rettighetsperiode med fremtidig stans legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
-                            }
-                            fremtidigHendelseMediator.behandle(
-                                VedtakHendelse.medFremtidigStans(
-                                    ident = ident,
-                                    startDato = fraOgMed.atStartOfDay(),
-                                    sluttDato = tilOgMed.atStartOfDay(),
-                                    referanseId = "$behandlingId-$index",
-                                    utfall = harRett,
-                                ),
+                        val vedtakHendelse =
+                            VedtakHendelse(
+                                ident = ident,
+                                dato = now(),
+                                startDato = fraOgMed.atStartOfDay(),
+                                sluttDato = tilOgMed?.atStartOfDay(),
+                                referanseId = "$behandlingId-$index",
+                                utfall = harRett,
+                                harNyRettighetsperiodeFraDagenEtter = harNyRettighetsperiodeFraDagenEtter,
                             )
-                        }
+                        personMediator.behandle(
+                            vedtakHendelse = vedtakHendelse,
+                        )
                     }
+
+                    if (rettighetsperiodenSkalBehandlesSomFremtidigStart(rettighetsperiode)) {
+                        logger.info {
+                            "Rettighetsperiode med fremtidig start legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
+                        }
+                        fremtidigHendelseMediator.behandle(
+                            VedtakHendelse.medFremtidigStart(
+                                ident = ident,
+                                startDato = fraOgMed.atStartOfDay(),
+                                sluttDato = tilOgMed?.atStartOfDay(),
+                                referanseId = "$behandlingId-$index",
+                                utfall = harRett,
+                            ),
+                        )
+                    }
+                    if (tilOgMed != null && rettighetsperiodenSkalBehandlesSomFremtidigStans(rettighetsperiode) &&
+                        !harNyRettighetsperiodeFraDagenEtter
+                    ) {
+                        logger.info {
+                            "Rettighetsperiode med fremtidig stans legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
+                        }
+                        fremtidigHendelseMediator.behandle(
+                            VedtakHendelse.medFremtidigStans(
+                                ident = ident,
+                                startDato = fraOgMed.atStartOfDay(),
+                                sluttDato = tilOgMed.atStartOfDay(),
+                                referanseId = "$behandlingId-$index",
+                                utfall = harRett,
+                            ),
+                        )
+                    }
+                }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved behandling av behandlingsresultat" }
                 sikkerlogg.error(e) { "Feil ved behandling av behandlingsresultat, ident=$ident. Selve meldingen er logget tidligere." }
@@ -147,11 +162,23 @@ class BehandlingsresultatMottak(
         fraOgMed: LocalDate,
     ): Boolean = opprinnelse != OPPRINNELSE_PÅ_RETTIGHETSPERIODER_SOM_ER_BEHANDLET_TIDLIGERE && fraOgMed.erFortidEllerIdag()
 
-    private fun rettighetsperiodenSkalBehandlesSomFremtidigStart(fraOgMed: LocalDate): Boolean = !fraOgMed.erFortidEllerIdag()
+    private fun rettighetsperiodenSkalBehandlesSomFremtidigStart(rettighetsperiode: Rettighetsperiode): Boolean =
+        !rettighetsperiode.fraOgMed.erFortidEllerIdag()
 
-    private fun rettighetsperiodenSkalBehandlesSomFremtidigStans(tilOgMed: LocalDate): Boolean = tilOgMed.erIdagEllerIFremtid()
+    private fun rettighetsperiodenSkalBehandlesSomFremtidigStans(rettighetsperiode: Rettighetsperiode): Boolean =
+        rettighetsperiode.tilOgMed?.erIdagEllerIFremtid() ?: false
 
     private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
 
     private fun LocalDate.erIdagEllerIFremtid() = isAfter(LocalDate.now().minusDays(1))
+
+    private fun List<Rettighetsperiode>.harNyRettighetsperiodeFraDagenEtterTilOgMed(rettighetsperiode: Rettighetsperiode): Boolean =
+        any { it.fraOgMed == rettighetsperiode.tilOgMed?.plusDays(1) }
+
+    private data class Rettighetsperiode(
+        val opprinnelse: String,
+        val fraOgMed: LocalDate,
+        val tilOgMed: LocalDate?,
+        val harRett: Boolean,
+    )
 }

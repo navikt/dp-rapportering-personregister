@@ -73,7 +73,24 @@ fun vedtakHendelse(
     sluttDato: LocalDateTime?,
     referanseId: String = "vedtak-123",
     utfall: Boolean = true,
+    harNyRettighetsperiodeFraDagenEtter: Boolean = false,
 ) = VedtakHendelse(
+    ident = ident,
+    dato = dato,
+    startDato = startDato,
+    referanseId = referanseId,
+    sluttDato = sluttDato,
+    utfall = utfall,
+    harNyRettighetsperiodeFraDagenEtter = harNyRettighetsperiodeFraDagenEtter,
+)
+
+fun vedtakHendelseMedFremtidigStart(
+    dato: LocalDateTime = nå,
+    startDato: LocalDateTime,
+    sluttDato: LocalDateTime? = null,
+    referanseId: String = "vedtak-123",
+    utfall: Boolean = true,
+) = VedtakHendelse.medFremtidigStart(
     ident = ident,
     dato = dato,
     startDato = startDato,

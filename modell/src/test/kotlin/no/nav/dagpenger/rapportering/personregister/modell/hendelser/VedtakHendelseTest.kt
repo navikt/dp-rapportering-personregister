@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelseMedFremtidigStans
+import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelseMedFremtidigStart
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -226,13 +227,70 @@ class VedtakHendelseTest {
     fun `erFremtidigStansHendelse returnerer true for hendelse laget med medFremtidigStopp`() {
         val hendelse = vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = fremtid)
 
-        hendelse.erFremtidigStansHendelse() shouldBe true
+        hendelse.erFremtidigStansHendelse shouldBe true
     }
 
     @Test
     fun `erFremtidigStansHendelse returnerer false for vanlig VedtakHendelse`() {
         val hendelse = vedtakHendelse(utfall = true, startDato = nå, sluttDato = null)
 
-        hendelse.erFremtidigStansHendelse() shouldBe false
+        hendelse.erFremtidigStansHendelse shouldBe false
+    }
+
+    @Test
+    fun `erFremtidigStartHendelse returnerer true for hendelse laget med medFremtidigStart`() {
+        val hendelse = vedtakHendelseMedFremtidigStart(startDato = fremtid)
+
+        hendelse.erFremtidigStartHendelse shouldBe true
+    }
+
+    @Test
+    fun `erFremtidigStartHendelse returnerer false for vanlig VedtakHendelse`() {
+        val hendelse = vedtakHendelse(utfall = true, startDato = nå, sluttDato = null)
+
+        hendelse.erFremtidigStartHendelse shouldBe false
+    }
+
+    @Test
+    fun `erFremtidigStartHendelse returnerer false for fremtidig-stans-hendelse`() {
+        val hendelse = vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = fremtid)
+
+        hendelse.erFremtidigStartHendelse shouldBe false
+    }
+
+    @Test
+    fun `hendelse med harNyRettighetsperiodeFraDagenEtter true sender ikke stoppmelding selv om utfall er true og sluttDato er i fortid`() {
+        val observer = mockk<PersonObserver>(relaxed = true)
+        testPerson {
+            addObserver(observer)
+            setAnsvarligSystem(AnsvarligSystem.DP)
+            behandle(vedtakHendelse(utfall = true, startDato = fortid, sluttDato = fortid, harNyRettighetsperiodeFraDagenEtter = true))
+
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `hendelse med harNyRettighetsperiodeFraDagenEtter true sender ikke stoppmelding ved utfall false`() {
+        val observer = mockk<PersonObserver>(relaxed = true)
+        testPerson {
+            addObserver(observer)
+            setAnsvarligSystem(AnsvarligSystem.DP)
+            behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null, harNyRettighetsperiodeFraDagenEtter = true))
+
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `en vedtakHendelseMedFremtidigStart sender ikke stoppmelding`() {
+        val observer = mockk<PersonObserver>(relaxed = true)
+        testPerson {
+            addObserver(observer)
+            setAnsvarligSystem(AnsvarligSystem.DP)
+            behandle(vedtakHendelseMedFremtidigStart(utfall = true, startDato = fortid, sluttDato = fortid))
+
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+        }
     }
 }

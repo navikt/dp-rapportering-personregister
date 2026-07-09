@@ -21,6 +21,7 @@ data class VedtakHendelse(
     override val referanseId: String,
     override val sluttDato: LocalDateTime? = null,
     val utfall: Boolean,
+    val harNyRettighetsperiodeFraDagenEtter: Boolean = false,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ
 
@@ -64,7 +65,7 @@ data class VedtakHendelse(
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
-        if (utfall && !erFremtidigStansHendelse()) {
+        if (skalFøreTilStart) {
             val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
 
@@ -76,7 +77,7 @@ data class VedtakHendelse(
             )
         }
 
-        if (!utfall || sluttDato.erFortid()) {
+        if (skalFøreTilStans) {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
@@ -96,7 +97,7 @@ data class VedtakHendelse(
                         person.hendelser
                             .filterIsInstance<MeldesyklusErPassertHendelse>()
                             .any {
-                                it.dato.isAfter(startDato)
+                                it.dato.isAfter(startDato) // burde vi her sjekke at det er før sluttdato også?
                             }
 
                     person.arbeidssøkerperioder.gjeldende
@@ -105,7 +106,12 @@ data class VedtakHendelse(
             }
     }
 
-    internal fun erFremtidigStansHendelse() = referanseId.startsWith(PREFIKS_FREMTIDIG_STANS)
+    internal val erFremtidigStansHendelse get() = referanseId.startsWith(PREFIKS_FREMTIDIG_STANS)
+    internal val erFremtidigStartHendelse get() = referanseId.startsWith(PREFIKS_FREMTIDIG_START)
+    private val skalFøreTilStart get() = utfall && !erFremtidigStansHendelse
+    private val skalFøreTilStans get() =
+        !harNyRettighetsperiodeFraDagenEtter && !erFremtidigStartHendelse &&
+            (!utfall || sluttDato.erFortid())
 }
 
 private fun LocalDateTime?.erFortid() = this?.toLocalDate()?.isBefore(LocalDate.now()) ?: false
