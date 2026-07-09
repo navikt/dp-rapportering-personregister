@@ -70,6 +70,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.StartAktiverHendelserJobManueltMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakFattetUtenforArenaMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -334,6 +335,10 @@ internal class ApplicationBuilder(
                             personRepository,
                         ),
                         arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
+                    )
+                    StartAktiverHendelserJobManueltMottak(
+                        rapidsConnection = rapid,
+                        aktiverHendelserJob = aktiverHendelserJob,
                     )
                 }
 
