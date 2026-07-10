@@ -796,7 +796,7 @@ infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed) }
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
 }
 
 class BeslutningObserver(
