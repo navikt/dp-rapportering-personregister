@@ -35,6 +35,7 @@ class PersonObserverMeldekortregister(
                         put("ident", person.ident)
                         put("fraOgMed", fraOgMed)
                         tilOgMed?.let { put("tilOgMed", it) }
+                        put("harRett", true)
                         put("handling", "START")
                         put("referanseId", UUIDv7.newUuid().toString())
                         put("skalMigreres", skalMigreres)
@@ -54,6 +55,7 @@ class PersonObserverMeldekortregister(
         person: Person,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
+        harRett: Boolean,
     ) {
         logger.info { "Sender Stopp-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Stopp-melding til Meldekortregister for person ${person.ident}" }
@@ -67,6 +69,7 @@ class PersonObserverMeldekortregister(
                         put("ident", person.ident)
                         put("fraOgMed", fraOgMed)
                         tilOgMed?.let { put("tilOgMed", it) }
+                        put("harRett", harRett)
                         put("handling", "STOPP")
                         put("referanseId", UUIDv7.newUuid().toString())
                         put("skalMigreres", false)

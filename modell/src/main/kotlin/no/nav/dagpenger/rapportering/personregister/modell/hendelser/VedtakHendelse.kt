@@ -79,7 +79,7 @@ data class VedtakHendelse(
         if (!utfall || sluttDato.erFortid()) {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
-                person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato)
+                person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, harRett = utfall)
             }
         }
 

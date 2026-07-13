@@ -146,7 +146,14 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = fortid, sluttDato = fortid))
 
             verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 1) {
+                observer.sendStoppMeldingTilMeldekortregister(
+                    person = any(),
+                    fraOgMed = fortid,
+                    tilOgMed = fortid,
+                    harRett = true,
+                )
+            }
         }
     }
 
@@ -158,7 +165,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = nå))
 
             verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -170,7 +177,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = nå))
 
             verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -182,7 +189,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = fremtid))
 
             verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -194,7 +201,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null))
 
             verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -206,7 +213,14 @@ class VedtakHendelseTest {
             setAnsvarligSystem(AnsvarligSystem.DP)
             behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
 
-            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 1) {
+                observer.sendStoppMeldingTilMeldekortregister(
+                    person = any(),
+                    fraOgMed = nå,
+                    tilOgMed = null,
+                    harRett = false,
+                )
+            }
         }
     }
 
@@ -218,7 +232,7 @@ class VedtakHendelseTest {
             setAnsvarligSystem(AnsvarligSystem.ARENA)
             behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
 
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 

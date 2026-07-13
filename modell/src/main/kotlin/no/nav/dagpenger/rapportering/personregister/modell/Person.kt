@@ -197,12 +197,20 @@ fun Person.sendStartMeldingTilMeldekortregister(
 fun Person.sendStoppMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
+    harRett: Boolean,
 ) {
     logger.info { "Sender Stopp-melding til Meldekortregister" }
 
     try {
         logger.info { "Antall observere: ${observers.size}" }
-        observers.forEach { observer -> observer.sendStoppMeldingTilMeldekortregister(this, fraOgMed, tilOgMed) }
+        observers.forEach { observer ->
+            observer.sendStoppMeldingTilMeldekortregister(
+                person = this,
+                fraOgMed = fraOgMed,
+                tilOgMed = tilOgMed,
+                harRett = harRett,
+            )
+        }
         logger.info { "Sendte Stopp-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Stopp-melding feilet!" }

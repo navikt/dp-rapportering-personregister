@@ -57,9 +57,10 @@ class PersonTest {
         @Test
         fun `behandler innvilget vedtak hendelse for arbeidssøker`() =
             arbeidssøker {
+                val nå = LocalDateTime.now()
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                val vedtakHendelse = vedtakHendelse()
+                val vedtakHendelse = vedtakHendelse(startDato = nå, utfall = true)
                 behandle(vedtakHendelse)
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
@@ -71,9 +72,10 @@ class PersonTest {
         @Test
         fun `behandler avslag vedtak hendelse for arbeidssøker`() =
             arbeidssøker {
+                val nå = LocalDateTime.now()
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse(utfall = false))
+                behandle(vedtakHendelse(startDato = nå, utfall = false))
 
                 ansvarligSystem shouldBe AnsvarligSystem.ARENA
                 this skalIkkeHaSendtStoppMeldingFor Periode(nå)
@@ -84,15 +86,33 @@ class PersonTest {
         @Test
         fun `behandler avslag vedtak hendelse for dagpengerbruker`() =
             arbeidssøker(overtattBekreftelse = true) {
+                val nå = LocalDateTime.now()
                 val søknadId = "456"
                 hendelser.add(søknadHendelse(referanseId = søknadId))
-                behandle(vedtakHendelse(utfall = true))
+                behandle(vedtakHendelse(startDato = nå, utfall = true))
 
-                val stansVedtak = vedtakHendelse(utfall = false)
+                val stansVedtak = vedtakHendelse(startDato = nå, utfall = false)
                 behandle(stansVedtak)
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
-                this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato)
+                this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato, harRett = false)
+                this.status shouldBe IKKE_DAGPENGERBRUKER
+                arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
+            }
+
+        @Test
+        fun `behandler stans på vedtakhendelse med utfall true for dagpengerbruker`() =
+            arbeidssøker(overtattBekreftelse = true) {
+                val søknadId = "456"
+                hendelser.add(søknadHendelse(referanseId = søknadId))
+                val nå = LocalDateTime.now()
+                behandle(vedtakHendelse(startDato = nå, utfall = true))
+
+                val stansVedtak = vedtakHendelse(startDato = nå.minusDays(2), sluttDato = nå.minusDays(1), utfall = true)
+                behandle(stansVedtak)
+
+                ansvarligSystem shouldBe AnsvarligSystem.DP
+                this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato, harRett = true)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
             }
@@ -263,9 +283,11 @@ class PersonTest {
 
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
+        startDato: LocalDateTime,
+        sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, dato, referanseId, dato.plusDays(10), utfall)
+        utfall: Boolean,
+    ) = VedtakHendelse(ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
@@ -306,14 +328,15 @@ infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato) }
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, requireNotNull(periode.harRett)) }
 }
 
 infix fun Person.skalIkkeHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato) }
+    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
 }
 
 data class Periode(
     val startDato: LocalDateTime,
     val sluttDato: LocalDateTime? = null,
+    val harRett: Boolean? = null,
 )
