@@ -41,6 +41,7 @@ class PersonObserverMeldekortregisterTest {
         message["ident"].asText() shouldBe ident
         message["fraOgMed"].asLocalDateTime() shouldBe startDato
         message["tilOgMed"] shouldBe null
+        message["harRett"].asBoolean() shouldBe true
         message["handling"].asText() shouldBe "START"
         message["referanseId"].asText() shouldNotBe null
         message["skalMigreres"].asBoolean() shouldBe true
@@ -73,13 +74,14 @@ class PersonObserverMeldekortregisterTest {
         message["ident"].asText() shouldBe ident
         message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
         message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        message["harRett"].asBoolean() shouldBe true
         message["handling"].asText() shouldBe "START"
         message["referanseId"].asText() shouldNotBe null
         message["skalMigreres"].asBoolean() shouldBe false
     }
 
     @Test
-    fun `kan sende Stopp-melding`() {
+    fun `kan sende Stopp-melding med harRett true`() {
         val testRapid = TestRapid()
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
@@ -95,7 +97,12 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
 
-        personObserverMeldekortregister.sendStoppMeldingTilMeldekortregister(person, fraOgMed, tilOgMed)
+        personObserverMeldekortregister.sendStoppMeldingTilMeldekortregister(
+            person = person,
+            fraOgMed = fraOgMed,
+            tilOgMed = tilOgMed,
+            harRett = true,
+        )
 
         testRapid.inspektør.size shouldBe 1
 
@@ -105,6 +112,45 @@ class PersonObserverMeldekortregisterTest {
         message["ident"].asText() shouldBe ident
         message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
         message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        message["harRett"].asBoolean() shouldBe true
+        message["handling"].asText() shouldBe "STOPP"
+        message["referanseId"].asText() shouldNotBe null
+        message["skalMigreres"].asBoolean() shouldBe false
+    }
+
+    @Test
+    fun `kan sende Stopp-melding med harRett false`() {
+        val testRapid = TestRapid()
+        mockkObject(ApplicationBuilder.Companion)
+        every { getRapidsConnection() } returns testRapid
+
+        val personId = 1234L
+        val ident = "12345678910"
+        val person = Person(ident)
+        val fraOgMed = LocalDateTime.now().minusDays(2)
+        val tilOgMed = LocalDateTime.now().plusDays(10)
+
+        val personRepository = mockk<PersonRepository>(relaxed = true)
+        every { personRepository.hentPersonId(eq(ident)) } returns personId
+
+        val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
+
+        personObserverMeldekortregister.sendStoppMeldingTilMeldekortregister(
+            person = person,
+            fraOgMed = fraOgMed,
+            tilOgMed = tilOgMed,
+            harRett = false,
+        )
+
+        testRapid.inspektør.size shouldBe 1
+
+        val message = testRapid.inspektør.message(0)
+        message["@event_name"].asText() shouldBe "meldekortoppretting"
+        message["personId"].asLong() shouldBe personId
+        message["ident"].asText() shouldBe ident
+        message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
+        message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        message["harRett"].asBoolean() shouldBe false
         message["handling"].asText() shouldBe "STOPP"
         message["referanseId"].asText() shouldNotBe null
         message["skalMigreres"].asBoolean() shouldBe false

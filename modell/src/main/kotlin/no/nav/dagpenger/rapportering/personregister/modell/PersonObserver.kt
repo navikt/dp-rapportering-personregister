@@ -35,5 +35,6 @@ interface PersonObserver {
         person: Person,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
+        harRett: Boolean,
     ) {}
 }
