@@ -9,7 +9,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 
@@ -20,6 +22,7 @@ class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
     private val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker: ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
@@ -65,6 +68,12 @@ class ArbeidssøkerBekreftelseMottak(
             logger.info {
                 "Mottok arbeidssøkerbekreftelse melding for periode=${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
+
+            meldingerRepository.lagreInnkommendeMelding(
+                ident = ident,
+                relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(arbeidssøkerBekreftelseMelding),
+            )
+
             runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
         } catch (e: Exception) {
             arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()

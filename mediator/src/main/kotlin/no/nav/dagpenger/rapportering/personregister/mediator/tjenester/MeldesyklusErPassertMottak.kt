@@ -8,7 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
@@ -18,6 +20,7 @@ class MeldesyklusErPassertMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
     private val meldesyklusErPassertMetrikker: MeldesyklusErPassertMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -65,6 +68,11 @@ class MeldesyklusErPassertMottak(
                     LocalDateTime.now(),
                     referanseId,
                 )
+
+            meldingerRepository.lagreInnkommendeMelding(
+                ident = ident,
+                relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(meldesyklusErPassertHendelse),
+            )
 
             personMediator.behandle(meldesyklusErPassertHendelse)
         } catch (e: Exception) {

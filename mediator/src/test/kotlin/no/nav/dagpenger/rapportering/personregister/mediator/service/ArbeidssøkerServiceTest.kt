@@ -1,17 +1,21 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
+import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDate
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -29,6 +33,7 @@ import java.time.ZoneId
 class ArbeidssøkerServiceTest {
     private val rapidsConnection = TestRapid()
     private val personRepository = mockk<PersonRepository>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
     private val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
 
@@ -38,13 +43,21 @@ class ArbeidssøkerServiceTest {
             arbeidssøkerConnector = arbeidssøkerConnector,
             meldekortregisterConnector = meldekortregisterConnector,
             rapidsConnection = { rapidsConnection },
-            avsluttetArbeidssøkerperiodeMetrikker,
+            avsluttetArbeidssøkerperiodeMetrikker = avsluttetArbeidssøkerperiodeMetrikker,
+            meldingerRepository = meldingerRepository,
         )
 
     private val ident = "12345678901"
     private val periodeId = UUIDv7.newUuid()
     private val startet = LocalDateTime.now().minusWeeks(3)
     private val avregistrertTidspunkt = LocalDateTime.now().minusDays(1)
+
+    init {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+    }
 
     @Test
     fun `kan hente siste arbeidssøkerperiode`() {
@@ -65,17 +78,24 @@ class ArbeidssøkerServiceTest {
     }
 
     @Test
-    fun `publiserer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem er DP og inkrementer metrikk`() {
+    @Suppress("MaxLineLength", "ktlint:standard:max-line-length")
+    fun `publiserer og lagrer melding med årsak fra repository og fastsattMeldedato fra meldekort når ansvarligSystem = DP + inkrementerer metrikk`() {
         val metrikk = avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count()
         runBlocking {
             val forventetMeldedato = LocalDate.now().minusDays(1)
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
 
             every { personRepository.hentPerson(ident) } returns person
-            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            every {
+                personRepository.hentÅrsakTilUtmelding(
+                    periodeId,
+                    ident,
+                )
+            } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
             coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns forventetMeldedato
 
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+            val periode = avsluttetPeriode()
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(periode)
 
             rapidsConnection.inspektør.size shouldBe 1
             with(rapidsConnection.inspektør.message(0)) {
@@ -88,18 +108,37 @@ class ArbeidssøkerServiceTest {
             }
             verify(exactly = 0) { personRepository.lagreÅrsakTilUtmelding(any(), any(), any()) }
             avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count() shouldBe metrikk + 1
+
+            coVerify(exactly = 1) {
+                meldingerRepository.lagreUtgåendeMelding(
+                    korrelasjonsId = any(),
+                    ident = ident,
+                    melding =
+                        match { melding ->
+                            with(defaultObjectMapper.readTree(melding)) {
+                                this["@event_name"].asText() == "avsluttet_arbeidssokerperiode" &&
+                                    this["ident"].asText() == ident &&
+                                    this["periodeId"].asText() == periodeId.toString() &&
+                                    this["avregistrertTidspunkt"].asLocalDateTime() == periode.avsluttet &&
+                                    this["årsak"].asText() == ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT.dbValue &&
+                                    this["fastsattMeldedato"].asLocalDate() == forventetMeldedato
+                            }
+                        },
+                )
+            }
         }
     }
 
     @Test
-    fun `lagrer årsak som UTMELDT_I_ARBEIDSSØKERREGISTERET når årsak til utmelding ikke finnes fra før av`() {
+    fun `lagrer årsak som UTMELDT_I_ARBEIDSSØKERREGISTERET når årsak til utmelding ikke finnes fra før av og lagrer meldingen`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns null
 
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+            val periode = avsluttetPeriode()
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(periode)
 
             rapidsConnection.inspektør.message(0)["årsak"].asText() shouldBe
                 ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue
@@ -110,20 +149,57 @@ class ArbeidssøkerServiceTest {
                     ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
                 )
             }
+
+            coVerify(exactly = 1) {
+                meldingerRepository.lagreUtgåendeMelding(
+                    korrelasjonsId = any(),
+                    ident = ident,
+                    melding =
+                        match { melding ->
+                            with(defaultObjectMapper.readTree(melding)) {
+                                this["@event_name"].asText() == "avsluttet_arbeidssokerperiode" &&
+                                    this["ident"].asText() == ident &&
+                                    this["periodeId"].asText() == periodeId.toString() &&
+                                    this["avregistrertTidspunkt"].asLocalDateTime() == periode.avsluttet &&
+                                    this["årsak"].asText() == ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue &&
+                                    this["fastsattMeldedato"] == null
+                            }
+                        },
+                )
+            }
         }
     }
 
     @Test
-    fun `utelater fastsattMeldedato når ingen innsendte meldekort finnes`() {
+    fun `utelater fastsattMeldedato når ingen innsendte meldekort finnes og lagrer meldingen`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
             every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery { meldekortregisterConnector.hentSisteFastsattMeldedato(ident) } returns null
 
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode())
+            val periode = avsluttetPeriode()
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(periode)
 
             rapidsConnection.inspektør.message(0).has("fastsattMeldedato") shouldBe false
+
+            coVerify(exactly = 1) {
+                meldingerRepository.lagreUtgåendeMelding(
+                    korrelasjonsId = any(),
+                    ident = ident,
+                    melding =
+                        match { melding ->
+                            with(defaultObjectMapper.readTree(melding)) {
+                                this["@event_name"].asText() == "avsluttet_arbeidssokerperiode" &&
+                                    this["ident"].asText() == ident &&
+                                    this["periodeId"].asText() == periodeId.toString() &&
+                                    this["avregistrertTidspunkt"].asLocalDateTime() == periode.avsluttet &&
+                                    this["årsak"].asText() == ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue &&
+                                    this["fastsattMeldedato"] == null
+                            }
+                        },
+                )
+            }
         }
     }
 

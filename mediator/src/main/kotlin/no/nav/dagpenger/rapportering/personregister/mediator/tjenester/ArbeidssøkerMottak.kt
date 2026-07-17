@@ -5,7 +5,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -22,20 +24,33 @@ class ArbeidssøkerMottak(
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
     private val arbeidssøkerService: ArbeidssøkerService,
     private val unleash: Unleash,
+    private val meldingerRepository: MeldingerRepository,
 ) {
     @WithSpan
     fun consume(records: ConsumerRecords<Long, Periode>) =
         records.forEach { record ->
             val periode = record.value()
 
-            try {
-                logger.info { "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}" }
-                sikkerLogg.info {
-                    "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}, ident=${periode.identitetsnummer}"
-                }
-                arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
+            logger.info { "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}" }
+            sikkerLogg.info {
+                "Mottok periode-melding fra Arbeidssøkerregisteret med key=${record.key()}, periodeId=${periode.id}, ident=${periode.identitetsnummer}"
+            }
+            arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeMottatt.increment()
 
-                val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
+            val arbeidssøkerperiode =
+                try {
+                    periode.tilArbeidssøkerperiode()
+                } catch (e: Exception) {
+                    logger.error(e) { "Feil ved parsing av periode-melding" }
+                    sikkerLogg.error(e) { "Feil ved parsing av periode-melding, ident=${periode.identitetsnummer}: $periode" }
+                    throw e
+                }
+
+            try {
+                meldingerRepository.lagreInnkommendeMelding(
+                    ident = arbeidssøkerperiode.ident,
+                    relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(arbeidssøkerperiode),
+                )
 
                 if (arbeidssøkerperiode.avregistrert()) {
                     if (unleash.isEnabled("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")) {

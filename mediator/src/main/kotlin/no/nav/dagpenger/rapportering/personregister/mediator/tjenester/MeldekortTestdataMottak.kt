@@ -7,9 +7,11 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.MessageMetadata
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 
 class MeldekortTestdataMottak(
     rapidsConnection: RapidsConnection,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         logger.info { "Starter MeldekortTestdataMottak" }
@@ -27,6 +29,11 @@ class MeldekortTestdataMottak(
         meterRegistry: MeterRegistry,
     ) {
         logger.info { "Tar imot meldekort testdata: ${packet.toJson()}" }
+
+        meldingerRepository.lagreInnkommendeMelding(
+            ident = null,
+            relevantMeldingsinnhold = packet.toJson(),
+        )
     }
 
     companion object {

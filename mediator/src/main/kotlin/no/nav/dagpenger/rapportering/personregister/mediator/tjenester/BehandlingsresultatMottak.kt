@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
@@ -30,6 +31,7 @@ class BehandlingsresultatMottak(
     private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
     private val behandlingsresultatMetrikker: BehandlingsresultatMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -76,6 +78,11 @@ class BehandlingsresultatMottak(
 
             try {
                 ident.validerIdent()
+
+                meldingerRepository.lagreInnkommendeMelding(
+                    ident = ident,
+                    relevantMeldingsinnhold = packet.toJson(),
+                )
 
                 personRepository.slettFremtidigeVedtakHendelser(ident)
 

@@ -8,7 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import java.time.LocalDateTime
@@ -19,6 +21,7 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class NødbremsMottak(
     val rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -43,14 +46,20 @@ class NødbremsMottak(
         sikkerLogg.info { "Mottok melding om at nødbrems aktiveres for $ident" }
 
         try {
-            personMediator.behandle(
+            val hendelse =
                 NødbremsHendelse(
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),
                     referanseId = UUIDv7.newUuid().toString(),
-                ),
+                )
+
+            meldingerRepository.lagreInnkommendeMelding(
+                ident = ident,
+                relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(hendelse),
             )
+
+            personMediator.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av nødbrems" }
             sikkerLogg.error(e) { "Feil ved behandling av nødbrems: ${packet.toJson()}" }
