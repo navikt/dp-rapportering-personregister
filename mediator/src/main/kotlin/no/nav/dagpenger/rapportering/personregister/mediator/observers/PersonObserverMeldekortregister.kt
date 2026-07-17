@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.observers
 import com.github.navikt.tbd_libs.rapids_and_rivers.JsonMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.Companion.getRapidsConnection
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -11,6 +12,7 @@ import java.time.LocalDateTime
 
 class PersonObserverMeldekortregister(
     private val personRepository: PersonRepository,
+    private val meldingerRepository: MeldingerRepository,
 ) : PersonObserver {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -44,6 +46,10 @@ class PersonObserverMeldekortregister(
 
             sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
             getRapidsConnection().publish(person.ident, message.toJson())
+            meldingerRepository.lagreUtgåendeMelding(
+                ident = person.ident,
+                melding = message.toJson(),
+            )
         } catch (e: Exception) {
             logger.error(e) { "Feil ved sending av Start-melding til Meldekortregister" }
             sikkerlogg.error(e) { "Feil ved sending av Start-melding til Meldekortregister for person ${person.ident}" }
@@ -78,6 +84,10 @@ class PersonObserverMeldekortregister(
 
             sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }
             getRapidsConnection().publish(person.ident, message.toJson())
+            meldingerRepository.lagreUtgåendeMelding(
+                ident = person.ident,
+                melding = message.toJson(),
+            )
         } catch (e: Exception) {
             logger.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister" }
             sikkerlogg.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister for person ${person.ident}" }

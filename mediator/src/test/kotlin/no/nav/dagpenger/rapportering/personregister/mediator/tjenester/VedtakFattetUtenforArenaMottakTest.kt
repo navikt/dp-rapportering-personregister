@@ -3,10 +3,13 @@ package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.vedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import org.junit.jupiter.api.BeforeEach
@@ -15,9 +18,15 @@ import org.junit.jupiter.api.Test
 class VedtakFattetUtenforArenaMottakTest {
     private val testRapid = TestRapid()
     private val behandlingRepository = mockk<BehandlingRepository>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
-        VedtakFattetUtenforArenaMottak(testRapid, behandlingRepository, vedtakMetrikker)
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+
+        VedtakFattetUtenforArenaMottak(testRapid, behandlingRepository, vedtakMetrikker, meldingerRepository)
     }
 
     @BeforeEach
@@ -26,7 +35,7 @@ class VedtakFattetUtenforArenaMottakTest {
     }
 
     @Test
-    fun `onPacket behandler melding og inkrementere metrikk`() {
+    fun `onPacket behandler melding, lagrer den og inkrementere metrikk`() {
         val metrikkCount = vedtakMetrikker.vedtakFattetUtenforArenaMottatt.count()
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
@@ -41,6 +50,21 @@ class VedtakFattetUtenforArenaMottakTest {
                 eq(søknadId),
                 eq(ident),
                 eq(sakId),
+            )
+        }
+        coVerify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = any(),
+                ident = ident,
+                relevantMeldingsinnhold =
+                    match { melding ->
+                        with(defaultObjectMapper.readTree(melding)) {
+                            this["ident"].asText() == ident &&
+                                this["behandlingId"].asText() == behandlingId &&
+                                this["søknadId"].asText() == søknadId &&
+                                this["sakId"].asText() == sakId
+                        }
+                    },
             )
         }
         vedtakMetrikker.vedtakFattetUtenforArenaMottatt.count() shouldBe metrikkCount + 1

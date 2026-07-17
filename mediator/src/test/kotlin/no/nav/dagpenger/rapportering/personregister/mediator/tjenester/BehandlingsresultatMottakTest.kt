@@ -4,13 +4,16 @@ import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.Called
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.behandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -19,21 +22,29 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDate.now
+import java.time.format.DateTimeFormatter.ISO_DATE
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
 
 class BehandlingsresultatMottakTest {
     private val testRapid = TestRapid()
     private val personRepository = mockk<PersonRepository>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
     private val personMediator = mockk<PersonMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
 
     init {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+
         BehandlingsresultatMottak(
             testRapid,
             personRepository,
             personMediator,
             fremtidigHendelseMediator,
             behandlingsresultatMetrikker,
+            meldingerRepository,
         )
     }
 
@@ -43,7 +54,7 @@ class BehandlingsresultatMottakTest {
     }
 
     @Test
-    fun `onPacket behandler melding og inkrementerer metrikk`() {
+    fun `onPacket behandler melding, lagrer den og inkrementerer metrikk`() {
         val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatMottatt.count()
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
@@ -91,6 +102,26 @@ class BehandlingsresultatMottakTest {
         testRapid.sendTestMessage(behandlingsresultat)
 
         verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident)) }
+        coVerify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = any(),
+                ident = ident,
+                relevantMeldingsinnhold =
+                    match { melding ->
+                        with(defaultObjectMapper.readTree(melding)) {
+                            this["ident"].asText() == ident &&
+                                this["rettighetsperioder"].size() == 2 &&
+                                this["rettighetsperioder"][0]["fraOgMed"].asText() == fraOgMed1.format(ISO_DATE) &&
+                                this["rettighetsperioder"][0]["tilOgMed"].asText() == tilOgMed1.format(ISO_DATE) &&
+                                this["rettighetsperioder"][0]["harRett"].asBoolean() &&
+                                this["rettighetsperioder"][0]["opprinnelse"].asText() == "Ny" &&
+                                this["rettighetsperioder"][1]["fraOgMed"].asText() == fraOgMed2.format(ISO_DATE) &&
+                                !this["rettighetsperioder"][1]["harRett"].asBoolean() &&
+                                this["rettighetsperioder"][1]["opprinnelse"].asText() == "Ny"
+                        }
+                    },
+            )
+        }
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident

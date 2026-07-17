@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.AktiverHendelserJob
 
 private val logger = KotlinLogging.logger {}
@@ -15,6 +16,7 @@ private val logger = KotlinLogging.logger {}
 internal class StartAktiverHendelserJobManueltMottak(
     val rapidsConnection: RapidsConnection,
     val aktiverHendelserJob: AktiverHendelserJob,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -30,8 +32,18 @@ internal class StartAktiverHendelserJobManueltMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        logger.info { "Mottok melding om at AktiverHendelserJob skal startes manuelt" }
+        try {
+            logger.info { "Mottok melding om at AktiverHendelserJob skal startes manuelt" }
 
-        aktiverHendelserJob.execute()
+            meldingerRepository.lagreInnkommendeMelding(
+                ident = null,
+                relevantMeldingsinnhold = packet.toJson(),
+            )
+
+            aktiverHendelserJob.execute()
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av ramp_start_aktiver_hendelser_job_manuelt" }
+            throw e
+        }
     }
 }

@@ -31,6 +31,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -126,6 +127,7 @@ internal class ApplicationBuilder(
     private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = ArbeidssøkerBeslutningRepositoryPostgres(dataSource, actionTimer)
     private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
+    private val meldingerRepository = MeldingerRepositoryPostgres(dataSource)
 
     private val tempPersonRepository = TempPersonRepositoryPostgres(dataSource)
 
@@ -169,7 +171,7 @@ internal class ApplicationBuilder(
         ArbeidssøkerBeslutningObserver(
             arbeidssøkerBeslutningRepository,
         )
-    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
+    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl), actionTimer, pdlIdentCache)
     private val personService =
@@ -186,6 +188,7 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
             { getRapidsConnection() },
             avsluttetArbeidssøkerperiodeMetrikker,
+            meldingerRepository,
         )
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
@@ -234,8 +237,14 @@ internal class ApplicationBuilder(
         )
 
     private val arbeidssøkerMottak =
-        ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
-    private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+        ArbeidssøkerMottak(
+            arbeidssøkerMediator,
+            arbeidssøkerperiodeMetrikker,
+            arbeidssøkerService,
+            unleash,
+            meldingerRepository,
+        )
+    private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
     private val bekreftelseKafkaProdusent =
         kafkaFactory.createProducer<Long, Bekreftelse>(
             clientId = "teamdagpenger-rapportering-producer",
@@ -243,7 +252,10 @@ internal class ApplicationBuilder(
             valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
         )
     private val arbeidssøkerBekreftelseKafka =
-        ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker)
+        ArbeidssøkerBekreftelseKafka(
+            bekreftelseKafkaProdusent,
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker,
+        )
 
     private val aktiverHendelserJob =
         AktiverHendelserJob(
@@ -310,23 +322,30 @@ internal class ApplicationBuilder(
                     logger.info { "Starter rapid with" }
                     logger.info { "config: $config" }
 
-                    MeldekortTestdataMottak(rapid)
+                    MeldekortTestdataMottak(rapid, meldingerRepository)
                     MeldestatusMottak(
                         rapid,
                         meldestatusMediator,
                         meldestatusMetrikker,
+                        meldingerRepository,
                     )
-                    MeldesyklusErPassertMottak(rapid, personMediator, meldesyklusErPassertMetrikker)
-                    SøknadMottak(rapid, søknadService, søknadMetrikker)
+                    MeldesyklusErPassertMottak(
+                        rapid,
+                        personMediator,
+                        meldesyklusErPassertMetrikker,
+                        meldingerRepository,
+                    )
+                    SøknadMottak(rapid, søknadService, søknadMetrikker, meldingerRepository)
                     BehandlingsresultatMottak(
                         rapid,
                         personRepository,
                         personMediator,
                         fremtidigHendelseMediator,
                         behandlingsresultatMetrikker,
+                        meldingerRepository,
                     )
-                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
-                    NødbremsMottak(rapid, personMediator)
+                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker, meldingerRepository)
+                    NødbremsMottak(rapid, personMediator, meldingerRepository)
                     ArbeidssøkerBekreftelseMottak(
                         rapid,
                         ArbeidssøkerBekreftelseService(
@@ -335,10 +354,12 @@ internal class ApplicationBuilder(
                             personRepository,
                         ),
                         arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
+                        meldingerRepository,
                     )
                     StartAktiverHendelserJobManueltMottak(
                         rapidsConnection = rapid,
                         aktiverHendelserJob = aktiverHendelserJob,
+                        meldingerRepository = meldingerRepository,
                     )
                 }
 

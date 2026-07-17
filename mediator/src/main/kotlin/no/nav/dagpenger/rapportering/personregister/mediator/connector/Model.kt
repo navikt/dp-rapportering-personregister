@@ -47,4 +47,3 @@ data class TidspunktFraKildeResponse(
     val tidspunkt: OffsetDateTime,
     val avviksType: String,
 )
-
