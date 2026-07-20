@@ -33,7 +33,7 @@ dependencies {
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.29.0")
-    implementation("io.opentelemetry:opentelemetry-api:1.63.0")
+    implementation("io.opentelemetry:opentelemetry-api:1.64.0")
     implementation("io.getunleash:unleash-client-java:12.2.2")
     implementation("com.github.navikt.tbd-libs:naisful-app:20260616.1253")
 
@@ -47,7 +47,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.mock.oauth2.server)
     testImplementation(libs.ktor.client.mock)
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.2")
     testImplementation("io.ktor:ktor-server-test-host-jvm:${libs.versions.ktor.get()}")
     testImplementation(libs.rapids.and.rivers.test)
     testImplementation("org.testcontainers:kafka:1.21.4")
