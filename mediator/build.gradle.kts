@@ -69,6 +69,7 @@ tasks {
     withType<ShadowJar> {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         mergeServiceFiles()
+        isZip64 = true
     }
     named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
         source(zipTree(schema.singleFile))
