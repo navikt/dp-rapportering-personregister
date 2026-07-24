@@ -16,6 +16,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erFortidEllerIdag
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIdagEllerIFremtid
 import java.time.LocalDate
 import java.time.LocalDateTime.now
 
@@ -150,8 +152,4 @@ class BehandlingsresultatMottak(
     private fun rettighetsperiodenSkalBehandlesSomFremtidigStart(fraOgMed: LocalDate): Boolean = !fraOgMed.erFortidEllerIdag()
 
     private fun rettighetsperiodenSkalBehandlesSomFremtidigStans(tilOgMed: LocalDate): Boolean = tilOgMed.erIdagEllerIFremtid()
-
-    private fun LocalDate.erFortidEllerIdag() = isBefore(LocalDate.now().plusDays(1))
-
-    private fun LocalDate.erIdagEllerIFremtid() = isAfter(LocalDate.now().minusDays(1))
 }
