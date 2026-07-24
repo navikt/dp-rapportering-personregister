@@ -4,6 +4,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 group = "org.example"
 version = "0.0.1"
 
@@ -24,7 +28,7 @@ tasks.named("runKtlintFormatOverMainSourceSet").configure {
 }*/
 
 dependencies {
-    implementation(libs.jackson.annotation)
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
 }
 
 tasks.test {
