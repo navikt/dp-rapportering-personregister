@@ -40,6 +40,28 @@ class DatoUtilsTest {
         }
 
         @Test
+        fun `returnerer false når LocalDateTime er tidligere samme dag`() {
+            val iDag =
+                LocalDateTime
+                    .now()
+                    .withHour(0)
+                    .withMinute(0)
+                    .withSecond(0)
+            iDag.erFortid() shouldBe false
+        }
+
+        @Test
+        fun `returnerer false når LocalDateTime er seinere samme dag`() {
+            val iDag =
+                LocalDateTime
+                    .now()
+                    .withHour(23)
+                    .withMinute(59)
+                    .withSecond(57)
+            iDag.erFortid() shouldBe false
+        }
+
+        @Test
         fun `returnerer false når LocalDateTime er i fremtiden`() {
             val fremtid = LocalDateTime.now().plusDays(1)
             fremtid.erFortid() shouldBe false
