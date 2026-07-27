@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     application
-    id("com.gradleup.shadow") version "9.5.1"
+    id("com.gradleup.shadow") version "9.6.0"
     id("com.github.davidmc24.gradle.plugin.avro") version "1.9.1"
     kotlin
 }
@@ -34,8 +34,8 @@ dependencies {
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.29.0")
     implementation("io.opentelemetry:opentelemetry-api:1.64.0")
-    implementation("io.getunleash:unleash-client-java:12.2.2")
-    implementation("com.github.navikt.tbd-libs:naisful-app:20260616.1253")
+    implementation("io.getunleash:unleash-client-java:12.2.3")
+    implementation("com.github.navikt.tbd-libs:naisful-app:20260702.1010")
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
@@ -69,6 +69,7 @@ tasks {
     withType<ShadowJar> {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
         mergeServiceFiles()
+        isZip64 = true
     }
     named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
         source(zipTree(schema.singleFile))
