@@ -9,8 +9,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmeldin
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erDatoIFortid
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
@@ -76,7 +76,7 @@ data class VedtakHendelse(
             )
         }
 
-        if (!utfall || sluttDato.erFortid()) {
+        if (!utfall || sluttDato.erDatoIFortid()) {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, harRett = utfall)
@@ -107,5 +107,3 @@ data class VedtakHendelse(
 
     internal fun erFremtidigStansHendelse() = referanseId.startsWith(PREFIKS_FREMTIDIG_STANS)
 }
-
-private fun LocalDateTime?.erFortid() = this?.toLocalDate()?.isBefore(LocalDate.now()) ?: false

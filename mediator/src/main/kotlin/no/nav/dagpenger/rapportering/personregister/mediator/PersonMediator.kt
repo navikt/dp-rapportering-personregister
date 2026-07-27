@@ -17,7 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
-import java.time.LocalDateTime
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 
 class PersonMediator(
     private val personRepository: PersonRepository,
@@ -59,7 +59,7 @@ class PersonMediator(
     ): Unit =
         actionTimer.timedAction("behandle_DagpengerMeldegruppeHendelse") {
             logger.info { "Behandler dagpenger meldegruppe hendelse: ${hendelse.referanseId}" }
-            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+            if (hendelse.sluttDato.erIFortid()) {
                 logger.info { "DagpengerMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 personService
@@ -89,7 +89,7 @@ class PersonMediator(
     fun behandle(hendelse: AnnenMeldegruppeHendelse) =
         actionTimer.timedAction("behandle_AnnenMeldegruppeHendelse") {
             logger.info { "Behandler annen meldegruppe hendelse: ${hendelse.referanseId}" }
-            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+            if (hendelse.sluttDato.erIFortid()) {
                 logger.info { "AnnenMeldegruppeHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 personService

@@ -13,7 +13,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
-import java.time.LocalDateTime
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 import java.time.LocalDateTime.now
 
 class MeldepliktMediator(
@@ -26,7 +26,7 @@ class MeldepliktMediator(
     fun behandle(hendelse: MeldepliktHendelse) =
         actionTimer.timedAction("behandle_MeldepliktHendelse") {
             logger.info { "Behandler meldeplikthendelse: ${hendelse.referanseId} med status: ${hendelse.statusMeldeplikt}" }
-            if (hendelse.sluttDato?.isBefore(LocalDateTime.now()) == true) {
+            if (hendelse.sluttDato.erIFortid()) {
                 logger.info { "MeldepliktHendelse med referanseId ${hendelse.referanseId} gjelder tilbake i tid. Ignorerer." }
             } else {
                 behandleHendelse(hendelse)

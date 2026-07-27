@@ -1,7 +1,7 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import no.nav.dagpenger.rapportering.personregister.modell.Person
-import java.time.LocalDateTime.now
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 
 interface MeldegruppeHendelse : Hendelse
 
@@ -11,5 +11,5 @@ fun MeldegruppeHendelse.gjelderTilbakeITid(person: Person) =
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldegruppeHendelse ->
             this.startDato.isBefore(sisteMeldegruppeHendelse.startDato) &&
-                this.sluttDato?.isBefore(now()) == true
+                this.sluttDato?.erIFortid() == true
         } ?: false
