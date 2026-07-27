@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
@@ -54,5 +55,5 @@ private fun MeldepliktHendelse.gjelderTilbakeITid(person: Person) =
         .maxByOrNull { it.startDato }
         ?.let { sisteMeldepliktHendelse ->
             this.startDato.isBefore(sisteMeldepliktHendelse.startDato) &&
-                this.sluttDato?.isBefore(LocalDateTime.now()) == true
+                this.sluttDato?.erIFortid() == true
         } ?: false

@@ -10,7 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
-import java.time.LocalDateTime
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 import java.util.UUID
 
 class PersonRepositoryInMemory : PersonRepository {
@@ -69,11 +69,10 @@ class PersonRepositoryInMemory : PersonRepository {
 
     override fun hentHendelserSomSkalAktiveres(): List<Hendelse> =
         fremtidigeHendelser.filter {
-            val nå = LocalDateTime.now()
             when (it) {
-                is MeldepliktHendelse -> it.startDato.isBefore(nå)
-                is DagpengerMeldegruppeHendelse -> it.startDato.isBefore(nå)
-                is AnnenMeldegruppeHendelse -> it.startDato.isBefore(nå)
+                is MeldepliktHendelse -> it.startDato.erIFortid()
+                is DagpengerMeldegruppeHendelse -> it.startDato.erIFortid()
+                is AnnenMeldegruppeHendelse -> it.startDato.erIFortid()
                 else -> false
             }
         }

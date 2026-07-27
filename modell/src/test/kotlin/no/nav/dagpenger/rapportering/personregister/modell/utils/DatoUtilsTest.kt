@@ -14,29 +14,29 @@ class DatoUtilsTest {
     private val enMånedFrem = nå.plusMonths(1)
 
     @Nested
-    inner class ErFortid {
+    inner class ErDatoIFortid {
         @Test
         fun `returnerer false når LocalDateTime er null`() {
             val nullDateTime: LocalDateTime? = null
-            nullDateTime.erFortid() shouldBe false
+            nullDateTime.erDatoIFortid() shouldBe false
         }
 
         @Test
-        fun `returnerer true når LocalDateTime er i fortiden`() {
+        fun `returnerer true når LocalDateTime er i fortid`() {
             val fortid = LocalDateTime.now().minusDays(1)
-            fortid.erFortid() shouldBe true
+            fortid.erDatoIFortid() shouldBe true
         }
 
         @Test
-        fun `returnerer true når LocalDateTime er flere år i fortiden`() {
+        fun `returnerer true når LocalDateTime er flere år i fortid`() {
             val fortid = LocalDateTime.now().minusYears(5)
-            fortid.erFortid() shouldBe true
+            fortid.erDatoIFortid() shouldBe true
         }
 
         @Test
         fun `returnerer false når LocalDateTime er i dag`() {
             val iDag = LocalDateTime.now().withHour(12).withMinute(0)
-            iDag.erFortid() shouldBe false
+            iDag.erDatoIFortid() shouldBe false
         }
 
         @Test
@@ -47,7 +47,7 @@ class DatoUtilsTest {
                     .withHour(0)
                     .withMinute(0)
                     .withSecond(0)
-            iDag.erFortid() shouldBe false
+            iDag.erDatoIFortid() shouldBe false
         }
 
         @Test
@@ -58,65 +58,107 @@ class DatoUtilsTest {
                     .withHour(23)
                     .withMinute(59)
                     .withSecond(57)
-            iDag.erFortid() shouldBe false
+            iDag.erDatoIFortid() shouldBe false
         }
 
         @Test
         fun `returnerer false når LocalDateTime er i fremtiden`() {
             val fremtid = LocalDateTime.now().plusDays(1)
-            fremtid.erFortid() shouldBe false
+            fremtid.erDatoIFortid() shouldBe false
         }
 
         @Test
         fun `returnerer false når LocalDateTime er flere år i fremtiden`() {
             val fremtid = LocalDateTime.now().plusYears(5)
-            fremtid.erFortid() shouldBe false
+            fremtid.erDatoIFortid() shouldBe false
         }
     }
 
     @Nested
-    inner class ErFortidEllerIdag {
+    inner class ErIFortid {
         @Test
-        fun `returnerer true når LocalDate er i fortiden`() {
-            iGår.erFortidEllerIdag() shouldBe true
+        fun `returnerer false når LocalDateTime er null`() {
+            val nullDateTime: LocalDateTime? = null
+            nullDateTime.erIFortid() shouldBe false
         }
 
         @Test
-        fun `returnerer true når LocalDate er en måned i fortiden`() {
-            enMånedSiden.erFortidEllerIdag() shouldBe true
+        fun `returnerer true når LocalDateTime er i fortid`() {
+            val fortid = LocalDateTime.now().minusSeconds(1)
+            fortid.erIFortid() shouldBe true
+        }
+
+        @Test
+        fun `returnerer false når LocalDateTime er i fremtiden`() {
+            val fremtid = LocalDateTime.now().plusSeconds(1)
+            fremtid.erIFortid() shouldBe false
+        }
+    }
+
+    @Nested
+    inner class ErIFremtid {
+        @Test
+        fun `returnerer false når LocalDateTime er null`() {
+            val nullDateTime: LocalDateTime? = null
+            nullDateTime.erIFremtid() shouldBe false
+        }
+
+        @Test
+        fun `returnerer false når LocalDateTime er i fortid`() {
+            val fortid = LocalDateTime.now().minusSeconds(1)
+            fortid.erIFremtid() shouldBe false
+        }
+
+        @Test
+        fun `returnerer true når LocalDateTime er i fremtid`() {
+            val fremtid = LocalDateTime.now().plusSeconds(1)
+            fremtid.erIFremtid() shouldBe true
+        }
+    }
+
+    @Nested
+    inner class ErIFortidEllerIdag {
+        @Test
+        fun `returnerer true når LocalDate er i fortid`() {
+            iGår.erIFortidEllerIdag() shouldBe true
+        }
+
+        @Test
+        fun `returnerer true når LocalDate er en måned i fortid`() {
+            enMånedSiden.erIFortidEllerIdag() shouldBe true
         }
 
         @Test
         fun `returnerer true når LocalDate er i dag`() {
-            nå.erFortidEllerIdag() shouldBe true
+            nå.erIFortidEllerIdag() shouldBe true
         }
 
         @Test
         fun `returnerer false når LocalDate er i morgen`() {
-            iMorgen.erFortidEllerIdag() shouldBe false
+            iMorgen.erIFortidEllerIdag() shouldBe false
         }
 
         @Test
         fun `returnerer false når LocalDate er i fremtiden`() {
-            enMånedFrem.erFortidEllerIdag() shouldBe false
+            enMånedFrem.erIFortidEllerIdag() shouldBe false
         }
 
         @Test
         fun `returnerer false når LocalDate er mange år i fremtiden`() {
             val fjerntFremtid = nå.plusYears(10)
-            fjerntFremtid.erFortidEllerIdag() shouldBe false
+            fjerntFremtid.erIFortidEllerIdag() shouldBe false
         }
     }
 
     @Nested
     inner class ErIdagEllerIFremtid {
         @Test
-        fun `returnerer false når LocalDate er i fortiden`() {
+        fun `returnerer false når LocalDate er i fortid`() {
             iGår.erIdagEllerIFremtid() shouldBe false
         }
 
         @Test
-        fun `returnerer false når LocalDate er en måned i fortiden`() {
+        fun `returnerer false når LocalDate er en måned i fortid`() {
             enMånedSiden.erIdagEllerIFremtid() shouldBe false
         }
 
@@ -131,12 +173,12 @@ class DatoUtilsTest {
         }
 
         @Test
-        fun `returnerer true når LocalDate er i fremtiden`() {
+        fun `returnerer true når LocalDate er i fremtid`() {
             enMånedFrem.erIdagEllerIFremtid() shouldBe true
         }
 
         @Test
-        fun `returnerer true når LocalDate er mange år i fremtiden`() {
+        fun `returnerer true når LocalDate er mange år i fremtid`() {
             val fjerntFremtid = nå.plusYears(10)
             fjerntFremtid.erIdagEllerIFremtid() shouldBe true
         }

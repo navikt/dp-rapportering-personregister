@@ -15,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
+import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFremtid
 import java.time.LocalDateTime.now
 
 class MeldestatusMediator(
@@ -106,7 +107,7 @@ class MeldestatusMediator(
                         harMeldtSeg = meldestatus.harMeldtSeg,
                     )
 
-                if (meldepliktHendelse.startDato.isAfter(now())) {
+                if (meldepliktHendelse.startDato.erIFremtid()) {
                     meldepliktendringMetrikker.fremtidigMeldepliktendringMottatt.increment()
                     fremtidigHendelseMediator.behandle(meldepliktHendelse)
                 } else {
@@ -132,7 +133,7 @@ class MeldestatusMediator(
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (dagpengerMeldegruppeHendelse.startDato.isAfter(now())) {
+                    if (dagpengerMeldegruppeHendelse.startDato.erIFremtid()) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(dagpengerMeldegruppeHendelse)
                     } else {
@@ -150,7 +151,7 @@ class MeldestatusMediator(
                             harMeldtSeg = meldestatus.harMeldtSeg,
                         )
 
-                    if (annenMeldegruppeHendelse.startDato.isAfter(now())) {
+                    if (annenMeldegruppeHendelse.startDato.erIFremtid()) {
                         meldegruppeendringMetrikker.fremtidigMeldegruppeMottatt.increment()
                         fremtidigHendelseMediator.behandle(annenMeldegruppeHendelse)
                     } else {
