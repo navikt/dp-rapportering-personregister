@@ -34,10 +34,10 @@ internal class AktiverHendelserJob(
             if (isLeader(httpClient, logger)) {
                 logger.info { "Starter jobb for å aktivere hendelser vi mottok med dato fram i tid" }
 
-                var antallHendelser: Int
+                var status: AktiverHendelserJobStatus
                 val tidBrukt =
                     measureTime {
-                        antallHendelser =
+                        status =
                             aktivererHendelser(
                                 personRepository,
                                 personService,
@@ -49,9 +49,11 @@ internal class AktiverHendelserJob(
 
                 logger.info {
                     "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
-                        "Aktiverte $antallHendelser på ${tidBrukt.inWholeSeconds} sekund(er)."
+                        "Aktiverte ${status.antallHendelserBehandletOk} av " +
+                        "${status.antallHendelserHentetForAktivering} på ${tidBrukt.inWholeSeconds} sekund(er). " +
+                        "${status.antallFeilendeHendelser} hendelse(r) kunne ikke aktiveres og kan kreve manuell oppfølging."
                 }
-                jobbkjøringMetrikker.jobbFullfort(tidBrukt, antallHendelser)
+                jobbkjøringMetrikker.jobbFullfort(tidBrukt, status.antallHendelserBehandletOk)
             } else {
                 logger.info { "Pod er ikke leader, så jobb for å aktivere fremtidige hendelser startes ikke" }
             }
@@ -69,8 +71,12 @@ internal class AktiverHendelserJob(
         personMediator: PersonMediator,
         meldestatusMediator: MeldestatusMediator,
         meldepliktConnector: MeldepliktConnector,
-    ): Int {
+    ): AktiverHendelserJobStatus {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
+        var jobStatus =
+            AktiverHendelserJobStatus(
+                antallHendelserHentetForAktivering = hendelser.size,
+            )
         hendelser.groupBy { hendelse -> hendelse.ident }.forEach { (ident, hendelserForIdent) ->
             var referanseIdForHendelseSomBehandles: String? = null
             try {
@@ -111,6 +117,7 @@ internal class AktiverHendelserJob(
                         }
                         personRepository.slettFremtidigHendelse(hendelse.referanseId)
                         logger.info { "Behandlet hendelse med referanseId=${hendelse.referanseId}. Fremtidig hendelse er slettet." }
+                        jobStatus.antallHendelserBehandletOk++
                     } else {
                         logger.warn {
                             "Fant ikke person. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
@@ -119,9 +126,11 @@ internal class AktiverHendelserJob(
                             "Fant ikke person med ident=$ident. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
                         }
                         personRepository.slettFremtidigHendelse(hendelse.referanseId)
+                        jobStatus.antallHendelserBehandletOk++
                     }
                 }
             } catch (e: Exception) {
+                jobStatus.antallFeilendeHendelser++
                 val loggmelding =
                     if (referanseIdForHendelseSomBehandles == null) {
                         "Ingen hendelser ble behandlet for personen. Ubehandlede hendelser=[${hendelserForIdent.joinToString {
@@ -142,6 +151,12 @@ internal class AktiverHendelserJob(
                 }
             }
         }
-        return hendelser.size
+        return jobStatus
     }
+
+    private data class AktiverHendelserJobStatus(
+        val antallHendelserHentetForAktivering: Int,
+        var antallHendelserBehandletOk: Int = 0,
+        var antallFeilendeHendelser: Int = 0,
+    )
 }

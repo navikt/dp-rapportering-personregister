@@ -337,6 +337,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
         verify(exactly = 1) { personRepositoryMock.slettFremtidigHendelse(behandlet.referanseId) }
         verify(exactly = 0) { personRepositoryMock.slettFremtidigHendelse(feiler.referanseId) }
         verify(exactly = 0) { personRepositoryMock.slettFremtidigHendelse(ikkeBehandlet.referanseId) }
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 1) }
+        verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
     }
 
     @Test
@@ -409,6 +411,8 @@ class AktiverHendelserJobTest : ApiTestSetup() {
         verify(exactly = 1) { personRepositoryMock.slettFremtidigHendelse("ident2-behandles-1") }
 
         coVerify(exactly = 1) { meldepliktConnectorMock.hentMeldestatus(any(), eq(ident2), any()) }
+        verify(exactly = 1) { jobbkjøringMetrikker.jobbFullfort(duration = any(), affectedRows = 1) }
+        verify(exactly = 0) { jobbkjøringMetrikker.jobbFeilet() }
     }
 
     @Test
