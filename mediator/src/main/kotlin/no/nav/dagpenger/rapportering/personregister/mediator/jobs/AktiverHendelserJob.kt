@@ -49,11 +49,11 @@ internal class AktiverHendelserJob(
 
                 logger.info {
                     "Jobb for å aktivere hendelser vi mottok med dato fram i tid ferdig. " +
-                        "Aktiverte ${status.antallHendelserBehandlet} av " +
+                        "Aktiverte ${status.antallHendelserBehandletOk} av " +
                         "${status.antallHendelserHentetForAktivering} på ${tidBrukt.inWholeSeconds} sekund(er). " +
                         "${status.antallFeilendeHendelser} hendelse(r) kunne ikke aktiveres og kan kreve manuell oppfølging."
                 }
-                jobbkjøringMetrikker.jobbFullfort(tidBrukt, status.antallHendelserBehandlet)
+                jobbkjøringMetrikker.jobbFullfort(tidBrukt, status.antallHendelserBehandletOk)
             } else {
                 logger.info { "Pod er ikke leader, så jobb for å aktivere fremtidige hendelser startes ikke" }
             }
@@ -117,7 +117,7 @@ internal class AktiverHendelserJob(
                         }
                         personRepository.slettFremtidigHendelse(hendelse.referanseId)
                         logger.info { "Behandlet hendelse med referanseId=${hendelse.referanseId}. Fremtidig hendelse er slettet." }
-                        jobStatus.antallHendelserBehandlet++
+                        jobStatus.antallHendelserBehandletOk++
                     } else {
                         logger.warn {
                             "Fant ikke person. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
@@ -126,7 +126,7 @@ internal class AktiverHendelserJob(
                             "Fant ikke person med ident=$ident. Hendelsen med referanseId=${hendelse.referanseId} ignoreres og slettes fra fremtidige hendelser."
                         }
                         personRepository.slettFremtidigHendelse(hendelse.referanseId)
-                        jobStatus.antallHendelserBehandlet++
+                        jobStatus.antallHendelserBehandletOk++
                     }
                 }
             } catch (e: Exception) {
@@ -156,7 +156,7 @@ internal class AktiverHendelserJob(
 
     private data class AktiverHendelserJobStatus(
         val antallHendelserHentetForAktivering: Int,
-        var antallHendelserBehandlet: Int = 0,
+        var antallHendelserBehandletOk: Int = 0,
         var antallFeilendeHendelser: Int = 0,
     )
 }
