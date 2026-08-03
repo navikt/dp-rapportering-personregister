@@ -26,6 +26,7 @@ interface PersonObserver {
 
     fun sendStartMeldingTilMeldekortregister(
         person: Person,
+        korrelasjonsId: String,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
@@ -33,6 +34,7 @@ interface PersonObserver {
 
     fun sendStoppMeldingTilMeldekortregister(
         person: Person,
+        korrelasjonsId: String,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         harRett: Boolean,

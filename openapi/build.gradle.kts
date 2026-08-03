@@ -4,6 +4,10 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint")
 }
 
+kotlin {
+    jvmToolchain(21)
+}
+
 group = "org.example"
 version = "0.0.1"
 
@@ -18,10 +22,6 @@ tasks.named("runKtlintCheckOverMainSourceSet").configure {
 tasks.named("runKtlintFormatOverMainSourceSet").configure {
     dependsOn("openApiGenerate")
 }
-
-/*repositories {
-    mavenCentral()
-}*/
 
 dependencies {
     implementation(libs.jackson.annotation)

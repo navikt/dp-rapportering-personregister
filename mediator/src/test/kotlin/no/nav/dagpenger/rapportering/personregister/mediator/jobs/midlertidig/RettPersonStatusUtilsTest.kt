@@ -136,7 +136,10 @@ class RettPersonStatusUtilsTest {
             val person =
                 Person(ident).apply {
                     hendelser.addAll(
-                        listOf(meldepliktHendelse(dato = nå, status = false), meldepliktHendelse(dato = tidligere, status = true)),
+                        listOf(
+                            meldepliktHendelse(dato = nå, status = false),
+                            meldepliktHendelse(dato = tidligere, status = true),
+                        ),
                     )
                 }
 
@@ -167,7 +170,10 @@ class RettPersonStatusUtilsTest {
             val person =
                 Person(ident).apply {
                     hendelser.addAll(
-                        listOf(meldepliktHendelse(dato = nå, status = true), meldepliktHendelse(dato = tidligere, status = true)),
+                        listOf(
+                            meldepliktHendelse(dato = nå, status = true),
+                            meldepliktHendelse(dato = tidligere, status = true),
+                        ),
                     )
                 }
 
@@ -282,7 +288,7 @@ class RettPersonStatusUtilsTest {
         fun `har kun personsynkroniseringhendelse`() {
             val nå = LocalDateTime.now()
             val hendelse = personSynkroniseringHendelse(dato = nå)
-            val søknad = SøknadHendelse(ident, nå, nå, "123")
+            val søknad = SøknadHendelse(UUIDv7.newUuid().toString(), ident, nå, nå, "123")
 
             arbeidssøker {
                 hendelser.add(hendelse)
@@ -334,8 +340,19 @@ class RettPersonStatusUtilsTest {
         fun `rekkefølge spiller ingen rolle`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
-            val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå.plusDays(1), null, "ARBS", true)
+            val hendelse1 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
+            val hendelse2 =
+                AnnenMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
+                    ident,
+                    nå,
+                    "456",
+                    nå.plusDays(1),
+                    null,
+                    "ARBS",
+                    true,
+                )
             val person =
                 Person(ident).apply {
                     hendelser.addAll(listOf(hendelse1, hendelse2))
@@ -350,8 +367,19 @@ class RettPersonStatusUtilsTest {
         fun `riktig hendelser og riktig rekkefølge`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
-            val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "ARBS", true)
+            val hendelse1 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
+            val hendelse2 =
+                AnnenMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
+                    ident,
+                    tidligere,
+                    "456",
+                    tidligere.plusDays(1),
+                    null,
+                    "ARBS",
+                    true,
+                )
             val person =
                 Person(ident).apply {
                     hendelser.addAll(listOf(hendelse1, hendelse2))
@@ -365,8 +393,18 @@ class RettPersonStatusUtilsTest {
         fun `har kun PersonsynkroniseringHendelse og DAGP`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
-            val hendelse2 = DagpengerMeldegruppeHendelse(ident, tidligere, "456", tidligere.plusDays(1), null, "DAG", true)
+            val hendelse1 = PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, nå, "123", nå)
+            val hendelse2 =
+                DagpengerMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
+                    ident,
+                    tidligere,
+                    "456",
+                    tidligere.plusDays(1),
+                    null,
+                    "DAG",
+                    true,
+                )
 
             arbeidssøker {
                 hendelser.addAll(
@@ -374,6 +412,7 @@ class RettPersonStatusUtilsTest {
                         hendelse1,
                         hendelse2,
                         StartetArbeidssøkerperiodeHendelse(
+                            UUIDv7.newUuid().toString(),
                             UUIDv7.newUuid(),
                             "12345678903",
                             nå,
@@ -389,7 +428,8 @@ class RettPersonStatusUtilsTest {
         @Test
         fun `ingen PersonsynkroniseringHendelse`() {
             val nå = LocalDateTime.now()
-            val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
+            val hendelse1 =
+                DagpengerMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, nå, "456", nå, null, "DAGP", true)
             val hendelse2 = meldepliktHendelse(dato = nå.minusDays(1), status = true)
 
             arbeidssøker {
@@ -401,7 +441,7 @@ class RettPersonStatusUtilsTest {
         @Test
         fun `har kun PersonsynkroniseringHendelse`() {
             val nå = LocalDateTime.now()
-            val hendelse = PersonSynkroniseringHendelse(ident, nå, "123", nå)
+            val hendelse = PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, nå, "123", nå)
 
             arbeidssøker {
                 hendelser.add(hendelse)
@@ -413,9 +453,20 @@ class RettPersonStatusUtilsTest {
         fun `siste hendelse er PersonsynkroniseringHendelse`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, nå, "123", nå)
-            val hendelse2 = AnnenMeldegruppeHendelse(ident, tidligere, "456", nå, null, "ARBS", true)
-            val hendelse3 = DagpengerMeldegruppeHendelse(ident, tidligere, "456", nå, null, "DAGP", true)
+            val hendelse1 = PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, nå, "123", nå)
+            val hendelse2 =
+                AnnenMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "456", nå, null, "ARBS", true)
+            val hendelse3 =
+                DagpengerMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
+                    ident,
+                    tidligere,
+                    "456",
+                    nå,
+                    null,
+                    "DAGP",
+                    true,
+                )
 
             arbeidssøker {
                 hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3))
@@ -427,9 +478,21 @@ class RettPersonStatusUtilsTest {
         fun `PersonsynkroniseringHendelse er i midten`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
-            val hendelse2 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
-            val hendelse3 = AnnenMeldegruppeHendelse(ident, tidligere.minusDays(1), "456", tidligere.minusDays(1), null, "ARBS", true)
+            val hendelse1 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
+            val hendelse2 =
+                AnnenMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, nå, "456", nå, null, "ARBS", true)
+            val hendelse3 =
+                AnnenMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
+                    ident,
+                    tidligere.minusDays(1),
+                    "456",
+                    tidligere.minusDays(1),
+                    null,
+                    "ARBS",
+                    true,
+                )
             val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2, hendelse3)) }
 
             beregnStatus(person) shouldBe Status.IKKE_DAGPENGERBRUKER
@@ -439,8 +502,10 @@ class RettPersonStatusUtilsTest {
         fun `PersonsynkroniseringHendelse er eldste`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = AnnenMeldegruppeHendelse(ident, nå, "456", nå, null, "ARBS", true)
-            val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+            val hendelse1 =
+                AnnenMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, nå, "456", nå, null, "ARBS", true)
+            val hendelse2 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
             val person = Person(ident).apply { hendelser.addAll(listOf(hendelse1, hendelse2)) }
 
             beregnStatus(person) shouldBe Status.IKKE_DAGPENGERBRUKER
@@ -450,8 +515,10 @@ class RettPersonStatusUtilsTest {
         fun `PersonsynkroniseringHendelse er eldste men siste er 'DAGP' uten meldeplikt`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
-            val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+            val hendelse1 =
+                DagpengerMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, nå, "456", nå, null, "DAGP", true)
+            val hendelse2 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
 
             arbeidssøker {
                 hendelser.addAll(listOf(hendelse1, hendelse2))
@@ -463,8 +530,10 @@ class RettPersonStatusUtilsTest {
         fun `PersonsynkroniseringHendelse er eldste men siste er 'DAGP' med meldeplikt`() {
             val nå = LocalDateTime.now()
             val tidligere = nå.minusDays(1)
-            val hendelse1 = DagpengerMeldegruppeHendelse(ident, nå, "456", nå, null, "DAGP", true)
-            val hendelse2 = PersonSynkroniseringHendelse(ident, tidligere, "123", tidligere)
+            val hendelse1 =
+                DagpengerMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, nå, "456", nå, null, "DAGP", true)
+            val hendelse2 =
+                PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, tidligere, "123", tidligere)
             val hendelse3 = meldepliktHendelse(dato = tidligere.minusDays(1), status = true)
 
             arbeidssøker {
@@ -478,25 +547,34 @@ class RettPersonStatusUtilsTest {
         dato: LocalDateTime = LocalDateTime.now(),
         startDato: LocalDateTime = dato.plusDays(1),
         status: Boolean = false,
-    ) = MeldepliktHendelse(ident, dato, "123", startDato, null, status, true)
+    ) = MeldepliktHendelse(UUIDv7.newUuid().toString(), ident, dato, "123", startDato, null, status, true)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         startDato: LocalDateTime = dato.plusDays(1),
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "DAGP", true)
+    ) = DagpengerMeldegruppeHendelse(
+        UUIDv7.newUuid().toString(),
+        ident,
+        dato,
+        referanseId,
+        startDato,
+        null,
+        "DAGP",
+        true,
+    )
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         startDato: LocalDateTime = dato.plusDays(1),
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, null, "ARBS", true)
+    ) = AnnenMeldegruppeHendelse(UUIDv7.newUuid().toString(), ident, dato, referanseId, startDato, null, "ARBS", true)
 
     private fun personSynkroniseringHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         startDato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-    ) = PersonSynkroniseringHendelse(ident, dato, referanseId, startDato)
+    ) = PersonSynkroniseringHendelse(UUIDv7.newUuid().toString(), ident, dato, referanseId, startDato)
 }
 
 private fun arbeidssøker(

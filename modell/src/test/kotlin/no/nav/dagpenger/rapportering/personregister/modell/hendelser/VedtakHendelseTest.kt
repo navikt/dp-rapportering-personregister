@@ -87,7 +87,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null))
 
             verify(exactly = 1) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), skalMigreres = true)
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), skalMigreres = true)
             }
         }
     }
@@ -101,7 +101,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null))
 
             verify(exactly = 1) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), skalMigreres = false)
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), skalMigreres = false)
             }
         }
     }
@@ -112,7 +112,7 @@ class VedtakHendelseTest {
         testPerson {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null))
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -123,7 +123,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -134,7 +134,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = fremtid))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -145,9 +145,10 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = fortid, sluttDato = fortid))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
             verify(exactly = 1) {
                 observer.sendStoppMeldingTilMeldekortregister(
+                    korrelasjonsId = any(),
                     person = any(),
                     fraOgMed = fortid,
                     tilOgMed = fortid,
@@ -164,8 +165,8 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = nå))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -176,8 +177,8 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = nå))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -188,8 +189,8 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = fremtid))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -200,8 +201,8 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
@@ -215,6 +216,7 @@ class VedtakHendelseTest {
 
             verify(exactly = 1) {
                 observer.sendStoppMeldingTilMeldekortregister(
+                    korrelasjonsId = any(),
                     person = any(),
                     fraOgMed = nå,
                     tilOgMed = null,
@@ -232,7 +234,7 @@ class VedtakHendelseTest {
             setAnsvarligSystem(AnsvarligSystem.ARENA)
             behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
 
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 

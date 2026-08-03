@@ -43,37 +43,49 @@ fun dagpengerMeldegruppeHendelse(
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato, sluttDato, "DAGP", true)
+) = DagpengerMeldegruppeHendelse(
+    UUID.randomUUID().toString(),
+    ident,
+    dato,
+    referanseId,
+    startDato,
+    sluttDato,
+    "DAGP",
+    true,
+)
 
 fun annenMeldegruppeHendelse(
     dato: LocalDateTime = nå,
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato, sluttDato, "ARBS", true)
+) = AnnenMeldegruppeHendelse(UUID.randomUUID().toString(), ident, dato, referanseId, startDato, sluttDato, "ARBS", true)
 
 fun meldepliktHendelse(
     dato: LocalDateTime = nå,
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     status: Boolean = false,
-) = MeldepliktHendelse(ident, dato, "123", startDato, sluttDato, status, true)
+) = MeldepliktHendelse(UUID.randomUUID().toString(), ident, dato, "123", startDato, sluttDato, status, true)
 
 fun startetArbeidssøkerperiodeHendelse(
     periodeId: UUID = UUID.randomUUID(),
     ident: String = "12345678901",
     startet: LocalDateTime = tidligere,
-) = StartetArbeidssøkerperiodeHendelse(periodeId, ident, nå, startet)
+) = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID().toString(), periodeId, ident, nå, startet)
 
-fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
+fun avsluttetArbeidssøkerperiodeHendelse() =
+    AvsluttetArbeidssøkerperiodeHendelse(UUID.randomUUID().toString(), periodeId, ident, tidligere, nå, nå)
 
 fun vedtakHendelse(
+    korrelasjonsId: String = UUID.randomUUID().toString(),
     dato: LocalDateTime = nå,
     startDato: LocalDateTime,
     sluttDato: LocalDateTime?,
     referanseId: String = "vedtak-123",
     utfall: Boolean = true,
 ) = VedtakHendelse(
+    korrelasjonsId = korrelasjonsId,
     ident = ident,
     dato = dato,
     startDato = startDato,
@@ -83,12 +95,14 @@ fun vedtakHendelse(
 )
 
 fun vedtakHendelseMedFremtidigStans(
+    korrelasjonsId: String = UUID.randomUUID().toString(),
     dato: LocalDateTime = nå,
     startDato: LocalDateTime,
     sluttDato: LocalDateTime,
     referanseId: String = "vedtak-123",
     utfall: Boolean = true,
 ) = VedtakHendelse.medFremtidigStans(
+    korrelasjonsId = korrelasjonsId,
     ident = ident,
     dato = dato,
     startDato = startDato,

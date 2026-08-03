@@ -274,11 +274,18 @@ private fun lagPerson(
     this.setMeldegruppe(meldegruppe)
     hendelser.addAll(
         listOf(
-            SøknadHendelse(ident, startet.plusHours(1), startet.plusHours(1), UUIDv7.newUuid().toString()),
+            SøknadHendelse(
+                UUIDv7.newUuid().toString(),
+                ident,
+                startet.plusHours(1),
+                startet.plusHours(1),
+                UUIDv7.newUuid().toString(),
+            ),
             if (meldegruppe ==
                 "DAGP"
             ) {
                 DagpengerMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
                     ident,
                     startet.plusHours(1),
                     UUIDv7.newUuid().toString(),
@@ -289,6 +296,7 @@ private fun lagPerson(
                 )
             } else {
                 AnnenMeldegruppeHendelse(
+                    UUIDv7.newUuid().toString(),
                     ident,
                     startet.plusHours(1),
                     UUIDv7.newUuid().toString(),
@@ -299,6 +307,7 @@ private fun lagPerson(
                 )
             },
             MeldepliktHendelse(
+                UUIDv7.newUuid().toString(),
                 ident,
                 startet.plusHours(1),
                 UUIDv7.newUuid().toString(),

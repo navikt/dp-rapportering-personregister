@@ -9,6 +9,7 @@ import java.time.LocalDateTime.now
 import java.util.UUID
 
 data class AvsluttetArbeidssøkerperiodeHendelse(
+    override val korrelasjonsId: String,
     override val periodeId: UUID,
     override val ident: String,
     override val startDato: LocalDateTime,

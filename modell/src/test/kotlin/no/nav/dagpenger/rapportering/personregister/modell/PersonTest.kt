@@ -108,7 +108,8 @@ class PersonTest {
                 val nå = LocalDateTime.now()
                 behandle(vedtakHendelse(startDato = nå, utfall = true))
 
-                val stansVedtak = vedtakHendelse(startDato = nå.minusDays(2), sluttDato = nå.minusDays(1), utfall = true)
+                val stansVedtak =
+                    vedtakHendelse(startDato = nå.minusDays(2), sluttDato = nå.minusDays(1), utfall = true)
                 behandle(stansVedtak)
 
                 ansvarligSystem shouldBe AnsvarligSystem.DP
@@ -277,29 +278,35 @@ class PersonTest {
     }
 
     private fun søknadHendelse(
+        korrelasjonsId: String = UUID.randomUUID().toString(),
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = SøknadHendelse(ident, dato, dato, referanseId)
+    ) = SøknadHendelse(korrelasjonsId, ident, dato, dato, referanseId)
 
     private fun vedtakHendelse(
+        korrelasjonsId: String = UUID.randomUUID().toString(),
         dato: LocalDateTime = nå,
         startDato: LocalDateTime,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         utfall: Boolean,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, sluttDato, utfall)
+    ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
-    ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status, true)
+        korrelasjonsId: String = UUID.randomUUID().toString(),
+    ) = MeldepliktHendelse(korrelasjonsId, ident, dato, "123", dato.plusDays(1), null, status, true)
 
-    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, nå, tidligere)
+    private fun startetArbeidssøkerperiodeHendelse() =
+        StartetArbeidssøkerperiodeHendelse(UUID.randomUUID().toString(), UUID.randomUUID(), ident, nå, tidligere)
 
-    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
+    private fun avsluttetArbeidssøkerperiodeHendelse() =
+        AvsluttetArbeidssøkerperiodeHendelse(UUID.randomUUID().toString(), periodeId, ident, tidligere, nå, nå)
 
     private fun meldesyklusErPassertHendelse() =
         MeldesyklusErPassertHendelse(
+            UUID.randomUUID().toString(),
             ident,
             nå,
             nå,
@@ -324,15 +331,22 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(any(), periode.startDato, periode.sluttDato, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, requireNotNull(periode.harRett)) }
+    verify(exactly = 1) {
+        sendStoppMeldingTilMeldekortregister(
+            any(),
+            periode.startDato,
+            periode.sluttDato,
+            requireNotNull(periode.harRett),
+        )
+    }
 }
 
 infix fun Person.skalIkkeHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
+    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(any(), periode.startDato, periode.sluttDato, any()) }
 }
 
 data class Periode(

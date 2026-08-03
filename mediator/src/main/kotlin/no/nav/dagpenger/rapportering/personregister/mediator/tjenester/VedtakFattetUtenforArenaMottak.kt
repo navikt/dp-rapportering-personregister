@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 
 private val logger = KotlinLogging.logger {}
@@ -17,6 +18,7 @@ class VedtakFattetUtenforArenaMottak(
     rapidsConnection: RapidsConnection,
     private val behandlingRepository: BehandlingRepository,
     private val vedtakMetrikker: VedtakMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -42,6 +44,12 @@ class VedtakFattetUtenforArenaMottak(
             val behandlingId = packet["behandlingId"].asText()
             val søknadId = packet["søknadId"].asText()
             val sakId = packet["sakId"].asText()
+
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = behandlingId,
+                ident = ident,
+                relevantMeldingsinnhold = packet.toJson(),
+            )
 
             behandlingRepository.lagreData(behandlingId, søknadId, ident, sakId)
         } catch (e: Exception) {

@@ -1,14 +1,18 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
@@ -19,9 +23,15 @@ import java.time.LocalDate
 class MeldesyklusErPassertMottakTest {
     private val testRapid = TestRapid()
     private val personMediator = mockk<PersonMediator>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
-        MeldesyklusErPassertMottak(testRapid, personMediator, meldesyklusErPassertMetrikker)
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+
+        MeldesyklusErPassertMottak(testRapid, personMediator, meldesyklusErPassertMetrikker, meldingerRepository)
     }
 
     @BeforeEach
@@ -30,7 +40,7 @@ class MeldesyklusErPassertMottakTest {
     }
 
     @Test
-    fun `onPacket behandler melding og inkrementerer metrikk`() {
+    fun `onPacket behandler melding, lagrer den og inkrementerer metrikk`() {
         val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.count()
         val hendelseSlot = slot<MeldesyklusErPassertHendelse>()
         every { personMediator.behandle(capture(hendelseSlot), 1) } just runs
@@ -57,6 +67,22 @@ class MeldesyklusErPassertMottakTest {
         hendelseSlot.captured.dato.toLocalDate() shouldBe dato
         hendelseSlot.captured.startDato.toLocalDate() shouldBe dato
         hendelseSlot.captured.referanseId shouldBe referanseId
+
+        coVerify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = any(),
+                ident = ident,
+                relevantMeldingsinnhold =
+                    match { melding ->
+                        with(defaultObjectMapper.readValue<MeldesyklusErPassertHendelse>(melding)) {
+                            this.ident == ident &&
+                                this.dato.toLocalDate() == dato &&
+                                this.startDato.toLocalDate() == dato &&
+                                this.referanseId == referanseId
+                        }
+                    },
+            )
+        }
         meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.count() shouldBe metrikkCount + 1
     }
 

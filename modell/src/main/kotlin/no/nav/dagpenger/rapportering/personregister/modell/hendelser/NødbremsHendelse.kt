@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 data class NødbremsHendelse(
+    override val korrelasjonsId: String,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
@@ -21,6 +22,10 @@ data class NødbremsHendelse(
         person.setAnsvarligSystem(AnsvarligSystem.ARENA)
         person.setHarRettTilDp(false)
 
-        person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, harRett = false)
+        person.sendStoppMeldingTilMeldekortregister(
+            korrelasjonsId = korrelasjonsId,
+            fraOgMed = startDato,
+            harRett = false,
+        )
     }
 }

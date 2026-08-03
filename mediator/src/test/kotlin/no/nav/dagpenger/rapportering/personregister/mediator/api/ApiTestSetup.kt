@@ -25,6 +25,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
@@ -55,10 +57,11 @@ open class ApiTestSetup {
     val arbeidssøkerConnector = mockk<ArbeidssøkerConnector>(relaxed = true)
     val meldepliktConnector = mockk<MeldepliktConnector>(relaxed = true)
     val personObserver = mockk<PersonObserver>(relaxed = true)
-
     val pdlConnector = mockk<PdlConnector>()
     val meldekortregisterConnector = mockk<MeldekortregisterConnector>()
+    val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
     val unleash = mockk<Unleash>()
+
     lateinit var behandlingRepository: BehandlingRepositoryPostgres
 
     companion object {
@@ -100,6 +103,7 @@ open class ApiTestSetup {
 
             every { unleash.isEnabled(any()) } returns true
             val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
+            val meldingerRepository = MeldingerRepositoryPostgres(dataSource)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
             val overtaBekreftelseKafkaProdusent =
@@ -139,6 +143,7 @@ open class ApiTestSetup {
                     meldekortregisterConnector,
                     { rapidsConnection },
                     avsluttetArbeidssøkerperiodeMetrikker,
+                    meldingerRepository,
                 )
             val arbeidssøkerMediator =
                 ArbeidssøkerMediator(
@@ -155,8 +160,14 @@ open class ApiTestSetup {
                     actionTimer,
                 )
             val arbeidssøkerMottak =
-                ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
-            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+                ArbeidssøkerMottak(
+                    arbeidssøkerMediator,
+                    arbeidssøkerperiodeMetrikker,
+                    arbeidssøkerService,
+                    unleash,
+                    meldingerRepository,
+                )
+            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
             val kafkaContext =
                 KafkaContext(
                     bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,

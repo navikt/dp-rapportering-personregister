@@ -67,7 +67,7 @@ class SøknadServiceTest {
         søknadService.behandle(søknadHendelse)
 
         person.harRettTilDp shouldBe true
-        verify(exactly = 1) { personObserver.sendStartMeldingTilMeldekortregister(person, søknadHendelse.startDato, null, false) }
+        verify(exactly = 1) { personObserver.sendStartMeldingTilMeldekortregister(person, any(), søknadHendelse.startDato, null, false) }
         verify(exactly = 1) { personService.oppdaterPerson(person) }
         verify(exactly = 1) { arbeidssøkerMediator.behandle(ident) }
     }
@@ -101,6 +101,7 @@ class SøknadServiceTest {
 
     private fun lagSøknadHendelse() =
         SøknadHendelse(
+            korrelasjonsId = UUIDv7.newUuid().toString(),
             ident = ident,
             dato = dato,
             startDato = dato,

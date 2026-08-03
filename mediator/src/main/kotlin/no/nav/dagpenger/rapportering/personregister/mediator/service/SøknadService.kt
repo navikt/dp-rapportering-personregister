@@ -37,7 +37,11 @@ class SøknadService(
 
             if (person.ansvarligSystem == AnsvarligSystem.DP && person.erArbeidssøker) {
                 person.setHarRettTilDp(true)
-                person.sendStartMeldingTilMeldekortregister(fraOgMed = søknadHendelse.startDato, skalMigreres = false)
+                person.sendStartMeldingTilMeldekortregister(
+                    korrelasjonsId = søknadHendelse.referanseId,
+                    fraOgMed = søknadHendelse.startDato,
+                    skalMigreres = false,
+                )
             }
 
             val nyStatus = person.vurderNyStatus()

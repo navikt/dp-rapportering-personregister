@@ -6,18 +6,15 @@ plugins {
 group = "no.nav.dapenger.rapportering.personregister"
 version = "unspecified"
 
-/*repositories {
-    mavenCentral()
-}*/
-
 dependencies {
     implementation(libs.kotlin.logging)
+
+    implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.kotest.assertions)
     testImplementation(libs.mockk)
 
-    testApi("org.junit.platform:junit-platform-suite-api:6.1.1")
     testImplementation("org.junit.platform:junit-platform-suite-engine:6.1.1")
     testImplementation("io.cucumber:cucumber-java8:7.34.4")
     testImplementation("io.cucumber:cucumber-junit-platform-engine:7.34.4")

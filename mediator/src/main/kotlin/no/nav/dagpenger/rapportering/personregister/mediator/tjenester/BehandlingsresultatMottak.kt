@@ -10,8 +10,10 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.oshai.kotlinlogging.withLoggingContext
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
@@ -30,6 +32,7 @@ class BehandlingsresultatMottak(
     private val personMediator: PersonMediator,
     private val fremtidigHendelseMediator: FremtidigHendelseMediator,
     private val behandlingsresultatMetrikker: BehandlingsresultatMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -60,6 +63,7 @@ class BehandlingsresultatMottak(
     ) {
         val behandlingId = packet["behandlingId"].asText()
         val behandlingskjedeId = packet["behandlingskjedeId"].asText()
+        val rettighetsperioder = packet["rettighetsperioder"]
         val ident = packet["ident"].asText()
 
         withLoggingContext(
@@ -77,9 +81,22 @@ class BehandlingsresultatMottak(
             try {
                 ident.validerIdent()
 
+                meldingerRepository.lagreInnkommendeMelding(
+                    korrelasjonsId = behandlingId,
+                    ident = ident,
+                    relevantMeldingsinnhold =
+                        """
+                        {
+                            "behandlingId": "$behandlingId",
+                            "behandlingskjedeId": "$behandlingskjedeId",
+                            "rettighetsperioder": ${defaultObjectMapper.writeValueAsString(rettighetsperioder)}
+                        }
+                        """.trimIndent(),
+                )
+
                 personRepository.slettFremtidigeVedtakHendelser(ident)
 
-                packet["rettighetsperioder"]
+                rettighetsperioder
                     .toList()
                     .sortedBy { it["fraOgMed"].asLocalDate() }
                     .forEachIndexed { index, rettighetsperiode ->
@@ -94,6 +111,7 @@ class BehandlingsresultatMottak(
                             }
                             val vedtakHendelse =
                                 VedtakHendelse(
+                                    korrelasjonsId = behandlingId,
                                     ident = ident,
                                     dato = now(),
                                     startDato = fraOgMed.atStartOfDay(),
@@ -110,6 +128,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStart(
+                                    korrelasjonsId = behandlingId,
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed?.atStartOfDay(),
@@ -124,6 +143,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStans(
+                                    korrelasjonsId = behandlingId,
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed.atStartOfDay(),

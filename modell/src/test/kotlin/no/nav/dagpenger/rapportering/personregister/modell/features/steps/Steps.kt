@@ -37,6 +37,7 @@ class Steps : No {
 
         Når("personen søker dagpenger") {
             SøknadHendelse(
+                UUID.randomUUID().toString(),
                 ident,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
@@ -83,10 +84,19 @@ class Steps : No {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         meldegruppeKode: String = "DAGP",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, meldegruppeKode, false)
+    ) = DagpengerMeldegruppeHendelse(
+        UUID.randomUUID().toString(),
+        ident,
+        dato,
+        referanseId,
+        dato,
+        null,
+        meldegruppeKode,
+        false,
+    )
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS", false)
+    ) = AnnenMeldegruppeHendelse(UUID.randomUUID().toString(), ident, dato, referanseId, dato, null, "ARBS", false)
 }

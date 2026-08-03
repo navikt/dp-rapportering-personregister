@@ -31,6 +31,7 @@ class ArbeidssøkerMediator(
             if (arbeidssøkerperiode.avsluttet == null) {
                 behandle(
                     StartetArbeidssøkerperiodeHendelse(
+                        korrelasjonsId = arbeidssøkerperiode.periodeId.toString(),
                         periodeId = arbeidssøkerperiode.periodeId,
                         ident = arbeidssøkerperiode.ident,
                         startDato = arbeidssøkerperiode.startet,
@@ -39,6 +40,7 @@ class ArbeidssøkerMediator(
             } else {
                 behandle(
                     AvsluttetArbeidssøkerperiodeHendelse(
+                        korrelasjonsId = arbeidssøkerperiode.periodeId.toString(),
                         periodeId = arbeidssøkerperiode.periodeId,
                         ident = arbeidssøkerperiode.ident,
                         startDato = arbeidssøkerperiode.startet,

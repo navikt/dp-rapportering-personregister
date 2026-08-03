@@ -20,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryInMemory
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
@@ -80,6 +81,7 @@ class PersonMediatorTest {
     private val pdlConnector = mockk<PdlConnector>()
     private val personObserver = mockk<PersonObserver>(relaxed = true)
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     private val unleash = FakeUnleash()
 
@@ -115,6 +117,7 @@ class PersonMediatorTest {
                 meldekortregisterConnector,
                 { rapidsConnection },
                 avsluttetArbeidssøkerperiodeMetrikker,
+                meldingerRepository,
             )
         arbeidssøkerMediator =
             ArbeidssøkerMediator(
@@ -224,7 +227,7 @@ class PersonMediatorTest {
         @Test
         fun `innvilget-vedtak for ny person`() {
             søknadService.behandle(søknadHendelse(ident))
-            personMediator.behandle(vedtakHendelse(ident))
+            personMediator.behandle(vedtakHendelse(ident = ident))
 
             personRepository
                 .hentPerson(ident)
@@ -246,7 +249,7 @@ class PersonMediatorTest {
                 person.merkPeriodeSomOvertatt(periodeId)
             }
 
-            val vedtakHendelse = vedtakHendelse(ident)
+            val vedtakHendelse = vedtakHendelse(ident = ident)
 
             personMediator.behandle(vedtakHendelse)
 
@@ -279,14 +282,14 @@ class PersonMediatorTest {
         fun `avslag-vedtak for dagpengerbruker`() {
             arbeidssøker(overtattBekreftelse = true) {}
             søknadService.behandle(søknadHendelse(ident))
-            personMediator.behandle(vedtakHendelse(ident, utfall = true))
+            personMediator.behandle(vedtakHendelse(ident = ident, utfall = true))
 
             val person = personRepository.hentPerson(ident)!!
             every { personObserver.frasagtArbeidssøkerbekreftelse(any(), periodeId) } answers {
                 person.merkPeriodeSomIkkeOvertatt(periodeId)
             }
 
-            val vedtakHendelse = vedtakHendelse(ident, utfall = false)
+            val vedtakHendelse = vedtakHendelse(ident = ident, utfall = false)
 
             personMediator.behandle(vedtakHendelse)
             personRepository
@@ -358,7 +361,7 @@ class PersonMediatorTest {
         fun `meldegruppeendring for person ved innvilget vedtak tas ikke hensyn til`() {
             arbeidssøker {}
             søknadService.behandle(søknadHendelse())
-            personMediator.behandle(vedtakHendelse(ident))
+            personMediator.behandle(vedtakHendelse(ident = ident))
             personMediator.behandle(dagpengerMeldegruppeHendelse(startDato = nå))
             personMediator.behandle(annenMeldegruppeHendelse(startDato = nå))
 
@@ -682,30 +685,31 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "321",
-    ) = NødbremsHendelse(ident, dato, startDato, referanseId)
+    ) = NødbremsHendelse(UUIDv7.newUuid().toString(), ident, dato, startDato, referanseId)
 
     private fun meldesyklusErPassertHendelse(
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = MeldesyklusErPassertHendelse(ident, dato, startDato, referanseId)
+    ) = MeldesyklusErPassertHendelse(UUIDv7.newUuid().toString(), ident, dato, startDato, referanseId)
 
     private fun søknadHendelse(
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
-        referanseId: String = "123",
-    ) = SøknadHendelse(ident, dato, startDato, referanseId)
+        referanseId: UUID = UUIDv7.newUuid(),
+    ) = SøknadHendelse(UUIDv7.newUuid().toString(), ident, dato, startDato, referanseId.toString())
 
     private fun vedtakHendelse(
+        korrelasjonsId: String = UUIDv7.newUuid().toString(),
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime = startDato.plusDays(10),
         referanseId: String = "456",
         utfall: Boolean = true,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, sluttDato, utfall)
+    ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
@@ -713,6 +717,7 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
     ) = DagpengerMeldegruppeHendelse(
+        UUIDv7.newUuid().toString(),
         ident,
         dato,
         referanseId,
@@ -728,6 +733,7 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
     ) = AnnenMeldegruppeHendelse(
+        UUIDv7.newUuid().toString(),
         ident,
         dato,
         referanseId,
@@ -743,6 +749,7 @@ class PersonMediatorTest {
         referanseId: String = "123",
         status: Boolean = true,
     ) = MeldepliktHendelse(
+        korrelasjonsId = UUIDv7.newUuid().toString(),
         ident = ident,
         dato = dato,
         startDato = dato,
@@ -792,11 +799,11 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(any(), periode.fraOgMed, periode.tilOgMed, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(any(), periode.fraOgMed, periode.tilOgMed, any()) }
 }
 
 class BeslutningObserver(

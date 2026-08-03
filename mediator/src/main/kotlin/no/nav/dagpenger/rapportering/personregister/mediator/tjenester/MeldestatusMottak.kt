@@ -8,7 +8,9 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldestatusMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusHendelse
 
@@ -19,6 +21,7 @@ class MeldestatusMottak(
     rapidsConnection: RapidsConnection,
     private val meldestatusMediator: MeldestatusMediator,
     private val meldestatusMetrikker: MeldestatusMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -50,6 +53,12 @@ class MeldestatusMottak(
 
         try {
             val hendelse = packet.tilHendelse()
+
+            meldingerRepository.lagreInnkommendeMelding(
+                ident = null,
+                relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(hendelse),
+            )
+
             meldestatusMediator.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldestatus-melding fra Arena" }

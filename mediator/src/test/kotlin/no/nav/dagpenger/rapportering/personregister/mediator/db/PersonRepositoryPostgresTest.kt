@@ -141,6 +141,7 @@ class PersonRepositoryPostgresTest {
             val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
             val ikkeArenaHendelse =
                 VedtakHendelse(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     dato = dato,
                     startDato = dato.plusSeconds(1),
@@ -201,6 +202,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = startDatoIFortid,
                     sluttDato = sluttDatoIFortid,
@@ -224,6 +226,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDate.now().atStartOfDay(),
@@ -244,6 +247,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -264,6 +268,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = LocalDateTime.now().minusDays(1),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -284,6 +289,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStart(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -307,6 +313,7 @@ class PersonRepositoryPostgresTest {
 
             val eldsteVedtak =
                 VedtakHendelse.medFremtidigStart(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = førsteDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -315,6 +322,7 @@ class PersonRepositoryPostgresTest {
 
             val midtersteVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = førsteDato.minusDays(10),
                     sluttDato = andreDato,
@@ -324,6 +332,7 @@ class PersonRepositoryPostgresTest {
 
             val nyesteVedtak =
                 VedtakHendelse.medFremtidigStart(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = tredjeDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -351,6 +360,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = fellesEffektivDato.minusDays(10),
                     sluttDato = fellesEffektivDato,
@@ -360,6 +370,7 @@ class PersonRepositoryPostgresTest {
 
             val vedtakMedStartdato =
                 VedtakHendelse.medFremtidigStart(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = fellesEffektivDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -386,6 +397,7 @@ class PersonRepositoryPostgresTest {
 
             val hendelseForFørsteIdent =
                 VedtakHendelse.medFremtidigStans(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident,
                     startDato = LocalDateTime.now().minusDays(10),
                     sluttDato = LocalDateTime.now().minusDays(1),
@@ -395,6 +407,7 @@ class PersonRepositoryPostgresTest {
 
             val hendelseForAndreIdent =
                 VedtakHendelse.medFremtidigStart(
+                    korrelasjonsId = UUIDv7.newUuid().toString(),
                     ident = ident2,
                     startDato = LocalDateTime.now().minusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
@@ -765,6 +778,7 @@ class PersonRepositoryPostgresTest {
         tilOgMed: LocalDate? = null,
         harRett: Boolean = false,
     ) = VedtakHendelse(
+        korrelasjonsId = UUIDv7.newUuid().toString(),
         ident = ident,
         dato = dato,
         startDato = fraOgMed.atStartOfDay(),
@@ -775,6 +789,7 @@ class PersonRepositoryPostgresTest {
 
     private fun søknadHendelse() =
         SøknadHendelse(
+            korrelasjonsId = UUIDv7.newUuid().toString(),
             ident = "12345678901",
             referanseId = UUIDv7.newUuid().toString(),
             dato = dato,
@@ -801,6 +816,7 @@ class PersonRepositoryPostgresTest {
         harMeldtSeg: Boolean = false,
     ) = if (meldegruppeKode == "DAGP") {
         DagpengerMeldegruppeHendelse(
+            korrelasjonsId = UUIDv7.newUuid().toString(),
             ident = "12345678901",
             referanseId = referanseId,
             dato = dato,
@@ -811,6 +827,7 @@ class PersonRepositoryPostgresTest {
         )
     } else {
         AnnenMeldegruppeHendelse(
+            korrelasjonsId = UUIDv7.newUuid().toString(),
             ident = "12345678901",
             referanseId = referanseId,
             dato = dato,
@@ -826,6 +843,7 @@ class PersonRepositoryPostgresTest {
         referanseId: String = UUIDv7.newUuid().toString(),
         harMeldtSeg: Boolean = false,
     ) = MeldepliktHendelse(
+        korrelasjonsId = UUIDv7.newUuid().toString(),
         ident = ident,
         referanseId = referanseId,
         dato = dato,

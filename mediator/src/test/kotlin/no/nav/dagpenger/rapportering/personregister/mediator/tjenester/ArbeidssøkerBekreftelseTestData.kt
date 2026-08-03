@@ -6,7 +6,7 @@ import java.time.Instant
 import java.util.UUID
 
 internal object ArbeidssøkerBekreftelseTestData {
-    const val ident = "12345678910"
+    const val IDENT = "12345678910"
 
     val periodeId: UUID = UUID.randomUUID()
     val bekreftelseId: UUID = UUID.randomUUID()
@@ -16,7 +16,7 @@ internal object ArbeidssøkerBekreftelseTestData {
     val gjelderTil: Instant = Instant.parse("2025-01-14T23:59:59Z")
 
     fun event(
-        ident: String = this.ident,
+        ident: String = this.IDENT,
         periodeId: UUID = this.periodeId,
         bekreftelseId: UUID = this.bekreftelseId,
         tidspunkt: Instant = this.tidspunkt,

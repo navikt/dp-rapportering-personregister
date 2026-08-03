@@ -178,6 +178,7 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
 }
 
 fun Person.sendStartMeldingTilMeldekortregister(
+    korrelasjonsId: String,
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     skalMigreres: Boolean,
@@ -186,7 +187,15 @@ fun Person.sendStartMeldingTilMeldekortregister(
 
     try {
         logger.info { "Antall observere: ${observers.size}" }
-        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, skalMigreres) }
+        observers.forEach { observer ->
+            observer.sendStartMeldingTilMeldekortregister(
+                person = this,
+                korrelasjonsId = korrelasjonsId,
+                fraOgMed = fraOgMed,
+                tilOgMed = tilOgMed,
+                skalMigreres = skalMigreres,
+            )
+        }
         logger.info { "Sendte Start-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }
@@ -195,6 +204,7 @@ fun Person.sendStartMeldingTilMeldekortregister(
 }
 
 fun Person.sendStoppMeldingTilMeldekortregister(
+    korrelasjonsId: String,
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     harRett: Boolean,
@@ -206,6 +216,7 @@ fun Person.sendStoppMeldingTilMeldekortregister(
         observers.forEach { observer ->
             observer.sendStoppMeldingTilMeldekortregister(
                 person = this,
+                korrelasjonsId = korrelasjonsId,
                 fraOgMed = fraOgMed,
                 tilOgMed = tilOgMed,
                 harRett = harRett,

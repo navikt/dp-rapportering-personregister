@@ -8,6 +8,8 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -24,6 +26,7 @@ class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val søknadService: SøknadService,
     private val søknadMetrikker: SøknadMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -56,8 +59,16 @@ class SøknadMottak(
         sikkerlogg.info { "Mottok innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
         søknadMetrikker.søknaderMottatt.increment()
 
+        val hendelse = packet.tilHendelse()
+
+        meldingerRepository.lagreInnkommendeMelding(
+            korrelasjonsId = hendelse.referanseId,
+            ident = ident,
+            relevantMeldingsinnhold = defaultObjectMapper.writeValueAsString(hendelse),
+        )
+
         try {
-            søknadService.behandle(packet.tilHendelse())
+            søknadService.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding" }
             sikkerlogg.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
@@ -79,6 +90,6 @@ class SøknadMottak(
                 UUIDv7.newUuid().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
             }
 
-        return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
+        return SøknadHendelse(korrelasjonsId = referanseId, ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
     }
 }

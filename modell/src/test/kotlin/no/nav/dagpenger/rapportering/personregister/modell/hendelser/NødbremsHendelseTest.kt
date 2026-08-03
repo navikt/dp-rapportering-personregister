@@ -18,6 +18,7 @@ class NødbremsHendelseTest {
 
             behandle(
                 NødbremsHendelse(
+                    korrelasjonsId = "korrelasjonsId-1",
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-1",
@@ -36,13 +37,14 @@ class NødbremsHendelseTest {
             addObserver(observer)
             behandle(
                 NødbremsHendelse(
+                    korrelasjonsId = "korrelasjonsId-2",
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-2",
                 ),
             )
 
-            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), false) }
+            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), false) }
         }
     }
 }

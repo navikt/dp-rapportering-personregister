@@ -51,6 +51,7 @@ internal fun Application.personstatusApi(
                     if (dagpengerbruker == false) {
                         personMediator.behandle(
                             PersonIkkeDagpengerSynkroniseringHendelse(
+                                korrelasjonsId = UUIDv7.newUuid().toString(),
                                 ident = ident,
                                 startDato = now(),
                                 referanseId = UUIDv7.newUuid().toString(),
@@ -59,6 +60,7 @@ internal fun Application.personstatusApi(
                     } else {
                         personMediator.behandle(
                             PersonSynkroniseringHendelse(
+                                korrelasjonsId = UUIDv7.newUuid().toString(),
                                 ident = ident,
                                 startDato = now(),
                                 referanseId = UUIDv7.newUuid().toString(),

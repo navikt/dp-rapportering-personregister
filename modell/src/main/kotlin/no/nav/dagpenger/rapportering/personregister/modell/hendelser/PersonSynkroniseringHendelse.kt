@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 data class PersonSynkroniseringHendelse(
+    override val korrelasjonsId: String,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val referanseId: String,

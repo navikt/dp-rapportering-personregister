@@ -264,10 +264,11 @@ class PersonRepositoryPostgres(
                         tx.run(
                             queryOf(
                                 """
-                INSERT INTO fremtidig_hendelse (ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                INSERT INTO fremtidig_hendelse (korrelasjonsid, ident, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
+                    korrelasjonsid = EXCLUDED.korrelasjonsid,
                     ident = EXCLUDED.ident,
                     dato = EXCLUDED.dato,
                     start_dato = EXCLUDED.start_dato,
@@ -276,6 +277,7 @@ class PersonRepositoryPostgres(
                     type = EXCLUDED.type,
                     extra = EXCLUDED.extra
                 """,
+                                hendelse.korrelasjonsId,
                                 hendelse.ident,
                                 hendelse.dato,
                                 hendelse.startDato,
@@ -661,10 +663,11 @@ class PersonRepositoryPostgres(
             queryOf(
                 // language=PostgreSQL
                 """
-                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                INSERT INTO hendelse (korrelasjonsid, person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
+                    korrelasjonsid = EXCLUDED.korrelasjonsid,
                     person_id = EXCLUDED.person_id,
                     dato = EXCLUDED.dato,
                     start_dato = EXCLUDED.start_dato,
@@ -673,6 +676,7 @@ class PersonRepositoryPostgres(
                     type = EXCLUDED.type,
                     extra = EXCLUDED.extra
                 """,
+                hendelse.korrelasjonsId,
                 personId,
                 hendelse.dato,
                 hendelse.startDato.tilPostgresqlTimestamp(),
@@ -773,15 +777,23 @@ class PersonRepositoryPostgres(
         val referanseId = row.string("referanse_id")
         val extra = row.stringOrNull("extra")
         val kilde = row.string("kilde")
+        val korrelasjonsId = row.stringOrNull("korrelasjonsid") ?: UUID.randomUUID().toString()
 
         return when (type) {
             "SøknadHendelse" -> {
-                SøknadHendelse(ident = ident, dato = dato, startDato = startDato ?: dato, referanseId = referanseId)
+                SøknadHendelse(
+                    korrelasjonsId = korrelasjonsId,
+                    ident = ident,
+                    dato = dato,
+                    startDato = startDato ?: dato,
+                    referanseId = referanseId,
+                )
             }
 
             "DagpengerMeldegruppeHendelse" -> {
                 val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 DagpengerMeldegruppeHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
@@ -799,6 +811,7 @@ class PersonRepositoryPostgres(
             "AnnenMeldegruppeHendelse" -> {
                 val meldegruppeExtra = defaultObjectMapper.readValue<MeldegruppeExtra>(extra!!)
                 AnnenMeldegruppeHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
@@ -815,6 +828,7 @@ class PersonRepositoryPostgres(
             "MeldepliktHendelse" -> {
                 val meldepliktExtra = defaultObjectMapper.readValue<MeldepliktExtra>(extra!!)
                 MeldepliktHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
@@ -831,6 +845,7 @@ class PersonRepositoryPostgres(
 
             "MeldesyklusErPassertHendelse" -> {
                 MeldesyklusErPassertHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     startDato = dato,
@@ -840,6 +855,7 @@ class PersonRepositoryPostgres(
 
             "StartetArbeidssøkerperiodeHendelse" -> {
                 StartetArbeidssøkerperiodeHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
                     dato = dato,
@@ -852,6 +868,7 @@ class PersonRepositoryPostgres(
 
             "AvsluttetArbeidssøkerperiodeHendelse" -> {
                 AvsluttetArbeidssøkerperiodeHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     periodeId = UUIDv7.fromString(referanseId),
                     ident = ident,
                     dato = dato,
@@ -868,6 +885,7 @@ class PersonRepositoryPostgres(
 
             "PersonSynkroniseringHendelse" -> {
                 PersonSynkroniseringHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
@@ -877,6 +895,7 @@ class PersonRepositoryPostgres(
 
             "PersonIkkeDagpengerSynkroniseringHendelse" -> {
                 PersonIkkeDagpengerSynkroniseringHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
@@ -888,6 +907,7 @@ class PersonRepositoryPostgres(
                 val vedtakExtra = defaultObjectMapper.readValue<VedtakExtra>(extra!!)
 
                 VedtakHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     startDato = startDato ?: dato,
@@ -899,6 +919,7 @@ class PersonRepositoryPostgres(
 
             "NødbremsHendelse" -> {
                 NødbremsHendelse(
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,
                     referanseId = referanseId,
