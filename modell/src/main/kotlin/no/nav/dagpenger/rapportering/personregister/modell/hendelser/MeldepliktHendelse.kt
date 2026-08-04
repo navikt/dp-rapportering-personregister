@@ -15,6 +15,7 @@ import java.time.LocalDateTime.now
 private val logger = KotlinLogging.logger {}
 
 data class MeldepliktHendelse(
+    override val korrelasjonsId: String?,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val referanseId: String,

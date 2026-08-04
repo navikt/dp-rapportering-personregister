@@ -37,6 +37,7 @@ class Steps : No {
 
         Når("personen søker dagpenger") {
             SøknadHendelse(
+                null,
                 ident,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
@@ -83,10 +84,21 @@ class Steps : No {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         meldegruppeKode: String = "DAGP",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, meldegruppeKode, false)
+        korrelasjonsId: String? = null,
+    ) = DagpengerMeldegruppeHendelse(
+        korrelasjonsId,
+        ident,
+        dato,
+        referanseId,
+        dato,
+        null,
+        meldegruppeKode,
+        false,
+    )
 
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = AnnenMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = null, "ARBS", false)
+        korrelasjonsId: String? = null,
+    ) = AnnenMeldegruppeHendelse(korrelasjonsId, ident, dato, referanseId, dato, null, "ARBS", false)
 }

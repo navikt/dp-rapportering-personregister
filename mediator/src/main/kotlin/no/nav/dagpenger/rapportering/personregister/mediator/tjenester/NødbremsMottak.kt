@@ -45,6 +45,7 @@ class NødbremsMottak(
         try {
             personMediator.behandle(
                 NødbremsHendelse(
+                    korrelasjonsId = null, // TODO:
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),

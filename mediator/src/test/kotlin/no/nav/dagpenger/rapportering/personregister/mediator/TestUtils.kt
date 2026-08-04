@@ -8,7 +8,9 @@ fun lagSøknadHendelse(
     ident: String,
     referanseId: String = "123",
     startDato: LocalDateTime = now(),
+    korrelasjonsId: String? = null,
 ) = SøknadHendelse(
+    korrelasjonsId = korrelasjonsId,
     ident = ident,
     referanseId = referanseId,
     dato = now(),

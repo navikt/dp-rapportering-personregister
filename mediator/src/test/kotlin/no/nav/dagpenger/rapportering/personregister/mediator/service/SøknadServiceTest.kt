@@ -101,6 +101,7 @@ class SøknadServiceTest {
 
     private fun lagSøknadHendelse() =
         SøknadHendelse(
+            korrelasjonsId = null,
             ident = ident,
             dato = dato,
             startDato = dato,

@@ -33,6 +33,7 @@ class MeldestatusMottakTest {
 
         val forventetHendelse =
             MeldestatusHendelse(
+                korrelasjonsId = null,
                 personId = 5268057,
                 meldestatusId = 95,
                 hendelseId = 95,

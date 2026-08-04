@@ -279,7 +279,8 @@ class PersonTest {
     private fun søknadHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-    ) = SøknadHendelse(ident, dato, dato, referanseId)
+        korrelasjonsId: String? = null,
+    ) = SøknadHendelse(korrelasjonsId, ident, dato, dato, referanseId)
 
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
@@ -287,19 +288,22 @@ class PersonTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         utfall: Boolean,
-    ) = VedtakHendelse(ident, dato, startDato, referanseId, sluttDato, utfall)
+        korrelasjonsId: String? = null,
+    ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
-    ) = MeldepliktHendelse(ident, dato, "123", dato.plusDays(1), null, status, true)
+        korrelasjonsId: String? = null,
+    ) = MeldepliktHendelse(korrelasjonsId, ident, dato, "123", dato.plusDays(1), null, status, true)
 
-    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(UUID.randomUUID(), ident, nå, tidligere)
+    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(null, UUID.randomUUID(), ident, nå, tidligere)
 
-    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(periodeId, ident, tidligere, nå, nå)
+    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(null, periodeId, ident, tidligere, nå, nå)
 
     private fun meldesyklusErPassertHendelse() =
         MeldesyklusErPassertHendelse(
+            null,
             ident,
             nå,
             nå,

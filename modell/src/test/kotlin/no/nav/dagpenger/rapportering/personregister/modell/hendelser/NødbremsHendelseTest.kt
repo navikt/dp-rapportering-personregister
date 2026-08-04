@@ -18,6 +18,7 @@ class NødbremsHendelseTest {
 
             behandle(
                 NødbremsHendelse(
+                    korrelasjonsId = null,
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-1",
@@ -36,6 +37,7 @@ class NødbremsHendelseTest {
             addObserver(observer)
             behandle(
                 NødbremsHendelse(
+                    korrelasjonsId = null,
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-2",
