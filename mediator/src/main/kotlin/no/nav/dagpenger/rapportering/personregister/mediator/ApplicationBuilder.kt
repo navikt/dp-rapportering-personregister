@@ -31,6 +31,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.runMigration
@@ -126,6 +127,7 @@ internal class ApplicationBuilder(
     private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = ArbeidssøkerBeslutningRepositoryPostgres(dataSource, actionTimer)
     private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
+    private val meldingerRepository = MeldingerRepositoryPostgres(dataSource)
 
     private val tempPersonRepository = TempPersonRepositoryPostgres(dataSource)
 
@@ -164,12 +166,13 @@ internal class ApplicationBuilder(
             bekreftelsePåVegneAvProdusent,
             arbeidssøkerConnector,
             bekreftelsePåVegneAvTopic,
+            meldingerRepository,
         )
     private val arbeidssøkerBeslutningObserver =
         ArbeidssøkerBeslutningObserver(
             arbeidssøkerBeslutningRepository,
         )
-    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository)
+    private val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
     private val pdlConnector = PdlConnector(createPersonOppslag(Configuration.pdlUrl), actionTimer, pdlIdentCache)
     private val personService =
@@ -317,7 +320,7 @@ internal class ApplicationBuilder(
                         meldestatusMetrikker,
                     )
                     MeldesyklusErPassertMottak(rapid, personMediator, meldesyklusErPassertMetrikker)
-                    SøknadMottak(rapid, søknadService, søknadMetrikker)
+                    SøknadMottak(rapid, søknadService, søknadMetrikker, meldingerRepository)
                     BehandlingsresultatMottak(
                         rapid,
                         personRepository,

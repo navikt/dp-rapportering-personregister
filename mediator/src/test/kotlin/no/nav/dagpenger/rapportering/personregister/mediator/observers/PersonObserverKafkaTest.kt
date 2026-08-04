@@ -4,8 +4,10 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.RecordKeyResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
@@ -21,12 +23,18 @@ class PersonObserverKafkaTest {
     private lateinit var arbeidssøkerConnector: ArbeidssøkerConnector
     private lateinit var personObserverKafka: PersonObserverKafka
     private val bekreftelsePåVegnAvTopic = "bekreftelsePåVegnAvTopic"
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     @BeforeEach
     fun setup() {
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+
         producer = MockKafkaProducer()
         arbeidssøkerConnector = mockk(relaxed = true)
-        personObserverKafka = PersonObserverKafka(producer, arbeidssøkerConnector, bekreftelsePåVegnAvTopic)
+        personObserverKafka = PersonObserverKafka(producer, arbeidssøkerConnector, bekreftelsePåVegnAvTopic, meldingerRepository)
     }
 
     @Test
@@ -40,13 +48,26 @@ class PersonObserverKafkaTest {
     }
 
     @Test
-    fun `kan overta arbeidssøkerbekreftelse`() {
+    fun `kan overta arbeidssøkerbekreftelse og ikke lagre utgående melding`() {
         val person = lagPersonMedArbeidssøkerperiode()
         coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
 
         personObserverKafka.sendOvertakelsesmelding(person)
 
         verifiserKafkaMelding(person)
+        verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
+    }
+
+    @Test
+    fun `kan overta arbeidssøkerbekreftelse og lagre utgående melding`() {
+        val person = lagPersonMedArbeidssøkerperiode()
+        coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
+
+        val korrelasjonsId = "test"
+        personObserverKafka.sendOvertakelsesmelding(person, korrelasjonsId)
+
+        verifiserKafkaMelding(person)
+        verify(exactly = 1) { meldingerRepository.lagreUtgåendeMelding(korrelasjonsId, person.ident, any()) }
     }
 
     @Test

@@ -6,6 +6,8 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.søknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -17,9 +19,15 @@ import java.time.LocalDateTime
 class SøknadMottakTest {
     private val testRapid = TestRapid()
     private val søknadService = mockk<SøknadService>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
-        SøknadMottak(testRapid, søknadService, søknadMetrikker)
+        System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
+        System.setProperty("KAFKA_SCHEMA_REGISTRY_PASSWORD", "KAFKA_SCHEMA_REGISTRY_PASSWORD")
+        System.setProperty("KAFKA_BROKERS", "KAFKA_BROKERS")
+
+        SøknadMottak(testRapid, søknadService, søknadMetrikker, meldingerRepository)
     }
 
     @BeforeEach
@@ -28,7 +36,7 @@ class SøknadMottakTest {
     }
 
     @Test
-    fun `onPacket behandler Quiz-søknad og inkrementerer metrikk`() {
+    fun `onPacket behandler Quiz-søknad, lagrer den og inkrementerer metrikk`() {
         val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678901"
         val søknadId = UUIDv7.newUuid().toString()
@@ -39,7 +47,7 @@ class SøknadMottakTest {
 
         val søknadHendelse =
             SøknadHendelse(
-                null,
+                søknadId,
                 ident,
                 dato.toLocalDateTime(),
                 dato.toLocalDateTime(),
@@ -47,11 +55,26 @@ class SøknadMottakTest {
             )
 
         verify(exactly = 1) { søknadService.behandle(søknadHendelse) }
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                søknadId,
+                ident,
+                match { melding ->
+                    with(defaultObjectMapper.readTree(melding)) {
+                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
+                            this["fødselsnummer"].asText() == ident &&
+                            this["datoRegistrert"].asText() == dato &&
+                            this["referanseId"].asText() == søknadId &&
+                            this["type"].asText() == "NySøknad"
+                    }
+                },
+            )
+        }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
-    fun `onPacket behandler Legacy-søknad og inkrementerer metrikk`() {
+    fun `onPacket behandler Legacy-søknad, lagrer den og inkrementerer metrikk`() {
         val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678902"
         val søknadId = UUIDv7.newUuid().toString()
@@ -62,7 +85,7 @@ class SøknadMottakTest {
 
         val søknadHendelse =
             SøknadHendelse(
-                null,
+                søknadId,
                 ident,
                 dato.toLocalDateTime(),
                 dato.toLocalDateTime(),
@@ -70,11 +93,26 @@ class SøknadMottakTest {
             )
 
         verify(exactly = 1) { søknadService.behandle(søknadHendelse) }
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                søknadId,
+                ident,
+                match { melding ->
+                    with(defaultObjectMapper.readTree(melding)) {
+                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
+                            this["fødselsnummer"].asText() == ident &&
+                            this["datoRegistrert"].asText() == dato &&
+                            this["referanseId"].asText() == søknadId &&
+                            this["type"].asText() == "NySøknad"
+                    }
+                },
+            )
+        }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
-    fun `onPacket behandler Papirsøknad og inkrementerer metrikk`() {
+    fun `onPacket behandler Papirsøknad, lagrer den og inkrementerer metrikk`() {
         val metrikkCount = søknadMetrikker.søknaderMottatt.count()
         val ident = "12345678903"
         val søknadsData = null
@@ -82,7 +120,29 @@ class SøknadMottakTest {
 
         testRapid.sendTestMessage(lagInnsendingFerdigstiltEvent(ident, dato, søknadsData))
 
-        verify(exactly = 1) { søknadService.behandle(any<SøknadHendelse>()) }
+        verify(exactly = 1) {
+            søknadService.behandle(
+                match { hendelse ->
+                    hendelse.ident == ident &&
+                        hendelse.startDato == dato.toLocalDateTime() &&
+                        hendelse.dato == dato.toLocalDateTime()
+                },
+            )
+        }
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                any(),
+                ident,
+                match { melding ->
+                    with(defaultObjectMapper.readTree(melding)) {
+                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
+                            this["fødselsnummer"].asText() == ident &&
+                            this["datoRegistrert"].asText() == dato &&
+                            this["type"].asText() == "NySøknad"
+                    }
+                },
+            )
+        }
         søknadMetrikker.søknaderMottatt.count() shouldBe metrikkCount + 1
     }
 

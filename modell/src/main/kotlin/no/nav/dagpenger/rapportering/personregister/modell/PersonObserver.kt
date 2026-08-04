@@ -4,7 +4,10 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface PersonObserver {
-    fun sendOvertakelsesmelding(person: Person) {}
+    fun sendOvertakelsesmelding(
+        person: Person,
+        korrelasjonsId: String? = null,
+    ) {}
 
     fun sendFrasigelsesmelding(
         person: Person,
@@ -29,6 +32,7 @@ interface PersonObserver {
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
+        korrelasjonsId: String? = null,
     ) {}
 
     fun sendStoppMeldingTilMeldekortregister(

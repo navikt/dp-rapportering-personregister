@@ -8,6 +8,7 @@ import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -24,6 +25,7 @@ class SøknadMottak(
     rapidsConnection: RapidsConnection,
     private val søknadService: SøknadService,
     private val søknadMetrikker: SøknadMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
@@ -50,14 +52,33 @@ class SøknadMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["fødselsnummer"].asText()
+        val ident = packet["fødselsnummer"].asString()
 
         logger.info { "Mottok innsending_ferdigstilt-melding" }
         sikkerlogg.info { "Mottok innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
         søknadMetrikker.søknaderMottatt.increment()
 
         try {
-            søknadService.behandle(packet.tilHendelse())
+            val hendelse = packet.tilHendelse()
+
+            val relevantMeldingsinnhold =
+                """
+                {
+                    "@event_name": "${packet["@event_name"].asString()}",
+                    "fødselsnummer": "$ident",
+                    "datoRegistrert": "${packet["datoRegistrert"].asString()}",
+                    "referanseId": "${hendelse.referanseId}",
+                    "type": "${packet["type"].asString()}"
+                }
+                """.trimIndent()
+
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = hendelse.referanseId,
+                ident = ident,
+                relevantMeldingsinnhold = relevantMeldingsinnhold,
+            )
+
+            søknadService.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding" }
             sikkerlogg.error(e) { "Feil ved behandling av innsending_ferdigstilt-melding, ident=$ident: ${packet.toJson()}" }
@@ -67,20 +88,20 @@ class SøknadMottak(
     }
 
     private fun JsonMessage.tilHendelse(): SøknadHendelse {
-        val ident = this["fødselsnummer"].asText()
-        val dato = LocalDateTime.parse(this["datoRegistrert"].asText())
+        val ident = this["fødselsnummer"].asString()
+        val dato = LocalDateTime.parse(this["datoRegistrert"].asString())
 
         val referanseId =
             if (!this[QUIZ_SØKNAD_ID_NØKKEL].isMissingNode) {
-                this[QUIZ_SØKNAD_ID_NØKKEL].asText()
+                this[QUIZ_SØKNAD_ID_NØKKEL].asString()
             } else if (!this[LEGACY_SØKNAD_ID_NØKKEL].isMissingNode) {
-                this[LEGACY_SØKNAD_ID_NØKKEL].asText()
+                this[LEGACY_SØKNAD_ID_NØKKEL].asString()
             } else {
                 UUIDv7.newUuid().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
             }
 
         return SøknadHendelse(
-            korrelasjonsId = null, // TODO:
+            korrelasjonsId = referanseId,
             ident = ident,
             dato = dato,
             startDato = dato,

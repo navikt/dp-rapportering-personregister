@@ -99,14 +99,14 @@ data class Person(
     }
 }
 
-fun Person.sendOvertakelsesmelding() {
+fun Person.sendOvertakelsesmelding(korrelasjonsId: String? = null) {
     logger.info { "Overtar arbeidssøkerbekreftelse" }
     arbeidssøkerperioder.gjeldende?.let {
         logger.info { "Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}" }
         logger.info { "Gjeldende arbeidssøkerperiode har ikke overtatt bekreftelse." }
         try {
             logger.info { "Antall observere: ${observers.size}" }
-            observers.forEach { observer -> observer.sendOvertakelsesmelding(this) }
+            observers.forEach { observer -> observer.sendOvertakelsesmelding(this, korrelasjonsId) }
             logger.info { "Kjørte overtagelse på observere uten feil" }
         } catch (e: Exception) {
             logger.error(e) { "Overtagelse feilet!" }
@@ -181,12 +181,15 @@ fun Person.sendStartMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     skalMigreres: Boolean,
+    korrelasjonsId: String? = null,
 ) {
     logger.info { "Sender Start-melding til Meldekortregister" }
 
     try {
         logger.info { "Antall observere: ${observers.size}" }
-        observers.forEach { observer -> observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, skalMigreres) }
+        observers.forEach { observer ->
+            observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, skalMigreres, korrelasjonsId)
+        }
         logger.info { "Sendte Start-melding på observere uten feil" }
     } catch (e: Exception) {
         logger.error(e) { "Overtagelse feilet!" }
