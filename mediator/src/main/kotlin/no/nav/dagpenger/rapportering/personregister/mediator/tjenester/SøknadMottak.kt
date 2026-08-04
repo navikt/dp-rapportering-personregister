@@ -79,6 +79,12 @@ class SøknadMottak(
                 UUIDv7.newUuid().toString() // Papirsøknad har ikke referanseId, da må vi generere en random UUID
             }
 
-        return SøknadHendelse(ident = ident, dato = dato, startDato = dato, referanseId = referanseId)
+        return SøknadHendelse(
+            korrelasjonsId = null, // TODO:
+            ident = ident,
+            dato = dato,
+            startDato = dato,
+            referanseId = referanseId,
+        )
     }
 }

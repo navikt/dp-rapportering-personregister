@@ -8,6 +8,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
 data class NødbremsHendelse(
+    override val korrelasjonsId: String?,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,

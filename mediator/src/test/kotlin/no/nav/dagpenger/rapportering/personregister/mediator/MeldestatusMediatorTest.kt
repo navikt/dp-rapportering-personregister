@@ -368,7 +368,9 @@ class MeldestatusMediatorTest {
         personId: Long = 1L,
         meldestatusId: Long = 2L,
         hendelseId: Long = 3L,
+        korrelasjonsId: String? = null,
     ) = MeldestatusHendelse(
+        korrelasjonsId = korrelasjonsId,
         personId = personId,
         meldestatusId = meldestatusId,
         hendelseId = hendelseId,

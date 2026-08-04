@@ -39,6 +39,7 @@ class SøknadMottakTest {
 
         val søknadHendelse =
             SøknadHendelse(
+                null,
                 ident,
                 dato.toLocalDateTime(),
                 dato.toLocalDateTime(),
@@ -61,6 +62,7 @@ class SøknadMottakTest {
 
         val søknadHendelse =
             SøknadHendelse(
+                null,
                 ident,
                 dato.toLocalDateTime(),
                 dato.toLocalDateTime(),

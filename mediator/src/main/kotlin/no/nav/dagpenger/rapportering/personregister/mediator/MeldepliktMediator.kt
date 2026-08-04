@@ -53,6 +53,7 @@ class MeldepliktMediator(
                             logger.info { "Hentet meldeplikt status: $meldeplikt. Nåværende meldeplikt for person: ${person.meldeplikt}" }
                             if (person.meldeplikt != meldeplikt) {
                                 MeldepliktHendelse(
+                                    korrelasjonsId = null, // TODO:
                                     ident = person.ident,
                                     referanseId = UUIDv7.newUuid().toString(),
                                     startDato = now(),

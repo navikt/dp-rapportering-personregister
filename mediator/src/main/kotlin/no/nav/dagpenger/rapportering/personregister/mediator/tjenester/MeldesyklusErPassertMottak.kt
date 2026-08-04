@@ -60,10 +60,11 @@ class MeldesyklusErPassertMottak(
 
             val meldesyklusErPassertHendelse =
                 MeldesyklusErPassertHendelse(
-                    ident,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    referanseId,
+                    korrelasjonsId = null, // TODO:
+                    ident = ident,
+                    dato = LocalDateTime.now(),
+                    startDato = LocalDateTime.now(),
+                    referanseId = referanseId,
                 )
 
             personMediator.behandle(meldesyklusErPassertHendelse)

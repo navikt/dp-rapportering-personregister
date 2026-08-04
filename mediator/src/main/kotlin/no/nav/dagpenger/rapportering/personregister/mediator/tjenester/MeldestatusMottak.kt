@@ -62,6 +62,7 @@ class MeldestatusMottak(
 
 private fun JsonMessage.tilHendelse(): MeldestatusHendelse =
     MeldestatusHendelse(
+        korrelasjonsId = null, // TODO:
         personId = this["after"]["PERSON_ID"].asText().toLong(),
         meldestatusId = this["after"]["MELDESTATUS_ID"].asText().toLong(),
         hendelseId = this["after"]["HENDELSE_ID"].asText().toLong(),

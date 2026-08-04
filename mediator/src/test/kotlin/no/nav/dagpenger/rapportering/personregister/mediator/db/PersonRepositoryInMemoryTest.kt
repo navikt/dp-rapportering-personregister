@@ -48,6 +48,7 @@ class PersonRepositoryInMemoryTest {
     fun `kan slette fremtidige Arena hendelser`() {
         val meldepliktHendelse =
             MeldepliktHendelse(
+                korrelasjonsId = null,
                 ident = person.ident,
                 referanseId = "MP123456789",
                 dato = LocalDateTime.now(),
@@ -58,6 +59,7 @@ class PersonRepositoryInMemoryTest {
             )
         val meldegruppeHendelse =
             DagpengerMeldegruppeHendelse(
+                korrelasjonsId = null,
                 ident = person.ident,
                 referanseId = "MG123456789",
                 dato = LocalDateTime.now(),
@@ -68,6 +70,7 @@ class PersonRepositoryInMemoryTest {
             )
         val annenPersonHendelse =
             DagpengerMeldegruppeHendelse(
+                korrelasjonsId = null,
                 ident = "12345678902",
                 referanseId = "MG123456780",
                 dato = LocalDateTime.now(),
@@ -78,6 +81,7 @@ class PersonRepositoryInMemoryTest {
             )
         val ikkeArenaHendelse =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now(),

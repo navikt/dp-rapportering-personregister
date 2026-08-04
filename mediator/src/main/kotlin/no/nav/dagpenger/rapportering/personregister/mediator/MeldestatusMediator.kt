@@ -99,6 +99,7 @@ class MeldestatusMediator(
             if (meldeplikt != it.meldeplikt) {
                 val meldepliktHendelse =
                     MeldepliktHendelse(
+                        korrelasjonsId = null, // TODO:
                         ident = person.ident,
                         referanseId = "MSMP$meldestatusId-$index",
                         startDato = it.meldepliktperiode?.fom ?: now(),
@@ -125,6 +126,7 @@ class MeldestatusMediator(
                 if (it.meldegruppe == "DAGP") {
                     val dagpengerMeldegruppeHendelse =
                         DagpengerMeldegruppeHendelse(
+                            korrelasjonsId = null, // TODO:
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
                             startDato = it.meldegruppeperiode?.fom ?: now(),
@@ -143,6 +145,7 @@ class MeldestatusMediator(
                 } else {
                     val annenMeldegruppeHendelse =
                         AnnenMeldegruppeHendelse(
+                            korrelasjonsId = null, // TODO:
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
                             startDato = it.meldegruppeperiode?.fom ?: now(),

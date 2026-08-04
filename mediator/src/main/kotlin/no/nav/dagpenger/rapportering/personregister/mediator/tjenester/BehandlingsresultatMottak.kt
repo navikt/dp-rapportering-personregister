@@ -96,6 +96,7 @@ class BehandlingsresultatMottak(
                             }
                             val vedtakHendelse =
                                 VedtakHendelse(
+                                    korrelasjonsId = null, // TODO:
                                     ident = ident,
                                     dato = now(),
                                     startDato = fraOgMed.atStartOfDay(),
@@ -112,6 +113,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStart(
+                                    korrelasjonsId = null, // TODO:
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed?.atStartOfDay(),
@@ -126,6 +128,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStans(
+                                    korrelasjonsId = null, // TODO:
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed.atStartOfDay(),

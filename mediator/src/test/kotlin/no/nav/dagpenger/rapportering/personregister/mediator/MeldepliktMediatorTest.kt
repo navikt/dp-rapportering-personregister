@@ -254,14 +254,26 @@ class MeldepliktMediatorTest {
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-    ) = DagpengerMeldegruppeHendelse(ident, dato, referanseId, startDato = dato, sluttDato = sluttDato, "DAGP", harMeldtSeg = true)
+        korrelasjonsId: String? = null,
+    ) = DagpengerMeldegruppeHendelse(
+        korrelasjonsId = korrelasjonsId,
+        ident = ident,
+        dato = dato,
+        referanseId = referanseId,
+        startDato = dato,
+        sluttDato = sluttDato,
+        meldegruppeKode = "DAGP",
+        harMeldtSeg = true,
+    )
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
+        korrelasjonsId: String? = null,
     ) = MeldepliktHendelse(
+        korrelasjonsId = korrelasjonsId,
         ident = ident,
         dato = dato,
         startDato = dato,

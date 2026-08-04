@@ -117,6 +117,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 Person(ident = ident1).apply {
                     behandle(
                         StartetArbeidssøkerperiodeHendelse(
+                            korrelasjonsId = null,
                             periodeId = UUIDv7.newUuid(),
                             ident = ident1,
                             startDato = nå.minusDays(1),
@@ -127,6 +128,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 Person(ident = ident2).apply {
                     behandle(
                         StartetArbeidssøkerperiodeHendelse(
+                            korrelasjonsId = null,
                             periodeId = UUIDv7.newUuid(),
                             ident = ident2,
                             startDato = nå.minusDays(1),
@@ -136,6 +138,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
 
             val meldepliktHendelse =
                 MeldepliktHendelse(
+                    korrelasjonsId = null,
                     ident = ident1,
                     referanseId = "123",
                     dato = nå.minusDays(2),
@@ -146,6 +149,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
                 )
             val meldegruppeHendelse =
                 DagpengerMeldegruppeHendelse(
+                    korrelasjonsId = null,
                     ident = ident1,
                     referanseId = "321",
                     dato = nå.minusDays(1),
@@ -157,6 +161,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
 
             val meldegruppeHendelse2 =
                 DagpengerMeldegruppeHendelse(
+                    korrelasjonsId = null,
                     ident = ident2,
                     referanseId = "322",
                     dato = nå.minusDays(1),
@@ -290,6 +295,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
         val nå = LocalDateTime.now()
         val behandlet =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = ident1,
                 referanseId = "behandlet-1",
                 startDato = nå.minusDays(2),
@@ -297,6 +303,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             )
         val feiler =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = ident1,
                 referanseId = "feiler-2",
                 startDato = nå.minusDays(1),
@@ -304,6 +311,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             )
         val ikkeBehandlet =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = ident1,
                 referanseId = "ikke-behandlet-3",
                 startDato = nå,
@@ -353,6 +361,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
         val nå = LocalDateTime.now()
         val vedtakSomFeiler =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = ident1,
                 referanseId = "ident1-feiler-1",
                 startDato = nå.minusDays(1),
@@ -360,6 +369,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             )
         val meldegruppeForIdent2 =
             DagpengerMeldegruppeHendelse(
+                korrelasjonsId = null,
                 ident = ident2,
                 referanseId = "ident2-behandles-1",
                 dato = nå.minusDays(1),
@@ -425,6 +435,7 @@ class AktiverHendelserJobTest : ApiTestSetup() {
 
         val hendelse =
             VedtakHendelse(
+                korrelasjonsId = null,
                 ident = ident1,
                 referanseId = "mangler-person-1",
                 startDato = LocalDateTime.now().minusDays(1),
