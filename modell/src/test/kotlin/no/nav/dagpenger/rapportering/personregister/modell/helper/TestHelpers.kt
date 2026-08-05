@@ -43,7 +43,7 @@ fun dagpengerMeldegruppeHendelse(
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = DagpengerMeldegruppeHendelse(korrelasjonsId, ident, dato, referanseId, startDato, sluttDato, "DAGP", true)
 
 fun annenMeldegruppeHendelse(
@@ -51,7 +51,7 @@ fun annenMeldegruppeHendelse(
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     referanseId: String = "123",
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = AnnenMeldegruppeHendelse(korrelasjonsId, ident, dato, referanseId, startDato, sluttDato, "ARBS", true)
 
 fun meldepliktHendelse(
@@ -59,14 +59,14 @@ fun meldepliktHendelse(
     startDato: LocalDateTime = nå,
     sluttDato: LocalDateTime? = null,
     status: Boolean = false,
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = MeldepliktHendelse(korrelasjonsId, ident, dato, "123", startDato, sluttDato, status, true)
 
 fun startetArbeidssøkerperiodeHendelse(
     periodeId: UUID = UUID.randomUUID(),
     ident: String = "12345678901",
     startet: LocalDateTime = tidligere,
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = StartetArbeidssøkerperiodeHendelse(korrelasjonsId, periodeId, ident, nå, startet)
 
 fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(null, periodeId, ident, tidligere, nå, nå)
@@ -77,7 +77,7 @@ fun vedtakHendelse(
     sluttDato: LocalDateTime?,
     referanseId: String = "vedtak-123",
     utfall: Boolean = true,
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = VedtakHendelse(
     korrelasjonsId = korrelasjonsId,
     ident = ident,
@@ -94,7 +94,7 @@ fun vedtakHendelseMedFremtidigStans(
     sluttDato: LocalDateTime,
     referanseId: String = "vedtak-123",
     utfall: Boolean = true,
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) = VedtakHendelse.medFremtidigStans(
     korrelasjonsId = korrelasjonsId,
     ident = ident,

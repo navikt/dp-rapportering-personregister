@@ -99,7 +99,7 @@ data class Person(
     }
 }
 
-fun Person.sendOvertakelsesmelding(korrelasjonsId: String? = null) {
+fun Person.sendOvertakelsesmelding(korrelasjonsId: UUID? = null) {
     logger.info { "Overtar arbeidssøkerbekreftelse" }
     arbeidssøkerperioder.gjeldende?.let {
         logger.info { "Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}" }
@@ -181,7 +181,7 @@ fun Person.sendStartMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     skalMigreres: Boolean,
-    korrelasjonsId: String? = null,
+    korrelasjonsId: UUID? = null,
 ) {
     logger.info { "Sender Start-melding til Meldekortregister" }
 

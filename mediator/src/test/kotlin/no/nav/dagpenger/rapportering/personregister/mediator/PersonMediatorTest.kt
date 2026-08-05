@@ -682,7 +682,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "321",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = NødbremsHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun meldesyklusErPassertHendelse(
@@ -690,7 +690,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldesyklusErPassertHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun søknadHendelse(
@@ -698,7 +698,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = SøknadHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun vedtakHendelse(
@@ -708,7 +708,7 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime = startDato.plusDays(10),
         referanseId: String = "456",
         utfall: Boolean = true,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun dagpengerMeldegruppeHendelse(
@@ -716,7 +716,7 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -733,7 +733,7 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = AnnenMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -750,7 +750,7 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

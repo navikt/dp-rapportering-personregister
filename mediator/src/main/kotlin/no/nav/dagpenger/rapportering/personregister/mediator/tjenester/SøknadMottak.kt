@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadServ
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import java.time.LocalDateTime
+import java.util.UUID
 
 private const val QUIZ_SØKNAD_ID_NØKKEL = "søknadsData.søknad_uuid"
 private const val LEGACY_SØKNAD_ID_NØKKEL = "søknadsData.brukerBehandlingId"
@@ -33,6 +34,7 @@ class SøknadMottak(
                 precondition { it.requireValue("@event_name", "innsending_ferdigstilt") }
                 validate {
                     it.requireKey(
+                        "@id",
                         "fødselsnummer",
                         "datoRegistrert",
                     )
@@ -59,7 +61,8 @@ class SøknadMottak(
         søknadMetrikker.søknaderMottatt.increment()
 
         try {
-            val hendelse = packet.tilHendelse()
+            val korrelasjonsId = UUIDv7.fromString(packet["@id"].asString())
+            val hendelse = packet.tilHendelse(korrelasjonsId)
 
             val relevantMeldingsinnhold =
                 """
@@ -73,7 +76,7 @@ class SøknadMottak(
                 """.trimIndent()
 
             meldingerRepository.lagreInnkommendeMelding(
-                korrelasjonsId = hendelse.referanseId,
+                korrelasjonsId = korrelasjonsId,
                 ident = ident,
                 relevantMeldingsinnhold = relevantMeldingsinnhold,
             )
@@ -87,7 +90,7 @@ class SøknadMottak(
         }
     }
 
-    private fun JsonMessage.tilHendelse(): SøknadHendelse {
+    private fun JsonMessage.tilHendelse(korrelasjonsId: UUID): SøknadHendelse {
         val ident = this["fødselsnummer"].asString()
         val dato = LocalDateTime.parse(this["datoRegistrert"].asString())
 
@@ -101,7 +104,7 @@ class SøknadMottak(
             }
 
         return SøknadHendelse(
-            korrelasjonsId = referanseId,
+            korrelasjonsId = korrelasjonsId,
             ident = ident,
             dato = dato,
             startDato = dato,

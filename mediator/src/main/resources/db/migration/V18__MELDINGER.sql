@@ -1,13 +1,13 @@
 CREATE TABLE meldinger_innkommende
 (
-    korrelasjons_id          VARCHAR(50) NOT NULL,
+    korrelasjons_id          UUID NOT NULL,
     ident                    VARCHAR(11),
     relevant_meldingsinnhold JSONB
 );
 
 CREATE TABLE meldinger_utgående
 (
-    korrelasjons_id VARCHAR(50) NOT NULL,
+    korrelasjons_id UUID        NOT NULL,
     ident           VARCHAR(11) NOT NULL,
     melding         JSONB
 );

@@ -6,7 +6,7 @@ import java.util.UUID
 interface PersonObserver {
     fun sendOvertakelsesmelding(
         person: Person,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) {}
 
     fun sendFrasigelsesmelding(
@@ -32,7 +32,7 @@ interface PersonObserver {
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) {}
 
     fun sendStoppMeldingTilMeldekortregister(

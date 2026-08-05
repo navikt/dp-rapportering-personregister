@@ -48,26 +48,14 @@ class PersonObserverKafkaTest {
     }
 
     @Test
-    fun `kan overta arbeidssøkerbekreftelse og ikke lagre utgående melding`() {
+    fun `kan overta arbeidssøkerbekreftelse`() {
         val person = lagPersonMedArbeidssøkerperiode()
         coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
 
         personObserverKafka.sendOvertakelsesmelding(person)
 
         verifiserKafkaMelding(person)
-        verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
-    }
-
-    @Test
-    fun `kan overta arbeidssøkerbekreftelse og lagre utgående melding`() {
-        val person = lagPersonMedArbeidssøkerperiode()
-        coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
-
-        val korrelasjonsId = "test"
-        personObserverKafka.sendOvertakelsesmelding(person, korrelasjonsId)
-
-        verifiserKafkaMelding(person)
-        verify(exactly = 1) { meldingerRepository.lagreUtgåendeMelding(korrelasjonsId, person.ident, any()) }
+        verify(exactly = 1) { meldingerRepository.lagreUtgåendeMelding(any(), person.ident, any()) }
     }
 
     @Test

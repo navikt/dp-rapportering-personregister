@@ -5,9 +5,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem.Dagpenger
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
+import java.util.UUID
 
 data class PersonSynkroniseringHendelse(
-    override val korrelasjonsId: String?,
+    override val korrelasjonsId: UUID?,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val referanseId: String,

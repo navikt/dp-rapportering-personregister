@@ -20,7 +20,7 @@ class PersonObserverMeldekortregisterTest {
     val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     @Test
-    fun `kan sende Start-melding uten å lagre den`() {
+    fun `kan sende Start-melding`() {
         val testRapid = TestRapid()
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
@@ -37,55 +37,24 @@ class PersonObserverMeldekortregisterTest {
 
         personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, true)
 
-        verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
-
         testRapid.inspektør.size shouldBe 1
 
-        val message = testRapid.inspektør.message(0)
-        message["@event_name"].asString() shouldBe "meldekortoppretting"
-        message["personId"].asLong() shouldBe personId
-        message["ident"].asString() shouldBe ident
-        message["fraOgMed"].asLocalDateTime() shouldBe startDato
-        message["tilOgMed"] shouldBe null
-        message["harRett"].asBoolean() shouldBe true
-        message["handling"].asString() shouldBe "START"
-        message["referanseId"].asString() shouldNotBe null
-        message["skalMigreres"].asBoolean() shouldBe true
-    }
-
-    @Test
-    fun `kan sende Start-melding og lagre den`() {
-        val testRapid = TestRapid()
-        mockkObject(ApplicationBuilder.Companion)
-        every { getRapidsConnection() } returns testRapid
-
-        val personId = 1234L
-        val ident = "12345678910"
-        val person = Person(ident)
-        val startDato = LocalDateTime.now().minusDays(1)
-
-        val personRepository = mockk<PersonRepository>(relaxed = true)
-        every { personRepository.hentPersonId(eq(ident)) } returns personId
-
-        val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
-
-        val korrelasjonsId = "test"
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(
-            person,
-            startDato,
-            null,
-            true,
-            korrelasjonsId,
-        )
-
-        testRapid.inspektør.size shouldBe 1
-        val melding = testRapid.inspektør.message(0).toString()
+        val melding = testRapid.inspektør.message(0)
+        melding["@event_name"].asString() shouldBe "meldekortoppretting"
+        melding["personId"].asLong() shouldBe personId
+        melding["ident"].asString() shouldBe ident
+        melding["fraOgMed"].asLocalDateTime() shouldBe startDato
+        melding["tilOgMed"] shouldBe null
+        melding["harRett"].asBoolean() shouldBe true
+        melding["handling"].asString() shouldBe "START"
+        melding["referanseId"].asString() shouldNotBe null
+        melding["skalMigreres"].asBoolean() shouldBe true
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
-                korrelasjonsId,
+                any(),
                 ident,
-                melding,
+                melding.toString(),
             )
         }
     }

@@ -32,6 +32,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHende
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PersonRepositoryPostgresTest {
     private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
@@ -460,9 +461,10 @@ class PersonRepositoryPostgresTest {
                     tx.run(
                         queryOf(
                             """
-                INSERT INTO hendelse (person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?::jsonb)
+                INSERT INTO hendelse (korrelasjons_id, person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 """,
+                            hendelse.korrelasjonsId,
                             personId,
                             hendelse.dato,
                             dato.plusSeconds(1),
@@ -777,7 +779,7 @@ class PersonRepositoryPostgresTest {
         fraOgMed: LocalDate = LocalDate.now(),
         tilOgMed: LocalDate? = null,
         harRett: Boolean = false,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = VedtakHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -815,7 +817,7 @@ class PersonRepositoryPostgresTest {
         referanseId: String = UUIDv7.newUuid().toString(),
         meldegruppeKode: String = "DAGP",
         harMeldtSeg: Boolean = false,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = if (meldegruppeKode == "DAGP") {
         DagpengerMeldegruppeHendelse(
             korrelasjonsId = korrelasjonsId,
@@ -844,7 +846,7 @@ class PersonRepositoryPostgresTest {
         ident: String,
         referanseId: String = UUIDv7.newUuid().toString(),
         harMeldtSeg: Boolean = false,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

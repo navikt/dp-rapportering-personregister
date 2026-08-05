@@ -13,9 +13,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.utils.erDatoIFortid
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
+import java.util.UUID
 
 data class VedtakHendelse(
-    override val korrelasjonsId: String?,
+    override val korrelasjonsId: UUID?,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
@@ -30,7 +31,7 @@ data class VedtakHendelse(
         private const val PREFIKS_FREMTIDIG_STANS = "FREMTIDIG-STANS"
 
         fun medFremtidigStart(
-            korrelasjonsId: String? = null,
+            korrelasjonsId: UUID? = null,
             ident: String,
             dato: LocalDateTime = now(),
             startDato: LocalDateTime,
@@ -48,7 +49,7 @@ data class VedtakHendelse(
         )
 
         fun medFremtidigStans(
-            korrelasjonsId: String? = null,
+            korrelasjonsId: UUID? = null,
             ident: String,
             dato: LocalDateTime = now(),
             startDato: LocalDateTime,

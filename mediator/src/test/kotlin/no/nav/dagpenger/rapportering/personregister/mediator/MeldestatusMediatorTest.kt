@@ -34,6 +34,7 @@ import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class MeldestatusMediatorTest {
     private lateinit var rapidsConnection: TestRapid
@@ -368,7 +369,7 @@ class MeldestatusMediatorTest {
         personId: Long = 1L,
         meldestatusId: Long = 2L,
         hendelseId: Long = 3L,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldestatusHendelse(
         korrelasjonsId = korrelasjonsId,
         personId = personId,

@@ -1,16 +1,17 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
+import java.util.UUID
 
 interface MeldingerRepository {
     fun lagreInnkommendeMelding(
-        korrelasjonsId: String = UUIDv7.newUuid().toString(),
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
         ident: String? = null,
         relevantMeldingsinnhold: String,
     )
 
     fun lagreUtgåendeMelding(
-        korrelasjonsId: String,
+        korrelasjonsId: UUID,
         ident: String,
         melding: String,
     )

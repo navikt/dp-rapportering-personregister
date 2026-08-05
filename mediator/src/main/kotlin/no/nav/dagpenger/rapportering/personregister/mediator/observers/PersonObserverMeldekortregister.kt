@@ -9,6 +9,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PersonObserverMeldekortregister(
     private val personRepository: PersonRepository,
@@ -24,7 +25,7 @@ class PersonObserverMeldekortregister(
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
-        korrelasjonsId: String?,
+        korrelasjonsId: UUID?,
     ) {
         logger.info { "Sender Start-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Start-melding til Meldekortregister for person ${person.ident}" }
@@ -47,13 +48,12 @@ class PersonObserverMeldekortregister(
 
             sikkerlogg.info { "Sender Start-melding til Meldekortregister: ${message.toJson()}" }
             getRapidsConnection().publish(person.ident, message.toJson())
-            if (korrelasjonsId != null) {
-                meldingerRepository.lagreUtgåendeMelding(
-                    korrelasjonsId = korrelasjonsId,
-                    ident = person.ident,
-                    melding = message.toJson(),
-                )
-            }
+
+            meldingerRepository.lagreUtgåendeMelding(
+                korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                ident = person.ident,
+                melding = message.toJson(),
+            )
         } catch (e: Exception) {
             logger.error(e) { "Feil ved sending av Start-melding til Meldekortregister" }
             sikkerlogg.error(e) { "Feil ved sending av Start-melding til Meldekortregister for person ${person.ident}" }

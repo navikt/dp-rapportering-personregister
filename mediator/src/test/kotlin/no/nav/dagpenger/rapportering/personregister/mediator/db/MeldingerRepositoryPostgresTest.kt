@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
 import io.kotest.assertions.throwables.shouldNotThrowAny
-import io.kotest.assertions.throwables.shouldThrow
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.dataSource
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.withMigratedDb
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -24,11 +23,11 @@ class MeldingerRepositoryPostgresTest {
         }
 
     @Test
-    fun `kaster exception hvis relevantMeldingsinnhold ikke er gyldig JSON`() =
+    fun `kaster ikke exception hvis relevantMeldingsinnhold ikke er gyldig JSON`() =
         withMigratedDb {
             val ident = "12345678901"
 
-            shouldThrow<Exception> {
+            shouldNotThrowAny {
                 meldingerRepository.lagreInnkommendeMelding(
                     ident = ident,
                     relevantMeldingsinnhold = "bla bla bla",
@@ -43,7 +42,7 @@ class MeldingerRepositoryPostgresTest {
 
             shouldNotThrowAny {
                 meldingerRepository.lagreUtgåendeMelding(
-                    korrelasjonsId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     melding = "{ \"key\": \"value\" }",
                 )
@@ -51,13 +50,13 @@ class MeldingerRepositoryPostgresTest {
         }
 
     @Test
-    fun `kaster exception hvis melding ikke er gyldig JSON`() =
+    fun `kaster ikke exception hvis melding ikke er gyldig JSON`() =
         withMigratedDb {
             val ident = "12345678901"
 
-            shouldThrow<Exception> {
+            shouldNotThrowAny {
                 meldingerRepository.lagreUtgåendeMelding(
-                    korrelasjonsId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     melding = "bla bla bla",
                 )
