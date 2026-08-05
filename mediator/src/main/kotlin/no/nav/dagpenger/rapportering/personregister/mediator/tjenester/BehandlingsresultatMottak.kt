@@ -79,7 +79,7 @@ class BehandlingsresultatMottak(
             try {
                 ident.validerIdent()
 
-                personRepository.slettFremtidigeVedtakHendelser(ident)
+                personRepository.slettFremtidigeVedtakHendelser(ident, behandlingskjedeId)
 
                 packet["rettighetsperioder"]
                     .toList()
@@ -103,6 +103,7 @@ class BehandlingsresultatMottak(
                                     sluttDato = tilOgMed?.atStartOfDay(),
                                     referanseId = "$behandlingId-$index",
                                     utfall = harRett,
+                                    behandlingskjedeId = behandlingskjedeId,
                                 )
                             personMediator.behandle(vedtakHendelse)
                         }
@@ -119,6 +120,7 @@ class BehandlingsresultatMottak(
                                     sluttDato = tilOgMed?.atStartOfDay(),
                                     referanseId = "$behandlingId-$index",
                                     utfall = harRett,
+                                    behandlingskjedeId = behandlingskjedeId,
                                 ),
                             )
                         }
@@ -134,6 +136,7 @@ class BehandlingsresultatMottak(
                                     sluttDato = tilOgMed.atStartOfDay(),
                                     referanseId = "$behandlingId-$index",
                                     utfall = harRett,
+                                    behandlingskjedeId = behandlingskjedeId,
                                 ),
                             )
                         }

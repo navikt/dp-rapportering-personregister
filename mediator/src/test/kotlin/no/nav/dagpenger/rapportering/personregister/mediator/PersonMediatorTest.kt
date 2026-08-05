@@ -708,8 +708,18 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime = startDato.plusDays(10),
         referanseId: String = "456",
         utfall: Boolean = true,
+        behandlingskjedeId: String? = "behandlingskjedeId",
         korrelasjonsId: UUID? = null,
-    ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
+    ) = VedtakHendelse(
+        korrelasjonsId = korrelasjonsId,
+        ident = ident,
+        dato = dato,
+        startDato = startDato,
+        referanseId = referanseId,
+        sluttDato = sluttDato,
+        utfall = utfall,
+        behandlingskjedeId = behandlingskjedeId,
+    )
 
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = nå,
