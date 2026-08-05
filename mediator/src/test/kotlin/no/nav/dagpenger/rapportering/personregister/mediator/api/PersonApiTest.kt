@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.kotest.matchers.collections.shouldContainOnly
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.bearerAuth
-import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -161,7 +160,7 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `person-{personId}-søknader returnerer forventet respons hvis personen eksisterer og personen har søknader`() =
+    fun `person-søknader returnerer forventet respons hvis personen eksisterer og personen har søknader`() =
         setUpTestApplication {
             val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
             val søknadHendelser =
@@ -183,12 +182,12 @@ class PersonApiTest : ApiTestSetup() {
                 }.also {
                     personRepository.lagrePerson(it)
                 }
-            val personId = personRepository.hentPersonId(ident)!!
 
             with(
-                client.get("/api/person/$personId/søknader") {
+                client.post("/api/person/søknader") {
                     header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody(ident)))
                 },
             ) {
                 status shouldBe OK
@@ -210,19 +209,19 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `person-{personId}-søknader returnerer forventet respons hvis personen eksisterer men personen ikke har søknader`() =
+    fun `person-søknader returnerer forventet respons hvis personen eksisterer men personen ikke har søknader`() =
         setUpTestApplication {
             val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
             Person(ident)
                 .also {
                     personRepository.lagrePerson(it)
                 }
-            val personId = personRepository.hentPersonId(ident)!!
 
             with(
-                client.get("/api/person/$personId/søknader") {
+                client.post("/api/person/søknader") {
                     header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody(ident)))
                 },
             ) {
                 status shouldBe OK
@@ -231,12 +230,13 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `person-{personId}-søknader returnerer forventet respons hvis personen ikke eksisterer`() =
+    fun `person-søknader returnerer forventet respons hvis personen ikke eksisterer`() =
         setUpTestApplication {
             with(
-                client.get("/api/person/123456/søknader") {
+                client.post("/api/person/søknader") {
                     header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody(ident)))
                 },
             ) {
                 status shouldBe NotFound
@@ -244,12 +244,13 @@ class PersonApiTest : ApiTestSetup() {
         }
 
     @Test
-    fun `person-{personId}-søknader returnerer forventet respons hvis personId er ugyldig`() =
+    fun `person-søknader returnerer forventet respons hvis ident ikke validerer`() =
         setUpTestApplication {
             with(
-                client.get("/api/person/hei-jeg-er-ikke-en-gyldig-personId/søknader") {
+                client.post("/api/person/søknader") {
                     header(HttpHeaders.ContentType, "application/json")
                     bearerAuth(issueAzureAdToken(emptyMap()))
+                    setBody(defaultObjectMapper.writeValueAsString(IdentBody("ident-som-ikke-validerer")))
                 },
             ) {
                 status shouldBe BadRequest

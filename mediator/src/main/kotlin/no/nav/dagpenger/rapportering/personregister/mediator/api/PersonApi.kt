@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationCall
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
@@ -30,18 +31,9 @@ internal fun Application.personApi(
             route("/hentPersonId") {
                 post {
                     logger.info { "POST /hentPersonId" }
-                    val request = call.receive<IdentBody>()
-
-                    try {
-                        request.ident.validerIdent()
-                    } catch (e: IllegalArgumentException) {
-                        val melding = "Validering av ident feilet: $e.message"
-                        logger.error { melding }
-                        throw BadRequestException(melding)
-                    }
 
                     personService
-                        .hentPersonId(request.ident)
+                        .hentPersonId(ident = getIdent(call))
                         ?.also { personId ->
                             call.respond(
                                 OK,
@@ -103,14 +95,14 @@ internal fun Application.personApi(
                 }
             }
 
-            route("/api/person/{personId}/søknader") {
-                get {
-                    val personId =
-                        call.parameters["personId"]?.toLongOrNull()
-                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+            route("/api/person/søknader") {
+                post {
+                    logger.info {
+                        "POST /api/person/søknader"
+                    }
 
                     søknadService
-                        .hentSøknader(personId)
+                        .hentSøknader(ident = getIdent(call))
                         .also { søknader ->
                             call.respond(
                                 OK,
@@ -125,6 +117,18 @@ internal fun Application.personApi(
                 }
             }
         }
+    }
+}
+
+private suspend fun getIdent(call: ApplicationCall): String {
+    val ident = call.receive<IdentBody>().ident
+    try {
+        ident.validerIdent()
+        return ident
+    } catch (e: IllegalArgumentException) {
+        val melding = "Validering av ident=${ident.take(255)} feilet: ${e.message}"
+        logger.error { melding }
+        throw BadRequestException(melding)
     }
 }
 

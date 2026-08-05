@@ -74,8 +74,8 @@ paths:
       security:
         - azureAd: []
 
-  /api/person/{personId}/søknader:
-      get:
+  /api/person/søknader:
+      post:
           responses:
               200:
                   description: OK
@@ -85,19 +85,19 @@ paths:
                               type: array
                               items:
                                   $ref: '#/components/schemas/Soknad'
+              400:
+                  description: Identen validerer ikke
               404:
-                  description: Hvis bruker med oppgitt personId ikke eksisterer
-          summary: Henter alle kjente søknader (de dp-rapportering-personregister vet om) for en gitt personId
-          description: Returnerer en liste med søknadId og tidspunkt for innsending. Hvis personId ikke har kjente søknader returneres en tom liste
-          operationId: get-personid-soknader
-          parameters:
-              -   in: path
-                  name: personId
-                  schema:
-                      type: integer
-                      format: int64
-                  required: true
-                  description: personId til personen du vil hente søknader for
+                  description: Hvis bruker med oppgitt ident ikke eksisterer
+          summary: Henter alle kjente søknader (de dp-rapportering-personregister vet om) for en gitt ident
+          description: Returnerer en liste med søknadId og tidspunkt for innsending. Hvis ident ikke har kjente søknader returneres en tom liste
+          operationId: post-soknader
+          requestBody:
+              required: true
+              content:
+                  application/json:
+                      schema:
+                          $ref: '#/components/schemas/IdentBody'
           security:
               -   azureAd: [ ]
 

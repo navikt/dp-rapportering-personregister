@@ -2,6 +2,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.service
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.api.PersonNotFoundException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -14,6 +15,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMe
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 class SøknadService(
     private val personService: PersonService,
@@ -64,11 +66,16 @@ class SøknadService(
         }
     }
 
-    fun hentSøknader(personId: Long): List<Søknad> =
-        personService.hentPerson(personId).hendelser.filterIsInstance<SøknadHendelse>().map { hendelse ->
-            Søknad(
-                søknadId = hendelse.referanseId,
-                innsendtTidspunkt = hendelse.startDato,
-            )
+    fun hentSøknader(ident: String): List<Søknad> =
+        personService.hentPerson(ident)?.let {
+            it.hendelser.filterIsInstance<SøknadHendelse>().map { hendelse ->
+                Søknad(
+                    søknadId = hendelse.referanseId,
+                    innsendtTidspunkt = hendelse.startDato,
+                )
+            }
+        } ?: run {
+            sikkerlogg.warn { "Fant ikke person ident=${ident.take(11)}" }
+            throw PersonNotFoundException()
         }
 }
