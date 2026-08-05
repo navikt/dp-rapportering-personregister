@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import java.time.LocalDateTime
 
 class MeldesyklusErPassertMottak(
@@ -58,8 +58,8 @@ class MeldesyklusErPassertMottak(
 
             ident.validerIdent()
 
-            val meldesyklusErPassertHendelse =
-                MeldesyklusErPassertHendelse(
+            val hendelse =
+                IkkeMeldtSegPå21DagerHendelse(
                     korrelasjonsId = null, // TODO:
                     ident = ident,
                     dato = LocalDateTime.now(),
@@ -67,7 +67,7 @@ class MeldesyklusErPassertMottak(
                     referanseId = referanseId,
                 )
 
-            personMediator.behandle(meldesyklusErPassertHendelse)
+            personMediator.behandle(hendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding" }
             sikkerlogg.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }

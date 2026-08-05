@@ -19,8 +19,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldeg
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
@@ -843,8 +843,8 @@ class PersonRepositoryPostgres(
                 )
             }
 
-            "MeldesyklusErPassertHendelse" -> {
-                MeldesyklusErPassertHendelse(
+            "MeldesyklusErPassertHendelse", "IkkeMeldtSegPå21DagerHendelse" -> {
+                IkkeMeldtSegPå21DagerHendelse(
                     korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = dato,

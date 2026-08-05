@@ -99,7 +99,7 @@ data class VedtakHendelse(
                     // Sjekker om meldekortregisteret har meldt at bruker har brutt fristen for meldeplikten etter startDato
                     val fristBrutt =
                         person.hendelser
-                            .filterIsInstance<MeldesyklusErPassertHendelse>()
+                            .filterIsInstance<IkkeMeldtSegPå21DagerHendelse>()
                             .any {
                                 it.dato.isAfter(startDato)
                             }

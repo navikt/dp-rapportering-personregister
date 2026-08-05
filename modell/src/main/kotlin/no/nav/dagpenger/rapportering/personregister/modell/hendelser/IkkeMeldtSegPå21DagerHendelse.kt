@@ -8,7 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmeldin
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 
-class MeldesyklusErPassertHendelse(
+class IkkeMeldtSegPå21DagerHendelse(
     override val korrelasjonsId: String?,
     override val ident: String,
     override val dato: LocalDateTime = now(),

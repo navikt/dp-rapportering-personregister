@@ -8,8 +8,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGER
 import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
@@ -240,11 +240,11 @@ class PersonTest {
     }
 
     @Nested
-    inner class MeldesyklusErPassertHendelser {
+    inner class IkkeMeldtSegPå21DagerHendelser {
         @Test
         fun `behandler meldesyklus er passert hendelse`() =
             arbeidssøker(overtattBekreftelse = true) {
-                behandle(meldesyklusErPassertHendelse())
+                behandle(IkkeMeldtSegPå21DagerHendelse())
                 this.arbeidssøkerperioder.gjeldende?.årsakTilUtmelding shouldBe
                     Arbeidssøkerperiode.ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER
                 arbeidssøkerperiodeObserver skalHaFrasagtSegAnsvaretMedFristBruttFor this
@@ -301,8 +301,8 @@ class PersonTest {
 
     private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(null, periodeId, ident, tidligere, nå, nå)
 
-    private fun meldesyklusErPassertHendelse() =
-        MeldesyklusErPassertHendelse(
+    private fun IkkeMeldtSegPå21DagerHendelse() =
+        IkkeMeldtSegPå21DagerHendelse(
             null,
             ident,
             nå,

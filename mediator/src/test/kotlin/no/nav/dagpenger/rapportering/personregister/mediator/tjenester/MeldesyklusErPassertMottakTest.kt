@@ -11,7 +11,7 @@ import io.mockk.slot
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
@@ -32,7 +32,7 @@ class MeldesyklusErPassertMottakTest {
     @Test
     fun `onPacket behandler melding og inkrementerer metrikk`() {
         val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.count()
-        val hendelseSlot = slot<MeldesyklusErPassertHendelse>()
+        val hendelseSlot = slot<IkkeMeldtSegPå21DagerHendelse>()
         every { personMediator.behandle(capture(hendelseSlot), 1) } just runs
 
         val ident = "12345678903"
@@ -73,7 +73,7 @@ class MeldesyklusErPassertMottakTest {
     @Test
     fun `onPacket kaster exception og inkrementerer metrikk hvis behandling feiler`() {
         val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.count()
-        every { personMediator.behandle(any<MeldesyklusErPassertHendelse>()) } throws RuntimeException("kaboom")
+        every { personMediator.behandle(any<IkkeMeldtSegPå21DagerHendelse>()) } throws RuntimeException("kaboom")
 
         val exception =
             shouldThrow<RuntimeException> {

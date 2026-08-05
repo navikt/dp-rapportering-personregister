@@ -41,8 +41,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGER
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
@@ -580,7 +580,7 @@ class PersonMediatorTest {
         @Test
         fun `send frasigelsesmelding når meldesyklus er passert`() {
             arbeidssøker(overtattBekreftelse = true) {
-                personMediator.behandle(meldesyklusErPassertHendelse())
+                personMediator.behandle(IkkeMeldtSegPå21DagerHendelse())
                 personObserver skalHaFrasagtAnsvaretMedFristBruttFor this
             }
         }
@@ -685,13 +685,13 @@ class PersonMediatorTest {
         korrelasjonsId: String? = null,
     ) = NødbremsHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
-    private fun meldesyklusErPassertHendelse(
+    private fun IkkeMeldtSegPå21DagerHendelse(
         ident: String = this.ident,
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
         korrelasjonsId: String? = null,
-    ) = MeldesyklusErPassertHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
+    ) = IkkeMeldtSegPå21DagerHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun søknadHendelse(
         ident: String = this.ident,
