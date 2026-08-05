@@ -7,6 +7,8 @@ import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
@@ -25,8 +27,12 @@ class PersonObserverKafka(
     private val producer: Producer<Long, PaaVegneAv>,
     private val arbeidssøkerConnector: ArbeidssøkerConnector,
     private val bekreftelsePåVegneAvTopic: String,
+    private val meldingerRepository: MeldingerRepository,
 ) : PersonObserver {
-    override fun sendOvertakelsesmelding(person: Person) {
+    override fun sendOvertakelsesmelding(
+        person: Person,
+        korrelasjonsId: UUID?,
+    ) {
         try {
             logger.info { "Starter overtagelse av bekreftelse for person. Arbs.perioder: ${person.arbeidssøkerperioder.size}" }
             sikkerlogg.info {
@@ -59,6 +65,13 @@ class PersonObserverKafka(
                     Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
                 )
                 val metadata = runBlocking { producer.sendDeferred(record).await() }
+
+                meldingerRepository.lagreUtgåendeMelding(
+                    korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                    ident = person.ident,
+                    melding = record.value().toString(),
+                )
+
                 logger.info {
                     "Sendte melding om at vi overtar ansvaret for bekreftelse av periodeId $periodeId til arbeidssøkerregisteret. " +
                         "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"

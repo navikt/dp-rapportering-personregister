@@ -39,6 +39,7 @@ import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class MeldepliktMediatorTest {
     private lateinit var rapidsConnection: TestRapid
@@ -254,7 +255,7 @@ class MeldepliktMediatorTest {
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -271,7 +272,7 @@ class MeldepliktMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
