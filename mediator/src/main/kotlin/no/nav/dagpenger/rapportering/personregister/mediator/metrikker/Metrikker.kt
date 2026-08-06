@@ -105,15 +105,15 @@ class MeldepliktendringMetrikker(
             .register(meterRegistry)
 }
 
-class MeldesyklusErPassertMetrikker(
+class IkkeMeldtSegPå21DagerMetrikker(
     meterRegistry: MeterRegistry,
 ) {
-    val meldesyklusErPassertMottatt: Counter =
+    val ikkeMeldtSegPå21DagerMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_meldesyklus_er_passert_mottatt_total")
             .description("Antall mottatte meldinger om at meldesyklus er passert")
             .register(meterRegistry)
-    val meldesyklusErPassertFeilet: Counter =
+    val ikkeMeldtSegPå21DagerFeilet: Counter =
         Counter
             .builder("${NAMESPACE}_meldesyklus_er_passert_feilet_total")
             .description("Antall behandlinger som har feilet av mottatte meldinger om at meldesyklus er passert")

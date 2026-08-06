@@ -152,7 +152,7 @@ class PersonMediator(
         hendelse: IkkeMeldtSegPå21DagerHendelse,
         counter: Int = 1,
     ): Unit =
-        actionTimer.timedAction("behandle_MeldesyklusErPassertHendelse") {
+        actionTimer.timedAction("behandle_IkkeMeldtSegPå21DagerHendelse") {
             logger.info { "Behandler IkkeMeldtSegPå21DagerHendelse: ${hendelse.referanseId}" }
             personService
                 .hentEllerOpprettPerson(hendelse.ident)

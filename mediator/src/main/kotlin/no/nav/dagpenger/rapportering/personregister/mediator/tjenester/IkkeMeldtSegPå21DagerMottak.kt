@@ -9,15 +9,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.IkkeMeldtSegPå21DagerMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import java.time.LocalDateTime
 
-class MeldesyklusErPassertMottak(
+class IkkeMeldtSegPå21DagerMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
-    private val meldesyklusErPassertMetrikker: MeldesyklusErPassertMetrikker,
+    private val ikkeMeldtSegPå21DagerMetrikker: IkkeMeldtSegPå21DagerMetrikker,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -51,14 +51,14 @@ class MeldesyklusErPassertMottak(
 
         logger.info { "Mottok meldesyklus_er_passert-melding" }
         sikkerlogg.info { "Mottok meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
-        meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.increment()
+        ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerMottatt.increment()
 
         try {
             val referanseId = packet["referanseId"].asText()
 
             ident.validerIdent()
 
-            val hendelse =
+            val ikkeMeldtSegPå21DagerHendelse =
                 IkkeMeldtSegPå21DagerHendelse(
                     korrelasjonsId = null, // TODO:
                     ident = ident,
@@ -67,11 +67,11 @@ class MeldesyklusErPassertMottak(
                     referanseId = referanseId,
                 )
 
-            personMediator.behandle(hendelse)
+            personMediator.behandle(ikkeMeldtSegPå21DagerHendelse)
         } catch (e: Exception) {
             logger.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding" }
             sikkerlogg.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
-            meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.increment()
+            ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.increment()
             throw e
         }
     }

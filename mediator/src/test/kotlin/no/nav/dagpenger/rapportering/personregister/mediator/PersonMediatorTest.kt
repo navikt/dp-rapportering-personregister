@@ -576,9 +576,9 @@ class PersonMediatorTest {
     }
 
     @Nested
-    inner class MeldesyklusErPassert {
+    inner class IkkeMeldtSegPå21Dager {
         @Test
-        fun `send frasigelsesmelding når meldesyklus er passert`() {
+        fun `send frasigelsesmelding når bruker ikke meldt seg på 21 dager`() {
             arbeidssøker(overtattBekreftelse = true) {
                 personMediator.behandle(IkkeMeldtSegPå21DagerHendelse())
                 personObserver skalHaFrasagtAnsvaretMedFristBruttFor this
