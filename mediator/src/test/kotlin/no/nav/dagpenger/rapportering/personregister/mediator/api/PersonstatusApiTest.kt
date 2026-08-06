@@ -217,7 +217,7 @@ class PersonstatusApiTest : ApiTestSetup() {
                 ?.also { person ->
                     person.behandle(
                         VedtakHendelse(
-                            UUIDv7.newUuid().toString(),
+                            UUIDv7.newUuid(),
                             ident,
                             now(),
                             now(),

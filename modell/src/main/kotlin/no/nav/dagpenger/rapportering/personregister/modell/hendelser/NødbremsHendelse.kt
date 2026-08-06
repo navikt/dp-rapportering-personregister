@@ -6,9 +6,10 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.sendStoppMeldingTilMeldekortregister
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
+import java.util.UUID
 
 data class NødbremsHendelse(
-    override val korrelasjonsId: String?,
+    override val korrelasjonsId: UUID?,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,

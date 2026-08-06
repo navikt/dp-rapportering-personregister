@@ -13,7 +13,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 data class StartetArbeidssøkerperiodeHendelse(
-    override val korrelasjonsId: String?,
+    override val korrelasjonsId: UUID?,
     override val periodeId: UUID,
     override val ident: String,
     override val dato: LocalDateTime = LocalDateTime.now(),

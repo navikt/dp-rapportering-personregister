@@ -84,7 +84,7 @@ class Steps : No {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         meldegruppeKode: String = "DAGP",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId,
         ident,
@@ -99,6 +99,6 @@ class Steps : No {
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = AnnenMeldegruppeHendelse(korrelasjonsId, ident, dato, referanseId, dato, null, "ARBS", false)
 }

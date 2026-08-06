@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMe
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class FremtidigHendelseMediatorTest {
     private val personRepository = mockk<PersonRepository>(relaxed = true)
@@ -31,7 +32,7 @@ class FremtidigHendelseMediatorTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -46,7 +47,7 @@ class FremtidigHendelseMediatorTest {
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = AnnenMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -61,7 +62,7 @@ class FremtidigHendelseMediatorTest {
     private fun meldepliktHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

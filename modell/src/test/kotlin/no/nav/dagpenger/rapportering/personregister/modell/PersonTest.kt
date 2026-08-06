@@ -279,7 +279,7 @@ class PersonTest {
     private fun søknadHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = SøknadHendelse(korrelasjonsId, ident, dato, dato, referanseId)
 
     private fun vedtakHendelse(
@@ -288,13 +288,13 @@ class PersonTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         utfall: Boolean,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
-        korrelasjonsId: String? = null,
+        korrelasjonsId: UUID? = null,
     ) = MeldepliktHendelse(korrelasjonsId, ident, dato, "123", dato.plusDays(1), null, status, true)
 
     private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(null, UUID.randomUUID(), ident, nå, tidligere)
