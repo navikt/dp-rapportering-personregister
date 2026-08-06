@@ -47,6 +47,7 @@ class BehandlingsresultatMottakTest {
         val metrikkCount = behandlingsresultatMetrikker.behandlingsresultatMottatt.count()
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
         val fraOgMed1 = now().minusDays(10)
         val tilOgMed1 = now().minusDays(1)
@@ -62,7 +63,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "$søknadId",
@@ -90,7 +91,7 @@ class BehandlingsresultatMottakTest {
 
         testRapid.sendTestMessage(behandlingsresultat)
 
-        verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident)) }
+        verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident), behandlingskjedeId) }
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident
@@ -115,6 +116,7 @@ class BehandlingsresultatMottakTest {
     fun `skal hente søknadId fra behandletHendelse når type er Søknad`() {
         val ident = "12345678903"
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
         val fraOgMed = now().minusDays(10)
 
@@ -126,7 +128,7 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "$søknadId",
@@ -148,7 +150,7 @@ class BehandlingsresultatMottakTest {
 
         testRapid.sendTestMessage(behandlingsresultat)
 
-        verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident)) }
+        verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident), behandlingskjedeId) }
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident

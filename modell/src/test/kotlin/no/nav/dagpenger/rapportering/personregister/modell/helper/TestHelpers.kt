@@ -86,6 +86,7 @@ fun vedtakHendelse(
     referanseId = referanseId,
     sluttDato = sluttDato,
     utfall = utfall,
+    behandlingskjedeId = null,
 )
 
 fun vedtakHendelseMedFremtidigStans(
@@ -103,4 +104,5 @@ fun vedtakHendelseMedFremtidigStans(
     referanseId = referanseId,
     sluttDato = sluttDato,
     utfall = utfall,
+    behandlingskjedeId = null,
 )
