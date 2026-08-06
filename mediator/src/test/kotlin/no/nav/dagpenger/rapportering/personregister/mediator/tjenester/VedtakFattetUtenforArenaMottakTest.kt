@@ -6,18 +6,22 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.service.BehandlingService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.vedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.ObjectMapper
+import java.time.LocalDateTime
 
 class VedtakFattetUtenforArenaMottakTest {
     private val testRapid = TestRapid()
-    private val behandlingRepository = mockk<BehandlingRepository>(relaxed = true)
+    private val behandlingService = mockk<BehandlingService>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
-        VedtakFattetUtenforArenaMottak(testRapid, behandlingRepository, vedtakMetrikker)
+        VedtakFattetUtenforArenaMottak(testRapid, behandlingService, meldingerRepository, vedtakMetrikker)
     }
 
     @BeforeEach
@@ -28,19 +32,40 @@ class VedtakFattetUtenforArenaMottakTest {
     @Test
     fun `onPacket behandler melding og inkrementere metrikk`() {
         val metrikkCount = vedtakMetrikker.vedtakFattetUtenforArenaMottatt.count()
+        val id = UUIDv7.newUuid()
         val behandlingId = UUIDv7.newUuid().toString()
         val søknadId = UUIDv7.newUuid().toString()
         val ident = "01020312345"
         val sakId = UUIDv7.newUuid().toString()
 
-        testRapid.sendTestMessage(lagMelding(behandlingId, søknadId, ident, sakId))
+        testRapid.sendTestMessage(lagMelding(id.toString(), behandlingId, søknadId, ident, sakId))
 
         verify(exactly = 1) {
-            behandlingRepository.lagreData(
-                eq(behandlingId),
-                eq(søknadId),
-                eq(ident),
-                eq(sakId),
+            behandlingService.behandle(
+                match { hendelse ->
+                    hendelse.korrelasjonsId == id &&
+                        hendelse.ident == ident &&
+                        hendelse.dato.isBefore(LocalDateTime.now().plusSeconds(1)) &&
+                        hendelse.referanseId == id.toString() &&
+                        hendelse.behandlingId == behandlingId &&
+                        hendelse.søknadId == søknadId &&
+                        hendelse.sakId == sakId
+                },
+            )
+        }
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                id,
+                ident,
+                match { melding ->
+                    with(ObjectMapper().readTree(melding)) {
+                        this["@event_name"].asString() == "vedtak_fattet_utenfor_arena" &&
+                            this["ident"].asString() == ident &&
+                            this["behandlingId"].asString() == behandlingId &&
+                            this["søknadId"].asString() == søknadId &&
+                            this["sakId"].asString() == sakId
+                    }
+                },
             )
         }
         vedtakMetrikker.vedtakFattetUtenforArenaMottatt.count() shouldBe metrikkCount + 1
@@ -49,7 +74,7 @@ class VedtakFattetUtenforArenaMottakTest {
     @Test
     fun `onPacket kaster exception og inkrementerer feilmetrikk hvis behandling av melding feiler`() {
         val metrikkCount = vedtakMetrikker.vedtakFattetUtenforArenaFeilet.count()
-        every { behandlingRepository.lagreData(any(), any(), any(), any()) } throws RuntimeException("kaboom")
+        every { behandlingService.behandle(any()) } throws RuntimeException("kaboom")
 
         val exception =
             shouldThrow<RuntimeException> {
@@ -61,6 +86,7 @@ class VedtakFattetUtenforArenaMottakTest {
     }
 
     private fun lagMelding(
+        id: String = UUIDv7.newUuid().toString(),
         behandlingId: String = UUIDv7.newUuid().toString(),
         søknadId: String = UUIDv7.newUuid().toString(),
         ident: String = "01020312345",
@@ -68,6 +94,7 @@ class VedtakFattetUtenforArenaMottakTest {
     ) = //language=json
         """
         {
+          "@id": "$id",
           "@event_name": "vedtak_fattet_utenfor_arena",
           "behandlingId": "$behandlingId",
           "søknadId": "$søknadId",

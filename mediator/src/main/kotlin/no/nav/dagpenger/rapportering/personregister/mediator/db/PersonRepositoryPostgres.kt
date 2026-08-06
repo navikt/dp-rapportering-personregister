@@ -26,6 +26,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeD
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakFattetUtenforArenaHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.postgresql.util.PGobject
 import java.time.LocalDate
@@ -689,40 +690,46 @@ class PersonRepositoryPostgres(
         )
     }
 
-    private fun Hendelse.hentEkstrafelter(): String? {
-        val test =
-            when (this) {
-                is DagpengerMeldegruppeHendelse -> {
-                    defaultObjectMapper.writeValueAsString(
-                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
-                    )
-                }
-
-                is AnnenMeldegruppeHendelse -> {
-                    defaultObjectMapper.writeValueAsString(
-                        MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
-                    )
-                }
-
-                is MeldepliktHendelse -> {
-                    defaultObjectMapper.writeValueAsString(
-                        MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
-                    )
-                }
-
-                is VedtakHendelse -> {
-                    defaultObjectMapper.writeValueAsString(
-                        VedtakExtra(utfall = this.utfall),
-                    )
-                }
-
-                else -> {
-                    null
-                }
+    private fun Hendelse.hentEkstrafelter(): String? =
+        when (this) {
+            is DagpengerMeldegruppeHendelse -> {
+                defaultObjectMapper.writeValueAsString(
+                    MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
+                )
             }
 
-        return test
-    }
+            is AnnenMeldegruppeHendelse -> {
+                defaultObjectMapper.writeValueAsString(
+                    MeldegruppeExtra(meldegruppeKode = this.meldegruppeKode, harMeldtSeg = this.harMeldtSeg),
+                )
+            }
+
+            is MeldepliktHendelse -> {
+                defaultObjectMapper.writeValueAsString(
+                    MeldepliktExtra(statusMeldeplikt = this.statusMeldeplikt, harMeldtSeg = this.harMeldtSeg),
+                )
+            }
+
+            is VedtakHendelse -> {
+                defaultObjectMapper.writeValueAsString(
+                    VedtakExtra(utfall = this.utfall),
+                )
+            }
+
+            is VedtakFattetUtenforArenaHendelse -> {
+                defaultObjectMapper.writeValueAsString(
+                    VedtakFattetUtenforArenaExtra(
+                        behandlingId = this.behandlingId,
+                        søknadId = this.søknadId,
+                        sakId = this.sakId,
+                    ),
+                )
+            }
+
+            else -> {
+                null
+            }
+        }
 
     private fun hentHarRettTilDp(
         ident: String,
@@ -917,6 +924,20 @@ class PersonRepositoryPostgres(
                 )
             }
 
+            "VedtakFattetUtenforArenaHendelse" -> {
+                val vedtakExtra = defaultObjectMapper.readValue<VedtakFattetUtenforArenaExtra>(extra!!)
+
+                VedtakFattetUtenforArenaHendelse(
+                    korrelasjonsId = korrelasjonsId,
+                    ident = ident,
+                    dato = dato,
+                    referanseId = referanseId,
+                    behandlingId = vedtakExtra.behandlingId,
+                    søknadId = vedtakExtra.søknadId,
+                    sakId = vedtakExtra.sakId,
+                )
+            }
+
             "NødbremsHendelse" -> {
                 NødbremsHendelse(
                     korrelasjonsId = korrelasjonsId,
@@ -1102,6 +1123,12 @@ data class MeldepliktExtra(
 
 data class VedtakExtra(
     val utfall: Boolean,
+)
+
+data class VedtakFattetUtenforArenaExtra(
+    val behandlingId: String,
+    val søknadId: String,
+    val sakId: String,
 )
 
 class OptimisticLockingException(
