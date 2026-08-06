@@ -217,13 +217,13 @@ class PersonstatusApiTest : ApiTestSetup() {
                 ?.also { person ->
                     person.behandle(
                         VedtakHendelse(
-                            UUIDv7.newUuid(),
-                            ident,
-                            now(),
-                            now(),
-                            "ref",
-                            now(),
-                            true,
+                            korrelasjonsId = UUIDv7.newUuid(),
+                            ident = ident,
+                            startDato = now(),
+                            referanseId = "ref",
+                            sluttDato = now(),
+                            utfall = true,
+                            behandlingskjedeId = "behandlingskjedeId",
                         ),
                     )
                     personRepository.oppdaterPerson(person)

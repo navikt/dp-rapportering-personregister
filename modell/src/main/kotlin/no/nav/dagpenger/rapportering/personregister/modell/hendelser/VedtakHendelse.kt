@@ -23,6 +23,7 @@ data class VedtakHendelse(
     override val referanseId: String,
     override val sluttDato: LocalDateTime? = null,
     val utfall: Boolean,
+    val behandlingskjedeId: String?,
 ) : Hendelse {
     override val kilde: Kildesystem = Kildesystem.PJ
 
@@ -38,6 +39,7 @@ data class VedtakHendelse(
             referanseId: String,
             sluttDato: LocalDateTime? = null,
             utfall: Boolean,
+            behandlingskjedeId: String?,
         ) = VedtakHendelse(
             korrelasjonsId = korrelasjonsId,
             ident = ident,
@@ -46,6 +48,7 @@ data class VedtakHendelse(
             referanseId = "$PREFIKS_FREMTIDIG_START-$referanseId",
             sluttDato = sluttDato,
             utfall = utfall,
+            behandlingskjedeId = behandlingskjedeId,
         )
 
         fun medFremtidigStans(
@@ -56,6 +59,7 @@ data class VedtakHendelse(
             referanseId: String,
             sluttDato: LocalDateTime,
             utfall: Boolean,
+            behandlingskjedeId: String?,
         ) = VedtakHendelse(
             korrelasjonsId = korrelasjonsId,
             ident = ident,
@@ -64,6 +68,7 @@ data class VedtakHendelse(
             referanseId = "$PREFIKS_FREMTIDIG_STANS-$referanseId",
             sluttDato = sluttDato,
             utfall = utfall,
+            behandlingskjedeId = behandlingskjedeId,
         )
     }
 

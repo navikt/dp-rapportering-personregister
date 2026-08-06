@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHende
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class PersonRepositoryInMemoryTest {
     private lateinit var personRepository: PersonRepository
@@ -87,6 +88,7 @@ class PersonRepositoryInMemoryTest {
                 startDato = LocalDateTime.now(),
                 referanseId = UUIDv7.newUuid().toString(),
                 utfall = true,
+                behandlingskjedeId = "behandlingskjedeId",
             )
 
         personRepository.lagreFremtidigHendelse(meldepliktHendelse)
@@ -97,5 +99,69 @@ class PersonRepositoryInMemoryTest {
 
         personRepository.slettFremtidigeArenaHendelser(person.ident)
         personRepository.hentAntallFremtidigeHendelser() shouldBe 2
+    }
+
+    @Test
+    fun `kan slette fremtidige VedtakHendelser med angitt behandlingskjedeId`() {
+        val behandlingskjedeId = UUID.randomUUID().toString()
+        val hendelse =
+            VedtakHendelse(
+                korrelasjonsId = null,
+                ident = person.ident,
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now().plusDays(1),
+                referanseId = UUIDv7.newUuid().toString(),
+                utfall = true,
+                behandlingskjedeId = behandlingskjedeId,
+            )
+
+        personRepository.lagreFremtidigHendelse(hendelse)
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
+
+        personRepository.slettFremtidigeVedtakHendelser(person.ident, behandlingskjedeId)
+
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 0
+    }
+
+    @Test
+    fun `kan slette fremtidige VedtakHendelser uten behandlingskjedeId`() {
+        val hendelse =
+            VedtakHendelse(
+                korrelasjonsId = null,
+                ident = person.ident,
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now().plusDays(1),
+                referanseId = UUIDv7.newUuid().toString(),
+                utfall = true,
+                behandlingskjedeId = null,
+            )
+
+        personRepository.lagreFremtidigHendelse(hendelse)
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
+
+        personRepository.slettFremtidigeVedtakHendelser(person.ident, "ukjent-kjedeId")
+
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 0
+    }
+
+    @Test
+    fun `beholder VedtakHendelse med annen behandlingskjedeId ved sletting`() {
+        val hendelse =
+            VedtakHendelse(
+                korrelasjonsId = null,
+                ident = person.ident,
+                dato = LocalDateTime.now(),
+                startDato = LocalDateTime.now().plusDays(1),
+                referanseId = UUIDv7.newUuid().toString(),
+                utfall = true,
+                behandlingskjedeId = UUID.randomUUID().toString(),
+            )
+
+        personRepository.lagreFremtidigHendelse(hendelse)
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
+
+        personRepository.slettFremtidigeVedtakHendelser(person.ident, "ukjent-kjedeId")
+
+        personRepository.hentAntallFremtidigeHendelser() shouldBe 1
     }
 }

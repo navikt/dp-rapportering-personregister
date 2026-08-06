@@ -84,15 +84,23 @@ class PersonRepositoryInMemory : PersonRepository {
     }
 
     override fun slettFremtidigeArenaHendelser(ident: String): Int {
-        val qty = fremtidigeHendelser.count { it.kilde == Kildesystem.Arena && it.ident == ident }
+        val antall = fremtidigeHendelser.count { it.kilde == Kildesystem.Arena && it.ident == ident }
         fremtidigeHendelser.removeIf { it.kilde == Kildesystem.Arena && it.ident == ident }
-        return qty
+        return antall
     }
 
-    override fun slettFremtidigeVedtakHendelser(ident: String): Int {
-        val qty = fremtidigeHendelser.count { it is VedtakHendelse && it.ident == ident }
-        fremtidigeHendelser.removeIf { it is VedtakHendelse && it.ident == ident }
-        return qty
+    override fun slettFremtidigeVedtakHendelser(
+        ident: String,
+        behandlingskjedeId: String,
+    ): Int {
+        val predicate: (Any) -> Boolean = {
+            it is VedtakHendelse &&
+                it.ident == ident &&
+                (it.behandlingskjedeId == behandlingskjedeId || it.behandlingskjedeId == null)
+        }
+        val antall = fremtidigeHendelser.count(predicate)
+        fremtidigeHendelser.removeIf(predicate)
+        return antall
     }
 
     override fun hentPersonerMedDagpenger(): List<String> =
