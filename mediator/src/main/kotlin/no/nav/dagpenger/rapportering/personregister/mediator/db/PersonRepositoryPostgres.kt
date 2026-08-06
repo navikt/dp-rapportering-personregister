@@ -843,7 +843,7 @@ class PersonRepositoryPostgres(
                 )
             }
 
-            "MeldesyklusErPassertHendelse", "IkkeMeldtSegPå21DagerHendelse" -> {
+            "IkkeMeldtSegPå21DagerHendelse" -> {
                 IkkeMeldtSegPå21DagerHendelse(
                     korrelasjonsId = korrelasjonsId,
                     ident = ident,
