@@ -358,15 +358,27 @@ class PersonRepositoryPostgres(
             }
         }
 
-    override fun slettFremtidigeVedtakHendelser(ident: String): Int =
+    override fun slettFremtidigeVedtakHendelser(
+        ident: String,
+        behandlingskjedeId: String,
+    ): Int =
         actionTimer.timedAction("db-slettFremtidigeVedtakHendelser") {
             sessionOf(dataSource).use { session ->
                 session.transaction { tx ->
                     tx.run(
                         queryOf(
-                            "DELETE FROM fremtidig_hendelse WHERE type = 'VedtakHendelse' AND ident = :ident",
+                            """
+                            DELETE FROM fremtidig_hendelse
+                            WHERE type = 'VedtakHendelse'
+                              AND ident = :ident
+                              AND (
+                                extra @> jsonb_build_object('behandlingskjedeId', :behandlingskjede_id::text)
+                                OR extra ->> 'behandlingskjedeId' IS NULL
+                              )
+                            """.trimIndent(),
                             mapOf(
                                 "ident" to ident,
+                                "behandlingskjede_id" to behandlingskjedeId,
                             ),
                         ).asUpdate,
                     )
@@ -712,7 +724,7 @@ class PersonRepositoryPostgres(
 
                 is VedtakHendelse -> {
                     defaultObjectMapper.writeValueAsString(
-                        VedtakExtra(utfall = this.utfall),
+                        VedtakExtra(utfall = utfall, behandlingskjedeId = behandlingskjedeId),
                     )
                 }
 
@@ -914,6 +926,7 @@ class PersonRepositoryPostgres(
                     sluttDato = sluttDato,
                     referanseId = referanseId,
                     utfall = vedtakExtra.utfall,
+                    behandlingskjedeId = vedtakExtra.behandlingskjedeId,
                 )
             }
 
@@ -1102,6 +1115,7 @@ data class MeldepliktExtra(
 
 data class VedtakExtra(
     val utfall: Boolean,
+    val behandlingskjedeId: String? = null,
 )
 
 class OptimisticLockingException(

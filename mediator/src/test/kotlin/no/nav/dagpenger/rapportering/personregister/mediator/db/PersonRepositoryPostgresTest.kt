@@ -108,6 +108,51 @@ class PersonRepositoryPostgresTest {
         }
 
     @Test
+    fun `behandlingskjedeId bevares ved lagring og henting av fremtidig vedtakhendelse`() =
+        withMigratedDb {
+            val behandlingskjedeId = UUID.randomUUID().toString()
+            val person = Person(ident = ident)
+            personRepository.lagrePerson(person)
+            val hendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.minusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = behandlingskjedeId,
+                )
+            personRepository.lagreFremtidigHendelse(hendelse)
+
+            val hentet = personRepository.hentHendelserSomSkalAktiveres()
+            hentet shouldHaveSize 1
+            (hentet.first() as VedtakHendelse).behandlingskjedeId shouldBe behandlingskjedeId
+        }
+
+    @Test
+    fun `fremtidig vedtakhendelse uten behandlingskjedeId i databasen deserialiseres uten feil`() =
+        withMigratedDb {
+            val person = Person(ident = ident)
+            personRepository.lagrePerson(person)
+            val hendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.minusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = null,
+                )
+            personRepository.lagreFremtidigHendelse(hendelse)
+
+            val hentet = personRepository.hentHendelserSomSkalAktiveres()
+            hentet shouldHaveSize 1
+            (hentet.first() as VedtakHendelse).behandlingskjedeId shouldBe null
+        }
+
+    @Test
     fun `kan lagre, hente og slette fremtidige hendelser`() =
         withMigratedDb {
             val person = Person(ident = ident)
@@ -148,6 +193,7 @@ class PersonRepositoryPostgresTest {
                     startDato = dato.plusSeconds(1),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person1)
@@ -175,6 +221,115 @@ class PersonRepositoryPostgresTest {
                 any { it.javaClass == MeldepliktHendelse::class.java } shouldBe true
                 any { it.ident == ident } shouldBe true
                 any { it.ident == ident2 } shouldBe true
+            }
+        }
+
+    @Test
+    fun `slettFremtidigeVedtakHendelser sletter hendelse med angitt behandlingskjedeId`() =
+        withMigratedDb {
+            val person = Person(ident)
+            val behandlingskjedeId = UUID.randomUUID().toString()
+            val hendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.plusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = behandlingskjedeId,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(hendelse)
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 1
+
+            val antallSlettet = personRepository.slettFremtidigeVedtakHendelser(ident, behandlingskjedeId)
+
+            antallSlettet shouldBe 1
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 0
+        }
+
+    @Test
+    fun `slettFremtidigeVedtakHendelser sletter hendelse uten behandlingskjedeId i extra`() =
+        withMigratedDb {
+            val person = Person(ident)
+            val hendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.plusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = null,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(hendelse)
+
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 1
+
+            val antallSlettet = personRepository.slettFremtidigeVedtakHendelser(ident, "ukjent-kjedeId")
+
+            antallSlettet shouldBe 1
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 0
+        }
+
+    @Test
+    fun `slettFremtidigeVedtakHendelser beholder hendelse med annen behandlingskjedeId`() =
+        withMigratedDb {
+            val person = Person(ident)
+            val annenKjedeId = "annen-kjedeId"
+            val hendelseSomSkalBeholdes =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.plusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = annenKjedeId,
+                )
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(hendelseSomSkalBeholdes)
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 1
+
+            val antallSlettet = personRepository.slettFremtidigeVedtakHendelser(ident, "ukjent-kjedeId")
+
+            antallSlettet shouldBe 0
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 1
+        }
+
+    @Test
+    fun `slettFremtidigeVedtakHendelser beholder hendelser av andre typer`() =
+        withMigratedDb {
+            val person = Person(ident)
+            val behandlingskjedeId = UUID.randomUUID().toString()
+            val vedtakHendelse =
+                VedtakHendelse(
+                    ident = ident,
+                    dato = dato,
+                    startDato = dato.plusDays(1),
+                    referanseId = UUIDv7.newUuid().toString(),
+                    korrelasjonsId = UUIDv7.newUuid(),
+                    utfall = true,
+                    behandlingskjedeId = behandlingskjedeId,
+                )
+            val meldegruppeHendelse = meldegruppeHendelse()
+
+            personRepository.lagrePerson(person)
+            personRepository.lagreFremtidigHendelse(vedtakHendelse)
+            personRepository.lagreFremtidigHendelse(meldegruppeHendelse)
+            personRepository.hentHendelserSomSkalAktiveres() shouldHaveSize 2
+
+            val antallSlettet = personRepository.slettFremtidigeVedtakHendelser(ident, behandlingskjedeId)
+
+            antallSlettet shouldBe 1
+            with(personRepository.hentHendelserSomSkalAktiveres()) {
+                shouldHaveSize(1)
+                first().javaClass shouldBe DagpengerMeldegruppeHendelse::class.java
             }
         }
 
@@ -209,6 +364,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = sluttDatoIFortid,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -233,6 +389,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = LocalDate.now().atStartOfDay(),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -254,6 +411,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = LocalDateTime.now().plusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -275,6 +433,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = LocalDateTime.now().plusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -296,6 +455,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = LocalDateTime.now().plusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -319,6 +479,7 @@ class PersonRepositoryPostgresTest {
                     startDato = førsteDato,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             val midtersteVedtak =
@@ -329,6 +490,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = andreDato,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             val nyesteVedtak =
@@ -338,6 +500,7 @@ class PersonRepositoryPostgresTest {
                     startDato = tredjeDato,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -367,6 +530,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = fellesEffektivDato,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             val vedtakMedStartdato =
@@ -376,6 +540,7 @@ class PersonRepositoryPostgresTest {
                     startDato = fellesEffektivDato,
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person)
@@ -404,6 +569,7 @@ class PersonRepositoryPostgresTest {
                     sluttDato = LocalDateTime.now().minusDays(1),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = false,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             val hendelseForAndreIdent =
@@ -413,6 +579,7 @@ class PersonRepositoryPostgresTest {
                     startDato = LocalDateTime.now().minusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
                     utfall = true,
+                    behandlingskjedeId = "behandlingskjedeId",
                 )
 
             personRepository.lagrePerson(person1)
@@ -785,9 +952,10 @@ class PersonRepositoryPostgresTest {
         ident = ident,
         dato = dato,
         startDato = fraOgMed.atStartOfDay(),
-        sluttDato = tilOgMed?.atStartOfDay(),
         referanseId = UUIDv7.newUuid().toString(),
+        sluttDato = tilOgMed?.atStartOfDay(),
         utfall = harRett,
+        behandlingskjedeId = UUIDv7.newUuid().toString(),
     )
 
     private fun søknadHendelse() =

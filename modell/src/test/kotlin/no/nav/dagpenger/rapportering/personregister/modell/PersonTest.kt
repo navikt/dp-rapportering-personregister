@@ -280,7 +280,13 @@ class PersonTest {
         dato: LocalDateTime = nå,
         referanseId: String = "123",
         korrelasjonsId: UUID? = null,
-    ) = SøknadHendelse(korrelasjonsId, ident, dato, dato, referanseId)
+    ) = SøknadHendelse(
+        korrelasjonsId = korrelasjonsId,
+        ident = ident,
+        dato = dato,
+        startDato = dato,
+        referanseId = referanseId,
+    )
 
     private fun vedtakHendelse(
         dato: LocalDateTime = nå,
@@ -289,25 +295,58 @@ class PersonTest {
         referanseId: String = "123",
         utfall: Boolean,
         korrelasjonsId: UUID? = null,
-    ) = VedtakHendelse(korrelasjonsId, ident, dato, startDato, referanseId, sluttDato, utfall)
+    ) = VedtakHendelse(
+        korrelasjonsId = korrelasjonsId,
+        ident = ident,
+        dato = dato,
+        startDato = startDato,
+        referanseId = referanseId,
+        sluttDato = sluttDato,
+        utfall = utfall,
+        behandlingskjedeId = null,
+    )
 
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
         korrelasjonsId: UUID? = null,
-    ) = MeldepliktHendelse(korrelasjonsId, ident, dato, "123", dato.plusDays(1), null, status, true)
+    ) = MeldepliktHendelse(
+        korrelasjonsId = korrelasjonsId,
+        ident = ident,
+        dato = dato,
+        referanseId = "123",
+        startDato = dato.plusDays(1),
+        sluttDato = null,
+        statusMeldeplikt = status,
+        harMeldtSeg = true,
+    )
 
-    private fun startetArbeidssøkerperiodeHendelse() = StartetArbeidssøkerperiodeHendelse(null, UUID.randomUUID(), ident, nå, tidligere)
+    private fun startetArbeidssøkerperiodeHendelse() =
+        StartetArbeidssøkerperiodeHendelse(
+            korrelasjonsId = null,
+            periodeId = UUID.randomUUID(),
+            ident = ident,
+            dato = nå,
+            startDato = tidligere,
+        )
 
-    private fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(null, periodeId, ident, tidligere, nå, nå)
+    private fun avsluttetArbeidssøkerperiodeHendelse() =
+        AvsluttetArbeidssøkerperiodeHendelse(
+            korrelasjonsId = null,
+            periodeId = periodeId,
+            ident = ident,
+            startDato = tidligere,
+            sluttDato = nå,
+            dato = nå,
+        )
 
     private fun meldesyklusErPassertHendelse() =
         MeldesyklusErPassertHendelse(
-            null,
-            ident,
-            nå,
-            nå,
-            UUID.randomUUID().toString(),
+            korrelasjonsId = null,
+            ident = ident,
+            dato = nå,
+            startDato = nå,
+            referanseId = UUID.randomUUID().toString(),
         )
 }
 

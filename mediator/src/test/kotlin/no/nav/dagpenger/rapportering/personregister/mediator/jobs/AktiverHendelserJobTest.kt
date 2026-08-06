@@ -297,25 +297,28 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             VedtakHendelse(
                 korrelasjonsId = null,
                 ident = ident1,
-                referanseId = "behandlet-1",
                 startDato = nå.minusDays(2),
+                referanseId = "behandlet-1",
                 utfall = true,
+                behandlingskjedeId = null,
             )
         val feiler =
             VedtakHendelse(
                 korrelasjonsId = null,
                 ident = ident1,
-                referanseId = "feiler-2",
                 startDato = nå.minusDays(1),
+                referanseId = "feiler-2",
                 utfall = true,
+                behandlingskjedeId = null,
             )
         val ikkeBehandlet =
             VedtakHendelse(
                 korrelasjonsId = null,
                 ident = ident1,
-                referanseId = "ikke-behandlet-3",
                 startDato = nå,
+                referanseId = "ikke-behandlet-3",
                 utfall = true,
+                behandlingskjedeId = null,
             )
 
         every { personRepositoryMock.hentHendelserSomSkalAktiveres() } returns listOf(behandlet, feiler, ikkeBehandlet)
@@ -363,9 +366,10 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             VedtakHendelse(
                 korrelasjonsId = null,
                 ident = ident1,
-                referanseId = "ident1-feiler-1",
                 startDato = nå.minusDays(1),
+                referanseId = "ident1-feiler-1",
                 utfall = true,
+                behandlingskjedeId = null,
             )
         val meldegruppeForIdent2 =
             DagpengerMeldegruppeHendelse(
@@ -437,9 +441,10 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             VedtakHendelse(
                 korrelasjonsId = null,
                 ident = ident1,
-                referanseId = "mangler-person-1",
                 startDato = LocalDateTime.now().minusDays(1),
+                referanseId = "mangler-person-1",
                 utfall = true,
+                behandlingskjedeId = null,
             )
 
         every { personRepositoryMock.hentHendelserSomSkalAktiveres() } returns listOf(hendelse)
