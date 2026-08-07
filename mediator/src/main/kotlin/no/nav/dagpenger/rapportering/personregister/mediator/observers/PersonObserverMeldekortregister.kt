@@ -66,6 +66,7 @@ class PersonObserverMeldekortregister(
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         harRett: Boolean,
+        korrelasjonsId: UUID?,
     ) {
         logger.info { "Sender Stopp-melding til Meldekortregister for person" }
         sikkerlogg.info { "Sender Stopp-melding til Meldekortregister for person ${person.ident}" }
@@ -88,6 +89,12 @@ class PersonObserverMeldekortregister(
 
             sikkerlogg.info { "Sender Stopp-melding til Meldekortregister: ${message.toJson()}" }
             getRapidsConnection().publish(person.ident, message.toJson())
+
+            meldingerRepository.lagreUtgåendeMelding(
+                korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                ident = person.ident,
+                melding = message.toJson(),
+            )
         } catch (e: Exception) {
             logger.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister" }
             sikkerlogg.error(e) { "Feil ved sending av Stopp-melding til Meldekortregister for person ${person.ident}" }

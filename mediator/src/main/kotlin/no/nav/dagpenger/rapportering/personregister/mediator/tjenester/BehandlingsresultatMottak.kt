@@ -14,6 +14,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMe
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortidEllerIdag
@@ -41,6 +42,7 @@ class BehandlingsresultatMottak(
                 }
                 validate {
                     it.requireKey(
+                        "@id",
                         "behandletHendelse",
                         "behandlingId",
                         "behandlingskjedeId",
@@ -60,9 +62,9 @@ class BehandlingsresultatMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val behandlingId = packet["behandlingId"].asText()
-        val behandlingskjedeId = packet["behandlingskjedeId"].asText()
-        val ident = packet["ident"].asText()
+        val behandlingId = packet["behandlingId"].asString()
+        val behandlingskjedeId = packet["behandlingskjedeId"].asString()
+        val ident = packet["ident"].asString()
 
         withLoggingContext(
             "behandlingId" to behandlingId,
@@ -85,7 +87,7 @@ class BehandlingsresultatMottak(
                     .toList()
                     .sortedBy { it["fraOgMed"].asLocalDate() }
                     .forEachIndexed { index, rettighetsperiode ->
-                        val opprinnelse = rettighetsperiode["opprinnelse"].asText()
+                        val opprinnelse = rettighetsperiode["opprinnelse"].asString()
                         val fraOgMed = rettighetsperiode["fraOgMed"].asLocalDate()
                         val tilOgMed = rettighetsperiode["tilOgMed"]?.asLocalDate()
                         val harRett = rettighetsperiode["harRett"].asBoolean()
@@ -96,7 +98,7 @@ class BehandlingsresultatMottak(
                             }
                             val vedtakHendelse =
                                 VedtakHendelse(
-                                    korrelasjonsId = null, // TODO:
+                                    korrelasjonsId = UUIDv7.fromString(packet["@id"].asString()),
                                     ident = ident,
                                     dato = now(),
                                     startDato = fraOgMed.atStartOfDay(),
@@ -114,7 +116,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStart(
-                                    korrelasjonsId = null, // TODO:
+                                    korrelasjonsId = UUIDv7.fromString(packet["@id"].asString()),
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed?.atStartOfDay(),
@@ -130,7 +132,7 @@ class BehandlingsresultatMottak(
                             }
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStans(
-                                    korrelasjonsId = null, // TODO:
+                                    korrelasjonsId = UUIDv7.fromString(packet["@id"].asString()),
                                     ident = ident,
                                     startDato = fraOgMed.atStartOfDay(),
                                     sluttDato = tilOgMed.atStartOfDay(),

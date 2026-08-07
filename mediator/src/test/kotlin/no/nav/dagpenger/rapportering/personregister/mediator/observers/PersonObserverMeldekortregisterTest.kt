@@ -80,16 +80,24 @@ class PersonObserverMeldekortregisterTest {
 
         testRapid.inspektør.size shouldBe 1
 
-        val message = testRapid.inspektør.message(0)
-        message["@event_name"].asString() shouldBe "meldekortoppretting"
-        message["personId"].asLong() shouldBe personId
-        message["ident"].asString() shouldBe ident
-        message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
-        message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
-        message["harRett"].asBoolean() shouldBe true
-        message["handling"].asString() shouldBe "START"
-        message["referanseId"].asString() shouldNotBe null
-        message["skalMigreres"].asBoolean() shouldBe false
+        val melding = testRapid.inspektør.message(0)
+        melding["@event_name"].asString() shouldBe "meldekortoppretting"
+        melding["personId"].asLong() shouldBe personId
+        melding["ident"].asString() shouldBe ident
+        melding["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
+        melding["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        melding["harRett"].asBoolean() shouldBe true
+        melding["handling"].asString() shouldBe "START"
+        melding["referanseId"].asString() shouldNotBe null
+        melding["skalMigreres"].asBoolean() shouldBe false
+
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                any(),
+                ident,
+                melding.toString(),
+            )
+        }
     }
 
     @Test
@@ -118,16 +126,24 @@ class PersonObserverMeldekortregisterTest {
 
         testRapid.inspektør.size shouldBe 1
 
-        val message = testRapid.inspektør.message(0)
-        message["@event_name"].asString() shouldBe "meldekortoppretting"
-        message["personId"].asLong() shouldBe personId
-        message["ident"].asString() shouldBe ident
-        message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
-        message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
-        message["harRett"].asBoolean() shouldBe true
-        message["handling"].asString() shouldBe "STOPP"
-        message["referanseId"].asString() shouldNotBe null
-        message["skalMigreres"].asBoolean() shouldBe false
+        val melding = testRapid.inspektør.message(0)
+        melding["@event_name"].asString() shouldBe "meldekortoppretting"
+        melding["personId"].asLong() shouldBe personId
+        melding["ident"].asString() shouldBe ident
+        melding["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
+        melding["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        melding["harRett"].asBoolean() shouldBe true
+        melding["handling"].asString() shouldBe "STOPP"
+        melding["referanseId"].asString() shouldNotBe null
+        melding["skalMigreres"].asBoolean() shouldBe false
+
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                any(),
+                ident,
+                melding.toString(),
+            )
+        }
     }
 
     @Test
@@ -156,15 +172,23 @@ class PersonObserverMeldekortregisterTest {
 
         testRapid.inspektør.size shouldBe 1
 
-        val message = testRapid.inspektør.message(0)
-        message["@event_name"].asString() shouldBe "meldekortoppretting"
-        message["personId"].asLong() shouldBe personId
-        message["ident"].asString() shouldBe ident
-        message["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
-        message["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
-        message["harRett"].asBoolean() shouldBe false
-        message["handling"].asString() shouldBe "STOPP"
-        message["referanseId"].asString() shouldNotBe null
-        message["skalMigreres"].asBoolean() shouldBe false
+        val melding = testRapid.inspektør.message(0)
+        melding["@event_name"].asString() shouldBe "meldekortoppretting"
+        melding["personId"].asLong() shouldBe personId
+        melding["ident"].asString() shouldBe ident
+        melding["fraOgMed"].asLocalDateTime() shouldBe fraOgMed
+        melding["tilOgMed"].asLocalDateTime() shouldBe tilOgMed
+        melding["harRett"].asBoolean() shouldBe false
+        melding["handling"].asString() shouldBe "STOPP"
+        melding["referanseId"].asString() shouldNotBe null
+        melding["skalMigreres"].asBoolean() shouldBe false
+
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                any(),
+                ident,
+                melding.toString(),
+            )
+        }
     }
 }
