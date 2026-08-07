@@ -7,4 +7,5 @@ enum class Kildesystem {
     Meldekortregister,
     Dagpenger,
     PJ,
+    DpSaksbehandling,
 }

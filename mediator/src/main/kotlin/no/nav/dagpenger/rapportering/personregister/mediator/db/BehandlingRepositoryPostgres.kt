@@ -17,9 +17,16 @@ class BehandlingRepositoryPostgres(
             session
                 .run(
                     queryOf(
-                        "INSERT INTO behandling " +
-                            "(behandling_id, soknad_id, ident, sak_id) " +
-                            "VALUES (?, ?, ?, ?)",
+                        """
+                        INSERT INTO behandling (behandling_id, soknad_id, ident, sak_id)
+                        VALUES (?, ?, ?, ?)
+                        ON CONFLICT (behandling_id) 
+                        DO UPDATE SET
+                            soknad_id = EXCLUDED.soknad_id,
+                            ident = EXCLUDED.ident,
+                            sak_id = EXCLUDED.sak_id,
+                            tidspunkt = CURRENT_TIMESTAMP
+                        """.trimIndent(),
                         behandlingId,
                         søknadId,
                         ident,
