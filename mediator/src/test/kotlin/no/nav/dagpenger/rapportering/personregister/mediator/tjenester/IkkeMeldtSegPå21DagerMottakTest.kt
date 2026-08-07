@@ -9,19 +9,19 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.meldesyklusErPassertMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.ikkeMeldtSegPå21DagerMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
-class MeldesyklusErPassertMottakTest {
+class IkkeMeldtSegPå21DagerMottakTest {
     private val testRapid = TestRapid()
     private val personMediator = mockk<PersonMediator>(relaxed = true)
 
     init {
-        MeldesyklusErPassertMottak(testRapid, personMediator, meldesyklusErPassertMetrikker)
+        IkkeMeldtSegPå21DagerMottak(testRapid, personMediator, ikkeMeldtSegPå21DagerMetrikker)
     }
 
     @BeforeEach
@@ -31,8 +31,8 @@ class MeldesyklusErPassertMottakTest {
 
     @Test
     fun `onPacket behandler melding og inkrementerer metrikk`() {
-        val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.count()
-        val hendelseSlot = slot<MeldesyklusErPassertHendelse>()
+        val metrikkCount = ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerMottatt.count()
+        val hendelseSlot = slot<IkkeMeldtSegPå21DagerHendelse>()
         every { personMediator.behandle(capture(hendelseSlot), 1) } just runs
 
         val ident = "12345678903"
@@ -57,23 +57,23 @@ class MeldesyklusErPassertMottakTest {
         hendelseSlot.captured.dato.toLocalDate() shouldBe dato
         hendelseSlot.captured.startDato.toLocalDate() shouldBe dato
         hendelseSlot.captured.referanseId shouldBe referanseId
-        meldesyklusErPassertMetrikker.meldesyklusErPassertMottatt.count() shouldBe metrikkCount + 1
+        ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerMottatt.count() shouldBe metrikkCount + 1
     }
 
     @Test
     fun `onPacket kaster exception og inkrementerer metrikk hvis ident ikke validerer`() {
-        val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.count()
+        val metrikkCount = ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.count()
 
         shouldThrow<IllegalArgumentException> {
             testRapid.sendTestMessage(lagMelding("12345"))
         }
-        meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.count() shouldBe metrikkCount + 1
+        ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.count() shouldBe metrikkCount + 1
     }
 
     @Test
     fun `onPacket kaster exception og inkrementerer metrikk hvis behandling feiler`() {
-        val metrikkCount = meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.count()
-        every { personMediator.behandle(any<MeldesyklusErPassertHendelse>()) } throws RuntimeException("kaboom")
+        val metrikkCount = ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.count()
+        every { personMediator.behandle(any<IkkeMeldtSegPå21DagerHendelse>()) } throws RuntimeException("kaboom")
 
         val exception =
             shouldThrow<RuntimeException> {
@@ -81,7 +81,7 @@ class MeldesyklusErPassertMottakTest {
             }
 
         exception.message shouldBe "kaboom"
-        meldesyklusErPassertMetrikker.meldesyklusErPassertFeilet.count() shouldBe metrikkCount + 1
+        ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.count() shouldBe metrikkCount + 1
     }
 
     private fun lagMelding(

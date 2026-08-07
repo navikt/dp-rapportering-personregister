@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.util.UUID
 
-class MeldesyklusErPassertHendelse(
+class IkkeMeldtSegPå21DagerHendelse(
     override val korrelasjonsId: UUID?,
     override val ident: String,
     override val dato: LocalDateTime = now(),

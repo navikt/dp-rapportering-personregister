@@ -72,7 +72,7 @@ Mottaksklasser konverterer innkommende meldinger til domenespesifikke hendelser:
 - `SøknadMottak` – søknad innsending -> `SøknadHendelse`.
 - `BehandlinsresultatMottak` / `VedtakFattetUtenforArenaMottak` – vedtak -> `VedtakHendelse`
 - `MeldestatusMottak` – tar i mot endringemeldinger fra Arena.
-- `MeldesyklusErPassertMottak` - varsler om at en meldekortsyklus til en bruker er passert.
+- `IkkeMeldtSegPå21DagerFeiletMottak` - varsler om at en meldekortsyklus til en bruker er passert.
 - `NødbremsMottak` – styrer midlertidig stopp.
 - `ArbeidssøkerMottak` & `ArbeidssøkerperiodeOvertakelseMottak` – endringer i perioder og "kvittering" for meldinger om overtakelse/frasigelse.
 
