@@ -55,7 +55,16 @@ class PersonObserverKafkaTest {
         personObserverKafka.sendOvertakelsesmelding(person)
 
         verifiserKafkaMelding(person)
-        verify(exactly = 1) { meldingerRepository.lagreUtgåendeMelding(any(), person.ident, any()) }
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                any(),
+                person.ident,
+                producer.meldinger
+                    .first()
+                    .value()
+                    .toString(),
+            )
+        }
     }
 
     @Test
@@ -66,6 +75,16 @@ class PersonObserverKafkaTest {
         personObserverKafka.sendFrasigelsesmelding(person)
 
         verifiserKafkaMelding(person)
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                any(),
+                person.ident,
+                producer.meldinger
+                    .first()
+                    .value()
+                    .toString(),
+            )
+        }
     }
 
     private fun lagPersonMedArbeidssøkerperiode(): Person {
