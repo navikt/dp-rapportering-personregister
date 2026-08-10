@@ -242,7 +242,7 @@ class PersonTest {
     @Nested
     inner class IkkeMeldtSegPå21DagerHendelser {
         @Test
-        fun `behandler meldesyklus er passert hendelse`() =
+        fun `behandler ikke_meldt_seg_på_21_dager hendelse`() =
             arbeidssøker(overtattBekreftelse = true) {
                 behandle(ikkeMeldtSegPå21DagerHendelse())
                 this.arbeidssøkerperioder.gjeldende?.årsakTilUtmelding shouldBe

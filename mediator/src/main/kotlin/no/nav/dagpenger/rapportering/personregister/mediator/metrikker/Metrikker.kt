@@ -110,13 +110,13 @@ class IkkeMeldtSegPå21DagerMetrikker(
 ) {
     val ikkeMeldtSegPå21DagerMottatt: Counter =
         Counter
-            .builder("${NAMESPACE}_meldesyklus_er_passert_mottatt_total")
-            .description("Antall mottatte meldinger om at meldesyklus er passert")
+            .builder("${NAMESPACE}_ikke_meldt_seg_pa_21_dager_total")
+            .description("Antall mottatte meldinger om at bruker ikke meldt seg på 21 dager")
             .register(meterRegistry)
     val ikkeMeldtSegPå21DagerFeilet: Counter =
         Counter
-            .builder("${NAMESPACE}_meldesyklus_er_passert_feilet_total")
-            .description("Antall behandlinger som har feilet av mottatte meldinger om at meldesyklus er passert")
+            .builder("${NAMESPACE}_ikke_meldt_seg_pa_21_dager_feilet_total")
+            .description("Antall behandlinger som har feilet av mottatte meldinger om at bruker ikke meldt seg på 21 dager")
             .register(meterRegistry)
 }
 

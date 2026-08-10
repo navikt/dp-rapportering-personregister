@@ -28,7 +28,7 @@ class IkkeMeldtSegPå21DagerMottak(
         River(rapidsConnection)
             .apply {
                 precondition {
-                    it.requireValue("@event_name", "meldesyklus_er_passert")
+                    it.requireAny("@event_name", listOf("meldesyklus_er_passert", "ikke_meldt_seg_på_21_dager"))
                 }
                 validate {
                     it.requireKey(
@@ -49,8 +49,8 @@ class IkkeMeldtSegPå21DagerMottak(
     ) {
         val ident = packet["ident"].asText()
 
-        logger.info { "Mottok meldesyklus_er_passert-melding" }
-        sikkerlogg.info { "Mottok meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
+        logger.info { "Mottok ikke_meldt_seg_på_21_dager-melding" }
+        sikkerlogg.info { "Mottok ikke_meldt_seg_på_21_dager-melding, ident=$ident: ${packet.toJson()}" }
         ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerMottatt.increment()
 
         try {
@@ -69,8 +69,8 @@ class IkkeMeldtSegPå21DagerMottak(
 
             personMediator.behandle(ikkeMeldtSegPå21DagerHendelse)
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding" }
-            sikkerlogg.error(e) { "Feil ved behandling av meldesyklus_er_passert-melding, ident=$ident: ${packet.toJson()}" }
+            logger.error(e) { "Feil ved behandling av ikke_meldt_seg_på_21_dager-melding" }
+            sikkerlogg.error(e) { "Feil ved behandling av ikke_meldt_seg_på_21_dager-melding, ident=$ident: ${packet.toJson()}" }
             ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.increment()
             throw e
         }

@@ -95,7 +95,7 @@ class IkkeMeldtSegPå21DagerMottakTest {
         //language=json
         """
         {
-          "@event_name": "meldesyklus_er_passert",
+          "@event_name": "ikke_meldt_seg_på_21_dager",
           "ident": "$ident",
           "dato": "$dato",
           "referanseId": "$referanseId",
