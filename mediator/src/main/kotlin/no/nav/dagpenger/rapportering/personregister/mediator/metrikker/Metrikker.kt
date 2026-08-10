@@ -111,7 +111,7 @@ class IkkeMeldtSegPå21DagerMetrikker(
     val ikkeMeldtSegPå21DagerMottatt: Counter =
         Counter
             .builder("${NAMESPACE}_ikke_meldt_seg_pa_21_dager_total")
-            .description("Antall mottatte meldinger om at bruker ikke meldt seg på 21 dager")
+            .description("Antall mottatte meldinger om at bruker ikke har meldt seg på 21 dager")
             .register(meterRegistry)
     val ikkeMeldtSegPå21DagerFeilet: Counter =
         Counter
