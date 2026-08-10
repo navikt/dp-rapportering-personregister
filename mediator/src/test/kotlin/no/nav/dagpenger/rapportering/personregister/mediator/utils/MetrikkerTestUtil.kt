@@ -10,11 +10,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.IkkeMeldtSegPå21DagerMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
@@ -26,7 +26,7 @@ object MetrikkerTestUtil {
     val meldestatusMetrikker = MeldestatusMetrikker(meterRegistry)
     val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
     val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
-    val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
+    val ikkeMeldtSegPå21DagerMetrikker = IkkeMeldtSegPå21DagerMetrikker(meterRegistry)
     val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
     val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker = ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker(meterRegistry)
     val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker = ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)

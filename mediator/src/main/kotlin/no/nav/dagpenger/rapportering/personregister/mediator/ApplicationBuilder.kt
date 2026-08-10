@@ -48,11 +48,11 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.BehandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.DatabaseMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.IkkeMeldtSegPå21DagerMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.JobbkjøringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldegruppeendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldepliktendringMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldesyklusErPassertMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
@@ -68,9 +68,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehandlingsresultatMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.IkkeMeldtSegPå21DagerMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldesyklusErPassertMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.StartAktiverHendelserJobManueltMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
@@ -104,7 +104,7 @@ internal class ApplicationBuilder(
     private val behandlingsresultatMetrikker = BehandlingsresultatMetrikker(meterRegistry)
     private val meldestatusMetrikker = MeldestatusMetrikker(meterRegistry)
     private val meldegruppeendringMetrikker = MeldegruppeendringMetrikker(meterRegistry)
-    private val meldesyklusErPassertMetrikker = MeldesyklusErPassertMetrikker(meterRegistry)
+    private val ikkeMeldtSegPå21DagerMetrikker = IkkeMeldtSegPå21DagerMetrikker(meterRegistry)
     private val meldepliktendringMetrikker = MeldepliktendringMetrikker(meterRegistry)
     private val arbeidssøkerperiodeMetrikker = ArbeidssøkerperiodeMetrikker(meterRegistry)
     private val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker =
@@ -326,7 +326,7 @@ internal class ApplicationBuilder(
                         meldestatusMediator,
                         meldestatusMetrikker,
                     )
-                    MeldesyklusErPassertMottak(rapid, personMediator, meldesyklusErPassertMetrikker)
+                    IkkeMeldtSegPå21DagerMottak(rapid, personMediator, ikkeMeldtSegPå21DagerMetrikker)
                     SøknadMottak(rapid, søknadService, søknadMetrikker, meldingerRepository)
                     BehandlingsresultatMottak(
                         rapid,
