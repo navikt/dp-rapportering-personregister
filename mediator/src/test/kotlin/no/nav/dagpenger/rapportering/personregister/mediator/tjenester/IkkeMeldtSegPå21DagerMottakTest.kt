@@ -8,6 +8,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.ikkeMeldtSegPå21DagerMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
@@ -84,6 +85,17 @@ class IkkeMeldtSegPå21DagerMottakTest {
         ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerFeilet.count() shouldBe metrikkCount + 1
     }
 
+    @Test
+    fun `onPacket behandler legacy meldekort_er_passert hendelse`() {
+        testRapid.sendTestMessage(
+            lagMelding(
+                event = "meldesyklus_er_passert",
+            ),
+        )
+
+        verify { personMediator.behandle(any<IkkeMeldtSegPå21DagerHendelse>(), 1) }
+    }
+
     private fun lagMelding(
         ident: String = "09876543210",
         dato: LocalDate? = LocalDate.now(),
@@ -91,11 +103,12 @@ class IkkeMeldtSegPå21DagerMottakTest {
         meldekortregisterPeriodeId: String = UUIDv7.newUuid().toString(),
         periodeFraOgMed: LocalDate? = LocalDate.now().minusDays(35),
         periodeTilOgMed: LocalDate? = LocalDate.now().minusDays(21),
+        event: String = "ikke_meldt_seg_på_21_dager",
     ): String =
         //language=json
         """
         {
-          "@event_name": "ikke_meldt_seg_på_21_dager",
+          "@event_name": "$event",
           "ident": "$ident",
           "dato": "$dato",
           "referanseId": "$referanseId",
