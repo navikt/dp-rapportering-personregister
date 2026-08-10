@@ -61,6 +61,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObs
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.BehandlingService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMottak
@@ -181,6 +182,12 @@ internal class ApplicationBuilder(
             personRepository,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
             meldekortregisterConnector,
+        )
+    private val behandlingService =
+        BehandlingService(
+            personService,
+            behandlingRepository,
+            actionTimer,
         )
     private val arbeidssøkerService =
         ArbeidssøkerService(
@@ -328,7 +335,7 @@ internal class ApplicationBuilder(
                         fremtidigHendelseMediator,
                         behandlingsresultatMetrikker,
                     )
-                    VedtakFattetUtenforArenaMottak(rapid, behandlingRepository, vedtakMetrikker)
+                    VedtakFattetUtenforArenaMottak(rapid, behandlingService, meldingerRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator)
                     ArbeidssøkerBekreftelseMottak(
                         rapid,

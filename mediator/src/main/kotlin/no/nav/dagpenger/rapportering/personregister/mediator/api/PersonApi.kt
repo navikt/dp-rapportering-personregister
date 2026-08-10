@@ -12,14 +12,16 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.rapportering.personregister.api.models.ArbeidssokerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.api.models.SoknadResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import java.net.URI
+import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 
 internal fun Application.personApi(
     personService: PersonService,
@@ -30,18 +32,12 @@ internal fun Application.personApi(
             route("/hentPersonId") {
                 post {
                     logger.info { "POST /hentPersonId" }
-                    val request = call.receive<IdentBody>()
 
-                    try {
-                        request.ident.validerIdent()
-                    } catch (e: IllegalArgumentException) {
-                        val melding = "Validering av ident feilet: $e.message"
-                        logger.error { melding }
-                        throw BadRequestException(melding)
-                    }
+                    val ident = call.receive<IdentBody>().ident
+                    validerIdent(ident)
 
                     personService
-                        .hentPersonId(request.ident)
+                        .hentPersonId(ident = ident)
                         ?.also { personId ->
                             call.respond(
                                 OK,
@@ -103,28 +99,39 @@ internal fun Application.personApi(
                 }
             }
 
-            route("/api/person/{personId}/søknader") {
-                get {
-                    val personId =
-                        call.parameters["personId"]?.toLongOrNull()
-                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+            route("/api/person/søknad/innsendt-tidspunkt") {
+                post {
+                    logger.info {
+                        "POST /api/person/søknad/innsendt-tidspunkt"
+                    }
+
+                    val personSøknadInnsendtTidspunktRequest = call.receive<PersonSøknadInnsendtTidspunktRequest>()
+                    validerIdent(personSøknadInnsendtTidspunktRequest.ident)
 
                     søknadService
-                        .hentSøknader(personId)
-                        .also { søknader ->
+                        .hentSøknadInnsendtTidspunkt(
+                            ident = personSøknadInnsendtTidspunktRequest.ident,
+                            søknadId = personSøknadInnsendtTidspunktRequest.søknadId,
+                        ).also { innsendtTidspunkt ->
                             call.respond(
                                 OK,
-                                søknader.map { søknad ->
-                                    SoknadResponse(
-                                        søknadId = søknad.søknadId,
-                                        innsendtTidspunkt = søknad.innsendtTidspunkt.toString(),
-                                    )
-                                },
+                                PersonSøknadInnsendtTidspunktResponse(innsendtTidspunkt),
                             )
                         }
                 }
             }
         }
+    }
+}
+
+private fun validerIdent(ident: String) {
+    try {
+        ident.validerIdent()
+    } catch (e: IllegalArgumentException) {
+        val melding = "Validering av ident feilet, se sikker logg for ident: ${e.message}"
+        sikkerlogg.error { "Validering av ident \"$ident\" feilet: ${e.message}" }
+        logger.error { melding }
+        throw BadRequestException(melding)
     }
 }
 
@@ -146,4 +153,13 @@ data class IdentBody(
 
 data class PersonIdBody(
     val personId: Long,
+)
+
+data class PersonSøknadInnsendtTidspunktRequest(
+    val ident: String,
+    val søknadId: UUID,
+)
+
+data class PersonSøknadInnsendtTidspunktResponse(
+    val innsendtTidspunkt: LocalDateTime,
 )
