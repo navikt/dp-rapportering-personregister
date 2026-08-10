@@ -84,13 +84,19 @@ data class VedtakHendelse(
                 fraOgMed = startDato,
                 tilOgMed = sluttDato,
                 skalMigreres = skalMigreres,
+                korrelasjonsId = korrelasjonsId,
             )
         }
 
         if (!utfall || sluttDato.erDatoIFortid()) {
             person.setHarRettTilDp(false)
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
-                person.sendStoppMeldingTilMeldekortregister(fraOgMed = startDato, tilOgMed = sluttDato, harRett = utfall)
+                person.sendStoppMeldingTilMeldekortregister(
+                    fraOgMed = startDato,
+                    tilOgMed = sluttDato,
+                    harRett = utfall,
+                    korrelasjonsId = korrelasjonsId,
+                )
             }
         }
 
@@ -100,7 +106,7 @@ data class VedtakHendelse(
             ?.let { status ->
                 person.setStatus(status)
                 if (person.oppfyllerKrav) {
-                    person.sendOvertakelsesmelding()
+                    person.sendOvertakelsesmelding(korrelasjonsId)
                 } else {
                     // Sjekker om meldekortregisteret har meldt at bruker har brutt fristen for meldeplikten etter startDato
                     val fristBrutt =
@@ -111,7 +117,7 @@ data class VedtakHendelse(
                             }
 
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, fristBrutt = fristBrutt) }
+                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, fristBrutt, korrelasjonsId) }
                 }
             }
     }

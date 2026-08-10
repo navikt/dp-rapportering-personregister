@@ -12,6 +12,7 @@ interface PersonObserver {
     fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean = false,
+        korrelasjonsId: UUID? = null,
     ) {
     }
 
@@ -40,5 +41,6 @@ interface PersonObserver {
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         harRett: Boolean,
+        korrelasjonsId: UUID? = null,
     ) {}
 }

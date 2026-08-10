@@ -87,6 +87,7 @@ class PersonObserverKafka(
     override fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean,
+        korrelasjonsId: UUID?,
     ) {
         try {
             logger.info { "Starter frasigelse for person. Arbeidssøkerperioder: ${person.arbeidssøkerperioder.size}" }
@@ -111,6 +112,13 @@ class PersonObserverKafka(
                         Attributes.of(AttributeKey.stringKey("periodeId"), periodeId.toString()),
                     )
                     val metadata = runBlocking { producer.sendDeferred(record).await() }
+
+                    meldingerRepository.lagreUtgåendeMelding(
+                        korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                        ident = person.ident,
+                        melding = record.value().toString(),
+                    )
+
                     logger.info {
                         "Sendte melding om at vi frasier oss ansvaret for bekreftelse av periodeId" +
                             " $periodeId til arbeidssøkerregisteret. " +
