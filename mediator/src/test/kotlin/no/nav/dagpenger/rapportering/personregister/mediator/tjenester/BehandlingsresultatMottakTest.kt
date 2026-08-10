@@ -11,12 +11,14 @@ import io.mockk.runs
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.FremtidigHendelseMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.behandlingsresultatMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.ObjectMapper
 import java.time.LocalDate
 import java.time.LocalDate.now
 import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
@@ -26,6 +28,7 @@ class BehandlingsresultatMottakTest {
     private val personRepository = mockk<PersonRepository>(relaxed = true)
     private val personMediator = mockk<PersonMediator>(relaxed = true)
     private val fremtidigHendelseMediator = mockk<FremtidigHendelseMediator>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
         BehandlingsresultatMottak(
@@ -34,6 +37,7 @@ class BehandlingsresultatMottakTest {
             personMediator,
             fremtidigHendelseMediator,
             behandlingsresultatMetrikker,
+            meldingerRepository,
         )
     }
 
@@ -58,6 +62,21 @@ class BehandlingsresultatMottakTest {
         every { personMediator.behandle(capture(hendelser), 1) } just runs
         every { fremtidigHendelseMediator.behandle(capture(fremtidigeHendelser)) } just runs
 
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed1",
+                  "tilOgMed": "$tilOgMed1",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }, {
+                  "fraOgMed": "$fraOgMed2",
+                  "harRett": false,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
         val behandlingsresultat =
             """
             {
@@ -73,25 +92,14 @@ class BehandlingsresultatMottakTest {
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [ ],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed1",
-                  "tilOgMed": "$tilOgMed1",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                },
-                {
-                  "fraOgMed": "$fraOgMed2",
-                  "harRett": false,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent()
 
         testRapid.sendTestMessage(behandlingsresultat)
 
         verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident), behandlingskjedeId) }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident
@@ -123,6 +131,16 @@ class BehandlingsresultatMottakTest {
         val hendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser), 1) } just runs
 
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
         val behandlingsresultat =
             """
             {
@@ -138,19 +156,14 @@ class BehandlingsresultatMottakTest {
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [ ],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent()
 
         testRapid.sendTestMessage(behandlingsresultat)
 
         verify { personRepository.slettFremtidigeVedtakHendelser(eq(ident), behandlingskjedeId) }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
 
         hendelser.size shouldBe 1
         hendelser[0].ident shouldBe ident
@@ -233,52 +246,31 @@ class BehandlingsresultatMottakTest {
         verify { personRepository wasNot Called }
         verify { personMediator wasNot Called }
         verify { fremtidigHendelseMediator wasNot Called }
+        verify { meldingerRepository wasNot Called }
         behandlingsresultatMetrikker.behandlingsresultatMottatt.count() shouldBe metrikkCount
     }
 
     @Test
     fun `behandlingsresultat med regelverk som ikke er Ferietillegg skal behandles`() {
-        testRapid.sendTestMessage(
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
+        val ident = "27298194126"
+        val rettighetsperioder =
             """
-            {
-              "@event_name": "behandlingsresultat",
-              "behandlingId": "a9b1da30-ff3f-4484-9dad-235e620ca189",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
-              "behandletHendelse": {
-                "datatype": "string",
-                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
-                "type": "Søknad"
-              },
-              "regelverk": "Annet regelverk",
-              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "automatisk": true,
-              "ident": "27298194126",
-              "opplysninger": [ ],
-              "rettighetsperioder": [
+            [
                 {
                   "fraOgMed": "2020-01-01",
                   "harRett": true,
                   "opprinnelse": "Ny"
                 }
-              ]
-            }
-            """.trimIndent(),
-        )
-
-        verify { personMediator.behandle(any<VedtakHendelse>()) }
-    }
-
-    @Test
-    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fortid skal ikke behandles`() {
-        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
-        val ident = "27298194126"
-
+            ]
+            """.trimIndent()
         testRapid.sendTestMessage(
             """
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -289,7 +281,23 @@ class BehandlingsresultatMottakTest {
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [ ],
-              "rettighetsperioder": [
+              "rettighetsperioder": $rettighetsperioder
+            }
+            """.trimIndent(),
+        )
+
+        verify { personMediator.behandle(any<VedtakHendelse>()) }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
+    }
+
+    @Test
+    fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fortid skal ikke behandles`() {
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
+        val ident = "27298194126"
+        val rettighetsperioder =
+            """
+            [
                 {
                   "fraOgMed": "${now().minusDays(14).format(ISO_LOCAL_DATE)}",
                   "harRett": true,
@@ -300,7 +308,25 @@ class BehandlingsresultatMottakTest {
                   "harRett": true,
                   "opprinnelse": "Ny"
                 }
-              ]
+            ]
+            """.trimIndent()
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "$behandlingskjedeId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -319,30 +345,17 @@ class BehandlingsresultatMottakTest {
                 },
             )
         }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i nåtid skal ikke behandles`() {
-        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "27298194126"
-
-        testRapid.sendTestMessage(
+        val rettighetsperioder =
             """
-            {
-              "@event_name": "behandlingsresultat",
-              "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
-              "behandletHendelse": {
-                "datatype": "string",
-                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
-                "type": "Søknad"
-              },
-              "regelverk": "Annet regelverk",
-              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "automatisk": true,
-              "ident": "$ident",
-              "opplysninger": [ ],
-              "rettighetsperioder": [
+            [
                 {
                   "fraOgMed": "${now().format(ISO_LOCAL_DATE)}",
                   "harRett": true,
@@ -353,7 +366,26 @@ class BehandlingsresultatMottakTest {
                   "harRett": true,
                   "opprinnelse": "Ny"
                 }
-              ]
+            ]
+            """.trimIndent()
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "$behandlingskjedeId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -372,31 +404,18 @@ class BehandlingsresultatMottakTest {
                 },
             )
         }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `behandlingsresultat med opprinnelse Arvet og fraOgMed i fremtid skal behandles`() {
-        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "27298194126"
         val fremtidigFraOgMed = now().plusDays(10)
-
-        testRapid.sendTestMessage(
+        val rettighetsperioder =
             """
-            {
-              "@event_name": "behandlingsresultat",
-              "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
-              "behandletHendelse": {
-                "datatype": "string",
-                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
-                "type": "Søknad"
-              },
-              "regelverk": "Annet regelverk",
-              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-              "automatisk": true,
-              "ident": "$ident",
-              "opplysninger": [ ],
-              "rettighetsperioder": [
+            [
                 {
                   "fraOgMed": "${fremtidigFraOgMed.format(ISO_LOCAL_DATE)}",
                   "harRett": true,
@@ -407,7 +426,26 @@ class BehandlingsresultatMottakTest {
                   "harRett": true,
                   "opprinnelse": "Ny"
                 }
-              ]
+            ]
+            """.trimIndent()
+
+        testRapid.sendTestMessage(
+            """
+            {
+              "@event_name": "behandlingsresultat",
+              "behandlingId": "$behandlingId",
+              "behandlingskjedeId": "$behandlingskjedeId",
+              "behandletHendelse": {
+                "datatype": "string",
+                "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
+                "type": "Søknad"
+              },
+              "regelverk": "Annet regelverk",
+              "basertPå": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+              "automatisk": true,
+              "ident": "$ident",
+              "opplysninger": [ ],
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -429,20 +467,33 @@ class BehandlingsresultatMottakTest {
                 },
             )
         }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `behandlingsresultat med opprinnelse Arvet og tilOgMed i fremtid skal behandles`() {
-        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "27298194126"
         val fremtidigTilOgMed = now().plusDays(10)
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "2020-02-02",
+                  "tilOgMed": "${fremtidigTilOgMed.format(ISO_LOCAL_DATE)}",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                }
+            ]
+            """.trimIndent()
 
         testRapid.sendTestMessage(
             """
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -453,14 +504,7 @@ class BehandlingsresultatMottakTest {
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [ ],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "2020-02-02",
-                  "tilOgMed": "${fremtidigTilOgMed.format(ISO_LOCAL_DATE)}",
-                  "harRett": true,
-                  "opprinnelse": "Arvet"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -480,19 +524,32 @@ class BehandlingsresultatMottakTest {
                 },
             )
         }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `behandlingsresultat med opprinnelse Arvet og tilOgMed i nåtid skal behandles som fremtidig hendelse`() {
-        val behandlingId = "a9b1da30-ff3f-4484-9dad-235e620ca189"
+        val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "27298194126"
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "2020-02-02",
+                  "tilOgMed": "${now().format(ISO_LOCAL_DATE)}",
+                  "harRett": true,
+                  "opprinnelse": "Arvet"
+                }
+            ]
+            """.trimIndent()
 
         testRapid.sendTestMessage(
             """
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": {
                 "datatype": "string",
                 "id": "7117556b-108f-48a9-ba3a-2880604a8fd2",
@@ -503,14 +560,7 @@ class BehandlingsresultatMottakTest {
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [ ],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "2020-02-02",
-                  "tilOgMed": "${now().format(ISO_LOCAL_DATE)}",
-                  "harRett": true,
-                  "opprinnelse": "Arvet"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -529,14 +579,28 @@ class BehandlingsresultatMottakTest {
                 },
             )
         }
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `rettighetsperiode med fraOgMed i fortid og tilOgMed i fremtid skal behandles både nå og som fremtidig hendelse`() {
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "12345678903"
         val fraOgMed = now().minusDays(10)
         val tilOgMed = now().plusDays(30)
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
+
         val hendelser = mutableListOf<VedtakHendelse>()
         val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser)) } just runs
@@ -547,19 +611,12 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed",
-                  "tilOgMed": "$tilOgMed",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -570,14 +627,29 @@ class BehandlingsresultatMottakTest {
         fremtidigeHendelser[0].referanseId shouldBe "FREMTIDIG-STANS-$behandlingId-0"
         fremtidigeHendelser[0].startDato shouldBe fraOgMed.atStartOfDay()
         fremtidigeHendelser[0].sluttDato shouldBe tilOgMed.atStartOfDay()
+
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `rettighetsperiode med både fraOgMed og tilOgMed i fremtid skal gi to fremtidige hendelser`() {
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "12345678903"
         val fraOgMed = now().plusDays(5)
         val tilOgMed = now().plusDays(30)
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
+
         val hendelser = mutableListOf<VedtakHendelse>()
         val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser)) } just runs
@@ -588,19 +660,12 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed",
-                  "tilOgMed": "$tilOgMed",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -609,14 +674,29 @@ class BehandlingsresultatMottakTest {
         fremtidigeHendelser.size shouldBe 2
         fremtidigeHendelser.any { it.referanseId == "FREMTIDIG-START-$behandlingId-0" } shouldBe true
         fremtidigeHendelser.any { it.referanseId == "FREMTIDIG-STANS-$behandlingId-0" } shouldBe true
+
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `rettighetsperiode med både fraOgMed og tilOgMed i nåtid skal både behandles nå og gi fremtidige hendelse`() {
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "12345678903"
         val fraOgMed = now()
         val tilOgMed = now()
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
+
         val hendelser = mutableListOf<VedtakHendelse>()
         val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser)) } just runs
@@ -627,19 +707,12 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed",
-                  "tilOgMed": "$tilOgMed",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -648,14 +721,29 @@ class BehandlingsresultatMottakTest {
         hendelser[0].referanseId shouldBe "$behandlingId-0"
         fremtidigeHendelser.size shouldBe 1
         fremtidigeHendelser[0].referanseId shouldBe "FREMTIDIG-STANS-$behandlingId-0"
+
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
     }
 
     @Test
     fun `rettighetsperiode med både fraOgMed og tilOgMed i fortid skal behandles nå og ikke gi fremtidige hendelser`() {
         val behandlingId = UUIDv7.newUuid().toString()
+        val behandlingskjedeId = UUIDv7.newUuid().toString()
         val ident = "12345678903"
         val fraOgMed = now().minusDays(30)
         val tilOgMed = now().minusDays(5)
+        val rettighetsperioder =
+            """
+            [
+                {
+                  "fraOgMed": "$fraOgMed",
+                  "tilOgMed": "$tilOgMed",
+                  "harRett": true,
+                  "opprinnelse": "Ny"
+                }
+            ]
+            """.trimIndent()
+
         val hendelser = mutableListOf<VedtakHendelse>()
         val fremtidigeHendelser = mutableListOf<VedtakHendelse>()
         every { personMediator.behandle(capture(hendelser)) } just runs
@@ -666,19 +754,12 @@ class BehandlingsresultatMottakTest {
             {
               "@event_name": "behandlingsresultat",
               "behandlingId": "$behandlingId",
-              "behandlingskjedeId": "7117556b-108f-48a9-ba3a-2880604a8fd3",
+              "behandlingskjedeId": "$behandlingskjedeId",
               "behandletHendelse": { "datatype": "string", "id": "abc", "type": "Søknad" },
               "automatisk": true,
               "ident": "$ident",
               "opplysninger": [],
-              "rettighetsperioder": [
-                {
-                  "fraOgMed": "$fraOgMed",
-                  "tilOgMed": "$tilOgMed",
-                  "harRett": true,
-                  "opprinnelse": "Ny"
-                }
-              ]
+              "rettighetsperioder": $rettighetsperioder
             }
             """.trimIndent(),
         )
@@ -686,5 +767,29 @@ class BehandlingsresultatMottakTest {
         hendelser.size shouldBe 1
         hendelser[0].referanseId shouldBe "$behandlingId-0"
         fremtidigeHendelser.size shouldBe 0
+
+        sjekkLagretInnkommendeMelding(ident, behandlingId, behandlingskjedeId, rettighetsperioder)
+    }
+
+    private fun sjekkLagretInnkommendeMelding(
+        ident: String,
+        behandlingId: String,
+        behandlingskjedeId: String,
+        rettighetsperioder: String,
+    ) {
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                any(),
+                ident,
+                match { melding ->
+                    with(ObjectMapper().readTree(melding)) {
+                        this["@event_name"].asString() == "behandlingsresultat" &&
+                            this["behandlingId"].asString() == behandlingId &&
+                            this["behandlingskjedeId"].asString() == behandlingskjedeId &&
+                            this["rettighetsperioder"].toString() == rettighetsperioder.replace("\n", "").replace(" ", "")
+                    }
+                },
+            )
+        }
     }
 }

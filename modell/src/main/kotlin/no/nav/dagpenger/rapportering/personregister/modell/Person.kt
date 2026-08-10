@@ -126,6 +126,7 @@ fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
 fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
+    korrelasjonsId: UUID? = null,
 ) {
     logger.info { "Frasier arbeidssøkerbekreftelse, fristBrutt=$fristBrutt" }
     arbeidssøkerperioder
@@ -135,7 +136,7 @@ fun Person.sendFrasigelsesmelding(
                 logger.info { "Gjeldende arbeidssøkerperiode har overtatt bekreftelse." }
                 try {
                     logger.info { "Antall observere: ${observers.size}" }
-                    observers.forEach { observer -> observer.sendFrasigelsesmelding(this, fristBrutt) }
+                    observers.forEach { observer -> observer.sendFrasigelsesmelding(this, fristBrutt, korrelasjonsId) }
                     logger.info { "Kjørte frasigelse på observere uten feil" }
                 } catch (e: Exception) {
                     logger.error(e) { "Frasigelse feilet!" }
@@ -201,6 +202,7 @@ fun Person.sendStoppMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     harRett: Boolean,
+    korrelasjonsId: UUID? = null,
 ) {
     logger.info { "Sender Stopp-melding til Meldekortregister" }
 
@@ -212,6 +214,7 @@ fun Person.sendStoppMeldingTilMeldekortregister(
                 fraOgMed = fraOgMed,
                 tilOgMed = tilOgMed,
                 harRett = harRett,
+                korrelasjonsId = korrelasjonsId,
             )
         }
         logger.info { "Sendte Stopp-melding på observere uten feil" }
