@@ -9,6 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import java.time.LocalDateTime
@@ -19,13 +20,14 @@ private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 class NødbremsMottak(
     val rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         River(rapidsConnection)
             .apply {
                 precondition { it.requireValue("@event_name", "ramps_nødbrems") }
                 validate {
-                    it.requireKey("ident")
+                    it.requireKey("@id", "ident")
                 }
             }.register(this)
     }
@@ -37,15 +39,30 @@ class NødbremsMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
+        val ident = packet["ident"].asString()
 
         logger.info { "Mottok melding om at nødbrems aktiveres" }
         sikkerLogg.info { "Mottok melding om at nødbrems aktiveres for $ident" }
 
         try {
+            val korrelasjonsId = UUIDv7.fromString(packet["@id"].asString())
+
+            val relevantMeldingsinnhold =
+                """
+                {
+                    "@event_name": "${packet["@event_name"].asString()}"
+                }
+                """.trimIndent()
+
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = korrelasjonsId,
+                ident = ident,
+                relevantMeldingsinnhold = relevantMeldingsinnhold,
+            )
+
             personMediator.behandle(
                 NødbremsHendelse(
-                    korrelasjonsId = null, // TODO:
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),

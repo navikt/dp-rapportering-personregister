@@ -68,7 +68,6 @@ class SøknadMottak(
                 """
                 {
                     "@event_name": "${packet["@event_name"].asString()}",
-                    "fødselsnummer": "$ident",
                     "datoRegistrert": "${packet["datoRegistrert"].asString()}",
                     "referanseId": "${hendelse.referanseId}",
                     "type": "${packet["type"].asString()}"

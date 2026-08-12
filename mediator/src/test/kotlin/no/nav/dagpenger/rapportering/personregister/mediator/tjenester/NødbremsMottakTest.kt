@@ -9,17 +9,20 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.ObjectMapper
 import java.time.LocalDate
 
 class NødbremsMottakTest {
     private val testRapid = TestRapid()
     private val personMediator = mockk<PersonMediator>(relaxed = true)
+    private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
     init {
-        NødbremsMottak(testRapid, personMediator)
+        NødbremsMottak(testRapid, personMediator, meldingerRepository)
     }
 
     @BeforeEach
@@ -50,5 +53,16 @@ class NødbremsMottakTest {
         hendelseSlot.captured.startDato.toLocalDate() shouldBe dato
 
         verify(exactly = 1) { personMediator.behandle(any<NødbremsHendelse>()) }
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(
+                any(),
+                ident,
+                match { melding ->
+                    with(ObjectMapper().readTree(melding)) {
+                        this["@event_name"].asString() == "ramps_nødbrems"
+                    }
+                },
+            )
+        }
     }
 }

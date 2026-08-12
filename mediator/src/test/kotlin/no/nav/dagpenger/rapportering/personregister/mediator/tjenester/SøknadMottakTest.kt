@@ -64,7 +64,6 @@ class SøknadMottakTest {
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
                         this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["fødselsnummer"].asText() == ident &&
                             this["datoRegistrert"].asText() == dato &&
                             this["referanseId"].asText() == søknadId &&
                             this["type"].asText() == "NySøknad"
@@ -103,7 +102,6 @@ class SøknadMottakTest {
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
                         this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["fødselsnummer"].asText() == ident &&
                             this["datoRegistrert"].asText() == dato &&
                             this["referanseId"].asText() == søknadId &&
                             this["type"].asText() == "NySøknad"
@@ -141,7 +139,6 @@ class SøknadMottakTest {
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
                         this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["fødselsnummer"].asText() == ident &&
                             this["datoRegistrert"].asText() == dato &&
                             this["type"].asText() == "NySøknad"
                     }
