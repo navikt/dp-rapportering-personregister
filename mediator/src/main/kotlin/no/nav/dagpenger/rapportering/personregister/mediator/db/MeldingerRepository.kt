@@ -8,11 +8,11 @@ interface MeldingerRepository {
         korrelasjonsId: UUID = UUIDv7.newUuid(),
         ident: String? = null,
         relevantMeldingsinnhold: String,
-    )
+    ): Int
 
     fun lagreUtgåendeMelding(
         korrelasjonsId: UUID,
         ident: String,
         melding: String,
-    )
+    ): Int
 }
