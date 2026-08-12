@@ -52,7 +52,6 @@ class VedtakFattetUtenforArenaMottak(
                 """
                 {
                     "@event_name": "${packet["@event_name"].asString()}",
-                    "ident": "$ident",
                     "behandlingId": "$behandlingId",
                     "søknadId": "$søknadId",
                     "sakId": "$sakId"

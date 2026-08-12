@@ -60,7 +60,6 @@ class VedtakFattetUtenforArenaMottakTest {
                 match { melding ->
                     with(ObjectMapper().readTree(melding)) {
                         this["@event_name"].asString() == "vedtak_fattet_utenfor_arena" &&
-                            this["ident"].asString() == ident &&
                             this["behandlingId"].asString() == behandlingId &&
                             this["søknadId"].asString() == søknadId &&
                             this["sakId"].asString() == sakId

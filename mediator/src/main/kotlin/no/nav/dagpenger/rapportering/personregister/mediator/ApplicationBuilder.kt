@@ -337,7 +337,7 @@ internal class ApplicationBuilder(
                         meldingerRepository,
                     )
                     VedtakFattetUtenforArenaMottak(rapid, behandlingService, meldingerRepository, vedtakMetrikker)
-                    NødbremsMottak(rapid, personMediator)
+                    NødbremsMottak(rapid, personMediator, meldingerRepository)
                     ArbeidssøkerBekreftelseMottak(
                         rapid,
                         ArbeidssøkerBekreftelseService(
