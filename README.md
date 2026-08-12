@@ -36,7 +36,7 @@ AnsvarligSystem settes default til Arena. Hvis bruker får et positivt vedtak fr
 ## Viktige komponenter
 ### Mediatorer
 Mediator-laget brukes for orkestrering og domenelogikk, og sørger for at sideeffekter (lagring, observatører, eksterne kall) samles ett sted.
-- `PersonMediator` – sentral koordinering av personrelaterte hendelser (søknad, vedtak, meldegruppe, synkronisering, meldesyklus passert).
+- `PersonMediator` – sentral koordinering av personrelaterte hendelser (søknad, vedtak, meldegruppe, synkronisering, ikke meldt seg på 21 dager).
 - `ArbeidssøkerMediator` – håndterer arbeidssøkerperioder og overtakelse/frasigelse.
 - `MeldepliktMediator` – håndterer meldepliktendringer.
 - `MeldestatusMediator` – prosesserer meldeplikt/meldegruppe ved melding om meldestatusendring fra Arena.
@@ -72,7 +72,7 @@ Mottaksklasser konverterer innkommende meldinger til domenespesifikke hendelser:
 - `SøknadMottak` – søknad innsending -> `SøknadHendelse`.
 - `BehandlinsresultatMottak` / `VedtakFattetUtenforArenaMottak` – vedtak -> `VedtakHendelse`
 - `MeldestatusMottak` – tar i mot endringemeldinger fra Arena.
-- `MeldesyklusErPassertMottak` - varsler om at en meldekortsyklus til en bruker er passert.
+- `IkkeMeldtSegPå21DagerFeiletMottak` - varsler om at en meldekortsyklus til en bruker er passert.
 - `NødbremsMottak` – styrer midlertidig stopp.
 - `ArbeidssøkerMottak` & `ArbeidssøkerperiodeOvertakelseMottak` – endringer i perioder og "kvittering" for meldinger om overtakelse/frasigelse.
 

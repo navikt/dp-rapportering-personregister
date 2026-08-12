@@ -12,7 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
-import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldesyklusErPassertHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.NødbremsHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonIkkeDagpengerSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
@@ -149,11 +149,11 @@ class PersonMediator(
         }
 
     fun behandle(
-        hendelse: MeldesyklusErPassertHendelse,
+        hendelse: IkkeMeldtSegPå21DagerHendelse,
         counter: Int = 1,
     ): Unit =
-        actionTimer.timedAction("behandle_MeldesyklusErPassertHendelse") {
-            logger.info { "Behandler MeldesyklusErPassertHendelse: ${hendelse.referanseId}" }
+        actionTimer.timedAction("behandle_IkkeMeldtSegPå21DagerHendelse") {
+            logger.info { "Behandler IkkeMeldtSegPå21DagerHendelse: ${hendelse.referanseId}" }
             personService
                 .hentEllerOpprettPerson(hendelse.ident)
                 .also { person ->
