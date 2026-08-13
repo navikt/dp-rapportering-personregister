@@ -42,7 +42,7 @@ data class AnnenMeldegruppeHendelse(
                 person.setStatus(it)
                 person.arbeidssøkerperioder.gjeldende
                     ?.also { periode ->
-                        person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg)
+                        person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg, korrelasjonsId)
                     }
             }
     }
