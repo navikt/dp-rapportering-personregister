@@ -253,7 +253,11 @@ internal class ApplicationBuilder(
             valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
         )
     private val arbeidssøkerBekreftelseKafka =
-        ArbeidssøkerBekreftelseKafka(bekreftelseKafkaProdusent, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker)
+        ArbeidssøkerBekreftelseKafka(
+            bekreftelseKafkaProdusent,
+            arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker,
+            meldingerRepository,
+        )
 
     private val aktiverHendelserJob =
         AktiverHendelserJob(
@@ -346,6 +350,7 @@ internal class ApplicationBuilder(
                             personRepository,
                         ),
                         arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
+                        meldingerRepository,
                     )
                     StartAktiverHendelserJobManueltMottak(
                         rapidsConnection = rapid,

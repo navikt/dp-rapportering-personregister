@@ -10,8 +10,11 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.tilArbeidssøkerBekreftelseMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
+import tools.jackson.databind.ObjectMapper
 
 private val logger = KotlinLogging.logger {}
 private val sikkerlogg = KotlinLogging.logger("tjenestekall")
@@ -20,6 +23,7 @@ class ArbeidssøkerBekreftelseMottak(
     rapidsConnection: RapidsConnection,
     private val arbeidssøkerBekreftelseService: ArbeidssøkerBekreftelseService,
     private val arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker: ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     init {
         logger.info { "Starter ArbeidssøkerBekreftelseMottak" }
@@ -30,6 +34,7 @@ class ArbeidssøkerBekreftelseMottak(
                 }
                 validate {
                     it.requireKey(
+                        "@id",
                         "ident",
                         "bekreftelse",
                     )
@@ -45,7 +50,8 @@ class ArbeidssøkerBekreftelseMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
+        val korrelasjonsId = UUIDv7.fromString(packet["@id"].asString())
+        val ident = packet["ident"].asString()
 
         logger.info { "Mottok arbeidssøkerbekreftelse-melding" }
         sikkerlogg.info { "Mottok arbeidssøkerbekreftelse-melding, ident=$ident: ${packet.toJson()}" }
@@ -61,11 +67,25 @@ class ArbeidssøkerBekreftelseMottak(
                 throw e
             }
 
+        val relevantMeldingsinnhold =
+            """
+            {
+                "@event_name": "${packet["@event_name"].asString()}",
+                "arbeidssøkerBekreftelseMelding": ${ObjectMapper().writeValueAsString(arbeidssøkerBekreftelseMelding)}
+            }
+            """.trimIndent()
+
+        meldingerRepository.lagreInnkommendeMelding(
+            korrelasjonsId = korrelasjonsId,
+            ident = ident,
+            relevantMeldingsinnhold = relevantMeldingsinnhold,
+        )
+
         try {
             logger.info {
                 "Mottok arbeidssøkerbekreftelse melding for periode=${arbeidssøkerBekreftelseMelding.bekreftelse.periodeId}"
             }
-            runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding) }
+            runBlocking { arbeidssøkerBekreftelseService.behandle(arbeidssøkerBekreftelseMelding, korrelasjonsId) }
         } catch (e: Exception) {
             arbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker.arbeidssøkerbekreftelseMottakFeilet.increment()
             logger.error(e) {

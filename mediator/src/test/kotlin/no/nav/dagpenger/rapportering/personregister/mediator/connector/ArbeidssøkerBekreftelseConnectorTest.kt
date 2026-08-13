@@ -8,6 +8,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftelse
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftelsesløsning
@@ -15,10 +16,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bruker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SendtInnAv
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Svar
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
-import org.apache.kafka.clients.producer.Producer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.MockKafkaProducer
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.clients.producer.RecordMetadata
-import org.apache.kafka.common.TopicPartition
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -26,8 +26,9 @@ import java.util.UUID
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse as ASRBekreftelse
 
 class ArbeidssøkerBekreftelseConnectorTest {
-    private val producer = mockk<Producer<Long, ASRBekreftelse>>()
-    private val connector = ArbeidssøkerBekreftelseKafka(producer, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker)
+    private val meldingerRepository = mockk<MeldingerRepository>()
+    private lateinit var producer: MockKafkaProducer<ASRBekreftelse>
+    private lateinit var connector: ArbeidssøkerBekreftelseKafka
 
     init {
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
@@ -40,18 +41,32 @@ class ArbeidssøkerBekreftelseConnectorTest {
     @BeforeEach
     fun setup() {
         mockkStatic("no.nav.dagpenger.rapportering.personregister.kafka.utils.ProducerUtilsKt")
+        producer = MockKafkaProducer()
+        connector =
+            ArbeidssøkerBekreftelseKafka(producer, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker, meldingerRepository)
     }
 
     @Suppress("DeferredResultUnused")
     @Test
     fun `sender bekreftelse og returnerer bekreftelseId`() {
-        val metadata = RecordMetadata(TopicPartition("topic", 0), 0, 0, 0, 0, 0)
-        val melding = bekreftelseMelding()
-        every { producer.sendDeferred(any<ProducerRecord<Long, ASRBekreftelse>>()) } returns CompletableDeferred(metadata)
+        val korrelasjonsId = UUID.randomUUID()
 
-        runBlocking { connector.sendBekreftelse(1L, melding) }
+        val melding = bekreftelseMelding()
+        every { meldingerRepository.lagreUtgåendeMelding(korrelasjonsId, melding.ident, any()) } returns 1
+
+        runBlocking { connector.sendBekreftelse(1L, melding, korrelasjonsId) }
 
         verify(exactly = 1) { producer.sendDeferred(any()) }
+        verify(exactly = 1) {
+            meldingerRepository.lagreUtgåendeMelding(
+                korrelasjonsId,
+                melding.ident,
+                producer.meldinger
+                    .first()
+                    .value()
+                    .toString(),
+            )
+        }
     }
 
     @Test
@@ -64,8 +79,10 @@ class ArbeidssøkerBekreftelseConnectorTest {
         val melding = bekreftelseMelding()
 
         shouldThrow<RuntimeException> {
-            runBlocking { connector.sendBekreftelse(1L, melding) }
+            runBlocking { connector.sendBekreftelse(1L, melding, UUID.randomUUID()) }
         }
+
+        verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
     }
 
     private fun bekreftelseMelding(
