@@ -15,55 +15,53 @@ class MeldingerRepositoryPostgres(
         korrelasjonsId: UUID,
         ident: String?,
         relevantMeldingsinnhold: String,
-    ) = sessionOf(dataSource)
-        .use { session ->
+    ): Int =
+        sessionOf(dataSource).use { session ->
+            var antallRaderOpprettet = 0
             try {
-                val affectedRows =
-                    session
-                        .run(
-                            queryOf(
-                                "INSERT INTO meldinger_innkommende " +
-                                    "(korrelasjons_id, ident, relevant_meldingsinnhold) " +
-                                    "VALUES (?, ?, ?::jsonb)",
-                                korrelasjonsId,
-                                ident,
-                                relevantMeldingsinnhold,
-                            ).asUpdate,
-                        )
+                antallRaderOpprettet =
+                    session.run(
+                        queryOf(
+                            "INSERT INTO meldinger_innkommende (korrelasjons_id, ident, relevant_meldingsinnhold, tidspunkt) VALUES (?, ?, ?::jsonb, CURRENT_TIMESTAMP)",
+                            korrelasjonsId,
+                            ident,
+                            relevantMeldingsinnhold,
+                        ).asUpdate,
+                    )
 
-                if (affectedRows == 0) {
-                    throw RuntimeException("Ingen berørte rader")
+                if (antallRaderOpprettet == 0) {
+                    throw RuntimeException("Ingen opprettede rader")
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved lagring av innkommende melding" }
             }
+            antallRaderOpprettet
         }
 
     override fun lagreUtgåendeMelding(
         korrelasjonsId: UUID,
         ident: String,
         melding: String,
-    ) = sessionOf(dataSource)
-        .use { session ->
+    ): Int =
+        sessionOf(dataSource).use { session ->
+            var antallRaderOpprettet = 0
             try {
-                val affectedRows =
-                    session
-                        .run(
-                            queryOf(
-                                "INSERT INTO meldinger_utgående " +
-                                    "(korrelasjons_id, ident, melding) " +
-                                    "VALUES (?, ?, ?::jsonb)",
-                                korrelasjonsId,
-                                ident,
-                                melding,
-                            ).asUpdate,
-                        )
+                antallRaderOpprettet =
+                    session.run(
+                        queryOf(
+                            "INSERT INTO meldinger_utgående (korrelasjons_id, ident, melding, tidspunkt) VALUES (?, ?, ?::jsonb, CURRENT_TIMESTAMP)",
+                            korrelasjonsId,
+                            ident,
+                            melding,
+                        ).asUpdate,
+                    )
 
-                if (affectedRows == 0) {
-                    throw RuntimeException("Ingen berørte rader")
+                if (antallRaderOpprettet == 0) {
+                    throw RuntimeException("Ingen opprettede rader")
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Feil ved lagring av utgående melding" }
             }
+            antallRaderOpprettet
         }
 }
