@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.connector
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.bekreftelseTopic
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
@@ -16,10 +17,12 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 class ArbeidssøkerBekreftelseKafka(
     private val bekreftelseKafkaProdusent: Producer<Long, Bekreftelse>,
     private val arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker: ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) {
     suspend fun sendBekreftelse(
         recordKey: Long,
         arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding,
+        korrelasjonsId: UUID,
     ): UUID {
         val periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId
 
@@ -40,6 +43,12 @@ class ArbeidssøkerBekreftelseKafka(
                 "Sendt arbeidssøkerbekreftelse for periode: $periodeId, ident: ${arbeidssøkerBekreftelseMelding.ident} til Arbeidssøkerregisteret."
                 "Metadata: topic=${metadata.topic()} (partition=${metadata.partition()}, offset=${metadata.offset()})"
             }
+
+            meldingerRepository.lagreUtgåendeMelding(
+                korrelasjonsId = korrelasjonsId,
+                ident = arbeidssøkerBekreftelseMelding.ident,
+                melding = record.value().toString(),
+            )
 
             return arbeidssøkerBekreftelseMelding.bekreftelse.id
         } catch (e: Exception) {

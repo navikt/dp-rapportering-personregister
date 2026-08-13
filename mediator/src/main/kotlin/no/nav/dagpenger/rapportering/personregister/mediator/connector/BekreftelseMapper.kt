@@ -49,30 +49,30 @@ fun ArbeidssøkerBekreftelseMelding.tilBekreftelse(): ASRBekreftelse {
 }
 
 fun JsonMessage.tilArbeidssøkerBekreftelseMelding(): ArbeidssøkerBekreftelseMelding {
-    val ident = this["ident"].asText()
+    val ident = this["ident"].asString()
     val bekreftelseNode = this["bekreftelse"]
-    val id = UUID.fromString(bekreftelseNode["id"].asText())
-    val periodeId = UUID.fromString(bekreftelseNode["periodeId"].asText())
-    val bekreftelsesløsning = Bekreftelsesløsning.valueOf(bekreftelseNode["bekreftelsesløsning"].asText())
+    val id = UUID.fromString(bekreftelseNode["id"].asString())
+    val periodeId = UUID.fromString(bekreftelseNode["periodeId"].asString())
+    val bekreftelsesløsning = Bekreftelsesløsning.valueOf(bekreftelseNode["bekreftelsesløsning"].asString())
     val svarNode = bekreftelseNode["svar"]
     val sendtInnAvNode = svarNode["sendtInnAv"]
     val sendtInnAv =
         SendtInnAv(
-            tidspunkt = sendtInnAvNode["tidspunkt"].asText().toLocalDateTime(),
+            tidspunkt = sendtInnAvNode["tidspunkt"].asString().toLocalDateTime(),
             utførtAv =
                 Bruker(
-                    type = sendtInnAvNode["utførtAv"]["type"].asText(),
-                    ident = sendtInnAvNode["utførtAv"]["ident"].asText(),
-                    sikkerhetsnivå = sendtInnAvNode["utførtAv"]["sikkerhetsnivå"].asText(),
+                    type = sendtInnAvNode["utførtAv"]["type"].asString(),
+                    ident = sendtInnAvNode["utførtAv"]["ident"].asString(),
+                    sikkerhetsnivå = sendtInnAvNode["utførtAv"]["sikkerhetsnivå"].asString(),
                 ),
-            kilde = sendtInnAvNode["kilde"].asText(),
-            årsak = sendtInnAvNode["årsak"].asText(),
+            kilde = sendtInnAvNode["kilde"].asString(),
+            årsak = sendtInnAvNode["årsak"].asString(),
         )
     val svar =
         Svar(
             sendtInnAv = sendtInnAv,
-            gjelderFra = svarNode["gjelderFra"].asText().toLocalDateTime(),
-            gjelderTil = svarNode["gjelderTil"].asText().toLocalDateTime(),
+            gjelderFra = svarNode["gjelderFra"].asString().toLocalDateTime(),
+            gjelderTil = svarNode["gjelderTil"].asString().toLocalDateTime(),
             harJobbetIDennePerioden = svarNode["harJobbetIDennePerioden"].asBoolean(),
             vilFortsetteSomArbeidssøker = svarNode["vilFortsetteSomArbeidssøker"].asBoolean(),
         )

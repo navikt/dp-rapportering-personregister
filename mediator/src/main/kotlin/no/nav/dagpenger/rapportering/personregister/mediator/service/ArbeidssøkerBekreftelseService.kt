@@ -17,7 +17,10 @@ class ArbeidssøkerBekreftelseService(
     private val arbeidssøkerBekreftelseKafka: ArbeidssøkerBekreftelseKafka,
     private val personRepository: PersonRepository,
 ) {
-    suspend fun behandle(arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding) {
+    suspend fun behandle(
+        arbeidssøkerBekreftelseMelding: ArbeidssøkerBekreftelseMelding,
+        korrelasjonsId: UUID,
+    ) {
         val periodeId = arbeidssøkerBekreftelseMelding.bekreftelse.periodeId
         val ident = arbeidssøkerBekreftelseMelding.ident
 
@@ -50,7 +53,7 @@ class ArbeidssøkerBekreftelseService(
                     ident = ident,
                 )
             }
-            arbeidssøkerBekreftelseKafka.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding)
+            arbeidssøkerBekreftelseKafka.sendBekreftelse(recordKey, arbeidssøkerBekreftelseMelding, korrelasjonsId)
         } catch (e: Exception) {
             logger.error(e) {
                 "Feil ved behandling av arbeidssøkerbekreftelse for periode: $periodeId"
