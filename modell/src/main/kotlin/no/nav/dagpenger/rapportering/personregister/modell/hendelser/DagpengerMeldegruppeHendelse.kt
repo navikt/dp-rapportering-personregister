@@ -38,7 +38,7 @@ data class DagpengerMeldegruppeHendelse(
             .takeIf { it != person.status && person.oppfyllerKrav }
             ?.also {
                 person.setStatus(it)
-                person.sendOvertakelsesmelding()
+                person.sendOvertakelsesmelding(korrelasjonsId)
             }
     }
 }

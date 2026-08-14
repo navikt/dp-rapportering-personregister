@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.Meldestat
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
 import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFremtid
 import java.time.LocalDateTime.now
+import java.util.UUID
 
 class MeldestatusMediator(
     private val personRepository: PersonRepository,
@@ -68,7 +69,7 @@ class MeldestatusMediator(
                     // Vi sletter eksisterende fremtidige Arena-hendelser i tilfelle vi får endringer FØR fremtidige hendelsene blir prosessert
                     // Slik har vi kun den siste versjonen av sannheten
                     personRepository.slettFremtidigeArenaHendelser(person.ident)
-                    behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus)
+                    behandleHendelse(hendelse.meldestatusId.toString(), person, meldestatus, hendelse.korrelasjonsId)
                 } else {
                     logger.info { "Person har ikke Arena som ansvarlig system, meldepliktendringer fra Meldestatus ignoreres." }
                     sikkerLogg.info {
@@ -82,6 +83,7 @@ class MeldestatusMediator(
         meldestatusId: String,
         person: Person,
         meldestatus: MeldestatusResponse,
+        korrelasjonsId: UUID? = null,
     ) {
         // Meldestatus inneholder:
         // En liste over aktiv(e) meldepliktperiode(r) basert på det som gjelder på søkedato og framover i tid
@@ -99,7 +101,7 @@ class MeldestatusMediator(
             if (meldeplikt != it.meldeplikt) {
                 val meldepliktHendelse =
                     MeldepliktHendelse(
-                        korrelasjonsId = null, // TODO:
+                        korrelasjonsId = korrelasjonsId,
                         ident = person.ident,
                         referanseId = "MSMP$meldestatusId-$index",
                         startDato = it.meldepliktperiode?.fom ?: now(),
@@ -126,7 +128,7 @@ class MeldestatusMediator(
                 if (it.meldegruppe == "DAGP") {
                     val dagpengerMeldegruppeHendelse =
                         DagpengerMeldegruppeHendelse(
-                            korrelasjonsId = null, // TODO:
+                            korrelasjonsId = korrelasjonsId,
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
                             startDato = it.meldegruppeperiode?.fom ?: now(),
@@ -145,7 +147,7 @@ class MeldestatusMediator(
                 } else {
                     val annenMeldegruppeHendelse =
                         AnnenMeldegruppeHendelse(
-                            korrelasjonsId = null, // TODO:
+                            korrelasjonsId = korrelasjonsId,
                             ident = person.ident,
                             referanseId = "MSMG$meldestatusId-$index",
                             startDato = it.meldegruppeperiode?.fom ?: now(),

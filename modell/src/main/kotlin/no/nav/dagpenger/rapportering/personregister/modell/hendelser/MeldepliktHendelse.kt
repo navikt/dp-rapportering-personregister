@@ -42,10 +42,10 @@ data class MeldepliktHendelse(
             ?.let {
                 person.setStatus(it)
                 if (person.oppfyllerKrav) {
-                    person.sendOvertakelsesmelding()
+                    person.sendOvertakelsesmelding(korrelasjonsId)
                 } else {
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg) }
+                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, !harMeldtSeg, korrelasjonsId) }
                 }
             }
     }
