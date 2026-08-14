@@ -24,7 +24,7 @@ class IkkeMeldtSegPå21DagerHendelse(
         person.arbeidssøkerperioder.gjeldende
             ?.also { periode ->
                 periode.årsakTilUtmelding = Arbeidssøkerperiode.ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER
-                person.sendFrasigelsesmelding(periode.periodeId, true)
+                person.sendFrasigelsesmelding(periode.periodeId, true, korrelasjonsId)
             }
     }
 

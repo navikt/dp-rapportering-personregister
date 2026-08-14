@@ -331,7 +331,12 @@ internal class ApplicationBuilder(
                         meldestatusMetrikker,
                         meldingerRepository,
                     )
-                    IkkeMeldtSegPå21DagerMottak(rapid, personMediator, ikkeMeldtSegPå21DagerMetrikker)
+                    IkkeMeldtSegPå21DagerMottak(
+                        rapid,
+                        personMediator,
+                        ikkeMeldtSegPå21DagerMetrikker,
+                        meldingerRepository,
+                    )
                     SøknadMottak(rapid, søknadService, søknadMetrikker, meldingerRepository)
                     BehandlingsresultatMottak(
                         rapid,
