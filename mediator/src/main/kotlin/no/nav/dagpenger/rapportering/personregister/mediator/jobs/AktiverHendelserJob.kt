@@ -102,7 +102,7 @@ internal class AktiverHendelserJob(
                                     }
                                 }
 
-                                meldestatusMediator.behandleHendelse(hendelse.referanseId, person, meldestatus)
+                                meldestatusMediator.behandleHendelse(hendelse.referanseId, person, meldestatus, hendelse.korrelasjonsId)
                             }
 
                             is VedtakHendelse -> {
