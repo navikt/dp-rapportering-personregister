@@ -196,6 +196,7 @@ internal class ApplicationBuilder(
             meldekortregisterConnector,
             { getRapidsConnection() },
             avsluttetArbeidssøkerperiodeMetrikker,
+            meldingerRepository,
         )
     private val arbeidssøkerMediator =
         ArbeidssøkerMediator(
@@ -244,7 +245,13 @@ internal class ApplicationBuilder(
         )
 
     private val arbeidssøkerMottak =
-        ArbeidssøkerMottak(arbeidssøkerMediator, arbeidssøkerperiodeMetrikker, arbeidssøkerService, unleash)
+        ArbeidssøkerMottak(
+            arbeidssøkerMediator,
+            arbeidssøkerperiodeMetrikker,
+            arbeidssøkerService,
+            unleash,
+            meldingerRepository,
+        )
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
     private val bekreftelseKafkaProdusent =
         kafkaFactory.createProducer<Long, Bekreftelse>(

@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -20,6 +21,7 @@ class ArbeidssøkerService(
     private val meldekortregisterConnector: MeldekortregisterConnector,
     private val rapidsConnection: () -> RapidsConnection,
     private val avsluttetArbeidssøkerperiodeMetrikker: AvsluttetArbeidssøkerperiodeMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) {
     suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =
         arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
@@ -40,7 +42,10 @@ class ArbeidssøkerService(
             )
         }
 
-    suspend fun publiserAvsluttetArbeidssøkerperiode(periode: Arbeidssøkerperiode) {
+    suspend fun publiserAvsluttetArbeidssøkerperiode(
+        periode: Arbeidssøkerperiode,
+        korrelasjonsId: UUID,
+    ) {
         personRepository.hentPerson(periode.ident)?.let { person ->
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 logger.info {
@@ -59,7 +64,7 @@ class ArbeidssøkerService(
                         årsak = årsak,
                     )
 
-                publiser(periode, melding)
+                publiser(periode, melding, korrelasjonsId)
             } else {
                 logger.info {
                     "Bruker har ansvarligSystem != DP, publiserer ikke avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}"
@@ -76,9 +81,17 @@ class ArbeidssøkerService(
     private fun publiser(
         periode: Arbeidssøkerperiode,
         melding: JsonMessage,
+        korrelasjonsId: UUID,
     ) {
         try {
             rapidsConnection().publish(periode.ident, melding.toJson())
+
+            meldingerRepository.lagreUtgåendeMelding(
+                korrelasjonsId = korrelasjonsId,
+                ident = periode.ident,
+                melding = melding.toJson(),
+            )
+
             avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.increment()
             logger.info { "Publiserte avsluttet_arbeidssokerperiode for periodeId ${periode.periodeId}" }
         } catch (e: Exception) {
