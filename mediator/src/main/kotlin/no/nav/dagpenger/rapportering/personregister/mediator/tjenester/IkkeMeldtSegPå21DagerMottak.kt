@@ -9,7 +9,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.IkkeMeldtSegPå21DagerMetrikker
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.IkkeMeldtSegPå21DagerHendelse
 import java.time.LocalDateTime
@@ -18,6 +20,7 @@ class IkkeMeldtSegPå21DagerMottak(
     rapidsConnection: RapidsConnection,
     private val personMediator: PersonMediator,
     private val ikkeMeldtSegPå21DagerMetrikker: IkkeMeldtSegPå21DagerMetrikker,
+    private val meldingerRepository: MeldingerRepository,
 ) : River.PacketListener {
     companion object {
         private val logger = KotlinLogging.logger {}
@@ -32,8 +35,8 @@ class IkkeMeldtSegPå21DagerMottak(
                 }
                 validate {
                     it.requireKey(
+                        "@id",
                         "ident",
-                        "dato",
                         "referanseId",
                     )
                 }
@@ -47,25 +50,40 @@ class IkkeMeldtSegPå21DagerMottak(
         metadata: MessageMetadata,
         meterRegistry: MeterRegistry,
     ) {
-        val ident = packet["ident"].asText()
+        val ident = packet["ident"].asString()
 
         logger.info { "Mottok ikke_meldt_seg_på_21_dager-melding" }
         sikkerlogg.info { "Mottok ikke_meldt_seg_på_21_dager-melding, ident=$ident: ${packet.toJson()}" }
         ikkeMeldtSegPå21DagerMetrikker.ikkeMeldtSegPå21DagerMottatt.increment()
 
         try {
-            val referanseId = packet["referanseId"].asText()
+            val korrelasjonsId = UUIDv7.fromString(packet["@id"].asString())
+            val referanseId = packet["referanseId"].asString()
 
             ident.validerIdent()
 
             val ikkeMeldtSegPå21DagerHendelse =
                 IkkeMeldtSegPå21DagerHendelse(
-                    korrelasjonsId = null, // TODO:
+                    korrelasjonsId = korrelasjonsId,
                     ident = ident,
                     dato = LocalDateTime.now(),
                     startDato = LocalDateTime.now(),
                     referanseId = referanseId,
                 )
+
+            val relevantMeldingsinnhold =
+                """
+                {
+                    "@event_name": "${packet["@event_name"].asString()}",
+                    "referanseId": "$referanseId"
+                }
+                """.trimIndent()
+
+            meldingerRepository.lagreInnkommendeMelding(
+                korrelasjonsId = korrelasjonsId,
+                ident = ident,
+                relevantMeldingsinnhold = relevantMeldingsinnhold,
+            )
 
             personMediator.behandle(ikkeMeldtSegPå21DagerHendelse)
         } catch (e: Exception) {
