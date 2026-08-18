@@ -8,6 +8,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
+import java.util.UUID
 
 class NødbremsHendelseTest {
     @Test
@@ -18,7 +19,7 @@ class NødbremsHendelseTest {
 
             behandle(
                 NødbremsHendelse(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUID.randomUUID(),
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-1",
@@ -37,14 +38,14 @@ class NødbremsHendelseTest {
             addObserver(observer)
             behandle(
                 NødbremsHendelse(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUID.randomUUID(),
                     ident = ident,
                     startDato = LocalDateTime.now(),
                     referanseId = "nødbrems-2",
                 ),
             )
 
-            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), false) }
+            verify(exactly = 1) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), false, any()) }
         }
     }
 }

@@ -6,13 +6,13 @@ import java.util.UUID
 interface PersonObserver {
     fun sendOvertakelsesmelding(
         person: Person,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) {}
 
     fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean = false,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) {
     }
 
@@ -33,7 +33,7 @@ interface PersonObserver {
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         skalMigreres: Boolean,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) {}
 
     fun sendStoppMeldingTilMeldekortregister(
@@ -41,6 +41,6 @@ interface PersonObserver {
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
         harRett: Boolean,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) {}
 }

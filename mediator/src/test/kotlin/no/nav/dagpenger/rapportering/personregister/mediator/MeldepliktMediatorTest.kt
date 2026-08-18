@@ -161,7 +161,7 @@ class MeldepliktMediatorTest {
             personMediator.behandle(dagpengerMeldegruppeHendelse())
             meldepliktMediator.behandle(meldepliktHendelse(status = true))
             status shouldBe DAGPENGERBRUKER
-            verify(exactly = 1) { personObserver.sendOvertakelsesmelding(any()) }
+            verify(exactly = 1) { personObserver.sendOvertakelsesmelding(any(), any()) }
         }
     }
 
@@ -214,7 +214,7 @@ class MeldepliktMediatorTest {
         arbeidssøker {
             val throwable =
                 shouldThrow<RuntimeException> {
-                    runBlocking { meldepliktMediator.behandle(ident, true) }
+                    runBlocking { meldepliktMediator.behandle(ident, true, UUIDv7.newUuid()) }
                 }
 
             throwable.message shouldBe "Kastet feil fra PDL"
@@ -262,7 +262,7 @@ class MeldepliktMediatorTest {
         dato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -279,7 +279,7 @@ class MeldepliktMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

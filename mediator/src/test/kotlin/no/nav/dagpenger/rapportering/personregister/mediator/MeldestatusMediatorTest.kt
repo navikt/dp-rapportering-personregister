@@ -372,7 +372,7 @@ class MeldestatusMediatorTest {
         personId: Long = 1L,
         meldestatusId: Long = 2L,
         hendelseId: Long = 3L,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = MeldestatusHendelse(
         korrelasjonsId = korrelasjonsId,
         personId = personId,

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AnnenMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
@@ -32,7 +33,7 @@ class FremtidigHendelseMediatorTest {
     private fun dagpengerMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -47,7 +48,7 @@ class FremtidigHendelseMediatorTest {
     private fun annenMeldegruppeHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = AnnenMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -62,7 +63,7 @@ class FremtidigHendelseMediatorTest {
     private fun meldepliktHendelse(
         dato: LocalDateTime = LocalDateTime.now(),
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

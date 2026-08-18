@@ -31,7 +31,7 @@ class PersonObserverKafka(
 ) : PersonObserver {
     override fun sendOvertakelsesmelding(
         person: Person,
-        korrelasjonsId: UUID?,
+        korrelasjonsId: UUID,
     ) {
         try {
             logger.info { "Starter overtagelse av bekreftelse for person. Arbs.perioder: ${person.arbeidssøkerperioder.size}" }
@@ -67,7 +67,7 @@ class PersonObserverKafka(
                 val metadata = runBlocking { producer.sendDeferred(record).await() }
 
                 meldingerRepository.lagreUtgåendeMelding(
-                    korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                    korrelasjonsId = korrelasjonsId,
                     ident = person.ident,
                     melding = record.value().toString(),
                 )
@@ -87,7 +87,7 @@ class PersonObserverKafka(
     override fun sendFrasigelsesmelding(
         person: Person,
         fristBrutt: Boolean,
-        korrelasjonsId: UUID?,
+        korrelasjonsId: UUID,
     ) {
         try {
             logger.info { "Starter frasigelse for person. Arbeidssøkerperioder: ${person.arbeidssøkerperioder.size}" }
@@ -114,7 +114,7 @@ class PersonObserverKafka(
                     val metadata = runBlocking { producer.sendDeferred(record).await() }
 
                     meldingerRepository.lagreUtgåendeMelding(
-                        korrelasjonsId = korrelasjonsId ?: UUIDv7.newUuid(),
+                        korrelasjonsId = korrelasjonsId,
                         ident = person.ident,
                         melding = record.value().toString(),
                     )

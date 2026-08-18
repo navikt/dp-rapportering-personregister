@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHtt
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -48,6 +49,7 @@ internal class AvvikStatusJob(
                         logger.info { "Hentet ${identer.size} identer for sjekking av status" }
 
                         identer.forEach { ident ->
+                            val korrelasjonsId = UUIDv7.newUuid()
                             val person =
                                 personService.hentPerson(ident)?.apply {
                                     if (this.observers.isEmpty()) {
@@ -62,7 +64,7 @@ internal class AvvikStatusJob(
                                         "Person har statusavvik: ident: ${person.ident} nåværende status: ${person.status}, " +
                                             "beregnet: $nyStatus"
                                     }
-                                    rettAvvik(person, nyStatus)
+                                    rettAvvik(person, nyStatus, korrelasjonsId)
                                     antallrettedePersoner++
                                     try {
                                         personRepository.oppdaterPerson(person)

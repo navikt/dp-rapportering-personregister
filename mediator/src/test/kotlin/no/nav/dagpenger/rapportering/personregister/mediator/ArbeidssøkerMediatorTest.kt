@@ -56,6 +56,7 @@ class ArbeidssøkerMediatorTest {
                 avsluttet = null,
                 overtattBekreftelse = null,
             ),
+            UUIDv7.newUuid(),
         )
 
         person.status shouldBe DAGPENGERBRUKER
@@ -77,6 +78,7 @@ class ArbeidssøkerMediatorTest {
                 avsluttet = null,
                 overtattBekreftelse = null,
             ),
+            UUIDv7.newUuid(),
         )
 
         person.status shouldBe IKKE_DAGPENGERBRUKER
@@ -104,6 +106,7 @@ class ArbeidssøkerMediatorTest {
 
         arbeidssøkerMediator.behandle(
             arbeidssøkerperiode.copy(avsluttet = LocalDateTime.now()),
+            UUIDv7.newUuid(),
         )
 
         person.status shouldBe IKKE_DAGPENGERBRUKER
@@ -127,7 +130,7 @@ class ArbeidssøkerMediatorTest {
             )
         every { personService.hentPerson(ident) } returns person
 
-        arbeidssøkerMediator.behandle(ident)
+        arbeidssøkerMediator.behandle(ident, UUIDv7.newUuid())
 
         person.status shouldBe DAGPENGERBRUKER
         personObserver skalHaSendtOvertakelseFor person
@@ -148,7 +151,7 @@ class ArbeidssøkerMediatorTest {
             )
         every { personService.hentPerson(ident) } returns null
 
-        arbeidssøkerMediator.behandle(ident)
+        arbeidssøkerMediator.behandle(ident, UUIDv7.newUuid())
 
         person.status shouldBe IKKE_DAGPENGERBRUKER
     }
@@ -172,7 +175,7 @@ class ArbeidssøkerMediatorTest {
             arbeidsøkerperioder.copy(avsluttet = LocalDateTime.now())
         every { personService.hentPerson(ident) } returns person
 
-        arbeidssøkerMediator.behandle(ident)
+        arbeidssøkerMediator.behandle(ident, UUIDv7.newUuid())
 
         person.status shouldBe IKKE_DAGPENGERBRUKER
         person.arbeidssøkerperioder
@@ -186,7 +189,7 @@ class ArbeidssøkerMediatorTest {
         coEvery { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) } throws
             RuntimeException("Feil ved henting av arbeidssøkerperiode")
 
-        arbeidssøkerMediator.behandle(ident)
+        arbeidssøkerMediator.behandle(ident, UUIDv7.newUuid())
 
         personRepository.hentPerson(ident)?.status shouldBe IKKE_DAGPENGERBRUKER
     }
@@ -208,7 +211,7 @@ class ArbeidssøkerMediatorTest {
 
         personRepository.lagrePerson(person)
 
-        arbeidssøkerMediator.behandle(ident)
+        arbeidssøkerMediator.behandle(ident, UUIDv7.newUuid())
 
         personRepository.hentPerson(ident)?.versjon shouldBe 2
     }

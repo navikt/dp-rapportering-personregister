@@ -49,7 +49,7 @@ class PersonRepositoryInMemoryTest {
     fun `kan slette fremtidige Arena hendelser`() {
         val meldepliktHendelse =
             MeldepliktHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 referanseId = "MP123456789",
                 dato = LocalDateTime.now(),
@@ -60,7 +60,7 @@ class PersonRepositoryInMemoryTest {
             )
         val meldegruppeHendelse =
             DagpengerMeldegruppeHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 referanseId = "MG123456789",
                 dato = LocalDateTime.now(),
@@ -71,7 +71,7 @@ class PersonRepositoryInMemoryTest {
             )
         val annenPersonHendelse =
             DagpengerMeldegruppeHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = "12345678902",
                 referanseId = "MG123456780",
                 dato = LocalDateTime.now(),
@@ -82,7 +82,7 @@ class PersonRepositoryInMemoryTest {
             )
         val ikkeArenaHendelse =
             VedtakHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now(),
@@ -106,7 +106,7 @@ class PersonRepositoryInMemoryTest {
         val behandlingskjedeId = UUID.randomUUID().toString()
         val hendelse =
             VedtakHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now().plusDays(1),
@@ -127,7 +127,7 @@ class PersonRepositoryInMemoryTest {
     fun `kan slette fremtidige VedtakHendelser uten behandlingskjedeId`() {
         val hendelse =
             VedtakHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now().plusDays(1),
@@ -148,7 +148,7 @@ class PersonRepositoryInMemoryTest {
     fun `beholder VedtakHendelse med annen behandlingskjedeId ved sletting`() {
         val hendelse =
             VedtakHendelse(
-                korrelasjonsId = null,
+                korrelasjonsId = UUIDv7.newUuid(),
                 ident = person.ident,
                 dato = LocalDateTime.now(),
                 startDato = LocalDateTime.now().plusDays(1),

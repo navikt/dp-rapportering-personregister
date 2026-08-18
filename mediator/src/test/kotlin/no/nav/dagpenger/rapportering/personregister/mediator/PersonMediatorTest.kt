@@ -492,7 +492,7 @@ class PersonMediatorTest {
                 personMediator.behandle(dagpengerMeldegruppeHendelse())
 
                 status shouldBe DAGPENGERBRUKER
-                verify(exactly = 1) { personObserver.sendOvertakelsesmelding(any()) }
+                verify(exactly = 1) { personObserver.sendOvertakelsesmelding(any(), any()) }
             }
         }
 
@@ -509,7 +509,7 @@ class PersonMediatorTest {
                 personMediator.behandle(annenMeldegruppeHendelse())
 
                 status shouldBe IKKE_DAGPENGERBRUKER
-                verify(exactly = 1) { personObserver.sendFrasigelsesmelding(any()) }
+                verify(exactly = 1) { personObserver.sendFrasigelsesmelding(any(), any(), any()) }
             }
         }
     }
@@ -685,7 +685,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "321",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = NødbremsHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun IkkeMeldtSegPå21DagerHendelse(
@@ -693,7 +693,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = IkkeMeldtSegPå21DagerHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun søknadHendelse(
@@ -701,7 +701,7 @@ class PersonMediatorTest {
         dato: LocalDateTime = nå,
         startDato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = SøknadHendelse(korrelasjonsId, ident, dato, startDato, referanseId)
 
     private fun vedtakHendelse(
@@ -712,7 +712,7 @@ class PersonMediatorTest {
         referanseId: String = "456",
         utfall: Boolean = true,
         behandlingskjedeId: String? = "behandlingskjedeId",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = VedtakHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -729,7 +729,7 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = DagpengerMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -746,7 +746,7 @@ class PersonMediatorTest {
         startDato: LocalDateTime = nå,
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = AnnenMeldegruppeHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -763,7 +763,7 @@ class PersonMediatorTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         status: Boolean = true,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -799,27 +799,27 @@ class PersonMediatorTest {
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 1) { sendOvertakelsesmelding(person) }
+    verify(exactly = 1) { sendOvertakelsesmelding(person, any()) }
 }
 
 infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 0) { sendOvertakelsesmelding(person) }
+    verify(exactly = 0) { sendOvertakelsesmelding(person, any()) }
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { sendFrasigelsesmelding(person) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, any(), any()) }
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
-    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, true, any()) }
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any(), any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
+    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any(), any()) }
 }
 
 class BeslutningObserver(
