@@ -6,12 +6,15 @@ import io.opentelemetry.instrumentation.annotations.WithSpan
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
+import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.avregistrert
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import org.apache.kafka.clients.consumer.ConsumerRecords
+import tools.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger {}
@@ -22,9 +25,12 @@ class ArbeidssøkerMottak(
     private val arbeidssøkerperiodeMetrikker: ArbeidssøkerperiodeMetrikker,
     private val arbeidssøkerService: ArbeidssøkerService,
     private val unleash: Unleash,
+    private val meldingerRepository: MeldingerRepository,
 ) {
     @WithSpan
-    fun consume(records: ConsumerRecords<Long, Periode>) =
+    fun consume(records: ConsumerRecords<Long, Periode>) {
+        val korrelasjonsId = UUIDv7.newUuid()
+
         records.forEach { record ->
             val periode = record.value()
 
@@ -37,9 +43,28 @@ class ArbeidssøkerMottak(
 
                 val arbeidssøkerperiode = periode.tilArbeidssøkerperiode()
 
+                val relevantMeldingsinnhold =
+                    """
+                    {
+                        "@event_name": "mottok_arbeidssøkerperiode",
+                        "arbeidssøkerperiode": ${ObjectMapper().writeValueAsString(arbeidssøkerperiode)}
+                    }
+                    """.trimIndent()
+
+                meldingerRepository.lagreInnkommendeMelding(
+                    korrelasjonsId = korrelasjonsId,
+                    ident = periode.identitetsnummer,
+                    relevantMeldingsinnhold = relevantMeldingsinnhold,
+                )
+
                 if (arbeidssøkerperiode.avregistrert()) {
                     if (unleash.isEnabled("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")) {
-                        runBlocking { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(arbeidssøkerperiode) }
+                        runBlocking {
+                            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
+                                arbeidssøkerperiode,
+                                korrelasjonsId,
+                            )
+                        }
                     } else {
                         logger.info { "Publisering av avsluttet arbeidssøkerperiode er deaktivert" }
                     }
@@ -59,6 +84,7 @@ class ArbeidssøkerMottak(
                 throw e
             }
         }
+    }
 
     private fun Periode.tilArbeidssøkerperiode() =
         Arbeidssøkerperiode(
