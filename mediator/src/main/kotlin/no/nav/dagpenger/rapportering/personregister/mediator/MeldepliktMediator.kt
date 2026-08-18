@@ -15,6 +15,8 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.utils.erIFortid
 import java.time.LocalDateTime.now
+import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 class MeldepliktMediator(
     private val personRepository: PersonRepository,
@@ -36,11 +38,12 @@ class MeldepliktMediator(
     suspend fun behandle(
         ident: String,
         harMeldtSeg: Boolean,
+        korrelasjonsId: UUID? = null,
         withDelay: Boolean = true,
     ) {
         // Delay for å la eventuell melding om meldeplikt fra Arena bli behandlet først
         if (withDelay) {
-            delay(1000)
+            delay(1000.milliseconds)
         }
         actionTimer.timedAction("behandle_hentMeldeplikt") {
             logger.info { "Henter meldeplikt for ident" }
@@ -53,7 +56,7 @@ class MeldepliktMediator(
                             logger.info { "Hentet meldeplikt status: $meldeplikt. Nåværende meldeplikt for person: ${person.meldeplikt}" }
                             if (person.meldeplikt != meldeplikt) {
                                 MeldepliktHendelse(
-                                    korrelasjonsId = null, // TODO:
+                                    korrelasjonsId = korrelasjonsId,
                                     ident = person.ident,
                                     referanseId = UUIDv7.newUuid().toString(),
                                     startDato = now(),

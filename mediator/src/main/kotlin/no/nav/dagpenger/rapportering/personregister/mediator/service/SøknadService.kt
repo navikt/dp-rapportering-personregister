@@ -63,7 +63,7 @@ class SøknadService(
                 return@timedAction
             }
 
-            arbeidssøkerMediator.behandle(søknadHendelse.ident)
+            arbeidssøkerMediator.behandle(søknadHendelse.ident, søknadHendelse.korrelasjonsId)
         }
     }
 
