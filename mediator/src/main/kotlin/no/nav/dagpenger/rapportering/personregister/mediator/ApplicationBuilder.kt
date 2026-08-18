@@ -252,7 +252,7 @@ internal class ApplicationBuilder(
             unleash,
             meldingerRepository,
         )
-    private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+    private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
     private val bekreftelseKafkaProdusent =
         kafkaFactory.createProducer<Long, Bekreftelse>(
             clientId = "teamdagpenger-rapportering-producer",
