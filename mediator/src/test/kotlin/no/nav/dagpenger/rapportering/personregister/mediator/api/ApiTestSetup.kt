@@ -165,7 +165,7 @@ open class ApiTestSetup {
                     unleash,
                     meldingerRepository,
                 )
-            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator)
+            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
             val kafkaContext =
                 KafkaContext(
                     bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,
