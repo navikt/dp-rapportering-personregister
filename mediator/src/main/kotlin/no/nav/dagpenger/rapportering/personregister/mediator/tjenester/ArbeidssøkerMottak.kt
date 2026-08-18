@@ -70,7 +70,7 @@ class ArbeidssøkerMottak(
                     }
                 }
 
-                arbeidssøkerMediator.behandle(arbeidssøkerperiode)
+                arbeidssøkerMediator.behandle(arbeidssøkerperiode, korrelasjonsId)
             } catch (e: Exception) {
                 logger.error(
                     e,

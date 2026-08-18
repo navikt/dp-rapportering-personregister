@@ -76,9 +76,9 @@ class PersonMediator(
                                 behandle(hendelse, counter + 1)
                             }
                             if (!person.meldeplikt) {
-                                runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg) }
+                                runBlocking { meldepliktMediator.behandle(hendelse.ident, hendelse.harMeldtSeg, hendelse.korrelasjonsId) }
                             }
-                            arbeidssøkerMediator.behandle(hendelse.ident)
+                            arbeidssøkerMediator.behandle(hendelse.ident, hendelse.korrelasjonsId)
                         } else {
                             logger.info { "Behandler ikke DagpengerMeldegruppeHendelse, fordi Arena ikke er ansvarlig system" }
                         }
@@ -122,7 +122,7 @@ class PersonMediator(
                         }
                         behandle(hendelse, counter + 1)
                     }
-                    arbeidssøkerMediator.behandle(person.ident)
+                    arbeidssøkerMediator.behandle(person.ident, hendelse.korrelasjonsId)
                 }
         }
 
@@ -144,7 +144,7 @@ class PersonMediator(
                         }
                         behandle(hendelse, counter + 1)
                     }
-                    arbeidssøkerMediator.behandle(person.ident)
+                    arbeidssøkerMediator.behandle(person.ident, hendelse.korrelasjonsId)
                 }
         }
 

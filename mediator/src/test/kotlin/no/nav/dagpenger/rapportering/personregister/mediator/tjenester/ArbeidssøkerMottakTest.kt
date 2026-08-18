@@ -50,7 +50,7 @@ class ArbeidssøkerMottakTest {
         val periode = records.first().value()
         arbeidssøkerMottak.consume(records)
 
-        verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>()) }
+        verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>(), any()) }
         verify(exactly = 1) {
             meldingerRepository.lagreInnkommendeMelding(
                 any(),
@@ -75,14 +75,14 @@ class ArbeidssøkerMottakTest {
     @Test
     fun `consume kaster exception og inkrementerer metrikk hvis behandling av melding feiler`() {
         val metrikkCount = arbeidssøkerperiodeMetrikker.arbeidssøkerperiodeFeilet.count()
-        every { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>()) } throws RuntimeException("kaboom")
+        every { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>(), any()) } throws RuntimeException("kaboom")
 
         val records = lagConsumerRecords()
         val periode = records.first().value()
         val exception = shouldThrow<RuntimeException> { arbeidssøkerMottak.consume(records) }
 
         exception.message shouldBe "kaboom"
-        verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>()) }
+        verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>(), any()) }
         verify(exactly = 1) {
             meldingerRepository.lagreInnkommendeMelding(
                 any(),

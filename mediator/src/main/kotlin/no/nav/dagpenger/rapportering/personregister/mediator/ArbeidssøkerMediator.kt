@@ -17,6 +17,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbe
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Start
 import no.nav.paw.bekreftelse.paavegneav.v1.vo.Stopp
+import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
 class ArbeidssøkerMediator(
@@ -26,43 +27,47 @@ class ArbeidssøkerMediator(
     private val personObservers: List<PersonObserver>,
     private val actionTimer: ActionTimer,
 ) {
-    fun behandle(arbeidssøkerperiode: Arbeidssøkerperiode) =
-        actionTimer.timedAction("behandle_arbeidssokerperiode") {
-            if (arbeidssøkerperiode.avsluttet == null) {
-                behandle(
-                    StartetArbeidssøkerperiodeHendelse(
-                        korrelasjonsId = null, // TODO:
-                        periodeId = arbeidssøkerperiode.periodeId,
-                        ident = arbeidssøkerperiode.ident,
-                        startDato = arbeidssøkerperiode.startet,
-                    ),
-                )
-            } else {
-                behandle(
-                    AvsluttetArbeidssøkerperiodeHendelse(
-                        korrelasjonsId = null, // TODO:
-                        periodeId = arbeidssøkerperiode.periodeId,
-                        ident = arbeidssøkerperiode.ident,
-                        startDato = arbeidssøkerperiode.startet,
-                        sluttDato = arbeidssøkerperiode.avsluttet!!,
-                    ),
-                )
-            }
+    fun behandle(
+        arbeidssøkerperiode: Arbeidssøkerperiode,
+        korrelasjonsId: UUID? = null,
+    ) = actionTimer.timedAction("behandle_arbeidssokerperiode") {
+        if (arbeidssøkerperiode.avsluttet == null) {
+            behandle(
+                StartetArbeidssøkerperiodeHendelse(
+                    korrelasjonsId = korrelasjonsId,
+                    periodeId = arbeidssøkerperiode.periodeId,
+                    ident = arbeidssøkerperiode.ident,
+                    startDato = arbeidssøkerperiode.startet,
+                ),
+            )
+        } else {
+            behandle(
+                AvsluttetArbeidssøkerperiodeHendelse(
+                    korrelasjonsId = korrelasjonsId,
+                    periodeId = arbeidssøkerperiode.periodeId,
+                    ident = arbeidssøkerperiode.ident,
+                    startDato = arbeidssøkerperiode.startet,
+                    sluttDato = arbeidssøkerperiode.avsluttet!!,
+                ),
+            )
         }
+    }
 
-    fun behandle(ident: String) =
-        actionTimer.timedAction("behandle_arbeidssoker") {
-            try {
-                val arbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
-                if (arbeidssøkerperiode != null) {
-                    behandle(arbeidssøkerperiode)
-                } else {
-                    logger.info { "Personen er ikke arbeidssøker" }
-                }
-            } catch (e: Exception) {
-                logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
+    fun behandle(
+        ident: String,
+        korrelasjonsId: UUID? = null,
+    ) = actionTimer.timedAction("behandle_arbeidssoker") {
+        try {
+            val arbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+            if (arbeidssøkerperiode != null) {
+                behandle(arbeidssøkerperiode, korrelasjonsId)
+            } else {
+                logger.info { "Personen er ikke arbeidssøker" }
             }
+        } catch (e: Exception) {
+            logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
         }
+    }
 
     suspend fun behandle(
         paVegneAv: PaaVegneAv,
