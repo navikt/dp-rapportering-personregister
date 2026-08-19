@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.createHtt
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.isLeader
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import java.time.LocalTime
 import java.time.ZonedDateTime
@@ -53,17 +54,29 @@ internal class ResendPåVegneAvMelding(
 
                         try {
                             identer.forEach { ident ->
+                                val korrelasjonsId = UUIDv7.newUuid()
                                 val person = personService.hentPerson(ident)
                                 if (person != null) {
                                     if (person.status == Status.DAGPENGERBRUKER) {
                                         sikkerLogg.info { "Sender overtakelsesmelding for ident: $ident" }
-                                        person.observers.forEach { observer -> observer.sendOvertakelsesmelding(person) }
+                                        person.observers.forEach { observer ->
+                                            observer.sendOvertakelsesmelding(
+                                                person,
+                                                korrelasjonsId,
+                                            )
+                                        }
                                         antallOvertakelser++
                                     }
 
                                     if (person.status == Status.IKKE_DAGPENGERBRUKER) {
                                         sikkerLogg.info { "Sender frasigelsesmelding for ident: $ident" }
-                                        person.observers.forEach { observer -> observer.sendFrasigelsesmelding(person) }
+                                        person.observers.forEach { observer ->
+                                            observer.sendFrasigelsesmelding(
+                                                person,
+                                                false,
+                                                korrelasjonsId,
+                                            )
+                                        }
                                         antallFrasigelser++
                                     }
                                 } else {

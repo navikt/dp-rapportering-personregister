@@ -29,7 +29,7 @@ class ArbeidssøkerMediator(
 ) {
     fun behandle(
         arbeidssøkerperiode: Arbeidssøkerperiode,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) = actionTimer.timedAction("behandle_arbeidssokerperiode") {
         if (arbeidssøkerperiode.avsluttet == null) {
             behandle(
@@ -55,7 +55,7 @@ class ArbeidssøkerMediator(
 
     fun behandle(
         ident: String,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) = actionTimer.timedAction("behandle_arbeidssoker") {
         try {
             val arbeidssøkerperiode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }

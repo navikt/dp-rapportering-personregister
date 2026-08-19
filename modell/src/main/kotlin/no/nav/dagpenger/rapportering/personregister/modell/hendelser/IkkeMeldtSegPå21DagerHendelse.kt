@@ -10,7 +10,7 @@ import java.time.LocalDateTime.now
 import java.util.UUID
 
 class IkkeMeldtSegPå21DagerHendelse(
-    override val korrelasjonsId: UUID?,
+    override val korrelasjonsId: UUID,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,

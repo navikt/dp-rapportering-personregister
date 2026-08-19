@@ -13,7 +13,7 @@ import java.util.UUID
 private val logger = KotlinLogging.logger {}
 
 data class DagpengerMeldegruppeHendelse(
-    override val korrelasjonsId: UUID?,
+    override val korrelasjonsId: UUID,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val referanseId: String,

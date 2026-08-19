@@ -11,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktH
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.PersonSynkroniseringHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
+import java.util.UUID
 
 private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
@@ -91,15 +92,16 @@ fun beregnStatus(person: Person): Status {
 fun rettAvvik(
     person: Person,
     nyStatus: Status,
+    korrelasjonsId: UUID,
 ) {
     if (nyStatus == Status.DAGPENGERBRUKER) {
         person.setMeldeplikt(true)
         person.setMeldegruppe("DAGP")
         person.setStatus(Status.DAGPENGERBRUKER)
-        person.observers.forEach { it.sendOvertakelsesmelding(person) }
+        person.observers.forEach { it.sendOvertakelsesmelding(person, korrelasjonsId) }
     } else {
         person.setStatus(Status.IKKE_DAGPENGERBRUKER)
-        person.observers.forEach { it.sendFrasigelsesmelding(person) }
+        person.observers.forEach { it.sendFrasigelsesmelding(person, false, korrelasjonsId) }
     }
 }
 

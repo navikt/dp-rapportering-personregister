@@ -16,7 +16,7 @@ import java.time.LocalDateTime.now
 import java.util.UUID
 
 data class VedtakHendelse(
-    override val korrelasjonsId: UUID?,
+    override val korrelasjonsId: UUID,
     override val ident: String,
     override val dato: LocalDateTime = now(),
     override val startDato: LocalDateTime,
@@ -32,7 +32,7 @@ data class VedtakHendelse(
         private const val PREFIKS_FREMTIDIG_STANS = "FREMTIDIG-STANS"
 
         fun medFremtidigStart(
-            korrelasjonsId: UUID? = null,
+            korrelasjonsId: UUID,
             ident: String,
             dato: LocalDateTime = now(),
             startDato: LocalDateTime,
@@ -52,7 +52,7 @@ data class VedtakHendelse(
         )
 
         fun medFremtidigStans(
-            korrelasjonsId: UUID? = null,
+            korrelasjonsId: UUID,
             ident: String,
             dato: LocalDateTime = now(),
             startDato: LocalDateTime,

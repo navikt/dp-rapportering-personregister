@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 interface Hendelse {
-    val korrelasjonsId: UUID?
+    val korrelasjonsId: UUID
     val ident: String
     val dato: LocalDateTime
     val startDato: LocalDateTime

@@ -279,7 +279,7 @@ class PersonTest {
     private fun søknadHendelse(
         dato: LocalDateTime = nå,
         referanseId: String = "123",
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUID.randomUUID(),
     ) = SøknadHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -294,7 +294,7 @@ class PersonTest {
         sluttDato: LocalDateTime? = null,
         referanseId: String = "123",
         utfall: Boolean,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUID.randomUUID(),
     ) = VedtakHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -309,7 +309,7 @@ class PersonTest {
     private fun meldepliktHendelse(
         dato: LocalDateTime = nå,
         status: Boolean = false,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUID.randomUUID(),
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -323,7 +323,7 @@ class PersonTest {
 
     private fun startetArbeidssøkerperiodeHendelse() =
         StartetArbeidssøkerperiodeHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = UUID.randomUUID(),
             periodeId = UUID.randomUUID(),
             ident = ident,
             dato = nå,
@@ -332,7 +332,7 @@ class PersonTest {
 
     private fun avsluttetArbeidssøkerperiodeHendelse() =
         AvsluttetArbeidssøkerperiodeHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = UUID.randomUUID(),
             periodeId = periodeId,
             ident = ident,
             startDato = tidligere,
@@ -342,7 +342,7 @@ class PersonTest {
 
     private fun ikkeMeldtSegPå21DagerHendelse() =
         IkkeMeldtSegPå21DagerHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = UUID.randomUUID(),
             ident = ident,
             dato = nå,
             startDato = nå,
@@ -351,31 +351,33 @@ class PersonTest {
 }
 
 infix fun PersonObserver.skalHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 1) { sendOvertakelsesmelding(person) }
+    verify(exactly = 1) { sendOvertakelsesmelding(person, any()) }
 }
 
 infix fun PersonObserver.skalIkkeHaSendtOvertakelseFor(person: Person) {
-    verify(exactly = 0) { sendOvertakelsesmelding(person) }
+    verify(exactly = 0) { sendOvertakelsesmelding(person, any()) }
 }
 
 infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
-    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = false) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, false, any()) }
 }
 
 infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person) {
-    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true, any()) }
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any(), any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, requireNotNull(periode.harRett)) }
+    verify(
+        exactly = 1,
+    ) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, requireNotNull(periode.harRett), any()) }
 }
 
 infix fun Person.skalIkkeHaSendtStoppMeldingFor(periode: Periode) {
-    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
+    verify(exactly = 0) { sendStoppMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any(), any()) }
 }
 
 data class Periode(

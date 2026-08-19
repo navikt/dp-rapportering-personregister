@@ -83,7 +83,7 @@ class MeldestatusMediator(
         meldestatusId: String,
         person: Person,
         meldestatus: MeldestatusResponse,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
     ) {
         // Meldestatus inneholder:
         // En liste over aktiv(e) meldepliktperiode(r) basert på det som gjelder på søkedato og framover i tid

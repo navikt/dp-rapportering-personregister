@@ -99,7 +99,7 @@ data class Person(
     }
 }
 
-fun Person.sendOvertakelsesmelding(korrelasjonsId: UUID? = null) {
+fun Person.sendOvertakelsesmelding(korrelasjonsId: UUID) {
     logger.info { "Overtar arbeidssøkerbekreftelse" }
     arbeidssøkerperioder.gjeldende?.let {
         logger.info { "Fant gjeldende arbeidssøkerperiode med periodeId ${it.periodeId}" }
@@ -126,7 +126,7 @@ fun Person.merkPeriodeSomOvertatt(periodeId: UUID) {
 fun Person.sendFrasigelsesmelding(
     periodeId: UUID,
     fristBrutt: Boolean,
-    korrelasjonsId: UUID? = null,
+    korrelasjonsId: UUID,
 ) {
     logger.info { "Frasier arbeidssøkerbekreftelse, fristBrutt=$fristBrutt" }
     arbeidssøkerperioder
@@ -182,7 +182,7 @@ fun Person.sendStartMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     skalMigreres: Boolean,
-    korrelasjonsId: UUID? = null,
+    korrelasjonsId: UUID,
 ) {
     logger.info { "Sender Start-melding til Meldekortregister" }
 
@@ -202,7 +202,7 @@ fun Person.sendStoppMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
     harRett: Boolean,
-    korrelasjonsId: UUID? = null,
+    korrelasjonsId: UUID,
 ) {
     logger.info { "Sender Stopp-melding til Meldekortregister" }
 
