@@ -187,7 +187,7 @@ class PersonRepositoryPostgresTest {
             val meldegruppeHendelse = meldegruppeHendelse("MG123456789")
             val ikkeArenaHendelse =
                 VedtakHendelse(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     dato = dato,
                     startDato = dato.plusSeconds(1),
@@ -358,7 +358,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = startDatoIFortid,
                     sluttDato = sluttDatoIFortid,
@@ -383,7 +383,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDate.now().atStartOfDay(),
@@ -405,7 +405,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -427,7 +427,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = LocalDateTime.now().minusDays(1),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -449,7 +449,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStart(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = LocalDate.now().atStartOfDay(),
                     sluttDato = LocalDateTime.now().plusDays(10),
@@ -474,7 +474,7 @@ class PersonRepositoryPostgresTest {
 
             val eldsteVedtak =
                 VedtakHendelse.medFremtidigStart(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = førsteDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -484,7 +484,7 @@ class PersonRepositoryPostgresTest {
 
             val midtersteVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = førsteDato.minusDays(10),
                     sluttDato = andreDato,
@@ -495,7 +495,7 @@ class PersonRepositoryPostgresTest {
 
             val nyesteVedtak =
                 VedtakHendelse.medFremtidigStart(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = tredjeDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -524,7 +524,7 @@ class PersonRepositoryPostgresTest {
 
             val fremtidigStansVedtak =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = fellesEffektivDato.minusDays(10),
                     sluttDato = fellesEffektivDato,
@@ -535,7 +535,7 @@ class PersonRepositoryPostgresTest {
 
             val vedtakMedStartdato =
                 VedtakHendelse.medFremtidigStart(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = fellesEffektivDato,
                     referanseId = UUIDv7.newUuid().toString(),
@@ -563,7 +563,7 @@ class PersonRepositoryPostgresTest {
 
             val hendelseForFørsteIdent =
                 VedtakHendelse.medFremtidigStans(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident,
                     startDato = LocalDateTime.now().minusDays(10),
                     sluttDato = LocalDateTime.now().minusDays(1),
@@ -574,7 +574,7 @@ class PersonRepositoryPostgresTest {
 
             val hendelseForAndreIdent =
                 VedtakHendelse.medFremtidigStart(
-                    korrelasjonsId = null,
+                    korrelasjonsId = UUIDv7.newUuid(),
                     ident = ident2,
                     startDato = LocalDateTime.now().minusDays(10),
                     referanseId = UUIDv7.newUuid().toString(),
@@ -946,7 +946,7 @@ class PersonRepositoryPostgresTest {
         fraOgMed: LocalDate = LocalDate.now(),
         tilOgMed: LocalDate? = null,
         harRett: Boolean = false,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = VedtakHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,
@@ -960,7 +960,7 @@ class PersonRepositoryPostgresTest {
 
     private fun søknadHendelse() =
         SøknadHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = UUIDv7.newUuid(),
             ident = "12345678901",
             referanseId = UUIDv7.newUuid().toString(),
             dato = dato,
@@ -985,7 +985,7 @@ class PersonRepositoryPostgresTest {
         referanseId: String = UUIDv7.newUuid().toString(),
         meldegruppeKode: String = "DAGP",
         harMeldtSeg: Boolean = false,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = if (meldegruppeKode == "DAGP") {
         DagpengerMeldegruppeHendelse(
             korrelasjonsId = korrelasjonsId,
@@ -1014,7 +1014,7 @@ class PersonRepositoryPostgresTest {
         ident: String,
         referanseId: String = UUIDv7.newUuid().toString(),
         harMeldtSeg: Boolean = false,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID = UUIDv7.newUuid(),
     ) = MeldepliktHendelse(
         korrelasjonsId = korrelasjonsId,
         ident = ident,

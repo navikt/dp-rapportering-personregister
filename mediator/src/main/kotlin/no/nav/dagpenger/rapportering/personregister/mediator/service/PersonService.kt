@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
@@ -22,26 +23,6 @@ class PersonService(
     private val personObservers: List<PersonObserver>,
     private val meldekortregisterConnector: MeldekortregisterConnector,
 ) {
-    // testing
-    fun triggerFrasigelse(periodeList: List<UUID>) {
-        logger.info { "Triggerer frasigelse" }
-
-        periodeList.forEach { periodeId ->
-            val person = personRepository.hentPersonMedPeriodeId(periodeId)
-
-            if (person != null) {
-                logger.info { "Sender frasigelsesmelding for periode $periodeId" }
-
-                if (person.observers.isEmpty()) {
-                    personObservers.forEach { observer -> person.addObserver(observer) }
-                }
-                person.sendFrasigelsesmelding(periodeId, false)
-            } else {
-                logger.warn { "Fant ikke person med periodeId $periodeId" }
-            }
-        }
-    }
-
     fun hentArbeidssokerperioder(personId: Long): List<Arbeidssøkerperiode> {
         logger.info { "Henter arbeidssøkerperioder for $personId" }
 
@@ -244,6 +225,7 @@ class PersonService(
                             ?.sendFrasigelsesmelding(
                                 arbeidssøkerperiode.periodeId,
                                 false,
+                                UUIDv7.newUuid(),
                             )
                         arbeidssøkerperiode.overtattBekreftelse = false
                     }

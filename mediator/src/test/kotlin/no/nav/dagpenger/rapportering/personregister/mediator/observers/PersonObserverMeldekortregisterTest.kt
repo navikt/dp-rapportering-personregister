@@ -12,6 +12,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.ApplicationBuilder.Companion.getRapidsConnection
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
@@ -25,6 +26,7 @@ class PersonObserverMeldekortregisterTest {
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
 
+        val korrelasjonsId = UUIDv7.newUuid()
         val personId = 1234L
         val ident = "12345678910"
         val person = Person(ident)
@@ -35,7 +37,7 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, true)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, true, korrelasjonsId)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -52,7 +54,7 @@ class PersonObserverMeldekortregisterTest {
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
-                any(),
+                korrelasjonsId,
                 ident,
                 melding.toString(),
             )
@@ -65,6 +67,7 @@ class PersonObserverMeldekortregisterTest {
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
 
+        val korrelasjonsId = UUIDv7.newUuid()
         val personId = 1234L
         val ident = "12345678910"
         val person = Person(ident)
@@ -76,7 +79,7 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, fraOgMed, tilOgMed, false)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, fraOgMed, tilOgMed, false, korrelasjonsId)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -93,7 +96,7 @@ class PersonObserverMeldekortregisterTest {
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
-                any(),
+                korrelasjonsId,
                 ident,
                 melding.toString(),
             )
@@ -106,6 +109,7 @@ class PersonObserverMeldekortregisterTest {
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
 
+        val korrelasjonsId = UUIDv7.newUuid()
         val personId = 1234L
         val ident = "12345678910"
         val person = Person(ident)
@@ -122,6 +126,7 @@ class PersonObserverMeldekortregisterTest {
             fraOgMed = fraOgMed,
             tilOgMed = tilOgMed,
             harRett = true,
+            korrelasjonsId = korrelasjonsId,
         )
 
         testRapid.inspektør.size shouldBe 1
@@ -139,7 +144,7 @@ class PersonObserverMeldekortregisterTest {
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
-                any(),
+                korrelasjonsId,
                 ident,
                 melding.toString(),
             )
@@ -152,6 +157,7 @@ class PersonObserverMeldekortregisterTest {
         mockkObject(ApplicationBuilder.Companion)
         every { getRapidsConnection() } returns testRapid
 
+        val korrelasjonsId = UUIDv7.newUuid()
         val personId = 1234L
         val ident = "12345678910"
         val person = Person(ident)
@@ -168,6 +174,7 @@ class PersonObserverMeldekortregisterTest {
             fraOgMed = fraOgMed,
             tilOgMed = tilOgMed,
             harRett = false,
+            korrelasjonsId = korrelasjonsId,
         )
 
         testRapid.inspektør.size shouldBe 1
@@ -185,7 +192,7 @@ class PersonObserverMeldekortregisterTest {
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
-                any(),
+                korrelasjonsId,
                 ident,
                 melding.toString(),
             )

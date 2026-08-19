@@ -60,7 +60,7 @@ class SøknadServiceTest {
         person.harRettTilDp shouldBe false
         person.status shouldBe Status.IKKE_DAGPENGERBRUKER
         verify(exactly = 1) { personService.oppdaterPerson(person) }
-        verify(exactly = 1) { arbeidssøkerMediator.behandle(ident) }
+        verify(exactly = 1) { arbeidssøkerMediator.behandle(ident, any()) }
     }
 
     @Test
@@ -79,10 +79,11 @@ class SøknadServiceTest {
                 søknadHendelse.startDato,
                 null,
                 false,
+                any(),
             )
         }
         verify(exactly = 1) { personService.oppdaterPerson(person) }
-        verify(exactly = 1) { arbeidssøkerMediator.behandle(ident) }
+        verify(exactly = 1) { arbeidssøkerMediator.behandle(ident, any()) }
     }
 
     @Test
@@ -95,7 +96,7 @@ class SøknadServiceTest {
         søknadService.behandle(søknadHendelse)
 
         person.status shouldBe Status.DAGPENGERBRUKER
-        verify(exactly = 1) { personObserver.sendOvertakelsesmelding(person) }
+        verify(exactly = 1) { personObserver.sendOvertakelsesmelding(person, any()) }
     }
 
     @Test
@@ -109,7 +110,7 @@ class SøknadServiceTest {
 
         person.hendelser.size shouldBe 1
         verify(exactly = 0) { personRepository.oppdaterPerson(any()) }
-        verify(exactly = 0) { arbeidssøkerMediator.behandle(person.ident) }
+        verify(exactly = 0) { arbeidssøkerMediator.behandle(person.ident, any()) }
     }
 
     @Test
@@ -158,7 +159,7 @@ class SøknadServiceTest {
 
     private fun lagSøknadHendelse() =
         SøknadHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = newUuid(),
             ident = ident,
             dato = dato,
             startDato = dato,
@@ -167,7 +168,7 @@ class SøknadServiceTest {
 
     private fun lagVedtakHendelse() =
         VedtakHendelse(
-            korrelasjonsId = null,
+            korrelasjonsId = newUuid(),
             ident = ident,
             startDato = dato,
             referanseId = newUuid().toString(),
