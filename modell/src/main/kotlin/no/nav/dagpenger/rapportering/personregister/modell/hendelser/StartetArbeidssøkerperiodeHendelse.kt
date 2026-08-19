@@ -31,7 +31,7 @@ data class StartetArbeidssøkerperiodeHendelse(
             .takeIf { it != person.status }
             ?.also { person.setStatus(it) }
             ?.takeIf { !person.overtattBekreftelse }
-            ?.also { person.sendOvertakelsesmelding() }
+            ?.also { person.sendOvertakelsesmelding(korrelasjonsId) }
     }
 }
 

@@ -246,7 +246,6 @@ class PersonService(
                                 false,
                             )
                         arbeidssøkerperiode.overtattBekreftelse = false
-                        arbeidssøkerperiode.copy(overtattBekreftelse = false)
                     }
                     arbeidssøkerperiode
                 }

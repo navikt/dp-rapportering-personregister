@@ -368,6 +368,7 @@ internal class ApplicationBuilder(
                     StartAktiverHendelserJobManueltMottak(
                         rapidsConnection = rapid,
                         aktiverHendelserJob = aktiverHendelserJob,
+                        meldingerRepository = meldingerRepository,
                     )
                 }
 
