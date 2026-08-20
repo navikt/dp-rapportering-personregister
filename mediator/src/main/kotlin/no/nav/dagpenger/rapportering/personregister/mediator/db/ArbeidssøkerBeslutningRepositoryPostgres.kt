@@ -74,7 +74,7 @@ class ArbeidssøkerBeslutningRepositoryPostgres(
     private fun hentPersonId(ident: String): Long =
         sessionOf(dataSource).use { session ->
             session.run(
-                queryOf("SELECT id FROM person WHERE ident = ?", ident)
+                queryOf("SELECT id FROM personregister_person WHERE ident = ?", ident)
                     .map { it.long("id") }
                     .asSingle,
             ) ?: throw IllegalStateException("Person with ident $ident not found")
