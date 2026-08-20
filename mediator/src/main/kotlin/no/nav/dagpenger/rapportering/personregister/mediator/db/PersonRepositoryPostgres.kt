@@ -517,7 +517,7 @@ class PersonRepositoryPostgres(
                         queryOf(
                             """
                             SELECT pers.ident FROM arbeidssoker arbs 
-                            INNER JOIN person pers ON arbs.person_id = pers.id
+                            INNER JOIN personregister_person pers ON arbs.person_id = pers.id
                             WHERE arbs.periode_id = :periode_id
                             """.trimIndent(),
                             mapOf("periode_id" to periodeId),
