@@ -622,13 +622,13 @@ class PersonRepositoryPostgresTest {
             sessionOf(dataSource).use { session ->
                 val personId =
                     session.run(
-                        queryOf("select id from person where ident = ?", ident).map { it.int("id") }.asSingle,
+                        queryOf("select id from personregister_person where ident = ?", ident).map { it.int("id") }.asSingle,
                     )
                 session.transaction { tx ->
                     tx.run(
                         queryOf(
                             """
-                INSERT INTO hendelse (korrelasjons_id, person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
+                INSERT INTO personregister_hendelse (korrelasjons_id, person_id, dato, start_dato, slutt_dato, kilde,referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 """,
                             hendelse.korrelasjonsId,
