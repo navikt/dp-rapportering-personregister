@@ -83,7 +83,7 @@ class PersonRepositoryPostgres(
         actionTimer.timedAction("db-finnesPerson") {
             sessionOf(dataSource).use { session ->
                 session.run(
-                    queryOf("SELECT EXISTS(SELECT 1 FROM person WHERE ident = :ident)", mapOf("ident" to ident))
+                    queryOf("SELECT EXISTS(SELECT 1 FROM personregister_person WHERE ident = :ident)", mapOf("ident" to ident))
                         .map { it.boolean(1) }
                         .asSingle,
                 ) ?: false
@@ -98,7 +98,7 @@ class PersonRepositoryPostgres(
                         tx.run(
                             queryOf(
                                 """
-                                INSERT INTO person (ident, status, meldeplikt, meldegruppe, versjon, ansvarlig_system, har_rett_til_dp) 
+                                INSERT INTO personregister_person (ident, status, meldeplikt, meldegruppe, versjon, ansvarlig_system, har_rett_til_dp) 
                                 VALUES (:ident, :status, :meldeplikt, :meldegruppe, :versjon, :ansvarlig_system, :har_rett_til_dp) 
                                 RETURNING id
                                 """.trimIndent(),
@@ -136,7 +136,7 @@ class PersonRepositoryPostgres(
                             .run(
                                 queryOf(
                                     """
-                                    UPDATE person 
+                                    UPDATE personregister_person 
                                     SET status = :status,
                                         meldeplikt = :meldeplikt,
                                         meldegruppe = :meldegruppe,
@@ -191,7 +191,7 @@ class PersonRepositoryPostgres(
                 tx
                     .run(
                         queryOf(
-                            "UPDATE person SET ident = :nyIdent WHERE ident = :ident",
+                            "UPDATE personregister_person SET ident = :nyIdent WHERE ident = :ident",
                             mapOf(
                                 "ident" to person.ident,
                                 "nyIdent" to nyIdent,
@@ -206,7 +206,7 @@ class PersonRepositoryPostgres(
         actionTimer.timedAction("db-hentAntallPersoner") {
             sessionOf(dataSource).use { session ->
                 session.run(
-                    queryOf("SELECT COUNT(*) FROM person")
+                    queryOf("SELECT COUNT(*) FROM personregister_person")
                         .map { it.int(1) }
                         .asSingle,
                 ) ?: 0
@@ -217,7 +217,7 @@ class PersonRepositoryPostgres(
         actionTimer.timedAction("db-hentAntallHendelser") {
             sessionOf(dataSource).use { session ->
                 session.run(
-                    queryOf("SELECT COUNT(*) FROM hendelse")
+                    queryOf("SELECT COUNT(*) FROM personregister_hendelse")
                         .map { it.int(1) }
                         .asSingle,
                 ) ?: 0
@@ -239,7 +239,7 @@ class PersonRepositoryPostgres(
         actionTimer.timedAction("db-hentAntallDagpengebrukere") {
             sessionOf(dataSource).use { session ->
                 session.run(
-                    queryOf("SELECT COUNT(*) FROM person WHERE status = 'DAGPENGERBRUKER'")
+                    queryOf("SELECT COUNT(*) FROM personregister_person WHERE status = 'DAGPENGERBRUKER'")
                         .map { it.int(1) }
                         .asSingle,
                 ) ?: 0
@@ -392,7 +392,7 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident FROM person p 
+                    SELECT ident FROM personregister_person p 
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
                     WHERE p.status = 'DAGPENGERBRUKER' AND arbs.overtatt_bekreftelse IS NOT true AND arbs.avsluttet IS null
                     """.trimIndent(),
@@ -406,7 +406,7 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident FROM person p 
+                    SELECT ident FROM personregister_person p 
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id 
                     WHERE p.status = 'DAGPENGERBRUKER' AND arbs.avsluttet IS null
                     """.trimIndent(),
@@ -421,7 +421,7 @@ class PersonRepositoryPostgres(
                 queryOf(
                     """
                     SELECT p.ident
-                    FROM person p
+                    FROM personregister_person p
                     LEFT JOIN arbeidssoker arbs ON p.id = arbs.person_id
                     WHERE p.status = 'DAGPENGERBRUKER' AND arbs.person_id IS NULL;
                     """.trimIndent(),
@@ -435,9 +435,9 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident FROM person p 
+                    SELECT ident FROM personregister_person p 
                     WHERE p.status = 'IKKE_DAGPENGERBRUKER'
-                    AND (SELECT count(*) FROM hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
+                    AND (SELECT count(*) FROM personregister_hendelse h WHERE h.person_id = p.id AND h.dato > CURRENT_DATE - INTERVAL '60 days') = 0
                     AND (
                         SELECT count(*)
                         FROM fremtidig_hendelse fh
@@ -475,7 +475,7 @@ class PersonRepositoryPostgres(
                         )
                         tx.run(
                             queryOf(
-                                "DELETE FROM hendelse WHERE person_id = :person_id",
+                                "DELETE FROM personregister_hendelse WHERE person_id = :person_id",
                                 mapOf(
                                     "person_id" to personId,
                                 ),
@@ -499,7 +499,7 @@ class PersonRepositoryPostgres(
                         )
                         tx.run(
                             queryOf(
-                                "DELETE FROM person WHERE ident = :ident",
+                                "DELETE FROM personregister_person WHERE ident = :ident",
                                 mapOf(
                                     "ident" to ident,
                                 ),
@@ -543,7 +543,7 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident FROM person p
+                    SELECT ident FROM personregister_person p
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id
                     WHERE p.status = 'DAGPENGERBRUKER'
                     AND arbs.avsluttet is null and  arbs.overtatt_bekreftelse IS not true
@@ -558,7 +558,7 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident FROM person p
+                    SELECT ident FROM personregister_person p
                     INNER JOIN arbeidssoker arbs on p.id = arbs.person_id
                     WHERE p.status = 'IKKE_DAGPENGERBRUKER'
                     AND arbs.avsluttet is null and  arbs.overtatt_bekreftelse IS not false
@@ -571,7 +571,7 @@ class PersonRepositoryPostgres(
     override fun hentAlleIdenter(): List<String> =
         sessionOf(dataSource).use { session ->
             session.run(
-                queryOf("SELECT ident FROM person")
+                queryOf("SELECT ident FROM personregister_person")
                     .map { it.string("ident") }
                     .asList,
             )
@@ -582,7 +582,7 @@ class PersonRepositoryPostgres(
             session.run(
                 queryOf(
                     """
-                    SELECT ident from person  p where p.status = 'IKKE_DAGPENGERBRUKER' and p.meldeplikt = false and p.meldegruppe = 'DAGP';
+                    SELECT ident from personregister_person  p where p.status = 'IKKE_DAGPENGERBRUKER' and p.meldeplikt = false and p.meldegruppe = 'DAGP';
                     """.trimIndent(),
                 ).map { it.string("ident") }
                     .asList,
@@ -592,7 +592,7 @@ class PersonRepositoryPostgres(
     override fun hentPersonId(ident: String): Long? =
         sessionOf(dataSource).use { session ->
             session.run(
-                queryOf("SELECT id FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                queryOf("SELECT id FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                     .map { row -> row.long("id") }
                     .asSingle,
             )
@@ -601,7 +601,7 @@ class PersonRepositoryPostgres(
     override fun hentIdent(personId: Long): String? =
         sessionOf(dataSource).use { session ->
             session.run(
-                queryOf("SELECT ident FROM person WHERE id = :id", mapOf("id" to personId))
+                queryOf("SELECT ident FROM personregister_person WHERE id = :id", mapOf("id" to personId))
                     .map { row -> row.string("ident") }
                     .asSingle,
             )
@@ -619,7 +619,7 @@ class PersonRepositoryPostgres(
                     UPDATE arbeidssoker 
                     SET aarsak_til_utmelding = :aarsak, sist_endret = :sist_endret
                     WHERE periode_id = :periode_id 
-                    AND person_id = (SELECT id FROM person WHERE ident = :ident)
+                    AND person_id = (SELECT id FROM personregister_person WHERE ident = :ident)
                     """.trimIndent(),
                     mapOf(
                         "aarsak" to årsak.dbValue,
@@ -643,7 +643,7 @@ class PersonRepositoryPostgres(
                     SELECT aarsak_til_utmelding
                     FROM arbeidssoker
                     WHERE periode_id = :periode_id
-                    AND person_id = (SELECT id FROM person WHERE ident = :ident)
+                    AND person_id = (SELECT id FROM personregister_person WHERE ident = :ident)
                     """.trimIndent(),
                     mapOf(
                         "periode_id" to periodeId,
@@ -662,7 +662,7 @@ class PersonRepositoryPostgres(
         tx: TransactionalSession,
     ): Int? =
         tx.run(
-            queryOf("SELECT versjon FROM person WHERE ident = :ident", mapOf("ident" to ident))
+            queryOf("SELECT versjon FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                 .map { row -> row.int("versjon") }
                 .asSingle,
         )
@@ -676,7 +676,7 @@ class PersonRepositoryPostgres(
             queryOf(
                 // language=PostgreSQL
                 """
-                INSERT INTO hendelse (korrelasjons_id, person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
+                INSERT INTO personregister_hendelse (korrelasjons_id, person_id, dato, start_dato, slutt_dato, kilde, referanse_id, type, extra) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)
                 ON CONFLICT (referanse_id) 
                 DO UPDATE SET 
@@ -749,7 +749,7 @@ class PersonRepositoryPostgres(
     ): Boolean =
         tx
             .run(
-                queryOf("SELECT har_rett_til_dp FROM person WHERE ident = :ident", mapOf("ident" to ident))
+                queryOf("SELECT har_rett_til_dp FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                     .map { row -> row.boolean("har_rett_til_dp") }
                     .asSingle,
             ) ?: throw IllegalStateException("Klarte ikke å hente vedtak")
@@ -759,7 +759,7 @@ class PersonRepositoryPostgres(
         tx: TransactionalSession,
     ): String? =
         tx.run(
-            queryOf("SELECT meldegruppe FROM person WHERE ident = :ident", mapOf("ident" to ident))
+            queryOf("SELECT meldegruppe FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                 .map { row -> row.stringOrNull("meldegruppe") }
                 .asSingle,
         )
@@ -769,7 +769,7 @@ class PersonRepositoryPostgres(
         tx: TransactionalSession,
     ): Boolean =
         tx.run(
-            queryOf("SELECT meldeplikt FROM person WHERE ident = :ident", mapOf("ident" to ident))
+            queryOf("SELECT meldeplikt FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                 .map { row -> row.boolean("meldeplikt") }
                 .asSingle,
         ) ?: throw IllegalStateException("Klarte ikke å hente meldeplikt")
@@ -780,7 +780,7 @@ class PersonRepositoryPostgres(
         tx: TransactionalSession,
     ): List<Hendelse> =
         tx.run(
-            queryOf("SELECT * FROM hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
+            queryOf("SELECT * FROM personregister_hendelse WHERE person_id = :person_id", mapOf("person_id" to personId))
                 .map { tilHendelse(it, ident) }
                 .asList,
         )
@@ -1080,7 +1080,7 @@ class PersonRepositoryPostgres(
         tx: TransactionalSession,
     ): String? =
         tx.run(
-            queryOf("SELECT ansvarlig_system FROM person WHERE ident = :ident", mapOf("ident" to ident))
+            queryOf("SELECT ansvarlig_system FROM personregister_person WHERE ident = :ident", mapOf("ident" to ident))
                 .map { row -> row.stringOrNull("ansvarlig_system") }
                 .asSingle,
         )
