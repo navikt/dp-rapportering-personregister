@@ -789,7 +789,7 @@ class PersonRepositoryPostgres(
         row: Row,
         ident: String,
     ): Hendelse {
-        val korrelasjonsId = row.stringOrNull("korrelasjons_id")?.let { UUIDv7.fromString(it) } ?: UUIDv7.newUuid()
+        val korrelasjonsId = UUIDv7.fromString(row.string("korrelasjons_id"))
         val type = row.string("type")
         val dato = row.localDateTime("dato")
         val startDato = row.fraPostgresqlTimestamp("start_dato")
