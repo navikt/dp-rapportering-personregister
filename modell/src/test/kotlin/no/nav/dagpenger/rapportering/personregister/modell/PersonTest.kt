@@ -363,7 +363,7 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretFor(person: Person) {
 }
 
 infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person) {
-    verify(exactly = 1) { sendFrasigelsesmelding(person, fristBrutt = true, any()) }
+    verify(exactly = 1) { sendFrasigelsesmelding(person, true, any()) }
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
