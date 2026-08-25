@@ -1,9 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.cio.CIO
@@ -19,9 +15,11 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.ContentType.Application
 import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
-import io.ktor.serialization.jackson.jackson
+import io.ktor.serialization.jackson3.jackson
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.cfg.DateTimeFeature
 import java.net.URI
 import java.time.Duration
 import kotlin.time.measureTime
@@ -38,10 +36,8 @@ fun createHttpClient(engine: HttpClientEngine = CIO.create {}) =
 
         install(ContentNegotiation) {
             jackson {
-                registerKotlinModule()
-                registerModule(JavaTimeModule())
-                disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+                disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             }
         }
     }

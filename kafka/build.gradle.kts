@@ -45,5 +45,5 @@ tasks.named("generateAvroProtocol", GenerateAvroProtocolTask::class.java) {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
