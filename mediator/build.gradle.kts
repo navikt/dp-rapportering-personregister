@@ -58,7 +58,7 @@ tasks.test {
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 application {
