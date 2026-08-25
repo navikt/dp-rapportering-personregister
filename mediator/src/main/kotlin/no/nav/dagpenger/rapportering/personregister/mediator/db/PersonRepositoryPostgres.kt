@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotliquery.Row
 import kotliquery.TransactionalSession
@@ -29,6 +28,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHend
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakFattetUtenforArenaHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import org.postgresql.util.PGobject
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID

@@ -63,10 +63,10 @@ class SøknadMottakTest {
                 ident,
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
-                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["datoRegistrert"].asText() == dato &&
-                            this["referanseId"].asText() == søknadId &&
-                            this["type"].asText() == "NySøknad"
+                        this["@event_name"].asString() == "innsending_ferdigstilt" &&
+                            this["datoRegistrert"].asString() == dato &&
+                            this["referanseId"].asString() == søknadId &&
+                            this["type"].asString() == "NySøknad"
                     }
                 },
             )
@@ -101,10 +101,10 @@ class SøknadMottakTest {
                 ident,
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
-                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["datoRegistrert"].asText() == dato &&
-                            this["referanseId"].asText() == søknadId &&
-                            this["type"].asText() == "NySøknad"
+                        this["@event_name"].asString() == "innsending_ferdigstilt" &&
+                            this["datoRegistrert"].asString() == dato &&
+                            this["referanseId"].asString() == søknadId &&
+                            this["type"].asString() == "NySøknad"
                     }
                 },
             )
@@ -138,9 +138,9 @@ class SøknadMottakTest {
                 ident,
                 match { melding ->
                     with(defaultObjectMapper.readTree(melding)) {
-                        this["@event_name"].asText() == "innsending_ferdigstilt" &&
-                            this["datoRegistrert"].asText() == dato &&
-                            this["type"].asText() == "NySøknad"
+                        this["@event_name"].asString() == "innsending_ferdigstilt" &&
+                            this["datoRegistrert"].asString() == dato &&
+                            this["type"].asString() == "NySøknad"
                     }
                 },
             )

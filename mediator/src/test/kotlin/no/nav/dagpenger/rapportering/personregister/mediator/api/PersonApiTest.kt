@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.bearerAuth
@@ -23,6 +22,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDateTime
 import java.util.UUID.randomUUID
 
@@ -95,7 +95,7 @@ class PersonApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe OK
-                defaultObjectMapper.readTree(bodyAsText())["personId"].asText() shouldBe "1"
+                defaultObjectMapper.readTree(bodyAsText())["personId"].asString() shouldBe "1"
             }
         }
 
@@ -155,7 +155,7 @@ class PersonApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe OK
-                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asString() shouldBe ident
             }
         }
 
