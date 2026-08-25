@@ -32,7 +32,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.30.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.31.1")
     implementation("io.opentelemetry:opentelemetry-api:1.65.0")
     implementation("io.getunleash:unleash-client-java:12.2.3")
     implementation("com.github.navikt.tbd-libs:naisful-app:20260811.1310")
