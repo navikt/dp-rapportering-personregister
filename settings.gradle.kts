@@ -9,10 +9,11 @@ dependencyResolutionManagement {
         gradlePluginPortal()
         maven("https://github-package-registry-mirror.gc.nav.no/cached/maven-release")
         maven("https://packages.confluent.io/maven/")
+        maven("https://jitpack.io")
     }
     versionCatalogs {
         create("libs") {
-            from("no.nav.dagpenger:dp-version-catalog:20260715.264.218d60")
+            from("no.nav.dagpenger:dp-version-catalog:20260812.281")
         }
     }
 }

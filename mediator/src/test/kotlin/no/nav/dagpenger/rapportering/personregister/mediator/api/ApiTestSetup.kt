@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.Unleash
 import io.ktor.http.ContentType
-import io.ktor.serialization.jackson.JacksonConverter
+import io.ktor.serialization.jackson3.JacksonConverter
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages

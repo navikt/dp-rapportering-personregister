@@ -60,7 +60,7 @@ class BehandlingApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["sakId"].asText() shouldBe "sakId1"
+                defaultObjectMapper.readTree(bodyAsText())["sakId"].asString() shouldBe "sakId1"
             }
 
             with(
@@ -71,7 +71,7 @@ class BehandlingApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["sakId"].asText() shouldBe "sakId1"
+                defaultObjectMapper.readTree(bodyAsText())["sakId"].asString() shouldBe "sakId1"
             }
         }
 
@@ -98,7 +98,7 @@ class BehandlingApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["sakId"].asText() shouldBe "sakId2"
+                defaultObjectMapper.readTree(bodyAsText())["sakId"].asString() shouldBe "sakId2"
             }
         }
 }

@@ -97,8 +97,8 @@ class PersonstatusApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
-                defaultObjectMapper.readTree(bodyAsText())["status"].asText() shouldBe "DAGPENGERBRUKER"
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asString() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["status"].asString() shouldBe "DAGPENGERBRUKER"
             }
         }
 
@@ -161,8 +161,8 @@ class PersonstatusApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe HttpStatusCode.OK
-                defaultObjectMapper.readTree(bodyAsText())["ident"].asText() shouldBe ident
-                defaultObjectMapper.readTree(bodyAsText())["status"].asText() shouldBe "IKKE_DAGPENGERBRUKER"
+                defaultObjectMapper.readTree(bodyAsText())["ident"].asString() shouldBe ident
+                defaultObjectMapper.readTree(bodyAsText())["status"].asString() shouldBe "IKKE_DAGPENGERBRUKER"
             }
         }
 
@@ -205,10 +205,10 @@ class PersonstatusApiTest : ApiTestSetup() {
             ) {
                 status shouldBe HttpStatusCode.OK
                 val obj = defaultObjectMapper.readTree(bodyAsText())
-                obj["ident"].asText() shouldBe ident
-                obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
+                obj["ident"].asString() shouldBe ident
+                obj["status"].asString() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe false
-                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.ARENA.value
+                obj["ansvarligSystem"].asString() shouldBe AnsvarligSystemResponse.ARENA.value
             }
 
             // Får VedtakHendelse
@@ -236,10 +236,10 @@ class PersonstatusApiTest : ApiTestSetup() {
             ) {
                 status shouldBe HttpStatusCode.OK
                 val obj = defaultObjectMapper.readTree(bodyAsText())
-                obj["ident"].asText() shouldBe ident
-                obj["status"].asText() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
+                obj["ident"].asString() shouldBe ident
+                obj["status"].asString() shouldBe StatusResponse.IKKE_DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe false
-                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
+                obj["ansvarligSystem"].asString() shouldBe AnsvarligSystemResponse.DP.value
                 obj["erRegistrertArbeidssøker"].asBoolean() shouldBe false
             }
 
@@ -268,10 +268,10 @@ class PersonstatusApiTest : ApiTestSetup() {
             ) {
                 status shouldBe HttpStatusCode.OK
                 val obj = defaultObjectMapper.readTree(bodyAsText())
-                obj["ident"].asText() shouldBe ident
-                obj["status"].asText() shouldBe StatusResponse.DAGPENGERBRUKER.value
+                obj["ident"].asString() shouldBe ident
+                obj["status"].asString() shouldBe StatusResponse.DAGPENGERBRUKER.value
                 obj["overtattBekreftelse"].asBoolean() shouldBe true
-                obj["ansvarligSystem"].asText() shouldBe AnsvarligSystemResponse.DP.value
+                obj["ansvarligSystem"].asString() shouldBe AnsvarligSystemResponse.DP.value
                 obj["erRegistrertArbeidssøker"].asBoolean() shouldBe true
             }
         }
