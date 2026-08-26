@@ -3,7 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
 import io.getunleash.Unleash
 import io.ktor.http.ContentType
-import io.ktor.serialization.jackson.JacksonConverter
+import io.ktor.serialization.jackson3.JacksonConverter
 import io.ktor.server.application.install
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
@@ -229,12 +229,12 @@ open class ApiTestSetup {
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
-                    "TRUNCATE TABLE person, hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",
+                    "TRUNCATE TABLE personregister_person, personregister_hendelse, status_historikk, arbeidssoker, fremtidig_hendelse, arbeidssoker_beslutning",
                 ).asExecute,
             )
             session.run(
                 queryOf(
-                    "ALTER SEQUENCE person_id_seq RESTART;",
+                    "ALTER SEQUENCE personregister_person_id_seq RESTART;",
                 ).asExecute,
             )
         }

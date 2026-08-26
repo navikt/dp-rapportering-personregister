@@ -121,6 +121,7 @@ internal class MeldestatusJob(
                                     UUIDv7.newUuid().toString(),
                                     person,
                                     meldestatus,
+                                    UUIDv7.newUuid(),
                                 )
                             }
 

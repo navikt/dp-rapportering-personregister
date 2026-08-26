@@ -41,7 +41,7 @@ class PersonObserverKafkaTest {
     fun `kan ikke overta arbeidssøkerbekreftelse når person ikke har arbeidssøkerperiode`() {
         val person = Person("12345678910")
 
-        personObserverKafka.sendFrasigelsesmelding(person)
+        personObserverKafka.sendFrasigelsesmelding(person, false, UUIDv7.newUuid())
 
         coVerify(exactly = 0) { arbeidssøkerConnector.hentRecordKey(person.ident) }
         producer.meldinger shouldBe emptyList()
@@ -52,7 +52,7 @@ class PersonObserverKafkaTest {
         val person = lagPersonMedArbeidssøkerperiode()
         coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
 
-        personObserverKafka.sendOvertakelsesmelding(person)
+        personObserverKafka.sendOvertakelsesmelding(person, UUIDv7.newUuid())
 
         verifiserKafkaMelding(person)
         verify(exactly = 1) {
@@ -72,7 +72,7 @@ class PersonObserverKafkaTest {
         val person = lagPersonMedArbeidssøkerperiode()
         coEvery { arbeidssøkerConnector.hentRecordKey(person.ident) } returns RecordKeyResponse(1)
 
-        personObserverKafka.sendFrasigelsesmelding(person)
+        personObserverKafka.sendFrasigelsesmelding(person, false, UUIDv7.newUuid())
 
         verifiserKafkaMelding(person)
         verify(exactly = 1) {

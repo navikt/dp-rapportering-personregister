@@ -38,7 +38,7 @@ class MeldepliktMediator(
     suspend fun behandle(
         ident: String,
         harMeldtSeg: Boolean,
-        korrelasjonsId: UUID? = null,
+        korrelasjonsId: UUID,
         withDelay: Boolean = true,
     ) {
         // Delay for å la eventuell melding om meldeplikt fra Arena bli behandlet først

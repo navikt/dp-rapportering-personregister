@@ -111,7 +111,7 @@ class TempPersonRepositoryPostgres(
                         """
                                 INSERT INTO temp_person (ident, status)
                                 SELECT ident, 'IKKE_PABEGYNT'
-                                FROM person;
+                                FROM personregister_person;
                 """,
                     )
                 val rowsAffected = tx.run(query.asUpdate)

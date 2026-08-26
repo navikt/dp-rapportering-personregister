@@ -27,15 +27,15 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
-    implementation("no.nav.dagpenger:pdl-klient:2025.12.19-08.15.2e150cd55270")
-    implementation("no.nav.dagpenger:oauth2-klient:2025.12.19-08.15.2e150cd55270")
+    implementation("no.nav.dagpenger:pdl-klient:2026.05.04-10.36.d489859941f7")
+    implementation("no.nav.dagpenger:oauth2-klient:2026.05.04-10.36.d489859941f7")
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
-    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.30.0")
+    implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.31.1")
     implementation("io.opentelemetry:opentelemetry-api:1.65.0")
-    implementation("io.getunleash:unleash-client-java:12.2.3")
-    implementation("com.github.navikt.tbd-libs:naisful-app:20260702.1010")
+    implementation("io.getunleash:unleash-client-java:12.3.0")
+    implementation("com.github.navikt.tbd-libs:naisful-app:20260823.1727")
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
@@ -58,7 +58,7 @@ tasks.test {
     jvmArgs("--add-opens", "java.base/java.time=ALL-UNNAMED")
 }
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
 
 application {

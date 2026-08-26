@@ -1,0 +1,11 @@
+ALTER TABLE person RENAME TO personregister_person;
+ALTER TABLE hendelse RENAME TO personregister_hendelse;
+
+ALTER INDEX person_ident_index RENAME TO personregister_person_ident_index;
+ALTER INDEX hendelse_person_id_index RENAME TO personregister_hendelse_person_id_index;
+
+ALTER SEQUENCE person_id_seq RENAME TO personregister_person_id_seq;
+
+ALTER TABLE personregister_person RENAME CONSTRAINT person_pkey TO personregister_person_pkey;
+ALTER TABLE personregister_person RENAME CONSTRAINT person_ident_key TO personregister_person_ident_key;
+ALTER TABLE personregister_hendelse RENAME CONSTRAINT hendelse_referanse_id_key TO personregister_hendelse_referanse_id_key;

@@ -50,7 +50,7 @@ class MeldestatusJobbTest {
         coEvery { meldepliktConnector.hentMeldestatus(any(), eq(ident4), any()) } returns null
 
         val behandletPersoner = mutableListOf<Person>()
-        every { meldestatusMediator.behandleHendelse(any(), capture(behandletPersoner), any()) } just runs
+        every { meldestatusMediator.behandleHendelse(any(), capture(behandletPersoner), any(), any()) } just runs
 
         personRepository.lagrePerson(Person(ident1))
         personRepository.lagrePerson(Person(ident2))

@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.statement.bodyAsText
@@ -12,6 +11,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusRequest
 import no.nav.dagpenger.rapportering.personregister.modell.meldestatus.MeldestatusResponse
+import tools.jackson.module.kotlin.readValue
 import java.time.LocalDate
 
 class MeldepliktConnector(
@@ -68,9 +68,11 @@ class MeldepliktConnector(
                 HttpStatusCode.OK -> {
                     defaultObjectMapper.readValue<MeldestatusResponse>(result.bodyAsText())
                 }
+
                 HttpStatusCode.NoContent -> {
                     null
                 }
+
                 else -> {
                     logger.error { "Uforventet status ${result.status.value} ved henting av meldestatus fra adapter" }
                     throw RuntimeException("Uforventet status ${result.status.value} ved henting av meldestatus fra adapter")
