@@ -20,7 +20,7 @@ dependencies {
     api("io.confluent:kafka-avro-serializer:8.3.1")
     api("io.confluent:kafka-schema-registry:8.3.1")
     api("io.confluent:kafka-streams-avro-serde:8.3.1")
-    api("org.apache.avro:avro:1.12.1")
+    api("org.apache.avro:avro:1.12.2")
     implementation(libs.rapids.and.rivers)
     implementation(libs.konfig)
     implementation(libs.kotlin.logging)
