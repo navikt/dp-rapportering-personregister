@@ -30,7 +30,7 @@ class VedtakFattetUtenforArenaMottakTest {
     }
 
     @Test
-    fun `onPacket behandler melding og inkrementere metrikk`() {
+    fun `onPacket behandler melding og inkrementerer metrikk for innvilget vedtak`() {
         val metrikkCount = vedtakMetrikker.vedtakFattetUtenforArenaMottatt.count()
         val id = UUIDv7.newUuid()
         val behandlingId = UUIDv7.newUuid().toString()
@@ -84,12 +84,23 @@ class VedtakFattetUtenforArenaMottakTest {
         vedtakMetrikker.vedtakFattetUtenforArenaFeilet.count() shouldBe metrikkCount + 1
     }
 
+    @Test
+    fun `onPacket behandler ikke avslag`() {
+        testRapid.sendTestMessage(lagMelding(førteTil = "Avslag"))
+
+        verify(exactly = 0) {
+            meldingerRepository.lagreInnkommendeMelding(any(), any(), any())
+            behandlingService.behandle(any())
+        }
+    }
+
     private fun lagMelding(
         id: String = UUIDv7.newUuid().toString(),
         behandlingId: String = UUIDv7.newUuid().toString(),
         søknadId: String = UUIDv7.newUuid().toString(),
         ident: String = "01020312345",
         sakId: String = UUIDv7.newUuid().toString(),
+        førteTil: String = "Innvilgelse",
     ) = //language=json
         """
         {
@@ -98,7 +109,8 @@ class VedtakFattetUtenforArenaMottakTest {
           "behandlingId": "$behandlingId",
           "søknadId": "$søknadId",
           "ident": "$ident",
-          "sakId": "$sakId"
+          "sakId": "$sakId",
+          "førteTil": "$førteTil"
         }
         """.trimIndent()
 }

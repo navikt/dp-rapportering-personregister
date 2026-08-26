@@ -27,6 +27,7 @@ class VedtakFattetUtenforArenaMottak(
             .apply {
                 precondition { it.requireValue("@event_name", "vedtak_fattet_utenfor_arena") }
                 validate { it.requireKey("@id", "behandlingId", "søknadId", "ident", "sakId") }
+                validate { it.requireValue("førteTil", "Innvilgelse") }
             }.register(this)
     }
 
