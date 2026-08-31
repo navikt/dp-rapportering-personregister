@@ -39,7 +39,7 @@ dependencies {
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
-    schema("no.nav.paw.arbeidssokerregisteret.api:bekreftelsesmelding-schema:1.26.05.04.35-1")
+    schema("no.nav.paw.arbeidssokerregisteret.api:bekreftelsesmelding-schema:25.02.07.15-1")
 
     testImplementation(kotlin("test"))
     testImplementation(libs.bundles.postgres.test)
