@@ -108,16 +108,8 @@ data class VedtakHendelse(
                 if (person.oppfyllerKrav) {
                     person.sendOvertakelsesmelding(korrelasjonsId)
                 } else {
-                    // Sjekker om meldekortregisteret har meldt at bruker har brutt fristen for meldeplikten etter startDato
-                    val fristBrutt =
-                        person.hendelser
-                            .filterIsInstance<IkkeMeldtSegPå21DagerHendelse>()
-                            .any {
-                                it.dato.isAfter(startDato)
-                            }
-
                     person.arbeidssøkerperioder.gjeldende
-                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, fristBrutt, korrelasjonsId) }
+                        ?.let { periode -> person.sendFrasigelsesmelding(periode.periodeId, false, korrelasjonsId) }
                 }
             }
     }
