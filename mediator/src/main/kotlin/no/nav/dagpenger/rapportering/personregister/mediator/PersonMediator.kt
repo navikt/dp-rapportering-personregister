@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
-import io.getunleash.Unleash
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException

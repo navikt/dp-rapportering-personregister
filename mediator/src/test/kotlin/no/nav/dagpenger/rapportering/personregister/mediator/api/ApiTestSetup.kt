@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.api
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.getunleash.Unleash
 import io.ktor.http.ContentType
 import io.ktor.serialization.jackson3.JacksonConverter
 import io.ktor.server.application.install
@@ -9,7 +8,6 @@ import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.testing.ApplicationTestBuilder
 import io.ktor.server.testing.testApplication
-import io.mockk.every
 import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
@@ -60,7 +58,6 @@ open class ApiTestSetup {
 
     val pdlConnector = mockk<PdlConnector>()
     val meldekortregisterConnector = mockk<MeldekortregisterConnector>()
-    val unleash = mockk<Unleash>()
     lateinit var behandlingRepository: BehandlingRepositoryPostgres
 
     companion object {
@@ -100,7 +97,6 @@ open class ApiTestSetup {
         testApplication {
             behandlingRepository = BehandlingRepositoryPostgres(dataSource)
 
-            every { unleash.isEnabled(any()) } returns true
             val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
@@ -162,7 +158,6 @@ open class ApiTestSetup {
                     arbeidssøkerMediator,
                     arbeidssøkerperiodeMetrikker,
                     arbeidssøkerService,
-                    unleash,
                     meldingerRepository,
                 )
             val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
