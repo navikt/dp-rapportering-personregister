@@ -57,7 +57,6 @@ class MeldestatusMediatorTest {
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
     private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
-
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()

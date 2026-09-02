@@ -61,7 +61,6 @@ class MeldepliktMediatorTest {
     private lateinit var beslutningRepository: ArbeidssøkerBeslutningRepository
     private lateinit var beslutningObserver: BeslutningObserver
 
-
     init {
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
         System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
