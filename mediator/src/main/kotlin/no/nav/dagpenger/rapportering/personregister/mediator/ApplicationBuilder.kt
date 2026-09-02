@@ -222,7 +222,6 @@ internal class ApplicationBuilder(
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             meldepliktMediator,
             actionTimer,
-            unleash,
         )
     private val søknadService =
         SøknadService(

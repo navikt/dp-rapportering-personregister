@@ -185,7 +185,6 @@ open class ApiTestSetup {
                     listOf(personObserver),
                     meldepliktMediator,
                     actionTimer,
-                    unleash,
                 )
 
             application {

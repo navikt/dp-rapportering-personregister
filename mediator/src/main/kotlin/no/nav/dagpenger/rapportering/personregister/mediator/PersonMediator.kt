@@ -26,7 +26,6 @@ class PersonMediator(
     private val personObservers: List<PersonObserver>,
     private val meldepliktMediator: MeldepliktMediator,
     private val actionTimer: ActionTimer,
-    private val unleash: Unleash,
 ) {
     fun behandle(
         vedtakHendelse: VedtakHendelse,
@@ -34,23 +33,19 @@ class PersonMediator(
     ): Unit =
         actionTimer.timedAction("behandle_VedtakHendelse") {
             logger.info { "Behandler vedtakshendelse: ${vedtakHendelse.referanseId}" }
-            if (unleash.isEnabled("dp-rapportering-personregister-les-vedtak")) {
-                personService
-                    .hentEllerOpprettPerson(vedtakHendelse.ident)
-                    .also { person ->
-                        person.behandle(vedtakHendelse)
-                        try {
-                            personRepository.oppdaterPerson(person)
-                        } catch (e: OptimisticLockingException) {
-                            logger.info(e) {
-                                "Optimistisk låsing feilet ved oppdatering av person med behandlingId ${vedtakHendelse.referanseId}. Counter: $counter"
-                            }
-                            behandle(vedtakHendelse, counter + 1)
+            personService
+                .hentEllerOpprettPerson(vedtakHendelse.ident)
+                .also { person ->
+                    person.behandle(vedtakHendelse)
+                    try {
+                        personRepository.oppdaterPerson(person)
+                    } catch (e: OptimisticLockingException) {
+                        logger.info(e) {
+                            "Optimistisk låsing feilet ved oppdatering av person med behandlingId ${vedtakHendelse.referanseId}. Counter: $counter"
                         }
+                        behandle(vedtakHendelse, counter + 1)
                     }
-            } else {
-                logger.info { "Lesing av vedtak er deaktivert i unleash" }
-            }
+                }
         }
 
     fun behandle(

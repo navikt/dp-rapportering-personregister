@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.getunleash.FakeUnleash
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
@@ -83,8 +82,6 @@ class PersonMediatorTest {
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
     private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
-    private val unleash = FakeUnleash()
-
     init {
         System.setProperty("KAFKA_SCHEMA_REGISTRY", "KAFKA_SCHEMA_REGISTRY")
         System.setProperty("KAFKA_SCHEMA_REGISTRY_USER", "KAFKA_SCHEMA_REGISTRY_USER")
@@ -144,7 +141,6 @@ class PersonMediatorTest {
                 listOf(personObserver, beslutningObserver),
                 meldepliktMediator,
                 actionTimer,
-                unleash,
             )
 
         søknadService =
@@ -154,7 +150,6 @@ class PersonMediatorTest {
                 actionTimer = actionTimer,
             )
 
-        unleash.enableAll()
         every { pdlConnector.hentIdenter(ident) } returns
             listOf(
                 Ident(
