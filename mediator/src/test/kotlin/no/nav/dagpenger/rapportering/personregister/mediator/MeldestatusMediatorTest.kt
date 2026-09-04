@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
-import io.getunleash.FakeUnleash
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.mockk.coEvery
@@ -58,8 +57,6 @@ class MeldestatusMediatorTest {
     private val meldekortregisterConnector = mockk<MeldekortregisterConnector>(relaxed = true)
     private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
 
-    private val unleash = FakeUnleash()
-
     @BeforeEach
     fun setup() {
         rapidsConnection = TestRapid()
@@ -111,7 +108,6 @@ class MeldestatusMediatorTest {
                 listOf(personObserver, beslutningObserver),
                 meldepliktMediator,
                 actionTimer,
-                unleash,
             )
         fremtidigHendelseMediator =
             FremtidigHendelseMediator(

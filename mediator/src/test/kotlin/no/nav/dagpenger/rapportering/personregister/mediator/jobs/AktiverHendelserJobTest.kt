@@ -62,7 +62,6 @@ class AktiverHendelserJobTest : ApiTestSetup() {
             listOf(personObserver),
             meldepliktMediator,
             actionTimer,
-            unleash,
         )
     private val fremtidigHendelseMediator = FremtidigHendelseMediator(personRepository, actionTimer)
     private val meldestatusMediator =

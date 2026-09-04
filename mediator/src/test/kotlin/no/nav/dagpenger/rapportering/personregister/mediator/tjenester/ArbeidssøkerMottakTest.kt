@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.tjenester
 
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
-import io.getunleash.FakeUnleash
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coVerify
@@ -32,13 +31,11 @@ class ArbeidssøkerMottakTest {
     private val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
     private val arbeidssøkerService = mockk<ArbeidssøkerService>(relaxed = true)
     private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
-    private val fakeUnleash = FakeUnleash()
     private val arbeidssøkerMottak =
         ArbeidssøkerMottak(
             arbeidssøkerMediator,
             arbeidssøkerperiodeMetrikker,
             arbeidssøkerService,
-            fakeUnleash,
             meldingerRepository,
         )
 
@@ -105,9 +102,7 @@ class ArbeidssøkerMottakTest {
     }
 
     @Test
-    fun `publiserAvsluttetArbeidssøkerperiode kalles når toggle er på og periode er avsluttet`() {
-        fakeUnleash.enable("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")
-
+    fun `publiserAvsluttetArbeidssøkerperiode kalles når periode er avsluttet`() {
         val records = lagConsumerRecords(avsluttet = true)
         val periode = records.first().value()
         arbeidssøkerMottak.consume(records)
@@ -134,32 +129,11 @@ class ArbeidssøkerMottakTest {
     }
 
     @Test
-    fun `publiserAvsluttetArbeidssøkerperiode kalles ikke når toggle er av og periode er avsluttet`() {
-        fakeUnleash.disable("dp-rapportering-personregister-publiser-avsluttet-arbeidssokerperiode")
-
-        val records = lagConsumerRecords(avsluttet = true)
-        val periode = records.first().value()
+    fun `publiserAvsluttetArbeidssøkerperiode kalles ikke når periode ikke er avsluttet`() {
+        val records = lagConsumerRecords(avsluttet = false)
         arbeidssøkerMottak.consume(records)
 
         coVerify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any()) }
-        verify(exactly = 1) {
-            meldingerRepository.lagreInnkommendeMelding(
-                any(),
-                ident,
-                match { melding ->
-                    with(ObjectMapper().readTree(melding)) {
-                        this["@event_name"].asString() == "mottok_arbeidssøkerperiode" &&
-                            with(this["arbeidssøkerperiode"]) {
-                                this["ident"].asString() == periode.identitetsnummer &&
-                                    this["periodeId"].asString() == periode.id.toString() &&
-                                    this["startet"].asLocalDateTime() == LocalDateTime.ofInstant(periode.startet.tidspunkt, ZONE_ID) &&
-                                    this["avsluttet"].asLocalDateTime() == LocalDateTime.ofInstant(periode.avsluttet?.tidspunkt, ZONE_ID) &&
-                                    this["overtattBekreftelse"].isNull
-                            }
-                    }
-                },
-            )
-        }
     }
 
     private fun lagConsumerRecords(avsluttet: Boolean = true): ConsumerRecords<Long, Periode> =

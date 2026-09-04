@@ -20,7 +20,6 @@ import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserialize
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.unleash
 import no.nav.dagpenger.rapportering.personregister.mediator.api.behandlingApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
@@ -222,7 +221,6 @@ internal class ApplicationBuilder(
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver),
             meldepliktMediator,
             actionTimer,
-            unleash,
         )
     private val søknadService =
         SøknadService(
@@ -249,7 +247,6 @@ internal class ApplicationBuilder(
             arbeidssøkerMediator,
             arbeidssøkerperiodeMetrikker,
             arbeidssøkerService,
-            unleash,
             meldingerRepository,
         )
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
