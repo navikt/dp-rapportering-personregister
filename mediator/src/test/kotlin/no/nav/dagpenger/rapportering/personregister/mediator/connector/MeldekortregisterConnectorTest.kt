@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
 
@@ -33,7 +34,13 @@ class MeldekortregisterConnectorTest {
         val forventet = LocalDate.now().minusDays(1)
         val body = defaultObjectMapper.writeValueAsString(SisteFastsattMeldedatoResponse(forventet))
 
-        val result = runBlocking { connector(body, 200).hentSisteFastsattMeldedato(ident) }
+        val result =
+            runBlocking {
+                connector(body, 200).hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                )
+            }
 
         result shouldBe forventet
     }
@@ -42,14 +49,26 @@ class MeldekortregisterConnectorTest {
     fun `hentSisteFastsattMeldedato returnerer null når bruker ikke har fastsattMeldedato`() {
         val body = defaultObjectMapper.writeValueAsString(SisteFastsattMeldedatoResponse(null))
 
-        val result = runBlocking { connector(body, 200).hentSisteFastsattMeldedato(ident) }
+        val result =
+            runBlocking {
+                connector(body, 200).hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                )
+            }
 
         result shouldBe null
     }
 
     @Test
     fun `hentSisteFastsattMeldedato returnerer null ved 404`() {
-        val result = runBlocking { connector("{}", 404).hentSisteFastsattMeldedato(ident) }
+        val result =
+            runBlocking {
+                connector("{}", 404).hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                )
+            }
 
         result shouldBe null
     }
@@ -57,7 +76,12 @@ class MeldekortregisterConnectorTest {
     @Test
     fun `hentSisteFastsattMeldedato kaster exception ved uventet statuskode`() {
         shouldThrow<RuntimeException> {
-            runBlocking { connector("{}", 500).hentSisteFastsattMeldedato(ident) }
+            runBlocking {
+                connector("{}", 500).hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                )
+            }
         }
     }
 }
