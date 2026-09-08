@@ -1,11 +1,13 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 data class SisteFastsattMeldedatoRequest(
     val ident: String,
+    val årsakTilUtmelding: Arbeidssøkerperiode.ÅrsakTilUtmelding,
 )
 
 data class SisteFastsattMeldedatoResponse(

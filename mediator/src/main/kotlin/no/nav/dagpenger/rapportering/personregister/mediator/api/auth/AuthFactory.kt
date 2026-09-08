@@ -16,6 +16,7 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.introspect.DefaultAccessorNamingStrategy
 import java.net.URI
 import java.net.URL
 import java.util.concurrent.TimeUnit
@@ -104,6 +105,7 @@ private val httpClient =
         install(ContentNegotiation) {
             jackson {
                 disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                accessorNaming(DefaultAccessorNamingStrategy.Provider().withFirstCharAcceptance(true, true))
             }
         }
     }

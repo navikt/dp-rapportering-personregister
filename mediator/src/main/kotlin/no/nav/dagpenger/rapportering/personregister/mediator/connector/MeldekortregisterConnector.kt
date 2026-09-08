@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
 import java.time.LocalDate
 
 class MeldekortregisterConnector(
@@ -71,7 +72,10 @@ class MeldekortregisterConnector(
         }
     }
 
-    suspend fun hentSisteFastsattMeldedato(ident: String): LocalDate? =
+    suspend fun hentSisteFastsattMeldedato(
+        ident: String,
+        årsakTilUtmelding: ÅrsakTilUtmelding,
+    ): LocalDate? =
         withContext(Dispatchers.IO) {
             val response =
                 sendPostRequest(
@@ -81,7 +85,7 @@ class MeldekortregisterConnector(
                         meldekortregisterTokenProvider.invoke()
                             ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "meldekortregister_hentSisteFastsattMeldedato",
-                    body = SisteFastsattMeldedatoRequest(ident),
+                    body = SisteFastsattMeldedatoRequest(ident, årsakTilUtmelding),
                     parameters = mapOf(),
                     actionTimer = actionTimer,
                 ).also {
@@ -89,8 +93,14 @@ class MeldekortregisterConnector(
                 }
 
             when (response.status) {
-                HttpStatusCode.OK -> response.body<SisteFastsattMeldedatoResponse>().fastsattMeldedato
-                HttpStatusCode.NotFound -> null
+                HttpStatusCode.OK -> {
+                    response.body<SisteFastsattMeldedatoResponse>().fastsattMeldedato
+                }
+
+                HttpStatusCode.NotFound -> {
+                    null
+                }
+
                 else -> {
                     val body = response.bodyAsText()
                     logger.error {
