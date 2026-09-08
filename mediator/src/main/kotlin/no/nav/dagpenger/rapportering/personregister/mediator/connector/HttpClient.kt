@@ -20,6 +20,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defau
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.cfg.DateTimeFeature
+import tools.jackson.databind.introspect.DefaultAccessorNamingStrategy
 import java.net.URI
 import java.time.Duration
 import kotlin.time.measureTime
@@ -38,6 +39,7 @@ fun createHttpClient(engine: HttpClientEngine = CIO.create {}) =
             jackson {
                 disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
                 disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                accessorNaming(DefaultAccessorNamingStrategy.Provider().withFirstCharAcceptance(true, true))
             }
         }
     }

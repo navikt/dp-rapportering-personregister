@@ -121,7 +121,8 @@ class ArbeidssøkerService(
         ident: String,
         periodeId: UUID,
     ): LocalDate? {
-        val fastsatt = meldekortregisterConnector.hentSisteFastsattMeldedato(ident)
+        val årsakTilUtmelding = hentEllerOpprettÅrsak(periodeId, ident)
+        val fastsatt = meldekortregisterConnector.hentSisteFastsattMeldedato(ident, årsakTilUtmelding)
         logger.info { "fastsattMeldedato=$fastsatt for periodeId=$periodeId" }
         return fastsatt
     }
