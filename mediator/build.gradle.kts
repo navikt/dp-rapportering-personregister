@@ -28,7 +28,7 @@ dependencies {
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
     implementation("no.nav.dagpenger:pdl-klient:2026.09.07-18.17.25c71da69269")
-    implementation("no.nav.dagpenger:oauth2-klient:2026.09.04-18.18.19debaae7137")
+    implementation("no.nav.dagpenger:oauth2-klient:2026.09.07-18.17.25c71da69269")
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
