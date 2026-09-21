@@ -19,13 +19,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v7.0.1
       - name: deploy to dev-gcp
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: dev-gcp
           VAR: unleashEnv=development
           RESOURCE: .nais/unleash-apitoken.yaml
       - name: deploy to prod-gcp
-        uses: nais/deploy/actions/deploy@v2
+        uses: nais/deploy/actions/deploy@v3
         env:
           CLUSTER: prod-gcp
           VAR: unleashEnv=production
