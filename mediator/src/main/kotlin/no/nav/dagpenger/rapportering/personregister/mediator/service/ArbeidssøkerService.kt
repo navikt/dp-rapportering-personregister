@@ -23,22 +23,29 @@ class ArbeidssøkerService(
     private val avsluttetArbeidssøkerperiodeMetrikker: AvsluttetArbeidssøkerperiodeMetrikker,
     private val meldingerRepository: MeldingerRepository,
 ) {
-    suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? =
-        arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident).firstOrNull()?.let {
+    suspend fun hentSisteArbeidssøkerperiode(ident: String): Arbeidssøkerperiode? = hentArbeidssøkerperioder(ident).firstOrNull()
+
+    suspend fun hentArbeidssøkerperioder(ident: String): List<Arbeidssøkerperiode> =
+        arbeidssøkerConnector.hentArbeidssøkerperioder(ident).map {
             Arbeidssøkerperiode(
                 periodeId = it.periodeId,
                 startet =
                     it.startet
-                        .tidspunkt
                         .atZoneSameInstant(ZONE_ID)
                         .toLocalDateTime(),
                 avsluttet =
                     it.avsluttet
-                        ?.tidspunkt
                         ?.atZoneSameInstant(ZONE_ID)
                         ?.toLocalDateTime(),
                 ident = ident,
                 overtattBekreftelse = null,
+                sisteBekreftelse =
+                    it.hendelser
+                        .filter { it.type == "BEKREFTELSE_V1" }
+                        .maxOfOrNull { hendelse ->
+                            hendelse.tidspunkt
+                        }?.atZoneSameInstant(ZONE_ID)
+                        ?.toLocalDateTime(),
             )
         }
 

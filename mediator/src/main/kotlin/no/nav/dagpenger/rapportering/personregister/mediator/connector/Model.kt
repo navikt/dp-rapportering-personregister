@@ -16,6 +16,7 @@ data class SisteFastsattMeldedatoResponse(
 
 data class ArbeidssøkerperiodeRequestBody(
     val identitetsnummer: String,
+    val type: String = "IDENTITETSNUMMER",
 )
 
 data class RecordKeyRequestBody(
@@ -28,24 +29,12 @@ data class RecordKeyResponse(
 
 data class ArbeidssøkerperiodeResponse(
     val periodeId: UUID,
-    val startet: MetadataResponse,
-    val avsluttet: MetadataResponse?,
+    val startet: OffsetDateTime,
+    val avsluttet: OffsetDateTime?,
+    val hendelser: List<HendelseResponse>,
 )
 
-data class MetadataResponse(
-    val tidspunkt: OffsetDateTime,
-    val utfoertAv: BrukerResponse,
-    val kilde: String,
-    val aarsak: String,
-    val tidspunktFraKilde: TidspunktFraKildeResponse?,
-)
-
-data class BrukerResponse(
+data class HendelseResponse(
     val type: String,
-    val id: String,
-)
-
-data class TidspunktFraKildeResponse(
     val tidspunkt: OffsetDateTime,
-    val avviksType: String,
 )
