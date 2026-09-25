@@ -13,10 +13,8 @@ import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
@@ -169,7 +167,6 @@ class PersonMediatorTest {
     inner class SøknadHendelser {
         @Test
         fun `søknad for ny person`() {
-            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
             søknadService.behandle(søknadHendelse(ident))
 
             personRepository
@@ -183,7 +180,6 @@ class PersonMediatorTest {
         @Test
         fun `søknad for eksisterende person`() {
             testPerson {
-                coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns emptyList()
                 søknadService.behandle(søknadHendelse(ident))
 
                 personRepository
@@ -198,7 +194,6 @@ class PersonMediatorTest {
         @Test
         fun `søknad for eksisterende arbeidssøker med ansvarlig system DP`() {
             arbeidssøker { }
-            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(any()) } returns arbeidssøkerperiodeResponse()
 
             val person = personRepository.hentPerson(ident)!!
             person.setAnsvarligSystem(AnsvarligSystem.DP)
@@ -327,7 +322,7 @@ class PersonMediatorTest {
         @Test
         fun `meldegruppeendring for ny person trigger henting av meldeplikt og arbeidssøkerperiode`() {
             val dagpengerMeldegruppeHendelse = dagpengerMeldegruppeHendelse()
-            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(dagpengerMeldegruppeHendelse.ident) } returns
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(dagpengerMeldegruppeHendelse.ident) } returns
                 arbeidssøkerperiodeResponse()
             coEvery { meldepliktConnector.hentMeldeplikt(dagpengerMeldegruppeHendelse.ident) } returns true
 
@@ -776,19 +771,9 @@ class PersonMediatorTest {
     ) = listOf(
         ArbeidssøkerperiodeResponse(
             periodeId = periodeId,
-            startet =
-                MetadataResponse(
-                    tidspunkt = startet,
-                    utfoertAv =
-                        BrukerResponse(
-                            type = "type",
-                            id = "ID",
-                        ),
-                    kilde = "kilde",
-                    aarsak = "Årsak",
-                    tidspunktFraKilde = null,
-                ),
+            startet = startet,
             avsluttet = null,
+            hendelser = emptyList(),
         ),
     )
 }
