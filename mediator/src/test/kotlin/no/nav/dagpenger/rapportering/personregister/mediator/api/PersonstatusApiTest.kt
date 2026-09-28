@@ -13,8 +13,6 @@ import no.nav.dagpenger.rapportering.personregister.api.models.AnsvarligSystemRe
 import no.nav.dagpenger.rapportering.personregister.api.models.StatusResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.BrukerResponse
-import no.nav.dagpenger.rapportering.personregister.mediator.connector.MetadataResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.lagSøknadHendelse
@@ -59,18 +57,13 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `Post personstatus lagrer person`() =
         setUpTestApplication {
-            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(eq(ident)) } returns
                 listOf(
                     ArbeidssøkerperiodeResponse(
                         UUIDv7.newUuid(),
-                        MetadataResponse(
-                            OffsetDateTime.now(ZoneOffset.UTC),
-                            BrukerResponse("", ""),
-                            "Arena",
-                            "Årsak",
-                            null,
-                        ),
+                        OffsetDateTime.now(ZoneOffset.UTC),
                         null,
+                        emptyList(),
                     ),
                 )
 
@@ -105,21 +98,6 @@ class PersonstatusApiTest : ApiTestSetup() {
     @Test
     fun `Post personstatus kan få dagpengerbruker = true og false`() =
         setUpTestApplication {
-            coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(eq(ident)) } returns
-                listOf(
-                    ArbeidssøkerperiodeResponse(
-                        UUIDv7.newUuid(),
-                        MetadataResponse(
-                            OffsetDateTime.now(ZoneOffset.UTC),
-                            BrukerResponse("", ""),
-                            "Arena",
-                            "Årsak",
-                            null,
-                        ),
-                        null,
-                    ),
-                )
-
             // Oppretter bruker
             with(
                 client.post("/personstatus") {

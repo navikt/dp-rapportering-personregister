@@ -18,29 +18,33 @@ class ArbeidssøkerConnector(
     private val httpClient: HttpClient = createHttpClient(),
     private val actionTimer: ActionTimer,
 ) {
-    suspend fun hentSisteArbeidssøkerperiode(ident: String): List<ArbeidssøkerperiodeResponse> =
+    suspend fun hentArbeidssøkerperioder(ident: String): List<ArbeidssøkerperiodeResponse> =
         withContext(Dispatchers.IO) {
             val result =
                 sendPostRequest(
-                    endpointUrl = "$arbeidssøkerregisterOppslagUrl/api/v1/veileder/arbeidssoekerperioder",
+                    endpointUrl = "$arbeidssøkerregisterOppslagUrl/api/v3/perioder",
                     token = oppslagTokenProvider.invoke() ?: throw RuntimeException("Klarte ikke å hente token"),
-                    metrikkNavn = "arbeidssokerregister_hentSisteArbeidssokerperiode",
+                    metrikkNavn = "arbeidssokerregister_hentArbeidssokerperioder",
                     body = ArbeidssøkerperiodeRequestBody(ident),
-                    parameters = mapOf("siste" to true),
+                    parameters =
+                        mapOf(
+                            "types" to "BEKREFTELSE_V1",
+                            "ordering" to "DESC",
+                        ),
                     httpClient = httpClient,
                     actionTimer = actionTimer,
                 ).also {
                     logger.info {
-                        "Kall til arbeidssøkerregister for å hente arbeidssøkerperiode for ident ga status ${it.status}"
+                        "Kall til arbeidssøkerregister for å hente arbeidssøkerperioder for ident ga status ${it.status}"
                     }
                 }
 
             if (result.status != HttpStatusCode.OK) {
                 val body = result.bodyAsText()
                 logger.warn {
-                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode for ident. $body"
+                    "Uforventet status ${result.status.value} ved henting av arbeidssøkerperioder for ident. $body"
                 }
-                throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperiode")
+                throw RuntimeException("Uforventet status ${result.status.value} ved henting av arbeidssøkerperioder")
             }
             result.body()
         }

@@ -10,6 +10,7 @@ data class Arbeidssøkerperiode(
     var avsluttet: LocalDateTime?,
     var overtattBekreftelse: Boolean?,
     var årsakTilUtmelding: ÅrsakTilUtmelding? = null,
+    val sisteBekreftelse: LocalDateTime? = null,
 ) {
     enum class ÅrsakTilUtmelding(
         val dbValue: String,

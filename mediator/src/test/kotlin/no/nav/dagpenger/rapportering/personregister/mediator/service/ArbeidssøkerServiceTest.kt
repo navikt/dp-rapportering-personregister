@@ -9,14 +9,14 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.HendelseResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.arbeidssøkerResponse
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.ÅrsakTilUtmelding
@@ -52,20 +52,85 @@ class ArbeidssøkerServiceTest {
 
     @Test
     fun `kan hente siste arbeidssøkerperiode`() {
-        val response = arbeidssøkerResponse(UUIDv7.newUuid())
-        coEvery { arbeidssøkerConnector.hentSisteArbeidssøkerperiode(ident) } returns listOf(response)
+        val startet =
+            LocalDateTime
+                .now()
+                .minusWeeks(3)
+                .atZone(ZoneId.of("Europe/Oslo"))
+                .toOffsetDateTime()
+        val avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime()
 
-        val periode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }
+        val response1 =
+            ArbeidssøkerperiodeResponse(
+                periodeId = UUIDv7.newUuid(),
+                startet = startet,
+                avsluttet = avsluttet,
+                hendelser = emptyList(),
+            )
+        val response2 =
+            ArbeidssøkerperiodeResponse(
+                periodeId = UUIDv7.newUuid(),
+                startet = avsluttet,
+                avsluttet = null,
+                hendelser = emptyList(),
+            )
+        // hentArbeidssøkerperioder returnerer perioder sortert i synkende rekkefølge etter startdato,
+        // så vi må legge response2 først for å teste at hentSisteArbeidssøkerperiode henter den siste perioden
+        coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns listOf(response2, response1)
 
-        val startetUTC =
-            periode
-                ?.startet
-                ?.atZone(ZONE_ID)
-                ?.withZoneSameInstant(ZoneId.of("UTC"))
-                ?.toOffsetDateTime()
+        val periode = runBlocking { arbeidssøkerService.hentSisteArbeidssøkerperiode(ident) }!!
 
-        response.periodeId shouldBe periode?.periodeId
-        response.startet.tidspunkt shouldBe startetUTC
+        periode.periodeId shouldBe response2.periodeId
+        periode.startet shouldBe response2.startet.toLocalDateTime()
+        periode.avsluttet shouldBe null
+        periode.sisteBekreftelse shouldBe null
+    }
+
+    @Test
+    fun `kan hente arbeidssøkerperioder`() {
+        val startet =
+            LocalDateTime
+                .now()
+                .minusWeeks(3)
+                .atZone(ZoneId.of("Europe/Oslo"))
+                .toOffsetDateTime()
+        val avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime()
+
+        val response1 =
+            ArbeidssøkerperiodeResponse(
+                periodeId = UUIDv7.newUuid(),
+                startet = startet,
+                avsluttet = avsluttet,
+                hendelser =
+                    listOf(
+                        HendelseResponse(
+                            type = "BEKREFTELSE_V1",
+                            tidspunkt = avsluttet.minusDays(1),
+                        ),
+                    ),
+            )
+        val response2 =
+            ArbeidssøkerperiodeResponse(
+                periodeId = UUIDv7.newUuid(),
+                startet = avsluttet,
+                avsluttet = null,
+                hendelser = emptyList(),
+            )
+
+        // hentArbeidssøkerperioder returnerer perioder sortert i synkende rekkefølge etter startdato
+        coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns listOf(response2, response1)
+
+        val perioder = runBlocking { arbeidssøkerService.hentArbeidssøkerperioder(ident) }
+
+        perioder.size shouldBe 2
+        perioder[0].periodeId shouldBe response2.periodeId
+        perioder[0].startet shouldBe response2.startet.toLocalDateTime()
+        perioder[0].avsluttet shouldBe null
+        perioder[0].sisteBekreftelse shouldBe null
+        perioder[1].periodeId shouldBe response1.periodeId
+        perioder[1].startet shouldBe response1.startet.toLocalDateTime()
+        perioder[1].avsluttet shouldBe response1.avsluttet!!.toLocalDateTime()
+        perioder[1].sisteBekreftelse shouldBe response1.avsluttet.minusDays(1).toLocalDateTime()
     }
 
     @Test
@@ -76,7 +141,12 @@ class ArbeidssøkerServiceTest {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
 
             every { personRepository.hentPerson(ident) } returns person
-            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            every {
+                personRepository.hentÅrsakTilUtmelding(
+                    periodeId,
+                    ident,
+                )
+            } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
