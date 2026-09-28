@@ -40,33 +40,53 @@ class ArbeidssøkerConnectorTest {
     @Test
     fun `Oppslag - Kan mappe fult objekt`() {
         val periodeId = UUIDv7.newUuid()
+        val startet = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3)
+        val avsluttet = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(1)
+        val hendelser =
+            listOf(
+                HendelseResponse(
+                    type = "BEKREFTELSE_V1",
+                    tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(2),
+                ),
+            )
+
         val response =
             runBlocking {
-                arbeidssøkerConnector(arbeidssøkerResponse(periodeId), 200).hentSisteArbeidssøkerperiode("12345678901")
+                arbeidssøkerConnector(
+                    arbeidssøkerResponse(periodeId, startet, avsluttet, hendelser),
+                    200,
+                ).hentArbeidssøkerperioder("12345678901")
             }
 
         response.size shouldBe 1
         with(response[0]) {
             periodeId.toString() shouldBe periodeId.toString()
-            avsluttet shouldNotBe null
+            startet shouldBe startet
+            avsluttet shouldBe avsluttet
+            hendelser shouldBe hendelser
         }
     }
 
     @Test
-    fun `Oppslag - Kan mappe objekt uten avsluttet`() {
+    fun `Oppslag - Kan mappe objekt uten avsluttet og uten hendelser`() {
         val periodeId = UUIDv7.newUuid()
+        val startet = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3)
+        val avsluttet = null
+        val hendelser = emptyList<HendelseResponse>()
+
         val response =
             runBlocking {
                 arbeidssøkerConnector(
-                    arbeidssøkerResponse(periodeId, inkluderAvsluttet = false),
+                    arbeidssøkerResponse(periodeId, startet, avsluttet, hendelser),
                     200,
-                ).hentSisteArbeidssøkerperiode("12345678901")
+                ).hentArbeidssøkerperioder("12345678901")
             }
 
         response.size shouldBe 1
         with(response[0]) {
             periodeId.toString() shouldBe periodeId.toString()
             avsluttet shouldBe null
+            hendelser shouldBe emptyList()
         }
     }
 
@@ -77,7 +97,7 @@ class ArbeidssøkerConnectorTest {
                 arbeidssøkerConnector(
                     """[]""",
                     200,
-                ).hentSisteArbeidssøkerperiode("12345678901")
+                ).hentArbeidssøkerperioder("12345678901")
             }
 
         response.size shouldBe 0
@@ -90,7 +110,7 @@ class ArbeidssøkerConnectorTest {
                 arbeidssøkerConnector(
                     """{feilkode: "400", melding: "Bad request error"}""",
                     400,
-                ).hentSisteArbeidssøkerperiode("12345678901")
+                ).hentArbeidssøkerperioder("12345678901")
             }
         }
     }
@@ -128,40 +148,17 @@ fun recordKeyResponse() =
 
 fun arbeidssøkerResponse(
     periodeId: UUID,
-    inkluderAvsluttet: Boolean = true,
+    startet: OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3),
+    avsluttet: OffsetDateTime? = null,
+    hendelser: List<HendelseResponse> = emptyList(),
 ) = defaultObjectMapper
     .writeValueAsString(
         listOf(
             ArbeidssøkerperiodeResponse(
                 periodeId = periodeId,
-                startet =
-                    MetadataResponse(
-                        tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusWeeks(3),
-                        utfoertAv =
-                            BrukerResponse(
-                                type = "SLUTTBRUKER",
-                                id = "12345678910",
-                            ),
-                        kilde = "kilde",
-                        aarsak = "aarsak",
-                        tidspunktFraKilde = null,
-                    ),
-                avsluttet =
-                    if (inkluderAvsluttet) {
-                        MetadataResponse(
-                            tidspunkt = OffsetDateTime.now(ZoneOffset.UTC).minusDays(2),
-                            utfoertAv =
-                                BrukerResponse(
-                                    type = "SYSTEM",
-                                    id = "paw-arbeidssoekerregisteret-bekreftelse-utgang:24.11.01.38-1",
-                                ),
-                            kilde = "kilde",
-                            aarsak = "Graceperiode utløpt",
-                            tidspunktFraKilde = null,
-                        )
-                    } else {
-                        null
-                    },
+                startet = startet,
+                avsluttet = avsluttet,
+                hendelser = hendelser,
             ),
         ),
     )
