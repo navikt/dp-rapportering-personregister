@@ -98,6 +98,29 @@ paths:
           security:
               -   azureAd: [ ]
 
+  /api/person/{personId}/meldedato:
+      get:
+          responses:
+              200:
+                  description: OK
+                  content:
+                      application/json:
+                        schema:
+                          $ref: '#/components/schemas/MeldedatoResponse'
+              404:
+                  description: Hvis bruker med oppgitt personId ikke eksisterer
+          summary: Henter meldedato for en gitt person
+          operationId: get-person-meldedato
+          parameters:
+              - in: path
+                name: personId
+                schema:
+                    type: integer
+                required: true
+                description: personId til personen du vil hente meldedato for
+          security:
+              -   azureAd: [ ]
+
   /arbeidssokerperioder/{personId}:
     get:
       responses:
@@ -160,6 +183,14 @@ components:
             innsendtTidspunkt:
                 type: string
                 format: date-time
+    MeldedatoResponse:
+        required:
+            - meldedato
+        type: object
+        properties:
+            meldedato:
+                type: string
+                format: date
     PersonStatus:
       required:
         - ident

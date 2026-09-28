@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.api
 import com.github.navikt.tbd_libs.rapids_and_rivers.toUUID
 import io.kotest.matchers.shouldBe
 import io.ktor.client.request.bearerAuth
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -12,8 +13,11 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.NotFound
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.mockk.coEvery
 import io.mockk.every
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.defaultObjectMapper
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.connector.HendelseResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder
 import no.nav.dagpenger.rapportering.personregister.mediator.lagSøknadHendelse
@@ -24,6 +28,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.readValue
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.util.UUID.randomUUID
 
 class PersonApiTest : ApiTestSetup() {
@@ -294,6 +299,121 @@ class PersonApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe BadRequest
+            }
+        }
+
+    @Test
+    fun `meldedato uten token gir unauthorized`() =
+        setUpTestApplication {
+            with(client.get("/api/person/1/meldedato")) {
+                status shouldBe HttpStatusCode.Unauthorized
+            }
+        }
+
+    @Test
+    fun `meldedato gir not found hvis personen ikke finnes`() =
+        setUpTestApplication {
+            with(
+                client.get("/api/person/1/meldedato") {
+                    header(HttpHeaders.ContentType, "application/json")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
+                },
+            ) {
+                status shouldBe NotFound
+            }
+        }
+
+    @Test
+    fun `meldedato returnerer null hvis personen finnes men ikke har arbeidssøkerperioder`() =
+        setUpTestApplication {
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            Person(ident)
+                .apply { behandle(lagSøknadHendelse(ident)) }
+                .also {
+                    personRepository.lagrePerson(it)
+                }
+
+            with(
+                client.get("/api/person/1/meldedato") {
+                    header(HttpHeaders.ContentType, "application/json")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
+                },
+            ) {
+                status shouldBe OK
+                defaultObjectMapper.readTree(bodyAsText())["meldedato"].isNull shouldBe true
+            }
+        }
+
+    @Test
+    fun `meldedato returnerer riktig meldedato hvis personen finnes og har arbeidssøkerperioder uten bekreftelse`() =
+        setUpTestApplication {
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            val meldedato = OffsetDateTime.now()
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(any()) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = UUIDv7.newUuid(),
+                        startet = meldedato,
+                        avsluttet = null,
+                        hendelser = emptyList(),
+                    ),
+                )
+
+            Person(ident)
+                .apply { behandle(lagSøknadHendelse(ident)) }
+                .also {
+                    personRepository.lagrePerson(it)
+                }
+
+            with(
+                client.get("/api/person/1/meldedato") {
+                    header(HttpHeaders.ContentType, "application/json")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
+                },
+            ) {
+                status shouldBe OK
+                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe meldedato.toLocalDate().toString()
+            }
+        }
+
+    @Test
+    fun `meldedato returnerer riktig meldedato hvis personen finnes og har arbeidssøkerperioder med bekreftelse`() =
+        setUpTestApplication {
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            val meldedato = OffsetDateTime.now()
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(any()) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = UUIDv7.newUuid(),
+                        startet = meldedato.minusDays(10),
+                        avsluttet = null,
+                        hendelser =
+                            listOf(
+                                HendelseResponse(
+                                    type = "BEKREFTELSE_V1",
+                                    tidspunkt = meldedato,
+                                ),
+                            ),
+                    ),
+                )
+
+            Person(ident)
+                .apply { behandle(lagSøknadHendelse(ident)) }
+                .also {
+                    personRepository.lagrePerson(it)
+                }
+
+            with(
+                client.get("/api/person/1/meldedato") {
+                    header(HttpHeaders.ContentType, "application/json")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
+                },
+            ) {
+                status shouldBe OK
+                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe meldedato.toLocalDate().toString()
             }
         }
 }

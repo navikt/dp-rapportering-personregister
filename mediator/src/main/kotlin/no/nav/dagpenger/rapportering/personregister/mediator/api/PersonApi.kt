@@ -12,10 +12,12 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import no.nav.dagpenger.rapportering.personregister.api.models.ArbeidssokerperiodeResponse
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.validerIdent
 import java.net.URI
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -26,6 +28,7 @@ private val sikkerlogg = KotlinLogging.logger("tjenestekall")
 internal fun Application.personApi(
     personService: PersonService,
     søknadService: SøknadService,
+    arbeidssøkerService: ArbeidssøkerService,
 ) {
     routing {
         authenticate("azureAd") {
@@ -120,6 +123,30 @@ internal fun Application.personApi(
                         }
                 }
             }
+
+            route("/api/person/{personId}/meldedato") {
+                get {
+                    val personId =
+                        call.parameters["personId"]?.toLongOrNull()
+                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+
+                    val ident = personService.hentIdent(personId) ?: throw PersonNotFoundException()
+                    val sisteArbeidssøkerperiode =
+                        arbeidssøkerService
+                            .hentArbeidssøkerperioder(ident)
+                            .firstOrNull()
+                    val meldedato: LocalDateTime? =
+                        listOfNotNull(
+                            sisteArbeidssøkerperiode?.startet,
+                            sisteArbeidssøkerperiode?.sisteBekreftelse,
+                        ).maxOrNull()
+
+                    call.respond(
+                        OK,
+                        MeldedatoResponse(meldedato?.toLocalDate()),
+                    )
+                }
+            }
         }
     }
 }
@@ -162,4 +189,8 @@ data class PersonSøknadInnsendtTidspunktRequest(
 
 data class PersonSøknadInnsendtTidspunktResponse(
     val innsendtTidspunkt: LocalDateTime,
+)
+
+data class MeldedatoResponse(
+    val meldedato: LocalDate? = null,
 )
