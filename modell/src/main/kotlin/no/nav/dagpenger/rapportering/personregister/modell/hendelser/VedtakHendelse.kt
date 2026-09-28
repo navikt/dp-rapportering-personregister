@@ -76,14 +76,12 @@ data class VedtakHendelse(
         person.hendelser.add(this)
 
         if (utfall && !erFremtidigStansHendelse()) {
-            val skalMigreres = person.ansvarligSystem != AnsvarligSystem.DP
             person.setAnsvarligSystem(AnsvarligSystem.DP)
-
             person.setHarRettTilDp(true)
             person.sendStartMeldingTilMeldekortregister(
                 fraOgMed = startDato,
                 tilOgMed = sluttDato,
-                skalMigreres = skalMigreres,
+                skalMigreres = true,
                 korrelasjonsId = korrelasjonsId,
             )
         }
@@ -99,6 +97,8 @@ data class VedtakHendelse(
                 )
             }
         }
+
+        person.setAnsvarligSystem(AnsvarligSystem.DP)
 
         person
             .vurderNyStatus()

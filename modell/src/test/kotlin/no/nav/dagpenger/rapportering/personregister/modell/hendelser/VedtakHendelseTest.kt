@@ -96,7 +96,7 @@ class VedtakHendelseTest {
     }
 
     @Test
-    fun `hendelse med utfall true sender startmelding med skalMigreres false når ansvarligSystem allerede er DP`() {
+    fun `hendelse med utfall true sender startmelding med skalMigreres true selv om ansvarlig system er DP`() {
         val korrelasjonsId = UUID.randomUUID()
         val observer = mockk<PersonObserver>(relaxed = true)
 
@@ -106,7 +106,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null, korrelasjonsId = korrelasjonsId))
 
             verify(exactly = 1) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), false, korrelasjonsId)
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), true, korrelasjonsId)
             }
         }
     }
