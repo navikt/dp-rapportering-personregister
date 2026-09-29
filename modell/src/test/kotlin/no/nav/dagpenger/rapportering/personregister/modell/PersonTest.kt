@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.modell
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
+import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem.DP
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.helper.annenMeldegruppeHendelse
@@ -63,7 +64,7 @@ class PersonTest {
                 val vedtakHendelse = vedtakHendelse(startDato = nå, utfall = true)
                 behandle(vedtakHendelse)
 
-                ansvarligSystem shouldBe AnsvarligSystem.DP
+                ansvarligSystem shouldBe DP
                 this skalHaSendtStartMeldingFor Periode(vedtakHendelse.startDato, vedtakHendelse.sluttDato)
                 arbeidssøkerperiodeObserver skalHaSendtOvertakelseFor this
                 this.status shouldBe DAGPENGERBRUKER
@@ -77,7 +78,7 @@ class PersonTest {
                 hendelser.add(søknadHendelse(referanseId = søknadId))
                 behandle(vedtakHendelse(startDato = nå, utfall = false))
 
-                ansvarligSystem shouldBe AnsvarligSystem.ARENA
+                ansvarligSystem shouldBe DP
                 this skalIkkeHaSendtStoppMeldingFor Periode(nå)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
@@ -94,7 +95,7 @@ class PersonTest {
                 val stansVedtak = vedtakHendelse(startDato = nå, utfall = false)
                 behandle(stansVedtak)
 
-                ansvarligSystem shouldBe AnsvarligSystem.DP
+                ansvarligSystem shouldBe DP
                 this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato, harRett = false)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
@@ -111,7 +112,7 @@ class PersonTest {
                 val stansVedtak = vedtakHendelse(startDato = nå.minusDays(2), sluttDato = nå.minusDays(1), utfall = true)
                 behandle(stansVedtak)
 
-                ansvarligSystem shouldBe AnsvarligSystem.DP
+                ansvarligSystem shouldBe DP
                 this skalHaSendtStoppMeldingFor Periode(stansVedtak.startDato, stansVedtak.sluttDato, harRett = true)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
                 arbeidssøkerperiodeObserver skalHaFrasagtAnsvaretFor this
