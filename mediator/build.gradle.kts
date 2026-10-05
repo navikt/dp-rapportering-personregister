@@ -35,7 +35,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.32.0")
     implementation("io.opentelemetry:opentelemetry-api:1.66.0")
     implementation("io.getunleash:unleash-client-java:12.3.0")
-    implementation("com.github.navikt.tbd-libs:naisful-app:20261001.2041")
+    implementation("com.github.navikt.tbd-libs:naisful-app:20261002.1227")
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
