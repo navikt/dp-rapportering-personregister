@@ -97,7 +97,7 @@ class MeldekortregisterConnector(
                     response.body<SisteFastsattMeldedatoResponse>().fastsattMeldedato
                 }
 
-                HttpStatusCode.NotFound -> {
+                HttpStatusCode.NoContent -> {
                     null
                 }
 

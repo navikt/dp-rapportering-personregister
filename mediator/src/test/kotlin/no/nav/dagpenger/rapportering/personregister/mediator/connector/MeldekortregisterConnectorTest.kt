@@ -61,10 +61,10 @@ class MeldekortregisterConnectorTest {
     }
 
     @Test
-    fun `hentSisteFastsattMeldedato returnerer null ved 404`() {
+    fun `hentSisteFastsattMeldedato returnerer null ved 204`() {
         val result =
             runBlocking {
-                connector("{}", 404).hentSisteFastsattMeldedato(
+                connector("{}", 204).hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
                 )
