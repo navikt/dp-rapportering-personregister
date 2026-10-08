@@ -7,6 +7,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.hendelser.AvsluttetAr
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.DagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.MeldepliktHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.StartetArbeidssøkerperiodeHendelse
+import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.VedtakHendelse
 import java.time.LocalDateTime
 import java.util.UUID
@@ -105,4 +106,17 @@ fun vedtakHendelseMedFremtidigStans(
     sluttDato = sluttDato,
     utfall = utfall,
     behandlingskjedeId = null,
+)
+
+fun søknadHendelse(
+    dato: LocalDateTime = nå,
+    startDato: LocalDateTime = nå,
+    referanseId: String = UUID.randomUUID().toString(),
+    korrelasjonsId: UUID = UUID.randomUUID(),
+) = SøknadHendelse(
+    korrelasjonsId = korrelasjonsId,
+    ident = ident,
+    dato = dato,
+    startDato = startDato,
+    referanseId = referanseId,
 )
