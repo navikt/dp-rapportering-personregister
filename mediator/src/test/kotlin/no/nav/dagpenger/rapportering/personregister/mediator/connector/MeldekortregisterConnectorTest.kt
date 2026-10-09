@@ -39,6 +39,7 @@ class MeldekortregisterConnectorTest {
                 connector(body, 200).hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                    LocalDate.now(),
                 )
             }
 
@@ -54,6 +55,7 @@ class MeldekortregisterConnectorTest {
                 connector(body, 200).hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                    LocalDate.now(),
                 )
             }
 
@@ -67,6 +69,7 @@ class MeldekortregisterConnectorTest {
                 connector("{}", 204).hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                    LocalDate.now(),
                 )
             }
 
@@ -80,6 +83,7 @@ class MeldekortregisterConnectorTest {
                 connector("{}", 500).hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.IKKE_MELDT_SEG_PÅ_21_DAGER,
+                    LocalDate.now(),
                 )
             }
         }

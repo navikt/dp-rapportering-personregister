@@ -45,7 +45,7 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
@@ -63,7 +63,7 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
@@ -693,7 +693,7 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
@@ -713,7 +713,7 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
@@ -765,7 +765,7 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
@@ -788,23 +788,49 @@ class PersonRepositoryPostgresTest {
     @Test
     fun `hentÅrsakTilUtmelding returnerer årsak når den er satt`() =
         withMigratedDb {
+            val arbeidssøkerperiode = opprettArbeidssøkerperiode(true)
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode),
                 )
             personRepository.lagrePerson(person)
 
-            val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
+            val periodeId = arbeidssøkerperiode.periodeId
             personRepository.lagreÅrsakTilUtmelding(
                 periodeId = periodeId,
                 ident = person.ident,
                 årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
 
-            val årsak = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)
+            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)!!
 
-            årsak shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            datoForUtmelding shouldBe dato.toLocalDate().plusDays(10)
+        }
+
+    @Test
+    fun `hentÅrsakTilUtmelding returnerer årsak og sist_endret hvis avsluttet er null`() =
+        withMigratedDb {
+            val arbeidssøkerperiode = opprettArbeidssøkerperiode()
+            val person =
+                testPerson(
+                    hendelser = mutableListOf(søknadHendelse()),
+                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode),
+                )
+            personRepository.lagrePerson(person)
+
+            val periodeId = arbeidssøkerperiode.periodeId
+            personRepository.lagreÅrsakTilUtmelding(
+                periodeId = periodeId,
+                ident = person.ident,
+                årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+            )
+
+            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)!!
+
+            årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            datoForUtmelding shouldBe LocalDate.now()
         }
 
     @Test
@@ -813,13 +839,13 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
             val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
 
-            val årsak = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)
+            val årsak = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)
 
             årsak shouldBe null
         }
@@ -830,13 +856,13 @@ class PersonRepositoryPostgresTest {
             val person =
                 testPerson(
                     hendelser = mutableListOf(søknadHendelse()),
-                    arbeidssøkerperiode = mutableListOf(arbeidssøkerperiode()),
+                    arbeidssøkerperiode = mutableListOf(opprettArbeidssøkerperiode()),
                 )
             personRepository.lagrePerson(person)
 
             val ukjentPeriodeId = UUIDv7.newUuid()
 
-            val årsak = personRepository.hentÅrsakTilUtmelding(ukjentPeriodeId, person.ident)
+            val årsak = personRepository.hentÅrsakTilOgDatoForUtmelding(ukjentPeriodeId, person.ident)
 
             årsak shouldBe null
         }
@@ -967,12 +993,12 @@ class PersonRepositoryPostgresTest {
             startDato = dato.plusSeconds(1),
         )
 
-    private fun arbeidssøkerperiode() =
+    private fun opprettArbeidssøkerperiode(avsluttet: Boolean? = false) =
         Arbeidssøkerperiode(
             ident = "12345678901",
             periodeId = UUIDv7.newUuid(),
             startet = dato.plusSeconds(1),
-            avsluttet = null,
+            avsluttet = if (avsluttet == true) dato.plusDays(10) else null,
             overtattBekreftelse = false,
         )
 

@@ -61,14 +61,14 @@ class ArbeidssøkerService(
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
                 val periodeId = periode.periodeId
                 val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId)
-                val årsak = hentEllerOpprettÅrsak(periodeId, periode.ident)
+                val (årsakTilUtmelding, _) = hentEllerOpprettÅrsakTilUtmelding(periodeId, periode.ident)
 
                 val melding =
                     avsluttetMelding(
                         periode = periode,
                         fastsattMeldedato = fastsattMeldedato,
                         avregistrertTidspunkt = avregistrertTidspunkt,
-                        årsak = årsak,
+                        årsak = årsakTilUtmelding,
                     )
 
                 publiser(periode, melding, korrelasjonsId)
@@ -109,12 +109,12 @@ class ArbeidssøkerService(
         }
     }
 
-    private fun hentEllerOpprettÅrsak(
+    private fun hentEllerOpprettÅrsakTilUtmelding(
         periodeId: UUID,
         ident: String,
-    ): Arbeidssøkerperiode.ÅrsakTilUtmelding =
-        personRepository.hentÅrsakTilUtmelding(periodeId, ident)
-            ?: Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.also { årsak ->
+    ): Pair<Arbeidssøkerperiode.ÅrsakTilUtmelding, LocalDate> =
+        personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident)
+            ?: Pair(Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET, LocalDate.now()).also { (årsak, _) ->
                 logger.info {
                     "Ingen årsak til utmelding lagret for periodeId=$periodeId. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
                 }
@@ -128,8 +128,13 @@ class ArbeidssøkerService(
         ident: String,
         periodeId: UUID,
     ): LocalDate? {
-        val årsakTilUtmelding = hentEllerOpprettÅrsak(periodeId, ident)
-        val fastsatt = meldekortregisterConnector.hentSisteFastsattMeldedato(ident, årsakTilUtmelding)
+        val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, ident)
+        val fastsatt =
+            meldekortregisterConnector.hentSisteFastsattMeldedato(
+                ident,
+                årsakTilUtmelding,
+                datoForUtmelding,
+            )
         logger.info { "fastsattMeldedato=$fastsatt for periodeId=$periodeId" }
         return fastsatt
     }
