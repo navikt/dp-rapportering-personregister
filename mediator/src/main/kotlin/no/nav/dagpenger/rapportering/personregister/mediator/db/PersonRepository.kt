@@ -3,6 +3,7 @@ package no.nav.dagpenger.rapportering.personregister.mediator.db
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.Hendelse
+import java.time.LocalDate
 import java.util.UUID
 
 interface PersonRepository {
@@ -74,8 +75,8 @@ interface PersonRepository {
         årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ) {}
 
-    fun hentÅrsakTilUtmelding(
+    fun hentÅrsakTilOgDatoForUtmelding(
         periodeId: UUID,
         ident: String,
-    ): Arbeidssøkerperiode.ÅrsakTilUtmelding?
+    ): Pair<Arbeidssøkerperiode.ÅrsakTilUtmelding, LocalDate>?
 }

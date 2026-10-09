@@ -142,15 +142,16 @@ class ArbeidssøkerServiceTest {
 
             every { personRepository.hentPerson(ident) } returns person
             every {
-                personRepository.hentÅrsakTilUtmelding(
+                personRepository.hentÅrsakTilOgDatoForUtmelding(
                     periodeId,
                     ident,
                 )
-            } returns ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+            } returns Pair(ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT, LocalDate.now())
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+                    any(),
                 )
             } returns forventetMeldedato
 
@@ -194,12 +195,13 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
-            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null andThen
-                ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET
+            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null andThen
+                Pair(ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET, LocalDate.now())
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    any(),
                 )
             } returns null
 
@@ -239,11 +241,12 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
-            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
+            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    any(),
                 )
             } returns null
 
@@ -326,11 +329,12 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
-            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
+            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
                     ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    any(),
                 )
             } throws RuntimeException("Meldekortregister utilgjengelig")
 

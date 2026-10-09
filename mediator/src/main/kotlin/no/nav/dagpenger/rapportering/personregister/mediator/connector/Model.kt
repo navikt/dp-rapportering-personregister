@@ -8,6 +8,7 @@ import java.util.UUID
 data class SisteFastsattMeldedatoRequest(
     val ident: String,
     val årsakTilUtmelding: Arbeidssøkerperiode.ÅrsakTilUtmelding,
+    val datoForUtmelding: LocalDate,
 )
 
 data class SisteFastsattMeldedatoResponse(

@@ -75,6 +75,7 @@ class MeldekortregisterConnector(
     suspend fun hentSisteFastsattMeldedato(
         ident: String,
         årsakTilUtmelding: ÅrsakTilUtmelding,
+        datoForUtmelding: LocalDate,
     ): LocalDate? =
         withContext(Dispatchers.IO) {
             val response =
@@ -85,7 +86,7 @@ class MeldekortregisterConnector(
                         meldekortregisterTokenProvider.invoke()
                             ?: throw RuntimeException("Klarte ikke å hente token"),
                     metrikkNavn = "meldekortregister_hentSisteFastsattMeldedato",
-                    body = SisteFastsattMeldedatoRequest(ident, årsakTilUtmelding),
+                    body = SisteFastsattMeldedatoRequest(ident, årsakTilUtmelding, datoForUtmelding),
                     parameters = mapOf(),
                     actionTimer = actionTimer,
                 ).also {
