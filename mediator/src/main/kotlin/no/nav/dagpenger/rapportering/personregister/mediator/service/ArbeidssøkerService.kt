@@ -50,18 +50,21 @@ class ArbeidssøkerService(
         }
 
     suspend fun publiserAvsluttetArbeidssøkerperiode(
-        periode: Arbeidssøkerperiode,
+        ident: String,
+        periodeId: UUID,
         korrelasjonsId: UUID,
     ) {
-        personRepository.hentPerson(periode.ident)?.let { person ->
+        personRepository.hentPerson(ident)?.let { person ->
             if (person.ansvarligSystem == AnsvarligSystem.DP) {
                 logger.info {
-                    "Bruker har ansvarligSystem == DP, publiserer avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}"
+                    "Bruker har ansvarligSystem == DP, publiserer avsluttet arbeidssøkerperiode for periodeId $periodeId"
                 }
+                val periode =
+                    hentArbeidssøkerperioder(ident).firstOrNull { it.periodeId == periodeId }
+                        ?: throw NoSuchElementException("Fant ikke arbeidssøkerperiode med periodeId $periodeId")
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
-                val periodeId = periode.periodeId
-                val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId)
-                val (årsakTilUtmelding, _) = hentEllerOpprettÅrsakTilUtmelding(periodeId, periode.ident)
+                val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, periode.ident)
+                val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId, årsakTilUtmelding, datoForUtmelding)
 
                 val melding =
                     avsluttetMelding(
@@ -74,7 +77,7 @@ class ArbeidssøkerService(
                 publiser(periode, melding, korrelasjonsId)
             } else {
                 logger.info {
-                    "Bruker har ansvarligSystem != DP, publiserer ikke avsluttet arbeidssøkerperiode for periodeId ${periode.periodeId}"
+                    "Bruker har ansvarligSystem != DP, publiserer ikke avsluttet arbeidssøkerperiode for periodeId $periodeId"
                 }
             }
         }
@@ -127,8 +130,9 @@ class ArbeidssøkerService(
     private suspend fun hentFastsattMeldedato(
         ident: String,
         periodeId: UUID,
+        årsakTilUtmelding: Arbeidssøkerperiode.ÅrsakTilUtmelding,
+        datoForUtmelding: LocalDate,
     ): LocalDate? {
-        val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, ident)
         val fastsatt =
             meldekortregisterConnector.hentSisteFastsattMeldedato(
                 ident,
