@@ -107,7 +107,7 @@ class ArbeidssøkerMottakTest {
         val periode = records.first().value()
         arbeidssøkerMottak.consume(records)
 
-        coVerify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any()) }
+        coVerify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any(), any()) }
         verify(exactly = 1) {
             meldingerRepository.lagreInnkommendeMelding(
                 any(),
@@ -133,7 +133,7 @@ class ArbeidssøkerMottakTest {
         val records = lagConsumerRecords(avsluttet = false)
         arbeidssøkerMottak.consume(records)
 
-        coVerify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any()) }
+        coVerify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any(), any()) }
     }
 
     private fun lagConsumerRecords(avsluttet: Boolean = true): ConsumerRecords<Long, Periode> =

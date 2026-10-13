@@ -142,6 +142,15 @@ class ArbeidssøkerServiceTest {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
 
             every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = periodeId,
+                        startet = startet.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        hendelser = emptyList(),
+                    ),
+                )
             every {
                 personRepository.hentÅrsakTilOgDatoForUtmelding(
                     periodeId,
@@ -157,7 +166,7 @@ class ArbeidssøkerServiceTest {
             } returns forventetMeldedato
 
             val korrelasjonsId = UUIDv7.newUuid()
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), korrelasjonsId)
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
 
             rapidsConnection.inspektør.size shouldBe 1
             with(rapidsConnection.inspektør.message(0)) {
@@ -196,6 +205,15 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = periodeId,
+                        startet = startet.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        hendelser = emptyList(),
+                    ),
+                )
             every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null andThen
                 Pair(ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET, LocalDate.now())
             coEvery {
@@ -207,7 +225,7 @@ class ArbeidssøkerServiceTest {
             } returns null
 
             val korrelasjonsId = UUIDv7.newUuid()
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), korrelasjonsId)
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
 
             rapidsConnection.inspektør.message(0)["årsak"].asString() shouldBe
                 ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue
@@ -242,6 +260,15 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = periodeId,
+                        startet = startet.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        hendelser = emptyList(),
+                    ),
+                )
             every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
@@ -252,7 +279,7 @@ class ArbeidssøkerServiceTest {
             } returns null
 
             val korrelasjonsId = UUIDv7.newUuid()
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), korrelasjonsId)
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
 
             rapidsConnection.inspektør.message(0).has("fastsattMeldedato") shouldBe false
 
@@ -281,7 +308,11 @@ class ArbeidssøkerServiceTest {
             val person = person(ansvarligSystem = AnsvarligSystem.ARENA)
             every { personRepository.hentPerson(ident) } returns person
 
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), UUIDv7.newUuid())
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
+                person.ident,
+                periodeId,
+                UUIDv7.newUuid(),
+            )
 
             rapidsConnection.inspektør.size shouldBe 0
 
@@ -297,7 +328,11 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             every { personRepository.hentPerson(ident) } returns null
 
-            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), UUIDv7.newUuid())
+            arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
+                ident,
+                periodeId,
+                UUIDv7.newUuid(),
+            )
 
             rapidsConnection.inspektør.size shouldBe 0
 
@@ -312,15 +347,44 @@ class ArbeidssøkerServiceTest {
     fun `kaster exception hvis perioden ikke er avsluttet`() {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
-            val aktivPeriode = avsluttetPeriode().copy(avsluttet = null)
+            val aktivPeriode = avsluttetPeriode.copy(avsluttet = null)
             every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = aktivPeriode.periodeId,
+                        startet = aktivPeriode.startet.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        avsluttet = aktivPeriode.avsluttet?.atZone(ZoneId.of("Europe/Oslo"))?.toOffsetDateTime(),
+                        hendelser = emptyList(),
+                    ),
+                )
 
             shouldThrow<IllegalArgumentException> {
-                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(aktivPeriode, UUIDv7.newUuid())
+                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
+                    ident,
+                    aktivPeriode.periodeId,
+                    UUIDv7.newUuid(),
+                )
             }
 
             rapidsConnection.inspektør.size shouldBe 0
 
+            verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
+        }
+    }
+
+    @Test
+    fun `kaster NoSuchElementException når perioden ikke finnes`() {
+        runBlocking {
+            val person = person(ansvarligSystem = AnsvarligSystem.DP)
+            every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns emptyList()
+
+            shouldThrow<NoSuchElementException> {
+                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(ident, periodeId, UUIDv7.newUuid())
+            }
+
+            rapidsConnection.inspektør.size shouldBe 0
             verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
         }
     }
@@ -340,7 +404,11 @@ class ArbeidssøkerServiceTest {
             } throws RuntimeException("Meldekortregister utilgjengelig")
 
             shouldThrow<RuntimeException> {
-                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(avsluttetPeriode(), UUIDv7.newUuid())
+                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
+                    ident,
+                    periodeId,
+                    UUIDv7.newUuid(),
+                )
             }
 
             rapidsConnection.inspektør.size shouldBe 0
@@ -349,7 +417,7 @@ class ArbeidssøkerServiceTest {
         }
     }
 
-    private fun avsluttetPeriode() =
+    private val avsluttetPeriode =
         Arbeidssøkerperiode(
             periodeId = periodeId,
             ident = ident,
