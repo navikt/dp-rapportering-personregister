@@ -65,6 +65,12 @@ private fun settDpRettOgSendStartmelding(
             return
         }
 
+        logger.info {
+            "Person som eier periodeId=${person.arbeidssøkerperioder.gjeldende?.periodeId} har registrert seg " +
+                "som arbeidssøker etter innsending av søknad og før vedtak i DP-Sak. Starter derfor meldekortproduksjon, " +
+                "korrelasjonsId=$korrelasjonsId"
+        }
+
         person.setHarRettTilDp(true)
         person.sendStartMeldingTilMeldekortregister(
             fraOgMed = nyesteSøknad.startDato,
