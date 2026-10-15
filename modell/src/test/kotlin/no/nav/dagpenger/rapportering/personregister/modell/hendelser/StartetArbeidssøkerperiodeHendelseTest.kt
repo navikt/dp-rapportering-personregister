@@ -230,4 +230,38 @@ class StartetArbeidssøkerperiodeHendelseTest {
             }
         }
     }
+
+    @Test
+    fun `sender ikke startmelding når vedtaket gjelder tidligere samme dag som søknadstidspunkt`() {
+        val korrelasjonsId = UUID.randomUUID()
+        val observer = mockk<PersonObserver>(relaxed = true)
+        val søknadDato = LocalDateTime.of(2026, 10, 15, 23, 0)
+        val vedtakStartDato = LocalDateTime.of(2026, 10, 15, 0, 30)
+        val vedtakSluttDato = LocalDateTime.of(2026, 10, 20, 12, 0)
+
+        testPerson {
+            addObserver(observer)
+            setAnsvarligSystem(AnsvarligSystem.DP)
+            hendelser.add(søknadHendelse(startDato = søknadDato, referanseId = "soknad-1"))
+            hendelser.add(
+                VedtakHendelse(
+                    korrelasjonsId = UUID.randomUUID(),
+                    ident = ident,
+                    dato = LocalDateTime.of(2026, 10, 14, 12, 0),
+                    startDato = vedtakStartDato,
+                    referanseId = "vedtak-1",
+                    sluttDato = vedtakSluttDato,
+                    utfall = false,
+                    behandlingskjedeId = null,
+                ),
+            )
+
+            behandle(startetArbeidssøkerperiodeHendelse(korrelasjonsId = korrelasjonsId))
+
+            harRettTilDp shouldBe false
+            verify(exactly = 0) {
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any())
+            }
+        }
+    }
 }
