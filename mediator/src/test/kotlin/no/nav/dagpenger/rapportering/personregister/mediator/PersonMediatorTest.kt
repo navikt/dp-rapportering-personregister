@@ -795,7 +795,7 @@ infix fun PersonObserver.skalHaFrasagtAnsvaretMedFristBruttFor(person: Person) {
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any(), any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.fraOgMed, periode.tilOgMed, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {

@@ -42,7 +42,6 @@ class SøknadService(
                 person.setHarRettTilDp(true)
                 person.sendStartMeldingTilMeldekortregister(
                     fraOgMed = søknadHendelse.startDato,
-                    skalMigreres = false,
                     korrelasjonsId = søknadHendelse.korrelasjonsId,
                 )
             }

@@ -24,7 +24,6 @@ class PersonObserverMeldekortregister(
         person: Person,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
-        skalMigreres: Boolean,
         korrelasjonsId: UUID,
     ) {
         logger.info { "Sender Start-melding til Meldekortregister for person" }
@@ -42,7 +41,6 @@ class PersonObserverMeldekortregister(
                         put("harRett", true)
                         put("handling", "START")
                         put("referanseId", UUIDv7.newUuid().toString())
-                        put("skalMigreres", skalMigreres)
                     },
                 )
 
@@ -83,7 +81,6 @@ class PersonObserverMeldekortregister(
                         put("harRett", harRett)
                         put("handling", "STOPP")
                         put("referanseId", UUIDv7.newUuid().toString())
-                        put("skalMigreres", false)
                     },
                 )
 

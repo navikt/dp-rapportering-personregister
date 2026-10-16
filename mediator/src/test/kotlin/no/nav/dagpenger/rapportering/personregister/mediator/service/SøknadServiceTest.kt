@@ -78,7 +78,6 @@ class SøknadServiceTest {
                 person,
                 søknadHendelse.startDato,
                 null,
-                false,
                 any(),
             )
         }

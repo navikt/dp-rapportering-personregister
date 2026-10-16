@@ -115,7 +115,6 @@ class StartetArbeidssøkerperiodeHendelseTest {
                     person = any(),
                     fraOgMed = nyesteSøknadDato,
                     tilOgMed = null,
-                    skalMigreres = false,
                     korrelasjonsId = korrelasjonsId,
                 )
             }
@@ -133,7 +132,7 @@ class StartetArbeidssøkerperiodeHendelseTest {
             behandle(startetArbeidssøkerperiodeHendelse())
 
             harRettTilDp shouldBe false
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -152,7 +151,7 @@ class StartetArbeidssøkerperiodeHendelseTest {
 
             harRettTilDp shouldBe true
             verify(exactly = 0) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any())
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any())
             }
         }
     }
@@ -186,7 +185,7 @@ class StartetArbeidssøkerperiodeHendelseTest {
 
             harRettTilDp shouldBe false
             verify(exactly = 0) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any())
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any())
             }
         }
     }
@@ -224,7 +223,6 @@ class StartetArbeidssøkerperiodeHendelseTest {
                     person = any(),
                     fraOgMed = søknadDato,
                     tilOgMed = null,
-                    skalMigreres = false,
                     korrelasjonsId = korrelasjonsId,
                 )
             }
