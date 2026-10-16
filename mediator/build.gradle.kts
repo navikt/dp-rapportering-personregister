@@ -27,15 +27,15 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.ktor.server)
     implementation(libs.bundles.ktor.client)
-    implementation("no.nav.dagpenger:pdl-klient:2026.10.09-12.23.1525536141d8")
-    implementation("no.nav.dagpenger:oauth2-klient:2026.10.09-12.23.1525536141d8")
+    implementation("no.nav.dagpenger:pdl-klient:2026.10.15-18.29.4e256bf96fe2")
+    implementation("no.nav.dagpenger:oauth2-klient:2026.10.15-18.29.4e256bf96fe2")
     implementation("io.ktor:ktor-server-netty:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-config-yaml:${libs.versions.ktor.get()}")
     implementation("io.ktor:ktor-server-metrics:${libs.versions.ktor.get()}")
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.32.0")
     implementation("io.opentelemetry:opentelemetry-api:1.67.0")
     implementation("io.getunleash:unleash-client-java:12.3.0")
-    implementation("com.github.navikt.tbd-libs:naisful-app:20261005.1432")
+    implementation("com.github.navikt.tbd-libs:naisful-app:20261013.1613")
 
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
 
