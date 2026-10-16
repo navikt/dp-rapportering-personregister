@@ -181,7 +181,6 @@ fun Person.leggTilNyArbeidssøkerperiode(hendelse: AvsluttetArbeidssøkerperiode
 fun Person.sendStartMeldingTilMeldekortregister(
     fraOgMed: LocalDateTime,
     tilOgMed: LocalDateTime? = null,
-    skalMigreres: Boolean,
     korrelasjonsId: UUID,
 ) {
     logger.info { "Sender Start-melding til Meldekortregister" }
@@ -189,7 +188,7 @@ fun Person.sendStartMeldingTilMeldekortregister(
     try {
         logger.info { "Antall observere: ${observers.size}" }
         observers.forEach { observer ->
-            observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, skalMigreres, korrelasjonsId)
+            observer.sendStartMeldingTilMeldekortregister(this, fraOgMed, tilOgMed, korrelasjonsId)
         }
         logger.info { "Sendte Start-melding på observere uten feil" }
     } catch (e: Exception) {

@@ -68,7 +68,6 @@ private fun settDpRettOgSendStartmelding(
         person.setHarRettTilDp(true)
         person.sendStartMeldingTilMeldekortregister(
             fraOgMed = nyesteSøknad.startDato,
-            skalMigreres = false,
             korrelasjonsId = korrelasjonsId,
         )
     }

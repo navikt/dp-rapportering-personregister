@@ -75,30 +75,26 @@ data class VedtakHendelse(
     override fun behandle(person: Person) {
         person.hendelser.add(this)
 
+        person.setAnsvarligSystem(AnsvarligSystem.DP)
+
         if (utfall && !erFremtidigStansHendelse()) {
-            person.setAnsvarligSystem(AnsvarligSystem.DP)
             person.setHarRettTilDp(true)
             person.sendStartMeldingTilMeldekortregister(
                 fraOgMed = startDato,
                 tilOgMed = sluttDato,
-                skalMigreres = true,
                 korrelasjonsId = korrelasjonsId,
             )
         }
 
         if (!utfall || sluttDato.erDatoIFortid()) {
             person.setHarRettTilDp(false)
-            if (person.ansvarligSystem == AnsvarligSystem.DP) {
-                person.sendStoppMeldingTilMeldekortregister(
-                    fraOgMed = startDato,
-                    tilOgMed = sluttDato,
-                    harRett = utfall,
-                    korrelasjonsId = korrelasjonsId,
-                )
-            }
+            person.sendStoppMeldingTilMeldekortregister(
+                fraOgMed = startDato,
+                tilOgMed = sluttDato,
+                harRett = utfall,
+                korrelasjonsId = korrelasjonsId,
+            )
         }
-
-        person.setAnsvarligSystem(AnsvarligSystem.DP)
 
         person
             .vurderNyStatus()

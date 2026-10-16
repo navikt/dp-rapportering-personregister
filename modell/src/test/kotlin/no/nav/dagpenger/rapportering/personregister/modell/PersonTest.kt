@@ -79,9 +79,8 @@ class PersonTest {
                 behandle(vedtakHendelse(startDato = nå, utfall = false))
 
                 ansvarligSystem shouldBe DP
-                this skalIkkeHaSendtStoppMeldingFor Periode(nå)
+                this skalHaSendtStoppMeldingFor Periode(nå, null, false)
                 this.status shouldBe IKKE_DAGPENGERBRUKER
-                arbeidssøkerperioder.gjeldende?.overtattBekreftelse shouldBe false
             }
 
         @Test
@@ -368,7 +367,7 @@ infix fun PersonObserver.skalHaFrasagtSegAnsvaretMedFristBruttFor(person: Person
 }
 
 infix fun Person.skalHaSendtStartMeldingFor(periode: Periode) {
-    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any(), any()) }
+    verify(exactly = 1) { sendStartMeldingTilMeldekortregister(periode.startDato, periode.sluttDato, any()) }
 }
 
 infix fun Person.skalHaSendtStoppMeldingFor(periode: Periode) {

@@ -32,7 +32,6 @@ interface PersonObserver {
         person: Person,
         fraOgMed: LocalDateTime,
         tilOgMed: LocalDateTime?,
-        skalMigreres: Boolean,
         korrelasjonsId: UUID,
     ) {}
 

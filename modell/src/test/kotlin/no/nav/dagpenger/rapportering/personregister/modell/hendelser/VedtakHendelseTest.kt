@@ -4,12 +4,19 @@ import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
+import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
+import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
+import no.nav.dagpenger.rapportering.personregister.modell.Status
+import no.nav.dagpenger.rapportering.personregister.modell.TemporalCollection
+import no.nav.dagpenger.rapportering.personregister.modell.helper.ident
+import no.nav.dagpenger.rapportering.personregister.modell.helper.periodeId
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.vedtakHendelseMedFremtidigStans
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class VedtakHendelseTest {
@@ -80,23 +87,7 @@ class VedtakHendelseTest {
         }
 
     @Test
-    fun `hendelse med utfall true sender startmelding med skalMigreres true når ansvarligSystem er ARENA`() {
-        val korrelasjonsId = UUID.randomUUID()
-        val observer = mockk<PersonObserver>(relaxed = true)
-
-        testPerson {
-            setAnsvarligSystem(AnsvarligSystem.ARENA)
-            addObserver(observer)
-            behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null, korrelasjonsId = korrelasjonsId))
-
-            verify(exactly = 1) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), true, korrelasjonsId)
-            }
-        }
-    }
-
-    @Test
-    fun `hendelse med utfall true sender startmelding med skalMigreres true selv om ansvarlig system er DP`() {
+    fun `hendelse med utfall true sender startmelding`() {
         val korrelasjonsId = UUID.randomUUID()
         val observer = mockk<PersonObserver>(relaxed = true)
 
@@ -106,7 +97,7 @@ class VedtakHendelseTest {
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null, korrelasjonsId = korrelasjonsId))
 
             verify(exactly = 1) {
-                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), true, korrelasjonsId)
+                observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId)
             }
         }
     }
@@ -119,7 +110,7 @@ class VedtakHendelseTest {
         testPerson {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null, korrelasjonsId = korrelasjonsId))
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), korrelasjonsId) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId) }
         }
     }
 
@@ -130,7 +121,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -141,7 +132,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = fremtid))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
         }
     }
 
@@ -154,7 +145,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = fortid, sluttDato = fortid, korrelasjonsId = korrelasjonsId))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), korrelasjonsId) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId) }
             verify(exactly = 1) {
                 observer.sendStoppMeldingTilMeldekortregister(
                     person = any(),
@@ -176,7 +167,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = nå, korrelasjonsId = korrelasjonsId))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), korrelasjonsId) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId) }
             verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
@@ -188,7 +179,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = nå))
 
-            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
+            verify(exactly = 0) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any()) }
             verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
@@ -202,7 +193,7 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = fremtid, korrelasjonsId = korrelasjonsId))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), korrelasjonsId) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId) }
             verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
@@ -216,13 +207,13 @@ class VedtakHendelseTest {
             addObserver(observer)
             behandle(vedtakHendelse(utfall = true, startDato = nå, sluttDato = null, korrelasjonsId = korrelasjonsId))
 
-            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), any(), korrelasjonsId) }
+            verify(exactly = 1) { observer.sendStartMeldingTilMeldekortregister(any(), any(), any(), korrelasjonsId) }
             verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
         }
     }
 
     @Test
-    fun `hendelse med utfall false sender stoppmelding når ansvarligSystem er DP`() {
+    fun `hendelse med utfall false sender stoppmelding`() {
         val korrelasjonsId = UUID.randomUUID()
         val observer = mockk<PersonObserver>(relaxed = true)
 
@@ -244,18 +235,6 @@ class VedtakHendelseTest {
     }
 
     @Test
-    fun `hendelse med utfall false sender ikke stoppmelding når ansvarligSystem er ARENA`() {
-        val observer = mockk<PersonObserver>(relaxed = true)
-        testPerson {
-            addObserver(observer)
-            setAnsvarligSystem(AnsvarligSystem.ARENA)
-            behandle(vedtakHendelse(utfall = false, startDato = nå, sluttDato = null))
-
-            verify(exactly = 0) { observer.sendStoppMeldingTilMeldekortregister(any(), any(), any(), any(), any()) }
-        }
-    }
-
-    @Test
     fun `erFremtidigStansHendelse returnerer true for hendelse laget med medFremtidigStopp`() {
         val hendelse = vedtakHendelseMedFremtidigStans(utfall = true, startDato = nå, sluttDato = fremtid)
 
@@ -267,5 +246,112 @@ class VedtakHendelseTest {
         val hendelse = vedtakHendelse(utfall = true, startDato = nå, sluttDato = null)
 
         hendelse.erFremtidigStansHendelse() shouldBe false
+    }
+
+    @Test
+    fun `skal endre status til DAGPENGERBRUKER og sende overtakelsesmelding når prosesserer vedtak med innvilgelse`() {
+        val korrelasjonsId = UUID.randomUUID()
+        val observer = mockk<PersonObserver>(relaxed = true)
+        val statusHistorikk = TemporalCollection<Status>()
+        statusHistorikk.put(LocalDateTime.now(), Status.IKKE_DAGPENGERBRUKER)
+
+        val person =
+            Person(
+                ident,
+                statusHistorikk = statusHistorikk,
+                arbeidssøkerperioder =
+                    mutableListOf(
+                        Arbeidssøkerperiode(
+                            periodeId,
+                            ident,
+                            LocalDateTime.now(),
+                            null,
+                            overtattBekreftelse = false,
+                        ),
+                    ),
+            )
+
+        person.status shouldBe Status.IKKE_DAGPENGERBRUKER
+
+        person.addObserver(observer)
+        person.behandle(
+            vedtakHendelse(
+                utfall = true,
+                startDato = nå,
+                sluttDato = null,
+                korrelasjonsId = korrelasjonsId,
+            ),
+        )
+
+        person.status shouldBe Status.DAGPENGERBRUKER
+        verify(exactly = 1) { observer.sendOvertakelsesmelding(person, korrelasjonsId) }
+    }
+
+    @Test
+    fun `skal endre status til IKKE_DAGPENGERBRUKER og sende frasigelsesmelding når prosesserer vedtak med avslag`() {
+        val korrelasjonsId = UUID.randomUUID()
+        val observer = mockk<PersonObserver>(relaxed = true)
+        val statusHistorikk = TemporalCollection<Status>()
+        statusHistorikk.put(LocalDateTime.now(), Status.DAGPENGERBRUKER)
+
+        val person =
+            Person(
+                ident,
+                statusHistorikk = statusHistorikk,
+                arbeidssøkerperioder =
+                    mutableListOf(
+                        Arbeidssøkerperiode(
+                            periodeId,
+                            ident,
+                            LocalDateTime.now(),
+                            null,
+                            overtattBekreftelse = true,
+                        ),
+                    ),
+            )
+
+        person.status shouldBe Status.DAGPENGERBRUKER
+
+        person.addObserver(observer)
+        person.behandle(
+            vedtakHendelse(
+                utfall = false,
+                startDato = nå,
+                sluttDato = null,
+                korrelasjonsId = korrelasjonsId,
+            ),
+        )
+
+        person.status shouldBe Status.IKKE_DAGPENGERBRUKER
+        verify(exactly = 1) { observer.sendFrasigelsesmelding(person, false, korrelasjonsId) }
+    }
+
+    @Test
+    fun `skal endre status til IKKE_DAGPENGERBRUKER men skal ikke sende frasigelsesmelding uten gjeldende arbeidssøkerperioder`() {
+        val korrelasjonsId = UUID.randomUUID()
+        val observer = mockk<PersonObserver>(relaxed = true)
+        val statusHistorikk = TemporalCollection<Status>()
+        statusHistorikk.put(LocalDateTime.now(), Status.DAGPENGERBRUKER)
+
+        val person =
+            Person(
+                ident,
+                statusHistorikk = statusHistorikk,
+            )
+
+        person.status shouldBe Status.DAGPENGERBRUKER
+
+        person.addObserver(observer)
+        person.behandle(
+            vedtakHendelse(
+                utfall = false,
+                startDato = nå,
+                sluttDato = null,
+                korrelasjonsId = korrelasjonsId,
+            ),
+        )
+
+        person.status shouldBe Status.IKKE_DAGPENGERBRUKER
+        verify(exactly = 0) { observer.sendFrasigelsesmelding(any(), any(), any()) }
     }
 }

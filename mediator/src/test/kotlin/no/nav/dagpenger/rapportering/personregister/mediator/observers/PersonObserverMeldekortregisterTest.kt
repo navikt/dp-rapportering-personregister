@@ -37,7 +37,7 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, true, korrelasjonsId)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, startDato, null, korrelasjonsId)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -50,7 +50,6 @@ class PersonObserverMeldekortregisterTest {
         melding["harRett"].asBoolean() shouldBe true
         melding["handling"].asString() shouldBe "START"
         melding["referanseId"].asString() shouldNotBe null
-        melding["skalMigreres"].asBoolean() shouldBe true
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
@@ -79,7 +78,7 @@ class PersonObserverMeldekortregisterTest {
 
         val personObserverMeldekortregister = PersonObserverMeldekortregister(personRepository, meldingerRepository)
 
-        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, fraOgMed, tilOgMed, false, korrelasjonsId)
+        personObserverMeldekortregister.sendStartMeldingTilMeldekortregister(person, fraOgMed, tilOgMed, korrelasjonsId)
 
         testRapid.inspektør.size shouldBe 1
 
@@ -92,7 +91,6 @@ class PersonObserverMeldekortregisterTest {
         melding["harRett"].asBoolean() shouldBe true
         melding["handling"].asString() shouldBe "START"
         melding["referanseId"].asString() shouldNotBe null
-        melding["skalMigreres"].asBoolean() shouldBe false
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
@@ -140,7 +138,6 @@ class PersonObserverMeldekortregisterTest {
         melding["harRett"].asBoolean() shouldBe true
         melding["handling"].asString() shouldBe "STOPP"
         melding["referanseId"].asString() shouldNotBe null
-        melding["skalMigreres"].asBoolean() shouldBe false
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
@@ -188,7 +185,6 @@ class PersonObserverMeldekortregisterTest {
         melding["harRett"].asBoolean() shouldBe false
         melding["handling"].asString() shouldBe "STOPP"
         melding["referanseId"].asString() shouldNotBe null
-        melding["skalMigreres"].asBoolean() shouldBe false
 
         verify(exactly = 1) {
             meldingerRepository.lagreUtgåendeMelding(
