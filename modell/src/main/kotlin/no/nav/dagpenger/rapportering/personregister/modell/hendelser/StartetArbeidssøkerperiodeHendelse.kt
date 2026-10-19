@@ -10,6 +10,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.overtattBekreftelse
 import no.nav.dagpenger.rapportering.personregister.modell.sendOvertakelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.sendStartMeldingTilMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -55,7 +56,7 @@ private fun settDpRettOgSendStartmelding(
             return
         }
 
-        if (person.harVedtakSomGjelderPåEllerEtter(nyesteSøknad.startDato)) {
+        if (person.harVedtakSomGjelderPåEllerEtter(nyesteSøknad.startDato.toLocalDate())) {
             logger.info {
                 "Det finnes et vedtak som gjelder på eller etter brukerens nyeste søknad. " +
                     "Søknaden antas å være ferdigbehandlet tidligere og brukeren har ingen aktiv søknad.  " +
@@ -79,16 +80,15 @@ private fun settDpRettOgSendStartmelding(
     }
 }
 
-private fun Person.harVedtakSomGjelderPåEllerEtter(søknadStartDato: LocalDateTime): Boolean =
+private fun Person.harVedtakSomGjelderPåEllerEtter(søknadStartDato: LocalDate): Boolean =
     hendelser.filterIsInstance<VedtakHendelse>().any { vedtak ->
+        val vedtakStartDato = vedtak.startDato.toLocalDate()
+        val vedtakSluttDato = vedtak.sluttDato?.toLocalDate()
+
         val gjelderPåSøknadsdato =
-            vedtak.startDato <= søknadStartDato && (
-                vedtak.sluttDato == null ||
-                    !vedtak.sluttDato.isBefore(
-                        søknadStartDato,
-                    )
-            )
-        val heleVedtaketErEtterSøknadsdato = vedtak.startDato >= søknadStartDato
+            !vedtakStartDato.isAfter(søknadStartDato) &&
+                (vedtakSluttDato == null || !vedtakSluttDato.isBefore(søknadStartDato))
+        val heleVedtaketErEtterSøknadsdato = !vedtakStartDato.isBefore(søknadStartDato)
 
         gjelderPåSøknadsdato || heleVedtaketErEtterSøknadsdato
     }
