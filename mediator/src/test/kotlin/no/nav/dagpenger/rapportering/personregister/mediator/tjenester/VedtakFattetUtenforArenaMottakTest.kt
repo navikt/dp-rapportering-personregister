@@ -85,10 +85,20 @@ class VedtakFattetUtenforArenaMottakTest {
     }
 
     @Test
-    fun `onPacket behandler ikke avslag`() {
+    fun `onPacket behandler innvilgelse`() {
+        testRapid.sendTestMessage(lagMelding(førteTil = "Innvilgelse"))
+
+        verify(exactly = 1) {
+            meldingerRepository.lagreInnkommendeMelding(any(), any(), any())
+            behandlingService.behandle(any())
+        }
+    }
+
+    @Test
+    fun `onPacket behandler avslag`() {
         testRapid.sendTestMessage(lagMelding(førteTil = "Avslag"))
 
-        verify(exactly = 0) {
+        verify(exactly = 1) {
             meldingerRepository.lagreInnkommendeMelding(any(), any(), any())
             behandlingService.behandle(any())
         }
