@@ -61,9 +61,14 @@ class ArbeidssøkerService(
                 }
                 val periode =
                     hentArbeidssøkerperioder(ident).firstOrNull { it.periodeId == periodeId }
-                        ?: throw NoSuchElementException("Fant ikke arbeidssøkerperiode med periodeId $periodeId")
+                        ?: run {
+                            logger.error {
+                                "Kunne ikke publisere melding om avsluttet arbeidssøkerperiode. Fant ikke arbeidssøkerperiode med periodeId $periodeId"
+                            }
+                            return
+                        }
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
-                val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, periode.ident)
+                val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, ident)
                 val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId, årsakTilUtmelding, datoForUtmelding)
 
                 val melding =
