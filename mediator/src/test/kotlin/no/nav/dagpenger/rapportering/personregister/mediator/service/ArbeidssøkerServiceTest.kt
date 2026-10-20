@@ -1,7 +1,12 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.service
 
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import ch.qos.logback.classic.spi.ILoggingEvent
+import ch.qos.logback.core.read.ListAppender
 import com.github.navikt.tbd_libs.rapids_and_rivers.asLocalDateTime
 import com.github.navikt.tbd_libs.rapids_and_rivers.test_support.TestRapid
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
@@ -23,6 +28,7 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode.
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
 import org.junit.jupiter.api.Test
+import org.slf4j.LoggerFactory
 import tools.jackson.databind.ObjectMapper
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -315,7 +321,6 @@ class ArbeidssøkerServiceTest {
             )
 
             rapidsConnection.inspektør.size shouldBe 0
-
             verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
         }
     }
@@ -335,7 +340,6 @@ class ArbeidssøkerServiceTest {
             )
 
             rapidsConnection.inspektør.size shouldBe 0
-
             avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeUtsendingFeilet.count() shouldBe metrikkFeilet
             avsluttetArbeidssøkerperiodeMetrikker.avsluttetArbeidssøkerperiodeSendt.count() shouldBe metrikkSendt
 
@@ -368,24 +372,37 @@ class ArbeidssøkerServiceTest {
             }
 
             rapidsConnection.inspektør.size shouldBe 0
-
             verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
         }
     }
 
     @Test
-    fun `kaster NoSuchElementException når perioden ikke finnes`() {
-        runBlocking {
-            val person = person(ansvarligSystem = AnsvarligSystem.DP)
-            every { personRepository.hentPerson(ident) } returns person
-            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns emptyList()
+    fun `feiler stille og logger error når perioden ikke finnes`() {
+        val logger = LoggerFactory.getLogger(ArbeidssøkerService::class.java) as Logger
+        val listAppender = ListAppender<ILoggingEvent>()
+        listAppender.start()
+        logger.addAppender(listAppender)
+        logger.level = Level.ERROR
 
-            shouldThrow<NoSuchElementException> {
-                arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(ident, periodeId, UUIDv7.newUuid())
+        try {
+            runBlocking {
+                val person = person(ansvarligSystem = AnsvarligSystem.DP)
+                every { personRepository.hentPerson(ident) } returns person
+                coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns emptyList()
+
+                shouldNotThrowAny {
+                    arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(ident, periodeId, UUIDv7.newUuid())
+                }
+
+                rapidsConnection.inspektør.size shouldBe 0
+                verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
+                listAppender.list.any {
+                    it.level == Level.ERROR &&
+                        it.formattedMessage.contains("Fant ikke arbeidssøkerperiode med periodeId")
+                } shouldBe true
             }
-
-            rapidsConnection.inspektør.size shouldBe 0
-            verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
+        } finally {
+            logger.detachAppender(listAppender)
         }
     }
 
@@ -394,6 +411,15 @@ class ArbeidssøkerServiceTest {
         runBlocking {
             val person = person(ansvarligSystem = AnsvarligSystem.DP)
             every { personRepository.hentPerson(ident) } returns person
+            coEvery { arbeidssøkerConnector.hentArbeidssøkerperioder(ident) } returns
+                listOf(
+                    ArbeidssøkerperiodeResponse(
+                        periodeId = periodeId,
+                        startet = startet.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime(),
+                        hendelser = emptyList(),
+                    ),
+                )
             every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
@@ -412,7 +438,6 @@ class ArbeidssøkerServiceTest {
             }
 
             rapidsConnection.inspektør.size shouldBe 0
-
             verify(exactly = 0) { meldingerRepository.lagreUtgåendeMelding(any(), any(), any()) }
         }
     }
