@@ -61,6 +61,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObs
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.BehandlingService
+import no.nav.dagpenger.rapportering.personregister.mediator.service.ManuellMigreringAvMeldekortForBrukereSomBareHarAvslagService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMottak
@@ -68,6 +69,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.BehandlingsresultatMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.IkkeMeldtSegPå21DagerMottak
+import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ManuellMigreringAvMeldekortForBrukereSomBareHarAvslagMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldekortTestdataMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.MeldestatusMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
@@ -366,6 +368,13 @@ internal class ApplicationBuilder(
                         rapidsConnection = rapid,
                         aktiverHendelserJob = aktiverHendelserJob,
                         meldingerRepository = meldingerRepository,
+                    )
+                    ManuellMigreringAvMeldekortForBrukereSomBareHarAvslagMottak(
+                        rapidsConnection = rapid,
+                        ManuellMigreringAvMeldekortForBrukereSomBareHarAvslagService(
+                            personRepository,
+                            personObserverMeldekortregister,
+                        ),
                     )
                 }
 
