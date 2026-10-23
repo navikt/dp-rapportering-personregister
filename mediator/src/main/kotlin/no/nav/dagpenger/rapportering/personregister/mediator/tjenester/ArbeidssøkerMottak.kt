@@ -55,16 +55,17 @@ class ArbeidssøkerMottak(
                     relevantMeldingsinnhold = relevantMeldingsinnhold,
                 )
 
+                arbeidssøkerMediator.behandle(arbeidssøkerperiode, korrelasjonsId)
+
                 if (arbeidssøkerperiode.avregistrert()) {
                     runBlocking {
                         arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(
-                            arbeidssøkerperiode,
+                            arbeidssøkerperiode.ident,
+                            arbeidssøkerperiode.periodeId,
                             korrelasjonsId,
                         )
                     }
                 }
-
-                arbeidssøkerMediator.behandle(arbeidssøkerperiode, korrelasjonsId)
             } catch (e: Exception) {
                 logger.error(
                     e,
