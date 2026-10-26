@@ -95,6 +95,7 @@ class ArbeidssøkerServiceTest {
                 .atZone(ZoneId.of("Europe/Oslo"))
                 .toOffsetDateTime()
         val avsluttet = avregistrertTidspunkt.atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime()
+        val sisteBekreftelse = avregistrertTidspunkt.minusDays(1).atZone(ZoneId.of("Europe/Oslo")).toOffsetDateTime()
 
         val response1 =
             ArbeidssøkerperiodeResponse(
@@ -105,7 +106,7 @@ class ArbeidssøkerServiceTest {
                     listOf(
                         HendelseResponse(
                             type = "BEKREFTELSE_V1",
-                            tidspunkt = avsluttet.minusDays(1),
+                            tidspunkt = sisteBekreftelse,
                         ),
                     ),
             )
@@ -130,7 +131,7 @@ class ArbeidssøkerServiceTest {
         perioder[1].periodeId shouldBe response1.periodeId
         perioder[1].startet shouldBe response1.startet.toLocalDateTime()
         perioder[1].avsluttet shouldBe response1.avsluttet!!.toLocalDateTime()
-        perioder[1].sisteBekreftelse shouldBe response1.avsluttet.minusDays(1).toLocalDateTime()
+        perioder[1].sisteBekreftelse shouldBe sisteBekreftelse.toLocalDateTime()
     }
 
     @Test
