@@ -62,10 +62,17 @@ class ArbeidssøkerMediator(
             if (arbeidssøkerperiode != null) {
                 behandle(arbeidssøkerperiode, korrelasjonsId)
             } else {
-                logger.info { "Personen er ikke arbeidssøker" }
+                logger.info {
+                    "Personen er ikke arbeidssøker, korrelasjonsId=$korrelasjonsId"
+                }
             }
         } catch (e: Exception) {
-            logger.error(e) { "Feil ved behandling av arbeidssøkerperiode" }
+            logger.error(e) {
+                "Feil ved behandling av arbeidssøkerperiode, korrelasjonsId=$korrelasjonsId"
+            }
+            sikkerLogg.error(e) {
+                "Feil ved behandling av arbeidssøkerperiode, korrelasjonsId=$korrelasjonsId, ident=$ident"
+            }
         }
     }
 
@@ -101,6 +108,9 @@ class ArbeidssøkerMediator(
 
         if (person.arbeidssøkerperioder.none { it.periodeId == paVegneAv.periodeId }) {
             logger.error { "Person har ingen arbeidssøkerperiode med periodeId ${paVegneAv.periodeId}. Dropper meldingen." }
+            sikkerLogg.error {
+                "Person har ingen arbeidssøkerperiode med periodeId ${paVegneAv.periodeId}. Dropper meldingen. ident=${person.ident}"
+            }
             return
         }
 
@@ -125,6 +135,9 @@ class ArbeidssøkerMediator(
 
             else -> {
                 logger.warn { "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}" }
+                sikkerLogg.warn {
+                    "Ukjent handling i PaaVegneAv: ${paVegneAv.handling}. PeriodeId ${paVegneAv.periodeId}, ident=${person.ident}"
+                }
             }
         }
 
@@ -145,7 +158,11 @@ class ArbeidssøkerMediator(
         arbeidssøkerHendelse: ArbeidssøkerperiodeHendelse,
         counter: Int = 1,
     ) {
-        logger.info { "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}" }
+        val loggKontekst =
+            "periodeId=${arbeidssøkerHendelse.periodeId}, korrelasjonsId=${arbeidssøkerHendelse.korrelasjonsId}"
+        logger.info {
+            "Behandler arbeidssøkerhendelse: ${arbeidssøkerHendelse.referanseId}, $loggKontekst"
+        }
 
         personService
             .hentPerson(arbeidssøkerHendelse.ident)
@@ -154,7 +171,7 @@ class ArbeidssøkerMediator(
                     personObservers.forEach { person.addObserver(it) }
                 }
                 logger.info {
-                    "Behandler arbeidssøkerhendelse for person med meldeplikt = ${person.meldeplikt} og meldegruppe = ${person.meldegruppe}"
+                    "Behandler arbeidssøkerhendelse for $loggKontekst, meldeplikt=${person.meldeplikt} og meldegruppe=${person.meldegruppe}"
                 }
                 person.behandle(arbeidssøkerHendelse)
                 try {
@@ -163,14 +180,17 @@ class ArbeidssøkerMediator(
                     logger.info(
                         e,
                     ) {
-                        "Optimistisk låsing feilet ved oppdatering av person med periodeId ${arbeidssøkerHendelse.periodeId}. Counter: $counter"
+                        "Optimistisk låsing feilet ved oppdatering av person med $loggKontekst. Counter: $counter"
                     }
                     behandle(arbeidssøkerHendelse, counter + 1)
                 }
-            } ?: logger.info { "Personen hendelsen gjelder for finnes ikke i databasen." }
+            } ?: logger.info {
+            "Personen hendelsen gjelder for finnes ikke i databasen, $loggKontekst"
+        }
     }
 
     companion object {
         private val logger = KotlinLogging.logger {}
+        private val sikkerLogg = KotlinLogging.logger("tjenestekall")
     }
 }

@@ -15,6 +15,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 data class StartetArbeidssøkerperiodeHendelse(
     override val korrelasjonsId: UUID,
@@ -26,6 +27,7 @@ data class StartetArbeidssøkerperiodeHendelse(
     override val sluttDato = null
 
     override fun behandle(person: Person) {
+        logger.info { "Starter behandling av arbeidssøkerperiodeHendelse, periodeId=$periodeId, korrelasjonsId=$korrelasjonsId" }
         person.hendelser.add(this)
 
         oppdaterGjeldendeperiode(person, this)
@@ -37,6 +39,8 @@ data class StartetArbeidssøkerperiodeHendelse(
             ?.also { person.setStatus(it) }
             ?.takeIf { !person.overtattBekreftelse }
             ?.also { person.sendOvertakelsesmelding(korrelasjonsId) }
+
+        logger.info { "Fullført behandling av arbeidssøkerperiodeHendelse, periodeId=$periodeId, korrelasjonsId=$korrelasjonsId" }
     }
 }
 
@@ -48,11 +52,12 @@ private fun settDpRettOgSendStartmelding(
         val nyesteSøknad = person.hendelser.filterIsInstance<SøknadHendelse>().maxByOrNull { it.startDato }
 
         if (nyesteSøknad == null) {
-            logger.error {
+            val melding =
                 "Mangler søknad for bruker som har registrert seg som arbeidssøker, dette burde ikke skje og må undersøkes. " +
                     "Setter ikke harRettTilDp og starter ikke meldekortproduksjon." +
                     "periodeId=${person.arbeidssøkerperioder.gjeldende?.periodeId}, korrelasjonsId=$korrelasjonsId"
-            }
+            logger.error { melding }
+            sikkerLogg.error { "$melding, ident=${person.ident}" }
             return
         }
 
@@ -99,7 +104,11 @@ private fun oppdaterGjeldendeperiode(
 ) {
     if (person.arbeidssøkerperioder.none { it.periodeId == hendelse.periodeId }) {
         person.arbeidssøkerperioder.gjeldende?.apply {
-            logger.warn { "Personen har allerede en aktiv arbeidssøkerperiode. Avslutter den før vi starter en ny." }
+            val melding =
+                "Personen har allerede en aktiv arbeidssøkerperiode. Avslutter den før vi starter en ny. " +
+                    "periodeId=$periodeId, korrelasjonsId=${hendelse.korrelasjonsId}"
+            logger.warn { melding }
+            sikkerLogg.warn { "$melding, ident=${person.ident}" }
             avsluttet = LocalDateTime.now()
             overtattBekreftelse = false
         }

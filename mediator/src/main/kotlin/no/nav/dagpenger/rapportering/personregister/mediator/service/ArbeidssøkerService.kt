@@ -65,6 +65,9 @@ class ArbeidssøkerService(
                             logger.error {
                                 "Kunne ikke publisere melding om avsluttet arbeidssøkerperiode. Fant ikke arbeidssøkerperiode med periodeId $periodeId"
                             }
+                            sikkerLogg.error {
+                                "Kunne ikke publisere melding om avsluttet arbeidssøkerperiode. Fant ikke arbeidssøkerperiode med periodeId $periodeId, ident=$ident"
+                            }
                             return
                         }
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
