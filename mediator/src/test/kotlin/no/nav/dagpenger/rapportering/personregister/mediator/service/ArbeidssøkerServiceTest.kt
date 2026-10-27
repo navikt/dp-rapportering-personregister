@@ -18,6 +18,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.HendelseResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerperiodeUtmeldingInfo
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
@@ -158,11 +159,15 @@ class ArbeidssøkerServiceTest {
                     ),
                 )
             every {
-                personRepository.hentÅrsakTilOgDatoForUtmelding(
+                personRepository.hentUtmeldinginfo(
                     periodeId,
                     ident,
                 )
-            } returns Pair(ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT, LocalDate.now())
+            } returns
+                ArbeidssøkerperiodeUtmeldingInfo(
+                    årsakTilUtmelding = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+                    datoForUtmelding = LocalDate.now(),
+                )
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -220,8 +225,11 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null andThen
-                Pair(ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET, LocalDate.now())
+            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null andThen
+                ArbeidssøkerperiodeUtmeldingInfo(
+                    årsakTilUtmelding = ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    datoForUtmelding = LocalDate.now(),
+                )
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -275,7 +283,7 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
+            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -420,7 +428,7 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident) } returns null
+            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
