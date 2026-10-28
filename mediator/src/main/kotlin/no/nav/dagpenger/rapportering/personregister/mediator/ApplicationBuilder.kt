@@ -20,7 +20,6 @@ import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserialize
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
-import no.nav.dagpenger.rapportering.personregister.mediator.api.behandlingApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
@@ -29,7 +28,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Meldekort
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerBeslutningRepositoryPostgres
-import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PostgresDataSourceBuilder.dataSource
@@ -60,7 +58,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObs
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerBekreftelseService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ArbeidssøkerService
-import no.nav.dagpenger.rapportering.personregister.mediator.service.BehandlingService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.ManuellMigreringAvMeldekortForBrukereSomBareHarAvslagService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
@@ -75,7 +72,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Meldestat
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.NødbremsMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.StartAktiverHendelserJobManueltMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.SøknadMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.VedtakFattetUtenforArenaMottak
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
@@ -128,7 +124,6 @@ internal class ApplicationBuilder(
 
     private val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
     private val arbeidssøkerBeslutningRepository = ArbeidssøkerBeslutningRepositoryPostgres(dataSource, actionTimer)
-    private val behandlingRepository = BehandlingRepositoryPostgres(dataSource)
     private val meldingerRepository = MeldingerRepositoryPostgres(dataSource)
 
     private val tempPersonRepository = TempPersonRepositoryPostgres(dataSource)
@@ -183,12 +178,6 @@ internal class ApplicationBuilder(
             personRepository,
             listOf(personObserverKafka, arbeidssøkerBeslutningObserver, personObserverMeldekortregister),
             meldekortregisterConnector,
-        )
-    private val behandlingService =
-        BehandlingService(
-            personService,
-            behandlingRepository,
-            actionTimer,
         )
     private val arbeidssøkerService =
         ArbeidssøkerService(
@@ -322,7 +311,6 @@ internal class ApplicationBuilder(
                                 pluginConfiguration(kafkaContext)
                                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                                 personApi(personService, søknadService, arbeidssøkerService)
-                                behandlingApi(behandlingRepository)
                             }
                         }
                     },
@@ -352,7 +340,6 @@ internal class ApplicationBuilder(
                         behandlingsresultatMetrikker,
                         meldingerRepository,
                     )
-                    VedtakFattetUtenforArenaMottak(rapid, behandlingService, meldingerRepository, vedtakMetrikker)
                     NødbremsMottak(rapid, personMediator, meldingerRepository)
                     ArbeidssøkerBekreftelseMottak(
                         rapid,
