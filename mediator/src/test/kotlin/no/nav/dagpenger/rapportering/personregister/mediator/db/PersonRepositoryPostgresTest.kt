@@ -803,7 +803,7 @@ class PersonRepositoryPostgresTest {
                 årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
 
-            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)!!
+            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentUtmeldinginfo(periodeId, person.ident)!!
 
             årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
             datoForUtmelding shouldBe dato.toLocalDate().plusDays(10)
@@ -827,7 +827,7 @@ class PersonRepositoryPostgresTest {
                 årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
 
-            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)!!
+            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentUtmeldinginfo(periodeId, person.ident)!!
 
             årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
             datoForUtmelding shouldBe LocalDate.now()
@@ -845,7 +845,7 @@ class PersonRepositoryPostgresTest {
 
             val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
 
-            val årsak = personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, person.ident)
+            val årsak = personRepository.hentUtmeldinginfo(periodeId, person.ident)
 
             årsak shouldBe null
         }
@@ -862,7 +862,7 @@ class PersonRepositoryPostgresTest {
 
             val ukjentPeriodeId = UUIDv7.newUuid()
 
-            val årsak = personRepository.hentÅrsakTilOgDatoForUtmelding(ukjentPeriodeId, person.ident)
+            val årsak = personRepository.hentUtmeldinginfo(ukjentPeriodeId, person.ident)
 
             årsak shouldBe null
         }

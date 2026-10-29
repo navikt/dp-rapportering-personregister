@@ -6,6 +6,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
+import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerperiodeUtmeldingInfo
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
@@ -71,15 +72,21 @@ class ArbeidssøkerService(
                             return
                         }
                 val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
-                val (årsakTilUtmelding, datoForUtmelding) = hentEllerOpprettÅrsakTilUtmelding(periodeId, ident)
-                val fastsattMeldedato = hentFastsattMeldedato(periode.ident, periodeId, årsakTilUtmelding, datoForUtmelding)
+                val utmeldinginfo = hentEllerOpprettUtmeldinginfo(periodeId, ident)
+                val fastsattMeldedato =
+                    hentFastsattMeldedato(
+                        periode.ident,
+                        periodeId,
+                        utmeldinginfo.årsakTilUtmelding,
+                        utmeldinginfo.datoForUtmelding,
+                    )
 
                 val melding =
                     avsluttetMelding(
                         periode = periode,
                         fastsattMeldedato = fastsattMeldedato,
                         avregistrertTidspunkt = avregistrertTidspunkt,
-                        årsak = årsakTilUtmelding,
+                        årsak = utmeldinginfo.årsakTilUtmelding,
                     )
 
                 publiser(periode, melding, korrelasjonsId)
@@ -120,19 +127,22 @@ class ArbeidssøkerService(
         }
     }
 
-    private fun hentEllerOpprettÅrsakTilUtmelding(
+    private fun hentEllerOpprettUtmeldinginfo(
         periodeId: UUID,
         ident: String,
-    ): Pair<Arbeidssøkerperiode.ÅrsakTilUtmelding, LocalDate> =
-        personRepository.hentÅrsakTilOgDatoForUtmelding(periodeId, ident)
-            ?: Pair(Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET, LocalDate.now()).also { (årsak, _) ->
+    ): ArbeidssøkerperiodeUtmeldingInfo =
+        personRepository.hentUtmeldinginfo(periodeId, ident)
+            ?: ArbeidssøkerperiodeUtmeldingInfo(
+                årsakTilUtmelding = Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                datoForUtmelding = LocalDate.now(),
+            ).also { utmeldinginfo ->
                 logger.info {
                     "Ingen årsak til utmelding lagret for periodeId=$periodeId. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
                 }
                 sikkerLogg.info {
                     "Ingen årsak til utmelding lagret for periodeId=$periodeId, ident=$ident. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
                 }
-                personRepository.lagreÅrsakTilUtmelding(periodeId, ident, årsak)
+                personRepository.lagreÅrsakTilUtmelding(periodeId, ident, utmeldinginfo.årsakTilUtmelding)
             }
 
     private suspend fun hentFastsattMeldedato(
