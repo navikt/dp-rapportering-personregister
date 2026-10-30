@@ -22,7 +22,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldepliktConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.PdlConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.BehandlingRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepositoryPostgres
 import no.nav.dagpenger.rapportering.personregister.mediator.db.Postgres.database
@@ -58,7 +57,6 @@ open class ApiTestSetup {
 
     val pdlConnector = mockk<PdlConnector>()
     val meldekortregisterConnector = mockk<MeldekortregisterConnector>()
-    lateinit var behandlingRepository: BehandlingRepositoryPostgres
 
     companion object {
         const val TOKENX_ISSUER_ID = "tokenx"
@@ -95,8 +93,6 @@ open class ApiTestSetup {
         clean()
 
         testApplication {
-            behandlingRepository = BehandlingRepositoryPostgres(dataSource)
-
             val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
             val testKafkaContainer = TestKafkaContainer()
             val paaVegneAvTopic = "paa-vegne-av-topic"
@@ -192,7 +188,6 @@ open class ApiTestSetup {
                 pluginConfiguration(kafkaContext)
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService, søknadService, arbeidssøkerService)
-                behandlingApi(behandlingRepository)
             }
 
             block()
