@@ -1,6 +1,5 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.db
 
-import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.Status
@@ -136,12 +135,17 @@ class PersonRepositoryInMemory : PersonRepository {
 
     override fun hentIdent(personId: Long): String? = null
 
-    override fun hentÅrsakTilOgDatoForUtmelding(
+    override fun hentUtmeldinginfo(
         periodeId: UUID,
         ident: String,
-    ): Pair<Arbeidssøkerperiode.ÅrsakTilUtmelding, LocalDate>? =
+    ): ArbeidssøkerperiodeUtmeldingInfo? =
         personList[ident]?.arbeidssøkerperioder?.find { it.periodeId == periodeId }?.let {
-            it.årsakTilUtmelding?.let { årsak -> Pair(årsak, LocalDate.now()) }
+            it.årsakTilUtmelding?.let { årsak ->
+                ArbeidssøkerperiodeUtmeldingInfo(
+                    årsakTilUtmelding = årsak,
+                    datoForUtmelding = LocalDate.now(),
+                )
+            }
         }
 
     private fun Person.deepCopy(versjon: Int) =
