@@ -14,9 +14,7 @@ import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.pdl.createPersonOppslag
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
 import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
-import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
-import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
@@ -38,6 +36,8 @@ import no.nav.dagpenger.rapportering.personregister.mediator.jobs.ScheduledTask
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.TaskExecutor
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.MeldestatusJob
 import no.nav.dagpenger.rapportering.personregister.mediator.jobs.midlertidig.ResendPåVegneAvMelding
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.KafkaConfig
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.KafkaLytter
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseFraDpMeldekortregisterMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
@@ -52,7 +52,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.Meldeplik
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.MeldestatusMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SynkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.SøknadMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.VedtakMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.ArbeidssøkerBeslutningObserver
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverKafka
 import no.nav.dagpenger.rapportering.personregister.mediator.observers.PersonObserverMeldekortregister
@@ -77,9 +76,7 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.clients.producer.Producer
-import org.apache.kafka.common.serialization.LongDeserializer
 import org.apache.kafka.common.serialization.LongSerializer
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -110,7 +107,6 @@ internal class ApplicationBuilder(
         ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker(meterRegistry)
     private val avsluttetArbeidssøkerperiodeMetrikker = AvsluttetArbeidssøkerperiodeMetrikker(meterRegistry)
     private val synkroniserPersonMetrikker = SynkroniserPersonMetrikker(meterRegistry)
-    private val vedtakMetrikker = VedtakMetrikker(meterRegistry)
     private val databaseMetrikker = DatabaseMetrikker(meterRegistry)
     private val actionTimer = ActionTimer(meterRegistry)
 
@@ -141,21 +137,6 @@ internal class ApplicationBuilder(
             clientId = "teamdagpenger-personregister-paavegneav-producer",
             keySerializer = LongSerializer::class,
             valueSerializer = PaaVegneAvAvroSerializer::class,
-        )
-    private val bekreftelsePåVegneAvKafkaConsumer =
-        kafkaFactory.createConsumer<Long, PaaVegneAv>(
-            groupId = "teamdagpenger-personregister-paavegneav-v1",
-            clientId = "teamdagpenger-personregister-paavegneav-consumer",
-            keyDeserializer = LongDeserializer::class,
-            valueDeserializer = PaaVegneAvAvroDeserializer::class,
-            autoCommit = false,
-        )
-    private val arbeidssøkerperioderKafkaConsumer =
-        kafkaFactory.createConsumer<Long, Periode>(
-            groupId = "teamdagpenger-personregister-arbeidssokerperiode-v1",
-            clientId = "teamdagpenger-personregister-arbeidssokerperiode-consumer",
-            keyDeserializer = LongDeserializer::class,
-            valueDeserializer = PeriodeAvroDeserializer::class,
         )
 
     private val personObserverKafka =
@@ -277,12 +258,6 @@ internal class ApplicationBuilder(
     private val kafkaContext =
         KafkaContext(
             bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
-            bekreftelsePåVegneAvKafkaConsumer = bekreftelsePåVegneAvKafkaConsumer,
-            påVegneAvMottak = overtakelseMottak,
-            påVegneAvTopic = bekreftelsePåVegneAvTopic,
-            arbeidssøkerperioderKafkaConsumer = arbeidssøkerperioderKafkaConsumer,
-            arbeidssøkerperioderTopic = arbeidssøkerperioderTopic,
-            arbeidssøkerMottak = arbeidssøkerMottak,
         )
 
     init {
@@ -366,6 +341,29 @@ internal class ApplicationBuilder(
                 }
 
         rapidsConnection.register(this)
+
+        val bekreftelsePåVegneAvKafkaLytter =
+            KafkaLytter<PaaVegneAv>(
+                KafkaConfig.consumer<PaaVegneAv>(
+                    topicName = bekreftelsePåVegneAvTopic,
+                    groupId = "teamdagpenger-personregister-paavegneav-v1",
+                ),
+                rapidsConnection,
+            ) { korrelasjonsId, paaVegneAv ->
+                overtakelseMottak.consume(korrelasjonsId, paaVegneAv)
+            }
+        val arbeidssøkerperioderKafkaLytter =
+            KafkaLytter<Periode>(
+                KafkaConfig.consumer<Periode>(
+                    topicName = arbeidssøkerperioderTopic,
+                    groupId = "teamdagpenger-personregister-arbeidssokerperiode-v1",
+                ),
+                rapidsConnection,
+            ) { korrelasjonsId, periode ->
+                arbeidssøkerMottak.consume(korrelasjonsId, periode)
+            }
+        rapidsConnection.register(bekreftelsePåVegneAvKafkaLytter)
+        rapidsConnection.register(arbeidssøkerperioderKafkaLytter)
     }
 
     internal fun start() {
@@ -385,10 +383,4 @@ internal class ApplicationBuilder(
 
 data class KafkaContext(
     val bekreftelsePåVegneAvKafkaProdusent: Producer<Long, PaaVegneAv>,
-    val bekreftelsePåVegneAvKafkaConsumer: KafkaConsumer<Long, PaaVegneAv>,
-    val påVegneAvMottak: ArbeidssøkerperiodeOvertakelseMottak,
-    val påVegneAvTopic: String,
-    val arbeidssøkerperioderKafkaConsumer: KafkaConsumer<Long, Periode>,
-    val arbeidssøkerperioderTopic: String,
-    val arbeidssøkerMottak: ArbeidssøkerMottak,
 )
