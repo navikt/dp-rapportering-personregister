@@ -48,11 +48,6 @@ class KafkaLytter<T>(
         }
     }
 
-    fun stop() {
-        stopConsumer()
-        stopApplication()
-    }
-
     private fun stopConsumer() {
         logger.info { "Stopper KafkaLytter" }
         if (running.getAndSet(false)) {
