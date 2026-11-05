@@ -3,8 +3,10 @@ package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 import com.github.navikt.tbd_libs.rapids_and_rivers_api.RapidsConnection
 import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
+import org.apache.kafka.clients.consumer.CloseOptions
 import org.apache.kafka.clients.consumer.Consumer
 import org.apache.kafka.clients.consumer.ConsumerRecords
+import org.apache.kafka.clients.consumer.OffsetAndMetadata
 import org.apache.kafka.common.TopicPartition
 import org.apache.kafka.common.errors.WakeupException
 import java.time.Duration
@@ -17,6 +19,7 @@ class KafkaLytter<T>(
     private val block: (korrelasjonsId: UUID, T) -> Unit,
 ) : RapidsConnection.StatusListener {
     private val running = AtomicBoolean(true)
+    private val applicationStopping = AtomicBoolean(false)
     private val consumerThread: Thread
 
     init {
@@ -24,6 +27,7 @@ class KafkaLytter<T>(
     }
 
     private companion object {
+        val shutdownTimeout: Duration = Duration.ofSeconds(5)
         val logger = KotlinLogging.logger {}
     }
 
@@ -32,35 +36,74 @@ class KafkaLytter<T>(
     }
 
     override fun onShutdown(rapidsConnection: RapidsConnection) {
-        stop()
+        if (applicationStopping.compareAndSet(false, true)) {
+            stopConsumer()
+        }
     }
 
     fun start() {
-        logger.info { "Starter ArbeidssøkerStatusLytter" }
+        logger.info { "Starter KafkaLytter" }
         if (!consumerThread.isAlive) {
             consumerThread.start()
         }
     }
 
     fun stop() {
-        logger.info { "Stopper ArbeidssøkerStatusLytter" }
-        running.set(false)
-        consumer.wakeup() // Interrupts poll() safely
-        consumerThread.join() // Ensure thread shutdown
-        rapidsConnection.stop()
+        stopConsumer()
+        stopApplication()
+    }
+
+    private fun stopConsumer() {
+        logger.info { "Stopper KafkaLytter" }
+        if (running.getAndSet(false)) {
+            consumer.wakeup() // Interrupts poll() safely
+        }
+        awaitConsumerShutdown()
+    }
+
+    private fun awaitConsumerShutdown() {
+        // Å vente på egen tråd gir deadlock
+        if (Thread.currentThread() == consumerThread) return
+        consumerThread.join(shutdownTimeout.toMillis())
+        if (consumerThread.isAlive) {
+            logger.warn { "Konsumenten avsluttet ikke innen tidsfristen. Fortsetter appstopp." }
+        }
+    }
+
+    private fun stopApplication() {
+        if (applicationStopping.compareAndSet(false, true)) {
+            rapidsConnection.stop()
+        }
     }
 
     private fun consumeLoop() {
+        var failed = true
         try {
             while (running.get()) {
                 val records = consumer.poll(Duration.ofSeconds(1))
                 processRecords(records)
             }
-        } catch (e: WakeupException) {
-            if (running.get()) throw e
-        } catch (e: Exception) {
-            logger.error(e) { "Noe feil skjedde i consumeringen" }
+            failed = false
+        } catch (e: Throwable) {
+            failed = e !is WakeupException || running.get()
+            if (failed) {
+                logger.error(e) { "Noe feil skjedde i consumeringen" }
+            }
         } finally {
+            running.set(false)
+            if (failed) {
+                // Shutdown-callbacks kan vente på consumer-tråden, så appen må stoppes fra en egen tråd
+                Thread(
+                    {
+                        awaitConsumerShutdown()
+                        stopApplication()
+                    },
+                    "kafka-lytter-shutdown",
+                ).apply {
+                    isDaemon = false
+                    start()
+                }
+            }
             closeResources()
         }
     }
@@ -82,17 +125,17 @@ class KafkaLytter<T>(
                 currentPositions[TopicPartition(record.topic(), record.partition())] = record.offset() + 1
             }
         } catch (err: Exception) {
-            logger.info(err) { "Feil ved behandling av meldinger. Tilbakestiller offsets: $currentPositions" }
+            logger.error(err) { "Feil ved behandling av meldinger. Tilbakestiller offsets: $currentPositions" }
             currentPositions.forEach { (partition, offset) -> consumer.seek(partition, offset) }
-            stop()
+            throw err
         } finally {
-            consumer.commitSync()
+            consumer.commitSync(currentPositions.mapValues { (_, offset) -> OffsetAndMetadata(offset) })
         }
     }
 
     private fun closeResources() {
         tryAndLog(consumer::unsubscribe)
-        tryAndLog(consumer::close)
+        tryAndLog { consumer.close(CloseOptions.timeout(shutdownTimeout)) }
     }
 
     private fun tryAndLog(block: () -> Unit) {
