@@ -63,14 +63,18 @@ class KafkaLytter<T>(
 
     private fun awaitConsumerShutdown() {
         // Å vente på egen tråd gir deadlock
+        logger.info { "Venter på at consumer-tråden skal avslutte..." }
         if (Thread.currentThread() == consumerThread) return
         consumerThread.join(shutdownTimeout.toMillis())
         if (consumerThread.isAlive) {
-            logger.warn { "Konsumenten avsluttet ikke innen tidsfristen. Fortsetter appstopp." }
+            logger.warn { "Consumer-tråden avsluttet ikke innen tidsfristen (${shutdownTimeout.toMillis()}). Fortsetter appstopp." }
+        } else {
+            logger.info { "Consumer-tråden er avsluttet." }
         }
     }
 
     private fun stopApplication() {
+        logger.info { "Stopper applikasjonen." }
         if (applicationStopping.compareAndSet(false, true)) {
             rapidsConnection.stop()
         }
@@ -87,11 +91,12 @@ class KafkaLytter<T>(
         } catch (e: Throwable) {
             failed = e !is WakeupException || running.get()
             if (failed) {
-                logger.error(e) { "Noe feil skjedde i consumeringen" }
+                logger.error(e) { "Feil ved konsumeringen av Kafka-melding." }
             }
         } finally {
             running.set(false)
             if (failed) {
+                logger.warn { "Stopper applikasjonen på grunn av feil ved konsumering av Kafka-melding, se tidligere logg for årsak." }
                 // Shutdown-callbacks kan vente på consumer-tråden, så appen må stoppes fra en egen tråd
                 Thread(
                     {

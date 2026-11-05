@@ -5,10 +5,13 @@ import io.confluent.kafka.schemaregistry.client.SchemaRegistryClientConfig
 import io.confluent.kafka.serializers.KafkaAvroDeserializer
 import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.serialization.LongDeserializer
 import java.util.Properties
+
+private val logger = KotlinLogging.logger {}
 
 object KafkaConfig {
     init {
@@ -37,6 +40,7 @@ object KafkaConfig {
         groupId: String,
     ): KafkaConsumer<Long, T> =
         KafkaConsumer<Long, T>(config.consumerConfig(groupId, defaultConsumerProperties)).also {
+            logger.info { "Abonnerer på topicName=$topicName med groupId=$groupId" }
             it.subscribe(listOf(topicName))
         }
 }
