@@ -7,8 +7,8 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftelse
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.Bekreftelsesløsning
@@ -40,7 +40,7 @@ class ArbeidssøkerBekreftelseConnectorTest {
 
     @BeforeEach
     fun setup() {
-        mockkStatic("no.nav.dagpenger.rapportering.personregister.kafka.utils.ProducerUtilsKt")
+        mockkStatic("no.nav.dagpenger.rapportering.personregister.mediator.kafka.KafkaUtilsKt")
         producer = MockKafkaProducer()
         connector =
             ArbeidssøkerBekreftelseKafka(producer, arbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker, meldingerRepository)

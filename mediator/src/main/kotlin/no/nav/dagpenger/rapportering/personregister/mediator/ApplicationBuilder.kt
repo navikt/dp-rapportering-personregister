@@ -12,12 +12,7 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.pdl.createPersonOppslag
-import no.nav.dagpenger.rapportering.personregister.kafka.KafkaFactory
-import no.nav.dagpenger.rapportering.personregister.kafka.KafkaKonfigurasjon
-import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroSerializer
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaSchemaRegistryConfig
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.kafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
@@ -76,7 +71,6 @@ import no.nav.helse.rapids_rivers.RapidApplication
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
 import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
-import org.apache.kafka.clients.producer.Producer
 import org.apache.kafka.common.serialization.LongSerializer
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
@@ -130,13 +124,18 @@ internal class ApplicationBuilder(
 
     private val bekreftelsePåVegneAvTopic = configuration.getValue("BEKREFTELSE_PAA_VEGNE_AV_TOPIC")
     private val arbeidssøkerperioderTopic = configuration.getValue("ARBEIDSSOKERPERIODER_TOPIC")
-    private val kafkaKonfigurasjon = KafkaKonfigurasjon(kafkaServerKonfigurasjon, kafkaSchemaRegistryConfig)
-    private val kafkaFactory = KafkaFactory(kafkaKonfigurasjon)
+
     private val bekreftelsePåVegneAvProdusent =
-        kafkaFactory.createProducer<Long, PaaVegneAv>(
+        KafkaConfig.producer<Long, PaaVegneAv>(
             clientId = "teamdagpenger-personregister-paavegneav-producer",
             keySerializer = LongSerializer::class,
-            valueSerializer = PaaVegneAvAvroSerializer::class,
+            valueSerializer = SpecificAvroSerializer<PaaVegneAv>()::class,
+        )
+    private val bekreftelseKafkaProdusent =
+        KafkaConfig.producer<Long, Bekreftelse>(
+            clientId = "teamdagpenger-rapportering-producer",
+            keySerializer = LongSerializer::class,
+            valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
         )
 
     private val personObserverKafka =
@@ -222,12 +221,6 @@ internal class ApplicationBuilder(
             meldingerRepository,
         )
     private val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
-    private val bekreftelseKafkaProdusent =
-        kafkaFactory.createProducer<Long, Bekreftelse>(
-            clientId = "teamdagpenger-rapportering-producer",
-            keySerializer = LongSerializer::class,
-            valueSerializer = SpecificAvroSerializer<Bekreftelse>()::class,
-        )
     private val arbeidssøkerBekreftelseKafka =
         ArbeidssøkerBekreftelseKafka(
             bekreftelseKafkaProdusent,
@@ -255,11 +248,6 @@ internal class ApplicationBuilder(
     private val resendPaaVegneAvJob = ResendPåVegneAvMelding()
     private val meldestatusJob = MeldestatusJob()
 
-    private val kafkaContext =
-        KafkaContext(
-            bekreftelsePåVegneAvKafkaProdusent = bekreftelsePåVegneAvProdusent,
-        )
-
     init {
         rapidsConnection =
             RapidApplication
@@ -283,7 +271,7 @@ internal class ApplicationBuilder(
                                     logger.info { "Lukket datasource" }
                                 }
 
-                                pluginConfiguration(kafkaContext)
+                                pluginConfiguration()
                                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                                 personApi(personService, søknadService, arbeidssøkerService)
                             }
@@ -380,7 +368,3 @@ internal class ApplicationBuilder(
         meldestatusJob.start(personService, tempPersonRepository, meldepliktConnector, meldestatusMediator)
     }
 }
-
-data class KafkaContext(
-    val bekreftelsePåVegneAvKafkaProdusent: Producer<Long, PaaVegneAv>,
-)

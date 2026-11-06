@@ -1,9 +1,9 @@
 package no.nav.dagpenger.rapportering.personregister.mediator.connector
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.bekreftelseTopic
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ArbeidssøkerBekreftelseTilArbeidssøkerregisteretMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerBekreftelseMelding
 import no.nav.paw.bekreftelse.melding.v1.Bekreftelse
