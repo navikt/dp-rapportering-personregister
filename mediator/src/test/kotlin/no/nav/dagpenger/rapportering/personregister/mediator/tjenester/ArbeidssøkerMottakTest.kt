@@ -45,7 +45,7 @@ class ArbeidssøkerMottakTest {
 
         val records = lagConsumerRecords()
         val periode = records.first().value()
-        arbeidssøkerMottak.consume(records)
+        arbeidssøkerMottak.consume(newUuid(), periode)
 
         verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>(), any()) }
         verify(exactly = 1) {
@@ -76,7 +76,7 @@ class ArbeidssøkerMottakTest {
 
         val records = lagConsumerRecords()
         val periode = records.first().value()
-        val exception = shouldThrow<RuntimeException> { arbeidssøkerMottak.consume(records) }
+        val exception = shouldThrow<RuntimeException> { arbeidssøkerMottak.consume(newUuid(), periode) }
 
         exception.message shouldBe "kaboom"
         verify(exactly = 1) { arbeidssøkerMediator.behandle(any<Arbeidssøkerperiode>(), any()) }
@@ -105,7 +105,7 @@ class ArbeidssøkerMottakTest {
     fun `publiserAvsluttetArbeidssøkerperiode kalles når periode er avsluttet`() {
         val records = lagConsumerRecords(avsluttet = true)
         val periode = records.first().value()
-        arbeidssøkerMottak.consume(records)
+        arbeidssøkerMottak.consume(newUuid(), periode)
 
         coVerify(exactly = 1) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any(), any()) }
         verify(exactly = 1) {
@@ -131,7 +131,8 @@ class ArbeidssøkerMottakTest {
     @Test
     fun `publiserAvsluttetArbeidssøkerperiode kalles ikke når periode ikke er avsluttet`() {
         val records = lagConsumerRecords(avsluttet = false)
-        arbeidssøkerMottak.consume(records)
+        val periode = records.first().value()
+        arbeidssøkerMottak.consume(newUuid(), periode)
 
         coVerify(exactly = 0) { arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(any(), any(), any()) }
     }

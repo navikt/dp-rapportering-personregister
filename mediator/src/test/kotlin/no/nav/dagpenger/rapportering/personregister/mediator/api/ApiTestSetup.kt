@@ -32,10 +32,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.mediator.service.PersonService
 import no.nav.dagpenger.rapportering.personregister.mediator.service.SøknadService
 import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerMottak
-import no.nav.dagpenger.rapportering.personregister.mediator.tjenester.ArbeidssøkerperiodeOvertakelseMottak
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.arbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
@@ -149,23 +146,10 @@ open class ApiTestSetup {
                     arbeidssøkerMediator,
                     actionTimer,
                 )
-            val arbeidssøkerMottak =
-                ArbeidssøkerMottak(
-                    arbeidssøkerMediator,
-                    arbeidssøkerperiodeMetrikker,
-                    arbeidssøkerService,
-                    meldingerRepository,
-                )
-            val overtakelseMottak = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
+
             val kafkaContext =
                 KafkaContext(
                     bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,
-                    bekreftelsePåVegneAvKafkaConsumer = bekreftelsePåVegneAvKafkaConsumer,
-                    påVegneAvMottak = overtakelseMottak,
-                    påVegneAvTopic = paaVegneAvTopic,
-                    arbeidssøkerperioderKafkaConsumer = arbedssøkerperiodeKafkaConsumer,
-                    arbeidssøkerperioderTopic = "ARBEIDSSOKERPERIODER_TOPIC",
-                    arbeidssøkerMottak = arbeidssøkerMottak,
                 )
 
             val personMediator =

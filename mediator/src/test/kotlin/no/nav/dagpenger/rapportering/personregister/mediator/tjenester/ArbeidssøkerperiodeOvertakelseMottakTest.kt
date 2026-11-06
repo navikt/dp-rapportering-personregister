@@ -18,8 +18,6 @@ import tools.jackson.databind.ObjectMapper
 import java.util.UUID
 
 class ArbeidssøkerperiodeOvertakelseMottakTest {
-    private val ident = "13308825099"
-
     private val arbeidssøkerMediator = mockk<ArbeidssøkerMediator>(relaxed = true)
     private val meldingerRepository = mockk<MeldingerRepository>(relaxed = true)
     private val mottakk = ArbeidssøkerperiodeOvertakelseMottak(arbeidssøkerMediator, meldingerRepository)
@@ -28,7 +26,7 @@ class ArbeidssøkerperiodeOvertakelseMottakTest {
     fun `consume behandler melding og lagrer innkommende melding`() {
         val periodeId = newUuid()
         val records = lagConsumerRecords(periodeId)
-        mottakk.consume(records)
+        mottakk.consume(newUuid(), records.first().value())
 
         coVerify(exactly = 1) { arbeidssøkerMediator.behandle(any<PaaVegneAv>(), 1, true) }
         verify(exactly = 1) {
