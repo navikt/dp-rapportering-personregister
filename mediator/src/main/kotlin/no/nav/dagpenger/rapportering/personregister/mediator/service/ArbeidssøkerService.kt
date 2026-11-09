@@ -6,7 +6,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.mediator.ZONE_ID
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerperiodeUtmeldingInfo
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.AvsluttetArbeidssøkerperiodeMetrikker
@@ -71,22 +70,22 @@ class ArbeidssøkerService(
                             }
                             return
                         }
-                val avregistrertTidspunkt = periode.hentAvregistrertTidspunkt()
-                val utmeldinginfo = hentEllerOpprettUtmeldinginfo(periodeId, ident)
+                val avsluttetTidspunkt = periode.hentAvsluttetTidspunkt()
+                val årsakTilUtmelding = hentEllerOpprettÅrsakTilUtmelding(periodeId, ident)
                 val fastsattMeldedato =
                     hentFastsattMeldedato(
                         periode.ident,
                         periodeId,
-                        utmeldinginfo.årsakTilUtmelding,
-                        utmeldinginfo.datoForUtmelding,
+                        årsakTilUtmelding,
+                        avsluttetTidspunkt.toLocalDate(),
                     )
 
                 val melding =
                     avsluttetMelding(
                         periode = periode,
                         fastsattMeldedato = fastsattMeldedato,
-                        avregistrertTidspunkt = avregistrertTidspunkt,
-                        årsak = utmeldinginfo.årsakTilUtmelding,
+                        avsluttetTidspunkt = avsluttetTidspunkt,
+                        årsak = årsakTilUtmelding,
                     )
 
                 publiser(periode, melding, korrelasjonsId)
@@ -98,7 +97,7 @@ class ArbeidssøkerService(
         }
     }
 
-    private fun Arbeidssøkerperiode.hentAvregistrertTidspunkt(): LocalDateTime =
+    private fun Arbeidssøkerperiode.hentAvsluttetTidspunkt(): LocalDateTime =
         avsluttet ?: throw IllegalArgumentException(
             "Periode $periodeId er ikke avsluttet og kan ikke publiseres",
         )
@@ -127,23 +126,21 @@ class ArbeidssøkerService(
         }
     }
 
-    private fun hentEllerOpprettUtmeldinginfo(
+    private fun hentEllerOpprettÅrsakTilUtmelding(
         periodeId: UUID,
         ident: String,
-    ): ArbeidssøkerperiodeUtmeldingInfo =
-        personRepository.hentUtmeldinginfo(periodeId, ident)
-            ?: ArbeidssøkerperiodeUtmeldingInfo(
-                årsakTilUtmelding = Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
-                datoForUtmelding = LocalDate.now(),
-            ).also { utmeldinginfo ->
-                logger.info {
-                    "Ingen årsak til utmelding lagret for periodeId=$periodeId. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
+    ): Arbeidssøkerperiode.ÅrsakTilUtmelding =
+        personRepository.hentÅrsakTilUtmelding(periodeId, ident)
+            ?: Arbeidssøkerperiode.ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET
+                .also { årsak ->
+                    logger.info {
+                        "Ingen årsak til utmelding lagret for periodeId=$periodeId. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
+                    }
+                    sikkerLogg.info {
+                        "Ingen årsak til utmelding lagret for periodeId=$periodeId, ident=$ident. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
+                    }
+                    personRepository.lagreÅrsakTilUtmelding(periodeId, ident, årsak)
                 }
-                sikkerLogg.info {
-                    "Ingen årsak til utmelding lagret for periodeId=$periodeId, ident=$ident. Lagrer UTMELDT_I_ARBEIDSSØKERREGISTERET som årsak."
-                }
-                personRepository.lagreÅrsakTilUtmelding(periodeId, ident, utmeldinginfo.årsakTilUtmelding)
-            }
 
     private suspend fun hentFastsattMeldedato(
         ident: String,
@@ -164,7 +161,7 @@ class ArbeidssøkerService(
     private fun avsluttetMelding(
         periode: Arbeidssøkerperiode,
         fastsattMeldedato: LocalDate?,
-        avregistrertTidspunkt: LocalDateTime,
+        avsluttetTidspunkt: LocalDateTime,
         årsak: Arbeidssøkerperiode.ÅrsakTilUtmelding,
     ): JsonMessage =
         JsonMessage.newMessage(
@@ -172,7 +169,7 @@ class ArbeidssøkerService(
             buildMap {
                 put("ident", periode.ident)
                 put("periodeId", periode.periodeId)
-                put("avregistrertTidspunkt", avregistrertTidspunkt)
+                put("avregistrertTidspunkt", avsluttetTidspunkt)
                 put("årsak", årsak.dbValue)
                 fastsattMeldedato?.let { put("fastsattMeldedato", it) }
             },
