@@ -12,7 +12,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.service.Arbeidssøk
 import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.avregistrert
 import no.nav.paw.arbeidssokerregisteret.api.v1.Periode
-import tools.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import java.util.UUID
 

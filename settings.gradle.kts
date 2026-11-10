@@ -21,4 +21,3 @@ dependencyResolutionManagement {
 include("mediator")
 include("modell")
 include("openapi")
-include("kafka")

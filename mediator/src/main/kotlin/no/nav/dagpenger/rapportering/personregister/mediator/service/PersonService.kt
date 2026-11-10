@@ -15,7 +15,6 @@ import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.sendFrasigelsesmelding
 import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
-import java.util.UUID
 
 class PersonService(
     private val pdlConnector: PdlConnector,
