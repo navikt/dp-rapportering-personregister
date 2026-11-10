@@ -11,11 +11,8 @@ import io.ktor.server.testing.testApplication
 import io.mockk.mockk
 import kotliquery.queryOf
 import kotliquery.sessionOf
-import no.nav.dagpenger.rapportering.personregister.kafka.PaaVegneAvAvroDeserializer
-import no.nav.dagpenger.rapportering.personregister.kafka.PeriodeAvroDeserializer
 import no.nav.dagpenger.rapportering.personregister.mediator.ArbeidssøkerMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.Configuration
-import no.nav.dagpenger.rapportering.personregister.mediator.KafkaContext
 import no.nav.dagpenger.rapportering.personregister.mediator.MeldepliktMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.PersonMediator
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
@@ -35,13 +32,9 @@ import no.nav.dagpenger.rapportering.personregister.mediator.statusPagesConfig
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.actionTimer
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.synkroniserPersonMetrikker
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaContainer
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.kafka.TestKafkaProducer
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
-import no.nav.paw.bekreftelse.paavegneav.v1.PaaVegneAv
 import no.nav.security.mock.oauth2.MockOAuth2Server
 import no.nav.security.mock.oauth2.token.DefaultOAuth2TokenCallback
-import org.apache.kafka.common.serialization.LongDeserializer
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 
@@ -91,22 +84,6 @@ open class ApiTestSetup {
 
         testApplication {
             val personRepository = PersonRepositoryPostgres(dataSource, actionTimer)
-            val testKafkaContainer = TestKafkaContainer()
-            val paaVegneAvTopic = "paa-vegne-av-topic"
-            val overtaBekreftelseKafkaProdusent =
-                TestKafkaProducer<PaaVegneAv>(paaVegneAvTopic, testKafkaContainer).producer
-            val bekreftelsePåVegneAvKafkaConsumer =
-                testKafkaContainer.createConsumer(
-                    "bekreftelse-pa-vegne-av-group",
-                    LongDeserializer::class,
-                    PaaVegneAvAvroDeserializer::class,
-                )
-            val arbedssøkerperiodeKafkaConsumer =
-                testKafkaContainer.createConsumer(
-                    "arbedssøkerperiode-group",
-                    LongDeserializer::class,
-                    PeriodeAvroDeserializer::class,
-                )
             val personService =
                 PersonService(
                     pdlConnector = pdlConnector,
@@ -147,11 +124,6 @@ open class ApiTestSetup {
                     actionTimer,
                 )
 
-            val kafkaContext =
-                KafkaContext(
-                    bekreftelsePåVegneAvKafkaProdusent = overtaBekreftelseKafkaProdusent,
-                )
-
             val personMediator =
                 PersonMediator(
                     personRepository,
@@ -169,7 +141,7 @@ open class ApiTestSetup {
                 install(StatusPages) {
                     statusPagesConfig()
                 }
-                pluginConfiguration(kafkaContext)
+                pluginConfiguration()
                 personstatusApi(personMediator, synkroniserPersonMetrikker, personService)
                 personApi(personService, søknadService, arbeidssøkerService)
             }

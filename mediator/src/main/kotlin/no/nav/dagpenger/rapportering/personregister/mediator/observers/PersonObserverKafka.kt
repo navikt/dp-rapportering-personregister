@@ -5,10 +5,9 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import kotlinx.coroutines.runBlocking
-import no.nav.dagpenger.rapportering.personregister.kafka.utils.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerConnector
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
-import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
+import no.nav.dagpenger.rapportering.personregister.mediator.kafka.sendDeferred
 import no.nav.dagpenger.rapportering.personregister.modell.Person
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.gjeldende
