@@ -44,7 +44,7 @@ dependencies {
     implementation("com.github.navikt.tbd-libs:naisful-app:20261029.1843")
 
     api("io.confluent:kafka-avro-serializer:8.4.1")
-    api("io.confluent:kafka-schema-registry:8.4.0")
+    api("io.confluent:kafka-schema-registry:8.4.1")
     api("io.confluent:kafka-streams-avro-serde:8.4.1")
     api("org.apache.avro:avro:1.12.1")
     paavegneavSchema("no.nav.paw.arbeidssokerregisteret.api:bekreftelse-paavegneav-schema:1.26.05.04.35-1")
