@@ -11,8 +11,6 @@ import io.getunleash.util.UnleashConfig
 import kotlinx.coroutines.runBlocking
 import no.nav.dagpenger.oauth2.CachedOauth2Client
 import no.nav.dagpenger.oauth2.OAuth2Config.AzureAd
-import no.nav.dagpenger.rapportering.personregister.kafka.KafkaSchemaRegistryConfig
-import no.nav.dagpenger.rapportering.personregister.kafka.KafkaServerKonfigurasjon
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.cfg.DateTimeFeature
@@ -120,24 +118,6 @@ internal object Configuration {
             "https://$it/graphql"
         }
     }
-
-    val kafkaSchemaRegistryConfig =
-        KafkaSchemaRegistryConfig(
-            url = properties[Key("KAFKA_SCHEMA_REGISTRY", stringType)],
-            username = properties[Key("KAFKA_SCHEMA_REGISTRY_USER", stringType)],
-            password = properties[Key("KAFKA_SCHEMA_REGISTRY_PASSWORD", stringType)],
-            autoRegisterSchema = true,
-            avroSpecificReaderConfig = true,
-        )
-
-    val kafkaServerKonfigurasjon =
-        KafkaServerKonfigurasjon(
-            autentisering = "SSL",
-            kafkaBrokers = properties[Key("KAFKA_BROKERS", stringType)],
-            keystorePath = properties.getOrNull(Key("KAFKA_KEYSTORE_PATH", stringType)),
-            credstorePassword = properties.getOrNull(Key("KAFKA_CREDSTORE_PASSWORD", stringType)),
-            truststorePath = properties.getOrNull(Key("KAFKA_TRUSTSTORE_PATH", stringType)),
-        )
 
     val defaultObjectMapper =
         JsonMapper

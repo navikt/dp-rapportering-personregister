@@ -1,4 +1,4 @@
-package no.nav.dagpenger.rapportering.personregister.kafka.utils
+package no.nav.dagpenger.rapportering.personregister.mediator.kafka
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
