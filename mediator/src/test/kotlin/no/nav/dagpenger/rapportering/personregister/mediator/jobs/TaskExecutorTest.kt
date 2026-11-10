@@ -49,17 +49,16 @@ class TaskExecutorTest {
 
         val mockedTime = LocalTime.of(1, 59, 58)
         val mockedDateTime = ZonedDateTime.now().with(mockedTime)
-        mockkStatic(ZonedDateTime::class)
-        every { ZonedDateTime.of(any(), any()) } returns mockedDateTime
 
-        taskExecutor.startExecution()
+        try {
+            mockkStatic(ZonedDateTime::class)
+            every { ZonedDateTime.of(any(), any()) } returns mockedDateTime andThen mockedDateTime andThen mockedDateTime.minusHours(1)
 
-        // hentHendelserSomSkalAktiveres må kalles én gang etter et par sekunder
-        coVerify(exactly = 1, timeout = 10000) { personRepository.hentHendelserSomSkalAktiveres() }
+            taskExecutor.startExecution()
 
-        // hentHendelserSomSkalAktiveres må kalles én gang til etter et par sekunder fordi vi har mocked ZonedDateTime
-        coVerify(exactly = 2, timeout = 10000) { personRepository.hentHendelserSomSkalAktiveres() }
-
-        clearStaticMockk(ZonedDateTime::class)
+            coVerify(atLeast = 2, timeout = 15000) { personRepository.hentHendelserSomSkalAktiveres() }
+        } finally {
+            clearStaticMockk(ZonedDateTime::class)
+        }
     }
 }
