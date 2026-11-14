@@ -10,6 +10,7 @@ import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -18,7 +19,6 @@ import no.nav.dagpenger.rapportering.personregister.mediator.connector.Arbeidss�
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerperiodeResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.HendelseResponse
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.MeldekortregisterConnector
-import no.nav.dagpenger.rapportering.personregister.mediator.db.ArbeidssøkerperiodeUtmeldingInfo
 import no.nav.dagpenger.rapportering.personregister.mediator.db.MeldingerRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.db.PersonRepository
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTestUtil.avsluttetArbeidssøkerperiodeMetrikker
@@ -159,15 +159,13 @@ class ArbeidssøkerServiceTest {
                     ),
                 )
             every {
-                personRepository.hentUtmeldinginfo(
+                personRepository.hentÅrsakTilUtmelding(
                     periodeId,
                     ident,
                 )
             } returns
-                ArbeidssøkerperiodeUtmeldingInfo(
-                    årsakTilUtmelding = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
-                    datoForUtmelding = LocalDate.now(),
-                )
+                ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
+
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -178,6 +176,14 @@ class ArbeidssøkerServiceTest {
 
             val korrelasjonsId = UUIDv7.newUuid()
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
+
+            coVerify(exactly = 1) {
+                meldekortregisterConnector.hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
+                    avregistrertTidspunkt.toLocalDate(),
+                )
+            }
 
             rapidsConnection.inspektør.size shouldBe 1
             with(rapidsConnection.inspektør.message(0)) {
@@ -225,11 +231,8 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null andThen
-                ArbeidssøkerperiodeUtmeldingInfo(
-                    årsakTilUtmelding = ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
-                    datoForUtmelding = LocalDate.now(),
-                )
+            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
+
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -240,6 +243,14 @@ class ArbeidssøkerServiceTest {
 
             val korrelasjonsId = UUIDv7.newUuid()
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
+
+            coVerify(exactly = 1) {
+                meldekortregisterConnector.hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    avregistrertTidspunkt.toLocalDate(),
+                )
+            }
 
             rapidsConnection.inspektør.message(0)["årsak"].asString() shouldBe
                 ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET.dbValue
@@ -283,7 +294,7 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null
+            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
@@ -294,6 +305,14 @@ class ArbeidssøkerServiceTest {
 
             val korrelasjonsId = UUIDv7.newUuid()
             arbeidssøkerService.publiserAvsluttetArbeidssøkerperiode(person.ident, periodeId, korrelasjonsId)
+
+            coVerify(exactly = 1) {
+                meldekortregisterConnector.hentSisteFastsattMeldedato(
+                    ident,
+                    ÅrsakTilUtmelding.UTMELDT_I_ARBEIDSSØKERREGISTERET,
+                    avregistrertTidspunkt.toLocalDate(),
+                )
+            }
 
             rapidsConnection.inspektør.message(0).has("fastsattMeldedato") shouldBe false
 
@@ -428,7 +447,7 @@ class ArbeidssøkerServiceTest {
                         hendelser = emptyList(),
                     ),
                 )
-            every { personRepository.hentUtmeldinginfo(periodeId, ident) } returns null
+            every { personRepository.hentÅrsakTilUtmelding(periodeId, ident) } returns null
             coEvery {
                 meldekortregisterConnector.hentSisteFastsattMeldedato(
                     ident,
