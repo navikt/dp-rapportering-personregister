@@ -1,14 +1,14 @@
 kafka:
-    pool: nav-prod
+  pool: nav-prod
 
 ingresses:
-    - https://dp-rapportering-personregister.intern.nav.no
+  - https://dp-rapportering-personregister.intern.nav.no
 
 cluster: prod-gcp
 gcp:
-    sql:
-        tier: db-custom-1-3840
-        maximumPoolSizePerPod: 30
+  sql:
+    tier: db-custom-1-3840
+    maximumPoolSizePerPod: 30
 
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag-v2.paw
 ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://prod-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag-v2/.default
@@ -28,11 +28,11 @@ PDL_API_SCOPE: api://prod-fss.pdl.pdl-api/.default
 KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-p,teamdagpenger.journalforing.v1
 
 additionalInbounds:
-    - application: meldekort-api
-      namespace: meldekort
+  - application: meldekort-api
+    namespace: meldekort
 
 azure:
-    tenant: nav.no
-    grupper:
-        saksbehandler: "2e9c63d8-322e-4c1f-b500-a0abb812761c" # 0000-GA-Dagpenger-Saksbehandler
-        les: "4c02342f-e979-46d6-8e04-28d4314c9a69" # 0000-GA-Dagpenger-Les
+  tenant: nav.no
+  grupper:
+    saksbehandler: "2e9c63d8-322e-4c1f-b500-a0abb812761c" # 0000-GA-Dagpenger-Saksbehandler
+    les: "4c02342f-e979-46d6-8e04-28d4314c9a69" # 0000-GA-Dagpenger-Les

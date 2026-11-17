@@ -1,14 +1,14 @@
 kafka:
-    pool: nav-dev
+  pool: nav-dev
 
 ingresses:
-    - https://dp-rapportering-personregister.intern.dev.nav.no
+  - https://dp-rapportering-personregister.intern.dev.nav.no
 
 cluster: dev-gcp
 gcp:
-    sql:
-        tier: db-g1-small
-        maximumPoolSizePerPod: 8
+  sql:
+    tier: db-g1-small
+    maximumPoolSizePerPod: 8
 
 ARBEIDSSOKERREGISTER_OPPSLAG_HOST: http://paw-arbeidssoekerregisteret-api-oppslag-v2.paw
 ARBEIDSSOKERREGISTER_OPPSLAG_SCOPE: api://dev-gcp.paw.paw-arbeidssoekerregisteret-api-oppslag-v2/.default
@@ -28,17 +28,17 @@ PDL_API_SCOPE: api://dev-fss.pdl.pdl-api/.default
 KAFKA_EXTRA_TOPIC: teamarenanais.aapen-arena-meldestatusendret-v1-q2,teamdagpenger.journalforing.v1
 
 additionalInbounds:
-    - application: meldekort-api-q1
-      namespace: meldekort
-    - application: meldekort-api-q2
-      namespace: meldekort
-    - application: tokenx-token-generator
-      namespace: nais
-    - application: azure-token-generator
-      namespace: nais
+  - application: meldekort-api-q1
+    namespace: meldekort
+  - application: meldekort-api-q2
+    namespace: meldekort
+  - application: tokenx-token-generator
+    namespace: nais
+  - application: azure-token-generator
+    namespace: nais
 
 azure:
-    tenant: trygdeetaten.no
-    grupper:
-        saksbehandler: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler
-        les: "a850742a-bda2-4334-94bc-74ecc0a3fbe0" # 0000-GA-Dagpenger-Les
+  tenant: trygdeetaten.no
+  grupper:
+    saksbehandler: "3e28466f-c53d-46da-8b44-a4abc2ad4593" # 0000-GA-Dagpenger-Saksbehandler
+    les: "a850742a-bda2-4334-94bc-74ecc0a3fbe0" # 0000-GA-Dagpenger-Les
