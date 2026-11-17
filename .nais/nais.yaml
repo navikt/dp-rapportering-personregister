@@ -145,3 +145,5 @@ spec:
           - NAVident
         groups:
           - id: {{azure.grupper.saksbehandler}}
+          - id: {{azure.grupper.les}}
+
