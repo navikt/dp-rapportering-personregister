@@ -114,6 +114,10 @@ class BehandlingsresultatMottak(
                             logger.info {
                                 "Rettighetsperiode behandles nå: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
                             }
+                            sikkerlogg.info {
+                                "Rettighetsperiode behandles nå: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett, ident=$ident"
+                            }
+
                             val vedtakHendelse =
                                 VedtakHendelse(
                                     korrelasjonsId = korrelasjonsId,
@@ -132,6 +136,10 @@ class BehandlingsresultatMottak(
                             logger.info {
                                 "Rettighetsperiode med fremtidig start legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
                             }
+                            sikkerlogg.info {
+                                "Rettighetsperiode med fremtidig start legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett, ident=$ident"
+                            }
+
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStart(
                                     korrelasjonsId = korrelasjonsId,
@@ -148,6 +156,10 @@ class BehandlingsresultatMottak(
                             logger.info {
                                 "Rettighetsperiode med fremtidig stans legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett"
                             }
+                            sikkerlogg.info {
+                                "Rettighetsperiode med fremtidig stans legges inn i fremtidig_hendelse: fraOgMed=$fraOgMed, tilOgMed=$tilOgMed, harRett=$harRett, ident=$ident"
+                            }
+
                             fremtidigHendelseMediator.behandle(
                                 VedtakHendelse.medFremtidigStans(
                                     korrelasjonsId = korrelasjonsId,

@@ -1,5 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
 import no.nav.dagpenger.rapportering.personregister.modell.Kildesystem
 import no.nav.dagpenger.rapportering.personregister.modell.Person
@@ -14,6 +15,9 @@ import no.nav.dagpenger.rapportering.personregister.modell.vurderNyStatus
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
 import java.util.UUID
+
+private val logger = KotlinLogging.logger {}
+private val sikkerLogg = KotlinLogging.logger("tjenestekall")
 
 data class VedtakHendelse(
     override val korrelasjonsId: UUID,
@@ -78,6 +82,13 @@ data class VedtakHendelse(
         person.setAnsvarligSystem(AnsvarligSystem.DP)
 
         if (utfall && !erFremtidigStansHendelse()) {
+            logger.info {
+                "Sender Start-melding for vedtakshendelse med referanseId=$referanseId, startDato=$startDato, sluttDato=$sluttDato, utfall=$utfall"
+            }
+            sikkerLogg.info {
+                "Sender Start-melding for vedtakshendelse med referanseId=$referanseId, startDato=$startDato, sluttDato=$sluttDato, utfall=$utfall, ident=$ident"
+            }
+
             person.setHarRettTilDp(true)
             person.sendStartMeldingTilMeldekortregister(
                 fraOgMed = startDato,
@@ -87,6 +98,13 @@ data class VedtakHendelse(
         }
 
         if (!utfall || sluttDato.erDatoIFortid()) {
+            logger.info {
+                "Sender Stopp-melding for vedtakshendelse med referanseId=$referanseId, startDato=$startDato, sluttDato=$sluttDato, utfall=$utfall"
+            }
+            sikkerLogg.info {
+                "Sender Stopp-melding for vedtakshendelse med referanseId=$referanseId, startDato=$startDato, sluttDato=$sluttDato, utfall=$utfall, ident=$ident"
+            }
+
             person.setHarRettTilDp(false)
             person.sendStoppMeldingTilMeldekortregister(
                 fraOgMed = startDato,
@@ -102,6 +120,12 @@ data class VedtakHendelse(
             ?.let { status ->
                 person.setStatus(status)
                 if (person.oppfyllerKrav) {
+                    logger.info {
+                        "Sender overtakelsesmelding"
+                    }
+                    sikkerLogg.info {
+                        "Sender overtakelsesmelding for person med ident=$ident"
+                    }
                     person.sendOvertakelsesmelding(korrelasjonsId)
                 } else {
                     person.arbeidssøkerperioder.gjeldende

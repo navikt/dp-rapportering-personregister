@@ -73,7 +73,7 @@ internal class AktiverHendelserJob(
         meldepliktConnector: MeldepliktConnector,
     ): AktiverHendelserJobStatus {
         val hendelser = personRepository.hentHendelserSomSkalAktiveres()
-        var jobStatus =
+        val jobStatus =
             AktiverHendelserJobStatus(
                 antallHendelserHentetForAktivering = hendelser.size,
             )
@@ -83,6 +83,14 @@ internal class AktiverHendelserJob(
                 var meldestatus: MeldestatusResponse? = null
                 hendelserForIdent.forEach { hendelse ->
                     referanseIdForHendelseSomBehandles = hendelse.referanseId
+
+                    logger.info {
+                        "Aktiverer hendelse med referanseId=${hendelse.referanseId} og type=${hendelse::class.simpleName}"
+                    }
+                    sikkerLogg.info {
+                        "Aktiverer hendelse med referanseId=${hendelse.referanseId}  og type=${hendelse::class.simpleName} for person med ident=$ident"
+                    }
+
                     val person = personService.hentPerson(ident)
 
                     if (person != null) {
@@ -106,6 +114,12 @@ internal class AktiverHendelserJob(
                             }
 
                             is VedtakHendelse -> {
+                                logger.info {
+                                    "Behandler vedtakshendelse med referanseId=${hendelse.referanseId}, startDato=${hendelse.startDato}, sluttDato=${hendelse.sluttDato}, utfall=${hendelse.utfall}"
+                                }
+                                sikkerLogg.info {
+                                    "Behandler vedtakshendelse med referanseId=${hendelse.referanseId}, startDato=${hendelse.startDato}, sluttDato=${hendelse.sluttDato}, utfall=${hendelse.utfall}, ident=${hendelse.ident}"
+                                }
                                 personMediator.behandle(hendelse)
                             }
 
