@@ -632,15 +632,15 @@ class PersonRepositoryPostgres(
         }
     }
 
-    override fun hentUtmeldinginfo(
+    override fun hentÅrsakTilUtmelding(
         periodeId: UUID,
         ident: String,
-    ): ArbeidssøkerperiodeUtmeldingInfo? =
+    ): Arbeidssøkerperiode.ÅrsakTilUtmelding? =
         sessionOf(dataSource).use { session ->
             session.run(
                 queryOf(
                     """
-                    SELECT aarsak_til_utmelding, avsluttet, sist_endret
+                    SELECT aarsak_til_utmelding
                     FROM arbeidssoker
                     WHERE periode_id = :periode_id
                     AND person_id = (SELECT id FROM personregister_person WHERE ident = :ident)
@@ -650,19 +650,9 @@ class PersonRepositoryPostgres(
                         "ident" to ident,
                     ),
                 ).map { row ->
-                    val årsak =
-                        row
-                            .stringOrNull("aarsak_til_utmelding")
-                            ?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) }
-
-                    if (årsak != null) {
-                        ArbeidssøkerperiodeUtmeldingInfo(
-                            årsakTilUtmelding = årsak,
-                            datoForUtmelding = row.localDateOrNull("avsluttet") ?: row.localDate("sist_endret"),
-                        )
-                    } else {
-                        null
-                    }
+                    row
+                        .stringOrNull("aarsak_til_utmelding")
+                        ?.let { Arbeidssøkerperiode.ÅrsakTilUtmelding.fromDbValue(it) }
                 }.asSingle,
             )
         }

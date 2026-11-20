@@ -803,14 +803,13 @@ class PersonRepositoryPostgresTest {
                 årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
 
-            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentUtmeldinginfo(periodeId, person.ident)!!
+            val årsakTilUtmelding = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)!!
 
             årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
-            datoForUtmelding shouldBe dato.toLocalDate().plusDays(10)
         }
 
     @Test
-    fun `hentÅrsakTilUtmelding returnerer årsak og sist_endret hvis avsluttet er null`() =
+    fun `hentÅrsakTilUtmelding returnerer årsak hvis avsluttet er null`() =
         withMigratedDb {
             val arbeidssøkerperiode = opprettArbeidssøkerperiode()
             val person =
@@ -827,10 +826,9 @@ class PersonRepositoryPostgresTest {
                 årsak = ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT,
             )
 
-            val (årsakTilUtmelding, datoForUtmelding) = personRepository.hentUtmeldinginfo(periodeId, person.ident)!!
+            val årsakTilUtmelding = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)!!
 
             årsakTilUtmelding shouldBe ÅrsakTilUtmelding.UTMELDT_PÅ_MELDEKORT
-            datoForUtmelding shouldBe LocalDate.now()
         }
 
     @Test
@@ -845,7 +843,7 @@ class PersonRepositoryPostgresTest {
 
             val periodeId = person.arbeidssøkerperioder.gjeldende!!.periodeId
 
-            val årsak = personRepository.hentUtmeldinginfo(periodeId, person.ident)
+            val årsak = personRepository.hentÅrsakTilUtmelding(periodeId, person.ident)
 
             årsak shouldBe null
         }
@@ -862,7 +860,7 @@ class PersonRepositoryPostgresTest {
 
             val ukjentPeriodeId = UUIDv7.newUuid()
 
-            val årsak = personRepository.hentUtmeldinginfo(ukjentPeriodeId, person.ident)
+            val årsak = personRepository.hentÅrsakTilUtmelding(ukjentPeriodeId, person.ident)
 
             årsak shouldBe null
         }
