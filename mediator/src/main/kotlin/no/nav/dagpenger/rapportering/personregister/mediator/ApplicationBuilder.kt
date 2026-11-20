@@ -12,7 +12,6 @@ import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import no.nav.dagpenger.pdl.createPersonOppslag
-import no.nav.dagpenger.rapportering.personregister.mediator.Configuration.config
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personApi
 import no.nav.dagpenger.rapportering.personregister.mediator.api.personstatusApi
 import no.nav.dagpenger.rapportering.personregister.mediator.connector.ArbeidssøkerBekreftelseKafka
@@ -289,8 +288,7 @@ internal class ApplicationBuilder(
                         }
                     },
                 ) { _, rapid ->
-                    logger.info { "Starter rapid with" }
-                    logger.info { "config: $config" }
+                    logger.info { "Starter rapid" }
 
                     MeldekortTestdataMottak(rapid)
                     MeldestatusMottak(
