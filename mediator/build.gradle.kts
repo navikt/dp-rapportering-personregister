@@ -41,7 +41,7 @@ dependencies {
     implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.34.0")
     implementation("io.opentelemetry:opentelemetry-api:1.68.0")
     implementation("io.getunleash:unleash-client-java:12.3.2")
-    implementation("com.github.navikt.tbd-libs:naisful-app:20261029.1843")
+    implementation("com.github.navikt.tbd-libs:naisful-app:20261123.1112")
 
     api("io.confluent:kafka-avro-serializer:8.4.1")
     api("io.confluent:kafka-schema-registry:8.4.1")
