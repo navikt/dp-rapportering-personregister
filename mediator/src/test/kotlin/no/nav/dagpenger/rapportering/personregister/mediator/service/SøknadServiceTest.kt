@@ -156,6 +156,33 @@ class SøknadServiceTest {
         shouldThrow<PersonNotFoundException> { søknadService.hentSøknadInnsendtTidspunkt(ident, randomUUID()) }
     }
 
+    @Test
+    fun `hentSøknader returnerer søknader hvis personen eksisterer`() {
+        val person = lagPerson(DP)
+
+        val søknadHendelse1 = lagSøknadHendelse().copy(startDato = LocalDateTime.now().minusDays(7))
+        val søknadHendelse2 = lagSøknadHendelse().copy(startDato = LocalDateTime.now().minusDays(1))
+        person.hendelser.addAll(
+            listOf(
+                søknadHendelse1,
+                søknadHendelse2,
+            ),
+        )
+        every { personService.hentPerson(any<Long>()) } returns person
+
+        val søknader = søknadService.hentSøknader(1L)
+        søknader.size shouldBe 2
+        søknader[0].innsendtTidspunkt shouldBe søknadHendelse1.startDato
+        søknader[1].innsendtTidspunkt shouldBe søknadHendelse2.startDato
+    }
+
+    @Test
+    fun `hentSøknader kaster forventet exception hvis personen ikke eksisterer`() {
+        every { personService.hentPerson(any<Long>()) } throws PersonNotFoundException("Fant ikke person med personId=1")
+
+        shouldThrow<PersonNotFoundException> { søknadService.hentSøknader(1L) }
+    }
+
     private fun lagSøknadHendelse() =
         SøknadHendelse(
             korrelasjonsId = newUuid(),

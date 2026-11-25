@@ -102,6 +102,24 @@ internal fun Application.personApi(
                 }
             }
 
+            route("/søknader/{personId}") {
+                get {
+                    val personId =
+                        call.parameters["personId"]?.toLongOrNull()
+                            ?: throw BadRequestException("Mangler eller ugyldig personId")
+
+                    søknadService
+                        .hentSøknader(personId)
+                        .also { søknader ->
+                            call
+                                .respond(
+                                    OK,
+                                    søknader,
+                                )
+                        }
+                }
+            }
+
             route("/api/person/søknad/innsendt-tidspunkt") {
                 post {
                     logger.info {
