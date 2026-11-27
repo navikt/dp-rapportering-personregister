@@ -1,7 +1,6 @@
 package no.nav.dagpenger.rapportering.personregister.modell.hendelser
 
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import io.mockk.mockk
 import io.mockk.verify
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
@@ -9,9 +8,9 @@ import no.nav.dagpenger.rapportering.personregister.modell.Arbeidssøkerperiode
 import no.nav.dagpenger.rapportering.personregister.modell.PersonObserver
 import no.nav.dagpenger.rapportering.personregister.modell.Status.DAGPENGERBRUKER
 import no.nav.dagpenger.rapportering.personregister.modell.Status.IKKE_DAGPENGERBRUKER
+import no.nav.dagpenger.rapportering.personregister.modell.helper.avsluttetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.dagpengerMeldegruppeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.meldepliktHendelse
-import no.nav.dagpenger.rapportering.personregister.modell.helper.periodeId
 import no.nav.dagpenger.rapportering.personregister.modell.helper.startetArbeidssøkerperiodeHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.søknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.helper.testPerson
@@ -35,23 +34,68 @@ class StartetArbeidssøkerperiodeHendelseTest {
     @Test
     fun `skal avslutte eksisterende aktiv periode før ny legges til`() {
         testPerson {
+            val periodeId1 = UUID.randomUUID()
+            val periodeId2 = UUID.randomUUID()
+
+            val startet1 = LocalDateTime.now().minusDays(10)
+            val startet2 = LocalDateTime.now().minusDays(1)
+
             arbeidssøkerperioder.add(
                 Arbeidssøkerperiode(
-                    periodeId = UUID.randomUUID(),
+                    periodeId = periodeId1,
                     ident = ident,
-                    startet = LocalDateTime.now().minusDays(10),
+                    startet = startet1,
                     avsluttet = null,
                     overtattBekreftelse = true,
                 ),
             )
 
-            behandle(startetArbeidssøkerperiodeHendelse(periodeId))
+            behandle(startetArbeidssøkerperiodeHendelse(periodeId = periodeId2, startet = startet2))
 
             arbeidssøkerperioder.size shouldBe 2
-            arbeidssøkerperioder.first().avsluttet shouldNotBe null
+            arbeidssøkerperioder.first().periodeId shouldBe periodeId1
+            arbeidssøkerperioder.first().startet shouldBe startet1
+            arbeidssøkerperioder.first().avsluttet shouldBe startet2
             arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
-            arbeidssøkerperioder.last().periodeId shouldBe periodeId
-            arbeidssøkerperioder.filter { it.avsluttet == null }.size shouldBe 1
+            arbeidssøkerperioder.last().periodeId shouldBe periodeId2
+            arbeidssøkerperioder.last().startet shouldBe startet2
+            arbeidssøkerperioder.last().avsluttet shouldBe null
+            arbeidssøkerperioder.last().overtattBekreftelse shouldBe null
+        }
+    }
+
+    @Test
+    fun `skal ikke oppdatere allerede utfylte avsluttet-feltet for eksisterende aktiv periode når ny legges til`() {
+        testPerson {
+            val periodeId1 = UUID.randomUUID()
+            val periodeId2 = UUID.randomUUID()
+
+            val startet1 = LocalDateTime.now().minusDays(10)
+            val avsluttet1 = LocalDateTime.now().minusDays(2)
+            val startet2 = LocalDateTime.now().minusDays(1)
+
+            arbeidssøkerperioder.add(
+                Arbeidssøkerperiode(
+                    periodeId = periodeId1,
+                    ident = ident,
+                    startet = startet1,
+                    avsluttet = avsluttet1,
+                    overtattBekreftelse = true,
+                ),
+            )
+
+            behandle(avsluttetArbeidssøkerperiodeHendelse(periodeId = periodeId1, startDato = startet1, sluttDato = avsluttet1))
+            behandle(startetArbeidssøkerperiodeHendelse(periodeId = periodeId2, startet = startet2))
+
+            arbeidssøkerperioder.size shouldBe 2
+            arbeidssøkerperioder.first().periodeId shouldBe periodeId1
+            arbeidssøkerperioder.first().startet shouldBe startet1
+            arbeidssøkerperioder.first().avsluttet shouldBe avsluttet1
+            arbeidssøkerperioder.first().overtattBekreftelse shouldBe false
+            arbeidssøkerperioder.last().periodeId shouldBe periodeId2
+            arbeidssøkerperioder.last().startet shouldBe startet2
+            arbeidssøkerperioder.last().avsluttet shouldBe null
+            arbeidssøkerperioder.last().overtattBekreftelse shouldBe null
         }
     }
 
