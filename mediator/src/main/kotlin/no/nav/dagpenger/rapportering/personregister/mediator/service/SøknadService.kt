@@ -6,6 +6,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.api.PersonNotFoundE
 import no.nav.dagpenger.rapportering.personregister.mediator.db.OptimisticLockingException
 import no.nav.dagpenger.rapportering.personregister.mediator.metrikker.ActionTimer
 import no.nav.dagpenger.rapportering.personregister.modell.AnsvarligSystem
+import no.nav.dagpenger.rapportering.personregister.modell.Søknad
 import no.nav.dagpenger.rapportering.personregister.modell.erArbeidssøker
 import no.nav.dagpenger.rapportering.personregister.modell.hendelser.SøknadHendelse
 import no.nav.dagpenger.rapportering.personregister.modell.oppfyllerKrav
@@ -76,6 +77,18 @@ class SøknadService(
         } ?: run {
             sikkerlogg.warn { "Fant ikke person ident=${ident.take(11)}" }
             throw PersonNotFoundException()
+        }
+
+    fun hentSøknader(personId: Long): List<Søknad> =
+        personService.hentPerson(personId).let {
+            it.hendelser
+                .filterIsInstance<SøknadHendelse>()
+                .map { hendelse ->
+                    Søknad(
+                        søknadId = hendelse.referanseId,
+                        innsendtTidspunkt = hendelse.startDato,
+                    )
+                }
         }
 }
 

@@ -25,6 +25,7 @@ import no.nav.dagpenger.rapportering.personregister.mediator.utils.MetrikkerTest
 import no.nav.dagpenger.rapportering.personregister.mediator.utils.UUIDv7
 import no.nav.dagpenger.rapportering.personregister.modell.Ident
 import no.nav.dagpenger.rapportering.personregister.modell.Person
+import no.nav.dagpenger.rapportering.personregister.modell.Søknad
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.readValue
 import java.time.LocalDateTime
@@ -374,7 +375,10 @@ class PersonApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe OK
-                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe meldedato.toLocalDate().toString()
+                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe
+                    meldedato
+                        .toLocalDate()
+                        .toString()
             }
         }
 
@@ -413,7 +417,46 @@ class PersonApiTest : ApiTestSetup() {
                 },
             ) {
                 status shouldBe OK
-                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe meldedato.toLocalDate().toString()
+                defaultObjectMapper.readTree(bodyAsText())["meldedato"].asString() shouldBe
+                    meldedato
+                        .toLocalDate()
+                        .toString()
+            }
+        }
+
+    @Test
+    fun `hentSøknader returnerer søknader`() =
+        setUpTestApplication {
+            val personRepository = PersonRepositoryPostgres(PostgresDataSourceBuilder.dataSource, actionTimer)
+
+            val søknadHendelse1 =
+                lagSøknadHendelse(
+                    ident = ident,
+                    referanseId = UUIDv7.newUuid().toString(),
+                    startDato = LocalDateTime.now().minusDays(7).truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
+                )
+            val søknadHendelse2 =
+                lagSøknadHendelse(
+                    ident = ident,
+                    referanseId = UUIDv7.newUuid().toString(),
+                    startDato = LocalDateTime.now().minusDays(1).truncatedTo(java.time.temporal.ChronoUnit.SECONDS),
+                )
+
+            val person = Person(ident)
+            person.hendelser.addAll(listOf(søknadHendelse1, søknadHendelse2))
+            personRepository.lagrePerson(person)
+
+            with(
+                client.get("/søknader/1") {
+                    header(HttpHeaders.ContentType, "application/json")
+                    bearerAuth(issueAzureAdToken(emptyMap()))
+                },
+            ) {
+                status shouldBe OK
+                val søknader = defaultObjectMapper.readValue<List<Søknad>>(bodyAsText())
+                søknader.size shouldBe 2
+                søknader[0].innsendtTidspunkt shouldBe søknadHendelse1.startDato
+                søknader[1].innsendtTidspunkt shouldBe søknadHendelse2.startDato
             }
         }
 }
