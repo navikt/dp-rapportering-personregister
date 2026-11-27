@@ -70,7 +70,13 @@ fun startetArbeidssøkerperiodeHendelse(
     korrelasjonsId: UUID = UUID.randomUUID(),
 ) = StartetArbeidssøkerperiodeHendelse(korrelasjonsId, periodeId, ident, nå, startet)
 
-fun avsluttetArbeidssøkerperiodeHendelse() = AvsluttetArbeidssøkerperiodeHendelse(UUID.randomUUID(), periodeId, ident, tidligere, nå, nå)
+fun avsluttetArbeidssøkerperiodeHendelse(
+    periodeId: UUID = UUID.randomUUID(),
+    ident: String = "12345678901",
+    startDato: LocalDateTime = tidligere,
+    sluttDato: LocalDateTime = nå,
+    korrelasjonsId: UUID = UUID.randomUUID(),
+) = AvsluttetArbeidssøkerperiodeHendelse(korrelasjonsId, periodeId, ident, startDato, sluttDato, nå)
 
 fun vedtakHendelse(
     dato: LocalDateTime = nå,

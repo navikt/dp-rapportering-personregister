@@ -109,7 +109,7 @@ private fun oppdaterGjeldendeperiode(
                     "periodeId=$periodeId, korrelasjonsId=${hendelse.korrelasjonsId}"
             logger.warn { melding }
             sikkerLogg.warn { "$melding, ident=${person.ident}" }
-            avsluttet = LocalDateTime.now()
+            avsluttet = hendelse.startDato
             overtattBekreftelse = false
         }
 
